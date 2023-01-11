@@ -12,7 +12,8 @@
   },
   "dependencies": {
     "pinia": "^2.0.28",
-    "vue": "^3.2.45"
+    "vue": "^3.2.45",
+    "vue3-drr-grid-layout": "^1.9.7"
   },
   "devDependencies": {
     "@rushstack/eslint-patch": "^1.1.4",
