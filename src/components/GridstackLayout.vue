@@ -1,7 +1,7 @@
 <template>
     <div class="grid-stack">
         <div
-            v-for="(w, indexs) in items"
+            v-for="(w, index) in items"
             class="grid-stack-item"
             :gs-x="w.x"
             :gs-y="w.y"
@@ -9,13 +9,19 @@
             :gs-h="w.h"
             :gs-id="w.id"
             :id="w.id"
-            :key="indexs"
+            :key="index"
         >
-            <div class="grid-stack-item-content widget">
-                <div class="drag-target test"></div>
-                {{ w }}
-                <component :is="w.component"></component>
-                <!-- <component :is="'TestComponent1'"></component> -->
+            <div class="grid-stack-item-content card" :id="`container-${w.id}`">
+                <div class="card-header drag-target">
+                    {{ w.component }}
+                    <button @click="toggleFullscreen(`container-${w.id}`)">
+                        full screen
+                    </button>
+                </div>
+                <div class="card-body">
+                    {{ w }}
+                    <component :is="w.component"></component>
+                </div>
             </div>
         </div>
     </div>
@@ -25,16 +31,53 @@
 import { ref } from 'vue';
 import { onMounted } from 'vue';
 import { GridStack, type GridStackOptions, type DDDragOpt } from 'gridstack';
+import screenfull from 'screenfull';
 import 'gridstack/dist/gridstack.min.css';
 import TestComponent1 from './TestComponent1.vue';
 import TestComponent2 from './TestComponent2.vue';
+
+// useful reference
+// https://stackoverflow.com/questions/72813397/gridstack-js-vue-3-components
+
 let count = 0;
 let grid: GridStack | null = null; // DO NOT use ref(null) as proxies GS will break all logic when comparing structures... see https://github.com/gridstack/gridstack.js/issues/2115
 const items = ref([
-    { component: 'TestComponent1', x: 0, y: 0, w: 6, h: 10, id: 1 },
-    { component: 'TestComponent2', x: 6, y: 0, w: 6, h: 5, id: 2 },
-    { component: 'TestComponent1', x: 6, y: 5, w: 6, h: 5, id: 3 },
-    { component: 'TestComponent2', x: 0, y: 10, w: 12, h: 3, id: 4 },
+    {
+        component: 'TestComponent1',
+        x: 0,
+        y: 0,
+        w: 6,
+        h: 10,
+        id: 1,
+        fullscreen: false,
+    },
+    {
+        component: 'TestComponent2',
+        x: 6,
+        y: 0,
+        w: 6,
+        h: 5,
+        id: 2,
+        fullscreen: false,
+    },
+    {
+        component: 'TestComponent1',
+        x: 6,
+        y: 5,
+        w: 6,
+        h: 5,
+        id: 3,
+        fullscreen: false,
+    },
+    {
+        component: 'TestComponent2',
+        x: 0,
+        y: 10,
+        w: 12,
+        h: 3,
+        id: 4,
+        fullscreen: false,
+    },
 ]);
 
 onMounted(() => {
@@ -44,6 +87,9 @@ onMounted(() => {
         float: true,
         cellHeight: '70px',
         minRow: 1,
+        resizable: {
+            handles: 'e,se,s,w',
+        },
         draggable: {
             handle: '.drag-target',
         },
@@ -71,28 +117,21 @@ onMounted(() => {
     // });
 });
 
-function addNewWidget() {
-    const node: any = items[count] || {
-        x: Math.round(12 * Math.random()),
-        y: Math.round(5 * Math.random()),
-        w: Math.round(1 + 3 * Math.random()),
-        h: Math.round(1 + 3 * Math.random()),
-    };
-    node.id = node.content = String(count++);
-    grid?.addWidget(node);
+function toggleFullscreen(elementId: string) {
+    const element = document.getElementById(elementId);
+    if (screenfull.isEnabled && element) {
+        screenfull.toggle(element);
+    }
 }
 </script>
 
-<style scoped lange="scss">
+<style scoped lang="scss">
+@import '../App.scss';
 .widget {
-    background: #ebebeb;
-    box-shadow: black 0 0 0 0;
-    border: solid grey 1px;
+    background: $gray-100;
 }
 
-.test {
-    height: 20px;
-    background: grey;
+.drag-target {
     cursor: move;
 }
 </style>

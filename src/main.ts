@@ -6,7 +6,7 @@ import 'vue3-drr-grid-layout/dist/style.css';
 import TestComponent1 from './components/TestComponent1.vue';
 import TestComponent2 from './components/TestComponent2.vue';
 
-// import './assets/main.css';
+import './App.scss';
 
 const app = createApp(App);
 

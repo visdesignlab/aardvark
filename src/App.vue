@@ -1,15 +1,12 @@
 <script setup lang="ts">
+import { ref } from 'vue';
 import GridstackLayout from './components/GridstackLayout.vue';
+
+let fullscreen = ref(false);
 </script>
 
 <template>
-    <div class="grid-container">
-        <GridstackLayout />
-    </div>
+    <GridstackLayout />
 </template>
 
-<style scoped>
-.grid-container {
-    background: bisque;
-}
-</style>
+<style scoped></style>
