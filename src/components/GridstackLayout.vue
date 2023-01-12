@@ -14,7 +14,8 @@
             <div class="grid-stack-item-content widget">
                 <div class="drag-target test"></div>
                 {{ w }}
-                <TestComponent2></TestComponent2>
+                <component :is="w.component"></component>
+                <!-- <component :is="'TestComponent1'"></component> -->
             </div>
         </div>
     </div>
@@ -28,17 +29,12 @@ import 'gridstack/dist/gridstack.min.css';
 import TestComponent1 from './TestComponent1.vue';
 import TestComponent2 from './TestComponent2.vue';
 let count = 0;
-let info = '';
 let grid: GridStack | null = null; // DO NOT use ref(null) as proxies GS will break all logic when comparing structures... see https://github.com/gridstack/gridstack.js/issues/2115
 const items = ref([
-    { x: 0, y: 0, w: 6, h: 10, id: 1 },
-    { x: 6, y: 0, w: 6, h: 5, id: 2 },
-    { x: 6, y: 5, w: 6, h: 5, id: 3 },
-    { x: 0, y: 10, w: 12, h: 3, id: 4 },
-    // { x: 2, y: 4, w: 3 },
-    //     { x: 4, y: 2 },
-    //     { x: 3, y: 1, h: 2 },
-    //     { x: 0, y: 6, w: 2, h: 2 },
+    { component: 'TestComponent1', x: 0, y: 0, w: 6, h: 10, id: 1 },
+    { component: 'TestComponent2', x: 6, y: 0, w: 6, h: 5, id: 2 },
+    { component: 'TestComponent1', x: 6, y: 5, w: 6, h: 5, id: 3 },
+    { component: 'TestComponent2', x: 0, y: 10, w: 12, h: 3, id: 4 },
 ]);
 
 onMounted(() => {
@@ -95,8 +91,8 @@ function addNewWidget() {
 }
 
 .test {
-    width: 20px;
     height: 20px;
-    background: red;
+    background: grey;
+    cursor: move;
 }
 </style>
