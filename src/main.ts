@@ -8,10 +8,23 @@ import TestComponent2 from './components/TestComponent2.vue';
 
 import './App.scss';
 
-const app = createApp(App);
+/* import the fontawesome core */
+import { library } from '@fortawesome/fontawesome-svg-core';
 
-app.use(createPinia()).use(GridLayout);
+/* import font awesome icon component */
+import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome';
 
-app.component('TestComponent1', TestComponent1);
-app.component('TestComponent2', TestComponent2);
-app.mount('#app');
+/* import specific icons */
+import { fas } from '@fortawesome/free-solid-svg-icons';
+// import { faExpand, faCompress } from '@fortawesome/free-solid-svg-icons';
+
+/* add icons to the library */
+library.add(fas);
+
+createApp(App)
+    .use(createPinia())
+    .use(GridLayout)
+    .component('font-awesome-icon', FontAwesomeIcon)
+    .component('TestComponent1', TestComponent1)
+    .component('TestComponent2', TestComponent2)
+    .mount('#app');

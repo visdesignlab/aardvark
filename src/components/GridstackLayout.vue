@@ -12,10 +12,24 @@
             :key="index"
         >
             <div class="grid-stack-item-content card" :id="`container-${w.id}`">
-                <div class="card-header drag-target">
-                    {{ w.component }}
-                    <button @click="toggleFullscreen(`container-${w.id}`)">
-                        full screen
+                <div class="card-header drag-target d-flex">
+                    <span
+                        class="flex-grow-1 d-flex flex-column justify-content-center"
+                        >{{ w.component }}</span
+                    >
+                    <button
+                        class="btn btn-sm btn-outline-dark float-end"
+                        @click="toggleFullscreen(`container-${w.id}`)"
+                    >
+                        <font-awesome-icon
+                            v-if="!isFullScreen"
+                            font-awesome-icon
+                            icon="expand"
+                        />
+                        <font-awesome-icon
+                            v-if="isFullScreen"
+                            icon="compress"
+                        />
                     </button>
                 </div>
                 <div class="card-body">
@@ -28,7 +42,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue';
+import { ref, computed } from 'vue';
 import { onMounted } from 'vue';
 import { GridStack, type GridStackOptions, type DDDragOpt } from 'gridstack';
 import screenfull from 'screenfull';
@@ -38,7 +52,12 @@ import TestComponent2 from './TestComponent2.vue';
 
 // useful reference
 // https://stackoverflow.com/questions/72813397/gridstack-js-vue-3-components
+// let isFullScreen = computed(() => {
+//     console.log('computed');
+//     return document.fullscreenElement !== null;
+// });
 
+let isFullScreen = ref(false);
 let count = 0;
 let grid: GridStack | null = null; // DO NOT use ref(null) as proxies GS will break all logic when comparing structures... see https://github.com/gridstack/gridstack.js/issues/2115
 const items = ref([
@@ -117,10 +136,11 @@ onMounted(() => {
     // });
 });
 
-function toggleFullscreen(elementId: string) {
+async function toggleFullscreen(elementId: string) {
     const element = document.getElementById(elementId);
     if (screenfull.isEnabled && element) {
-        screenfull.toggle(element);
+        await screenfull.toggle(element);
+        isFullScreen.value = screenfull.isFullscreen;
     }
 }
 </script>
