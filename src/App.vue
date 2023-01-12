@@ -1,10 +1,11 @@
 <script setup lang="ts">
-import GridLayoutExample from './components/GridLayout.vue';
+import GridstackLayout from './components/GridstackLayout.vue';
 </script>
 
 <template>
     <div class="grid-container">
-        <GridLayoutExample />
+        <GridstackLayout />
+        <!-- <GridLayoutExample /> -->
     </div>
 </template>
 
