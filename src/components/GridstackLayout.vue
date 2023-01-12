@@ -14,28 +14,32 @@
             <div class="grid-stack-item-content widget">
                 <div class="drag-target test"></div>
                 {{ w }}
-                <TestComponent1></TestComponent1>
+                <TestComponent2></TestComponent2>
             </div>
         </div>
     </div>
 </template>
 
 <script setup lang="ts">
-// import VueGridLayout from 'vue-grid-layout';
+import { ref } from 'vue';
 import { onMounted } from 'vue';
 import { GridStack, type GridStackOptions, type DDDragOpt } from 'gridstack';
 import 'gridstack/dist/gridstack.min.css';
 import TestComponent1 from './TestComponent1.vue';
+import TestComponent2 from './TestComponent2.vue';
 let count = 0;
 let info = '';
 let grid: GridStack | null = null; // DO NOT use ref(null) as proxies GS will break all logic when comparing structures... see https://github.com/gridstack/gridstack.js/issues/2115
-const items = [
-    { x: 2, y: 1, h: 2 },
-    { x: 2, y: 4, w: 3 },
-    { x: 4, y: 2 },
-    { x: 3, y: 1, h: 2 },
-    { x: 0, y: 6, w: 2, h: 2 },
-];
+const items = ref([
+    { x: 0, y: 0, w: 6, h: 10, id: 1 },
+    { x: 6, y: 0, w: 6, h: 5, id: 2 },
+    { x: 6, y: 5, w: 6, h: 5, id: 3 },
+    { x: 0, y: 10, w: 12, h: 3, id: 4 },
+    // { x: 2, y: 4, w: 3 },
+    //     { x: 4, y: 2 },
+    //     { x: 3, y: 1, h: 2 },
+    //     { x: 0, y: 6, w: 2, h: 2 },
+]);
 
 onMounted(() => {
     // let args: GridStackOptions;
@@ -48,15 +52,27 @@ onMounted(() => {
             handle: '.drag-target',
         },
     });
-
-    grid.on('dragstart', (event: Event, element: any, ...args: any[]) => {
-        console.log({ event, element, args });
-        // event.preventDefault();
+    grid.on('change', (event: any, changeItems: any) => {
+        changeItems.forEach((item: any) => {
+            var widget = items.value.find((w) => w.id == item.id);
+            if (!widget) {
+                alert('Widget not found: ' + item.id);
+                return;
+            }
+            widget.x = item.x;
+            widget.y = item.y;
+            widget.w = item.w;
+            widget.h = item.h;
+        });
     });
-    grid.on('dragstop', function (_event: any, element: any) {
-        const node = element.gridstackNode;
-        info = `you just dragged node #${node.id} to ${node.x},${node.y} – good job!`;
-    });
+    // grid.on('dragstart', (event: Event, element: any, ...args: any[]) => {
+    //     console.log({ event, element, args });
+    //     // event.preventDefault();
+    // });
+    // grid.on('dragstop', function (_event: any, element: any) {
+    //     const node = element.gridstackNode;
+    //     info = `you just dragged node #${node.id} to ${node.x},${node.y} – good job!`;
+    // });
 });
 
 function addNewWidget() {

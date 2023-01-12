@@ -8,13 +8,13 @@ import { ref } from 'vue';
 let count = ref(0);
 
 function increment() {
-    console.log('increment!');
-    count.value++;
+    console.log('add 10!');
+    count.value += 10;
 }
 </script>
 
 <style scoped lange="scss">
 div {
-    background: tomato;
+    background: steelblue;
 }
 </style>

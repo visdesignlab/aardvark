@@ -5,13 +5,11 @@ import GridstackLayout from './components/GridstackLayout.vue';
 <template>
     <div class="grid-container">
         <GridstackLayout />
-        <!-- <GridLayoutExample /> -->
     </div>
 </template>
 
 <style scoped>
 .grid-container {
-    width: 100vw;
-    height: 100vh;
+    background: bisque;
 }
 </style>
