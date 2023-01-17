@@ -1,8 +1,6 @@
 import { createApp } from 'vue';
 import { createPinia } from 'pinia';
 import App from './App.vue';
-import GridLayout from 'vue3-drr-grid-layout';
-import 'vue3-drr-grid-layout/dist/style.css';
 import TestComponent1 from './components/TestComponent1.vue';
 import TestComponent2 from './components/TestComponent2.vue';
 
@@ -23,7 +21,6 @@ library.add(fas);
 
 createApp(App)
     .use(createPinia())
-    .use(GridLayout)
     .component('font-awesome-icon', FontAwesomeIcon)
     .component('TestComponent1', TestComponent1)
     .component('TestComponent2', TestComponent2)

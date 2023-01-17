@@ -19,8 +19,7 @@
         "gridstack": "^7.2.0",
         "pinia": "^2.0.28",
         "screenfull": "^6.0.2",
-        "vue": "^3.2.45",
-        "vue3-drr-grid-layout": "^1.9.7"
+        "vue": "^3.2.45"
     },
     "devDependencies": {
         "@rushstack/eslint-patch": "^1.1.4",
