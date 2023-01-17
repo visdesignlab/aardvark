@@ -112,6 +112,7 @@ onMounted(() => {
         draggable: {
             handle: '.drag-target',
         },
+        margin: 7,
     });
     grid.on('change', (event: any, changeItems: any) => {
         changeItems.forEach((item: any) => {
