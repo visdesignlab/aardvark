@@ -34,7 +34,7 @@
                 </div>
                 <div class="card-body">
                     {{ w }}
-                    <component :is="w.component"></component>
+                    <component :is="w.component" v-bind="w.props"></component>
                 </div>
             </div>
         </div>
@@ -42,13 +42,16 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue';
+import { ref, computed, reactive } from 'vue';
 import { onMounted } from 'vue';
 import { GridStack, type GridStackOptions, type DDDragOpt } from 'gridstack';
 import screenfull from 'screenfull';
 import 'gridstack/dist/gridstack.min.css';
 import TestComponent1 from './TestComponent1.vue';
 import TestComponent2 from './TestComponent2.vue';
+import { useCounterStore } from '@/stores/counter';
+
+const counter = useCounterStore();
 
 // useful reference
 // https://stackoverflow.com/questions/72813397/gridstack-js-vue-3-components
@@ -69,6 +72,7 @@ const items = ref([
         h: 10,
         id: 1,
         fullscreen: false,
+        props: { counterState: counter },
     },
     {
         component: 'TestComponent2',
@@ -87,6 +91,7 @@ const items = ref([
         h: 5,
         id: 3,
         fullscreen: false,
+        props: { counterState: counter },
     },
     {
         component: 'TestComponent2',
