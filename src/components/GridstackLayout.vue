@@ -32,7 +32,7 @@
                         />
                     </button>
                 </div>
-                <div class="card-body">
+                <div class="card-body scroll-y">
                     {{ w }}
                     <component :is="w.component" v-bind="w.props"></component>
                 </div>
@@ -159,5 +159,9 @@ async function toggleFullscreen(elementId: string) {
 
 .drag-target {
     cursor: move;
+}
+
+.scroll-y {
+    overflow-y: scroll;
 }
 </style>
