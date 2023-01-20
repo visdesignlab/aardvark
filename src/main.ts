@@ -3,6 +3,7 @@ import { createPinia } from 'pinia';
 import App from './App.vue';
 import TestComponent1 from './components/TestComponent1.vue';
 import TestComponent2 from './components/TestComponent2.vue';
+import HorizonChart from './components/HorizonChart.vue';
 
 import './App.scss';
 
@@ -24,4 +25,5 @@ createApp(App)
     .component('font-awesome-icon', FontAwesomeIcon)
     .component('TestComponent1', TestComponent1)
     .component('TestComponent2', TestComponent2)
+    .component('HorizonChart', HorizonChart)
     .mount('#app');

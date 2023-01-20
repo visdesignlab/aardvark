@@ -49,9 +49,14 @@ import screenfull from 'screenfull';
 import 'gridstack/dist/gridstack.min.css';
 import TestComponent1 from './TestComponent1.vue';
 import TestComponent2 from './TestComponent2.vue';
+import HorizonChart from './HorizonChart.vue';
 import { useCounterStore } from '@/stores/counter';
+import { useTemporalPoints } from '@/stores/temporalPoints';
+import { useListOfTemporalPoints } from '@/stores/listOfTemporalPoints';
 
 const counter = useCounterStore();
+// const temporalPoints = useTemporalPoints();
+const lisfOfTemporalPoints = useListOfTemporalPoints();
 
 // useful reference
 // https://stackoverflow.com/questions/72813397/gridstack-js-vue-3-components
@@ -65,14 +70,26 @@ let count = 0;
 let grid: GridStack | null = null; // DO NOT use ref(null) as proxies GS will break all logic when comparing structures... see https://github.com/gridstack/gridstack.js/issues/2115
 const items = ref([
     {
-        component: 'TestComponent1',
+        component: 'HorizonChart',
         x: 0,
         y: 0,
         w: 6,
         h: 10,
         id: 1,
         fullscreen: false,
-        props: { counterState: counter },
+        props: {
+            chartWidth: 200,
+            chartHeight: 50,
+            dataStore: lisfOfTemporalPoints.currentList,
+            attrKey: 'x',
+            info: '',
+            settings: {
+                baseline: 0,
+                modHeight: 5,
+                mirrorNegative: false,
+                includeBinLine: true,
+            },
+        },
     },
     {
         component: 'TestComponent2',
@@ -162,6 +179,6 @@ async function toggleFullscreen(elementId: string) {
 }
 
 .scroll-y {
-    overflow-y: scroll;
+    overflow-y: auto;
 }
 </style>
