@@ -33,7 +33,6 @@
                     </button>
                 </div>
                 <div class="card-body scroll-y">
-                    {{ w }}
                     <component :is="w.component" v-bind="w.props"></component>
                 </div>
             </div>
@@ -92,7 +91,7 @@ const items = ref([
         },
     },
     {
-        component: 'TestComponent2',
+        component: 'DatasetSelector',
         x: 6,
         y: 0,
         w: 6,
@@ -137,6 +136,7 @@ onMounted(() => {
         margin: 7,
     });
     grid.on('change', (event: any, changeItems: any) => {
+        if (changeItems == null) return;
         changeItems.forEach((item: any) => {
             var widget = items.value.find((w) => w.id == item.id);
             if (!widget) {
