@@ -1,17 +1,19 @@
 import { ref } from 'vue';
 import { defineStore } from 'pinia';
 export interface Lineage {
-    lineageId: string; // should be equal to the founder cell trackId
+    lineageId: string; // should be equal to the founder trackId
+    founder: Track;
     attrNum: NumericalAttributes;
     attrStr: StringAttributes;
-    // todo --- decide on actual structure of hierarchy.
 }
 
 export interface Track {
-    trackId: string;
+    trackId: string; // unique id for the cell track
     attrNum: NumericalAttributes;
     attrStr: StringAttributes;
     cells: Cell[];
+    parentId: string; // id of parent cell, if one exists
+    children: Track[]; // daughter tracks if they exist
 }
 
 export interface Cell {
@@ -52,11 +54,18 @@ export const useCellMetaData = defineStore('cellMetaData', () => {
     const trackArray = ref<Track[]>();
     const trackMap = ref<Map<string, Track>>();
     const lineageArray = ref<Lineage[]>();
+    const lineageMap = ref<Map<string, Lineage>>();
 
     function init(rawData: AnyAttributes[], columnHeaders: string[]): void {
+        console.log('init');
         headers.value = columnHeaders;
+        console.log('header', headers.value);
         initCells(rawData);
+        console.log('cells', cellArray.value);
         initTracks();
+        console.log('tracks', trackArray.value);
+        initLineages();
+        console.log('lineages', lineageArray.value);
     }
 
     function initCells(rawData: AnyAttributes[]): void {
@@ -70,6 +79,11 @@ export const useCellMetaData = defineStore('cellMetaData', () => {
                 const val = row[key];
                 if (key === headerKeys.value.trackId) {
                     trackId = val.toString();
+                    continue;
+                }
+                if (key === headerKeys.value.parentId) {
+                    // always force parent id to be a string
+                    attrStr[key] = val?.toString() ?? '';
                     continue;
                 }
                 switch (typeof val) {
@@ -111,11 +125,14 @@ export const useCellMetaData = defineStore('cellMetaData', () => {
         for (const cell of cellArray.value) {
             const trackId = cell.trackId;
             if (!trackMap.value.has(trackId)) {
+                const parentId = cell.attrStr[headerKeys.value.parentId] ?? '';
                 const track: Track = {
                     trackId,
+                    parentId,
                     attrNum: {},
                     attrStr: {},
                     cells: [],
+                    children: [],
                 };
 
                 trackMap.value.set(trackId, track);
@@ -129,9 +146,73 @@ export const useCellMetaData = defineStore('cellMetaData', () => {
     function computeTrackLevelAttributes(): void {
         if (trackArray.value == null) return;
         for (const track of trackArray.value) {
-            track.attrNum['length'] = track.cells.length;
+            track.attrNum['track_length'] = track.cells.length;
         }
     }
 
-    return { headerKeys, headers, cellArray, trackArray, lineageArray, init };
+    function initLineages(): void {
+        if (trackArray.value == null) return;
+        if (trackMap.value == null) return;
+        // assumes that values are already sorted by time.
+        lineageArray.value = [];
+        lineageMap.value = new Map<string, Lineage>();
+        // this populates the children attribute of the tracks
+        // as well as building the lineage data list/map
+        for (const track of trackArray.value) {
+            const parentId = track.parentId;
+            if (parentId == '' || parentId == track.trackId) {
+                // founder cell
+                const lineageId = track.trackId;
+                const lineage: Lineage = {
+                    lineageId,
+                    founder: track,
+                    attrNum: {},
+                    attrStr: {},
+                };
+                lineageArray.value.push(lineage);
+                lineageMap.value.set(lineageId, lineage);
+            } else {
+                // daughter cell
+                const parentTrack = trackMap.value.get(parentId);
+                parentTrack?.children.push(track);
+            }
+        }
+        computeLineageLevelAttributes();
+    }
+
+    function computeLineageLevelAttributes(): void {
+        if (lineageArray.value == null) return;
+
+        for (const lineage of lineageArray.value) {
+            lineage.attrNum['cell_count'] = computeCellCount(lineage.founder);
+            lineage.attrNum['generations'] = computeTreeHeight(lineage.founder);
+        }
+    }
+
+    function computeCellCount(track: Track): number {
+        let childrenCount = 0;
+        for (const child of track.children) {
+            childrenCount += computeCellCount(child);
+        }
+        return 1 + childrenCount;
+    }
+
+    function computeTreeHeight(track: Track): number {
+        let maxChildHeight = 0;
+        for (const child of track.children) {
+            maxChildHeight = Math.max(maxChildHeight, computeTreeHeight(child));
+        }
+        return 1 + maxChildHeight;
+    }
+
+    return {
+        headerKeys,
+        headers,
+        cellArray,
+        trackArray,
+        trackMap,
+        lineageArray,
+        lineageMap,
+        init,
+    };
 });
