@@ -1,32 +1,27 @@
 <template>
-    <svg :width="chartWidth" :height="chartHeight">
-        <clipPath :id="clipPathId">
-            <rect x="0" y="0" :width="chartWidth" :height="chartHeight"></rect>
-        </clipPath>
-        <rect x="0" y="0" :width="chartWidth" :height="chartHeight">
-            <title>Info: {{ info }}</title>
-        </rect>
+    <!-- <svg :width="chartWidth" :height="chartHeight"> -->
+    <clipPath :id="clipPathId">
+        <rect x="0" y="0" :width="chartWidth" :height="chartHeight"></rect>
+    </clipPath>
+    <rect x="0" y="0" :width="chartWidth" :height="chartHeight">
+        <title>Info: {{ info }}</title>
+    </rect>
 
-        <g @mousemove="debug" :clip-path="`url(#${clipPathId})`">
-            <path
-                :class="settings.includeBinLine && 'stroke-thin'"
-                v-for="(info, i) in offsetInfo"
-                :key="i"
-                :transform="info.transform"
-                :d="areaPath"
-                :fill="info.color"
-            ></path>
-            <rect></rect>
-        </g>
-    </svg>
+    <g @mousemove="debug" :clip-path="`url(#${clipPathId})`">
+        <path
+            :class="settings.includeBinLine && 'stroke-thin'"
+            v-for="(info, i) in offsetInfo"
+            :key="i"
+            :transform="info.transform"
+            :d="areaPath"
+            :fill="info.color"
+        ></path>
+        <rect></rect>
+    </g>
+    <!-- </svg> -->
 </template>
 
 <script lang="ts">
-import type {
-    TemporalPoint,
-    TemporalPoints,
-    useTemporalPoints,
-} from '@/stores/temporalPoints';
 import { mapStores } from 'pinia';
 import { computed, defineComponent, ref } from 'vue';
 import { extent as d3Extent } from 'd3-array';
@@ -47,12 +42,9 @@ export default defineComponent({
     props: {
         chartWidth: { type: Number, required: true },
         chartHeight: { type: Number, required: true },
-        // data: { type: Array as () => TemporalPoint[], required: true },
-        dataStore: {
-            type: Object,
-            required: true,
-        },
-        attrKey: { type: String, required: true },
+        data: { type: Array as () => any[], required: true },
+        timeAccessor: { type: Function, required: true },
+        valueAccessor: { type: Function, required: true },
         settings: {
             type: Object as () => HorizonChartSettings,
             default: () => {
@@ -68,15 +60,14 @@ export default defineComponent({
         maxColors: { type: Number, default: 6 },
     },
     setup(props) {
-        console.log({ points: props.dataStore.points });
         function debug(): void {
             console.log(props.info);
         }
         function getReasonableModH(): number {
             const [minVal, maxVal] = d3Extent(
-                props.dataStore.points,
-                (point: TemporalPoint) => point.attributes[props.attrKey]
-            ) as [number, number];
+                props.data,
+                props.valueAccessor
+            ) as unknown as [number, number];
             return (maxVal - minVal) / props.maxColors;
         }
         const defaultSettings: HorizonChartSettings = {
@@ -92,9 +83,9 @@ export default defineComponent({
 
         const scaleX = computed(() => {
             const extent = d3Extent(
-                props.dataStore.points as TemporalPoint[],
-                (point: TemporalPoint) => point.time
-            ) as [number, number];
+                props.data,
+                props.timeAccessor
+            ) as unknown as [number, number];
             return scaleLinear().domain(extent).range([0, props.chartWidth]);
         });
         const scaleY = computed(() => {
@@ -125,16 +116,14 @@ export default defineComponent({
         const clipPathId = ref(uuidv4());
 
         const areaGen = computed(() => {
-            return area<TemporalPoint>()
-                .x((d: TemporalPoint) => scaleX.value(d.time))
-                .y1((d: TemporalPoint) =>
-                    scaleY.value(d.attributes[props.attrKey])
-                )
+            return area<any>()
+                .x((d: any) => scaleX.value(props.timeAccessor(d)))
+                .y1((d: any) => scaleY.value(props.valueAccessor(d)))
                 .y0(scaleY.value(mergedSettings.value.baseline));
         });
 
         const areaPath = computed(() => {
-            const path = areaGen.value(props.dataStore.points);
+            const path = areaGen.value(props.data);
             console.log({ path });
             return path;
         });
@@ -142,9 +131,8 @@ export default defineComponent({
         const offsetInfo = computed<{ transform: string; color: string }[]>(
             () => {
                 const offsetInfo: { transform: string; color: string }[] = [];
-                const [minVal, maxVal] = d3Extent(
-                    props.dataStore.points,
-                    (point: TemporalPoint) => point.attributes[props.attrKey]
+                const [minVal, maxVal] = d3Extent(props.data, (point: any) =>
+                    props.valueAccessor(point)
                 ) as [number, number];
                 const positiveCount = Math.ceil(
                     (maxVal - mergedSettings.value.baseline) /

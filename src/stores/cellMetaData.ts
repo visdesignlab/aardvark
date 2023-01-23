@@ -56,6 +56,7 @@ export const useCellMetaData = defineStore('cellMetaData', () => {
     const trackMap = ref<Map<string, Track>>();
     const lineageArray = ref<Lineage[]>();
     const lineageMap = ref<Map<string, Lineage>>();
+    const selectedLineage = ref<Lineage>();
 
     const cellAttributeHeaders = computed(() => {
         if (!dataInitialized.value) return [];
@@ -136,6 +137,7 @@ export const useCellMetaData = defineStore('cellMetaData', () => {
         initCells(rawData);
         initTracks();
         initLineages();
+        selectedLineage.value = lineageArray?.value?.[0];
         dataInitialized.value = true;
     }
 
@@ -276,6 +278,14 @@ export const useCellMetaData = defineStore('cellMetaData', () => {
         return 1 + maxChildHeight;
     }
 
+    function getTime(cell: Cell): number {
+        return cell.attrNum[headerKeys.value.time];
+    }
+
+    function getNumAttr(obj: Cell | Track | Lineage, attr: string): number {
+        return obj.attrNum[attr];
+    }
+
     return {
         headerKeys,
         headers,
@@ -288,6 +298,9 @@ export const useCellMetaData = defineStore('cellMetaData', () => {
         cellAttributeHeaders,
         trackAttributeHeaders,
         lineageAttributeHeaders,
+        selectedLineage,
         init,
+        getTime,
+        getNumAttr,
     };
 });

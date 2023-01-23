@@ -6,6 +6,7 @@
         :headers="headers"
         :items="items"
         fixedHeader="true"
+        @click-row="selectRow"
     ></EasyDataTable>
     <NoDataSplash></NoDataSplash>
     <!-- </div> -->
@@ -13,7 +14,8 @@
 
 <script setup lang="ts">
 import { ref, computed } from 'vue';
-import { useCellMetaData } from '@/stores/cellMetaData';
+import { useCellMetaData, type Lineage } from '@/stores/cellMetaData';
+import type { ClickRowArgument } from 'vue3-easy-data-table';
 const cellMetaData = useCellMetaData();
 
 const props = defineProps<{ attributeLevel: 'cell' | 'track' | 'lineage' }>();
@@ -41,6 +43,12 @@ const items = computed(() => {
     }
     return [];
 });
+
+function selectRow(item: ClickRowArgument): void {
+    if (props.attributeLevel == 'lineage') {
+        cellMetaData.selectedLineage = item as Lineage;
+    }
+}
 </script>
 
 <style scoped lange="scss">

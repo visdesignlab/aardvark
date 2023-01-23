@@ -79,11 +79,23 @@ const items = ref([
         fullscreen: false,
     },
     {
-        component: 'SimpleTable',
+        component: 'LooneageView',
         x: 0,
         y: 3,
-        w: 4,
+        w: 12,
         h: 10,
+        id: id++,
+        fullscreen: false,
+        props: {
+            attrKey: 'Dry Mass (pg)',
+        },
+    },
+    {
+        component: 'SimpleTable',
+        x: 0,
+        y: 13,
+        w: 4,
+        h: 4,
         id: id++,
         fullscreen: false,
         props: {
@@ -93,9 +105,9 @@ const items = ref([
     {
         component: 'SimpleTable',
         x: 4,
-        y: 3,
+        y: 13,
         w: 4,
-        h: 10,
+        h: 4,
         id: id++,
         fullscreen: false,
         props: {
@@ -105,9 +117,9 @@ const items = ref([
     {
         component: 'SimpleTable',
         x: 8,
-        y: 3,
+        y: 13,
         w: 4,
-        h: 10,
+        h: 4,
         id: id++,
         fullscreen: false,
         props: {
