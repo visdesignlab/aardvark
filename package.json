@@ -30,7 +30,9 @@
         "pinia": "^2.0.28",
         "screenfull": "^6.0.2",
         "uuid": "^9.0.0",
-        "vue": "^3.2.45"
+        "vue": "^3.2.45",
+        "vue-cheetah-grid": "^1.8.6",
+        "vue3-easy-data-table": "^1.5.27"
     },
     "devDependencies": {
         "@rushstack/eslint-patch": "^1.1.4",

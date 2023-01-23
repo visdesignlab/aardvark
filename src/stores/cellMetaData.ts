@@ -1,4 +1,4 @@
-import { ref } from 'vue';
+import { ref, computed } from 'vue';
 import { defineStore } from 'pinia';
 export interface Lineage {
     lineageId: string; // should be equal to the founder trackId
@@ -50,22 +50,93 @@ export const useCellMetaData = defineStore('cellMetaData', () => {
 
     // we might want to wrap these inside a container, so it's convenient to create a list of them.
     // e.g. there's a different table for each condition or each well. hmm maybe start with this and add later.
+    const dataInitialized = ref(false);
     const cellArray = ref<Cell[]>();
     const trackArray = ref<Track[]>();
     const trackMap = ref<Map<string, Track>>();
     const lineageArray = ref<Lineage[]>();
     const lineageMap = ref<Map<string, Lineage>>();
 
+    const cellAttributeHeaders = computed(() => {
+        if (!dataInitialized.value) return [];
+        if (cellArray.value == null) return [];
+        const headers = [
+            { text: 'Row ID', value: 'rowId', sortable: true },
+            { text: 'Track ID', value: 'trackId', sortable: true },
+        ];
+        const firstCell = cellArray.value[0];
+        for (const key in firstCell.attrNum) {
+            headers.push({
+                text: key,
+                value: `attrNum.${key}`,
+                sortable: true,
+            });
+        }
+        for (const key in firstCell.attrStr) {
+            headers.push({
+                text: key,
+                value: `attrStr.${key}`,
+                sortable: true,
+            });
+        }
+        return headers;
+    });
+
+    const trackAttributeHeaders = computed(() => {
+        if (!dataInitialized.value) return [];
+        if (trackArray.value == null) return [];
+        const headers = [
+            { text: 'Track ID', value: 'trackId', sortable: true },
+            { text: 'Parent ID', value: 'parentId', sortable: true },
+        ];
+        const firstTrack = trackArray.value[0];
+        for (const key in firstTrack.attrNum) {
+            headers.push({
+                text: key,
+                value: `attrNum.${key}`,
+                sortable: true,
+            });
+        }
+        for (const key in firstTrack.attrStr) {
+            headers.push({
+                text: key,
+                value: `attrStr.${key}`,
+                sortable: true,
+            });
+        }
+        return headers;
+    });
+
+    const lineageAttributeHeaders = computed(() => {
+        if (!dataInitialized.value) return [];
+        if (lineageArray.value == null) return [];
+        const headers = [
+            { text: 'Lineage ID', value: 'lineageId', sortable: true },
+        ];
+        const firstLineage = lineageArray.value[0];
+        for (const key in firstLineage.attrNum) {
+            headers.push({
+                text: key,
+                value: `attrNum.${key}`,
+                sortable: true,
+            });
+        }
+        for (const key in firstLineage.attrStr) {
+            headers.push({
+                text: key,
+                value: `attrStr.${key}`,
+                sortable: true,
+            });
+        }
+        return headers;
+    });
+
     function init(rawData: AnyAttributes[], columnHeaders: string[]): void {
-        console.log('init');
         headers.value = columnHeaders;
-        console.log('header', headers.value);
         initCells(rawData);
-        console.log('cells', cellArray.value);
         initTracks();
-        console.log('tracks', trackArray.value);
         initLineages();
-        console.log('lineages', lineageArray.value);
+        dataInitialized.value = true;
     }
 
     function initCells(rawData: AnyAttributes[]): void {
@@ -208,11 +279,15 @@ export const useCellMetaData = defineStore('cellMetaData', () => {
     return {
         headerKeys,
         headers,
+        dataInitialized,
         cellArray,
         trackArray,
         trackMap,
         lineageArray,
         lineageMap,
+        cellAttributeHeaders,
+        trackAttributeHeaders,
+        lineageAttributeHeaders,
         init,
     };
 });
