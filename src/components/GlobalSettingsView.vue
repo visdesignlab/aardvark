@@ -1,0 +1,61 @@
+<template>
+    <div class="d-flex ps-1 pt-1 pb-1 h-100">
+        <div class="btn-group-vertical justify-content-start" role="group">
+            <button
+                v-for="setting in globalSettings.settingsPages"
+                :key="setting.id"
+                :title="setting.name"
+                :class="`flex-grow-0 btn btn-lg ${
+                    setting.show ? 'btn-dark' : 'btn-light'
+                }`"
+                @click="() => globalSettings.toggleShown(setting)"
+            >
+                <font-awesome-icon :icon="`fa-solid ${setting.faKey}`" />
+            </button>
+        </div>
+        <Transition name="slide-right">
+            <div
+                v-if="globalSettings.activePage != null"
+                class="settings-panel ms-1"
+            >
+                <h5 class="text-center">
+                    {{ globalSettings.activePage.name }}
+                </h5>
+                <component
+                    :is="globalSettings.activePage.component"
+                ></component>
+            </div>
+        </Transition>
+    </div>
+</template>
+
+<script setup lang="ts">
+import { useGlobalSettings } from '@/stores/globalSettings';
+const globalSettings = useGlobalSettings();
+</script>
+
+<style scoped lang="scss">
+$panel-width: 300px;
+
+.flex-grow-0 {
+    flex-grow: 0;
+}
+
+.settings-panel {
+    width: $panel-width;
+    position: relative;
+    left: 0px;
+}
+
+.slide-right-enter-active,
+.slide-right-leave-active {
+    transition: all 0.3s ease;
+    left: 0px;
+}
+
+.slide-right-enter-from,
+.slide-right-leave-to {
+    opacity: 0.05;
+    left: -$panel-width;
+}
+</style>

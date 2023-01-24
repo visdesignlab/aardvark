@@ -4,6 +4,7 @@ add option to save grid to indexed db
 look into using track library
 
 cleanup code
+dark mode
 
 scale y more efficiently
 add simple image viewer

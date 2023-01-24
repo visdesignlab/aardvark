@@ -46,137 +46,20 @@ import { onMounted } from 'vue';
 import { GridStack, type GridStackOptions, type DDDragOpt } from 'gridstack';
 import screenfull from 'screenfull';
 import 'gridstack/dist/gridstack.min.css';
-// import TestComponent1 from './TestComponent1.vue';
-// import TestComponent2 from './TestComponent2.vue';
-// import HorizonChart from './HorizonChart.vue';
-// impor;t { useCounterStore } from '@/stores/counter';
-// import { useTemporalPoints } from '@/stores/temporalPoints';
-// import { useListOfTemporalPoints } from '@/stores/listOfTemporalPoints'
 import { useLayoutConfig } from '@/stores/layoutConfig';
-
-// const counter = useCounterStore();
-// const temporalPoints = useTemporalPoints();
-// const lisfOfTemporalPoints = useListOfTemporalPoints();
 const layoutConfig = useLayoutConfig();
 // useful reference
 // https://stackoverflow.com/questions/72813397/gridstack-js-vue-3-components
-// let isFullScreen = computed(() => {
-//     console.log('computed');
-//     return document.fullscreenElement !== null;
-// });
 
 let isFullScreen = ref(false);
-let count = 0;
 let grid: GridStack | null = null; // DO NOT use ref(null) as proxies GS will break all logic when comparing structures... see https://github.com/gridstack/gridstack.js/issues/2115
-let id = 0;
-// const items = ref([
-//     {
-//         component: 'DatasetSelector',
-//         x: 0,
-//         y: 0,
-//         w: 12,
-//         h: 3,
-//         id: id++,
-//         fullscreen: false,
-//     },
-//     {
-//         component: 'LooneageView',
-//         x: 0,
-//         y: 3,
-//         w: 12,
-//         h: 10,
-//         id: id++,
-//         fullscreen: false,
-//         props: {
-//             // attrKey: 'Dry Mass (pg)',
-//             attrKey: 'mass',
-//         },
-//     },
-//     {
-//         component: 'SimpleTable',
-//         x: 0,
-//         y: 13,
-//         w: 4,
-//         h: 4,
-//         id: id++,
-//         fullscreen: false,
-//         props: {
-//             attributeLevel: 'lineage',
-//         },
-//     },
-//     {
-//         component: 'SimpleTable',
-//         x: 4,
-//         y: 13,
-//         w: 4,
-//         h: 4,
-//         id: id++,
-//         fullscreen: false,
-//         props: {
-//             attributeLevel: 'track',
-//         },
-//     },
-//     {
-//         component: 'SimpleTable',
-//         x: 8,
-//         y: 13,
-//         w: 4,
-//         h: 4,
-//         id: id++,
-//         fullscreen: false,
-//         props: {
-//             attributeLevel: 'cell',
-//         },
-//     },
-// {
-//     component: 'TestComponent1',
-//     x: 6,
-//     y: 5,
-//     w: 6,
-//     h: 5,
-//     id: 3,
-//     fullscreen: false,
-//     props: { counterState: counter },
-// },
-// {
-//     component: 'TestComponent2',
-//     x: 0,
-//     y: 10,
-//     w: 12,
-//     h: 3,
-//     id: 4,
-//     fullscreen: false,
-// },
-// {
-//     component: 'HorizonChart',
-//     x: 0,
-//     y: 10,
-//     w: 6,
-//     h: 10,
-//     id: 1,
-//     fullscreen: false,
-//     props: {
-//         chartWidth: 200,
-//         chartHeight: 50,
-//         dataStore: lisfOfTemporalPoints.currentList,
-//         attrKey: 'x',
-//         info: '',
-//         settings: {
-//             baseline: 0,
-//             modHeight: 5,
-//             mirrorNegative: false,
-//             includeBinLine: true,
-//         },
-//     },
-// },
-// ]);
 
 onMounted(() => {
     // let args: GridStackOptions;
     grid = GridStack.init({
         // DO NOT user grid.value = GridStack.init(), see above
         float: true,
-        cellHeight: '70px',
+        cellHeight: '50px',
         minRow: 1,
         resizable: {
             handles: 'e,se,s,w',
@@ -186,19 +69,14 @@ onMounted(() => {
         },
         margin: 7,
     });
+
     grid.on('change', (event: any, changeItems: any) => {
-        // if (changeItems == null) return;
-        // changeItems.forEach((item: any) => {
-        //     var widget = items.value.find((w) => w.id == item.id);
-        //     if (!widget) {
-        //         alert('Widget not found: ' + item.id);
-        //         return;
-        //     }
-        //     widget.x = item.x;
-        //     widget.y = item.y;
-        //     widget.w = item.w;
-        //     widget.h = item.h;
-        // });
+        if (changeItems == null) return;
+        for (let changedItem of changeItems) {
+            layoutConfig.updateItem(changedItem);
+        }
+        console.log({ changeItems });
+        console.log(layoutConfig.currentLayout.items);
     });
     // grid.on('dragstart', (event: Event, element: any, ...args: any[]) => {
     //     console.log({ event, element, args });
@@ -220,11 +98,6 @@ async function toggleFullscreen(elementId: string) {
 </script>
 
 <style scoped lang="scss">
-@import '../App.scss';
-.widget {
-    background: $gray-100;
-}
-
 .drag-target {
     cursor: move;
 }
