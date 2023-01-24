@@ -52,7 +52,7 @@ export default defineComponent({
                     baseline: 0,
                     modHeight: null,
                     mirrorNegative: false,
-                    includeBinLine: false,
+                    includeBinLine: true,
                 };
             },
         },
@@ -74,7 +74,7 @@ export default defineComponent({
             baseline: 0,
             modHeight: getReasonableModH(),
             mirrorNegative: false,
-            includeBinLine: false,
+            includeBinLine: true,
         };
 
         const mergedSettings = computed(() => {

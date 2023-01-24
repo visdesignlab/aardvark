@@ -1,11 +1,9 @@
 <template>
     <NoDataSplash></NoDataSplash>
-    <div ref="looneageContainer">
-        <svg
-            v-if="cellMetaData.dataInitialized"
-            :width="containerWidth"
-            :height="containerHeight"
-        >
+    <div v-if="cellMetaData.dataInitialized" ref="looneageContainer">
+        <button @click="verticalScale -= 0.1">decrease</button>
+        <button @click="verticalScale += 0.1">increase</button>
+        <svg :width="containerWidth" :height="containerHeight">
             <g :transform="`translate(0,${-extent[1]})`">
                 <g
                     v-for="node in layoutRoot.descendants()"
@@ -62,16 +60,26 @@ interface LooneageViewProps {
     attrKey: string;
     // containerWidth: number;
     encodeChildSplit: boolean;
-    spacing: number;
-    rowHeight: number;
+    initialSpacing: number;
+    initialRowHeight: number;
     horizonChartSettings: HorizonChartSettings;
 }
 
 const props = withDefaults(defineProps<LooneageViewProps>(), {
     // containerWidth: 800,
     encodeChildSplit: false,
-    spacing: 4,
-    rowHeight: 16,
+    initialSpacing: 4,
+    initialRowHeight: 16,
+});
+
+const verticalScale = ref(1);
+
+const rowHeight = computed(() => {
+    return props.initialRowHeight * verticalScale.value;
+});
+
+const spacing = computed(() => {
+    return props.initialSpacing * verticalScale.value;
 });
 const { width: containerWidth } = useElementSize(looneageContainer);
 // const containerWidth = computed(() => {
@@ -98,9 +106,9 @@ const layoutRoot = computed<LayoutNode<Track>>(() => {
     return flextree<Track>({
         nodeSize: (node: LayoutNode<Track>) => {
             const timeWidth = getWidth(node.data);
-            return [props.rowHeight, timeWidth];
+            return [rowHeight.value, timeWidth];
         },
-        spacing: props.spacing,
+        spacing: spacing.value,
     })(tree.value);
 });
 
@@ -157,7 +165,7 @@ const extent = computed<[number, number, number, number]>(() => {
 
     const maxY = d3Max(
         layoutRoot.value.descendants(),
-        (n: LayoutNode<Track>) => n.x + props.rowHeight
+        (n: LayoutNode<Track>) => n.x + rowHeight.value
     ) as unknown as number;
 
     return [minX, minY, maxX, maxY];

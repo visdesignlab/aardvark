@@ -1,0 +1,19 @@
+add layout to store
+add global toolbar
+add option to save grid to indexed db
+look into using track library
+
+
+add simple image viewer
+
+add option to filter out parts of tree
+add option to select attribute in looneage
+debug reasonable mod height
+add images to looneage view
+add extra charts to looneage view
+add option to view multiple lineages?
+
+create components
+* folder table component (lineage -> track -> cells)
+* simple image viewer
+* general vis? scatterplot / violin plots?

@@ -87,7 +87,8 @@ const items = ref([
         id: id++,
         fullscreen: false,
         props: {
-            attrKey: 'Dry Mass (pg)',
+            // attrKey: 'Dry Mass (pg)',
+            attrKey: 'mass',
         },
     },
     {
