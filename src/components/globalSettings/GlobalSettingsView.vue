@@ -16,11 +16,12 @@
         <Transition name="slide-right">
             <div
                 v-if="globalSettings.activePage != null"
-                class="settings-panel ms-1"
+                class="settings-panel ms-2"
             >
-                <h5 class="text-center">
+                <h5>
                     {{ globalSettings.activePage.name }}
                 </h5>
+                <hr />
                 <component
                     :is="globalSettings.activePage.component"
                 ></component>
