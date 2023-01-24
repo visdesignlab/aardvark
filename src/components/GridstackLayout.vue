@@ -1,7 +1,7 @@
 <template>
     <div class="grid-stack">
         <div
-            v-for="(w, index) in layoutConfig.currentLayout.items"
+            v-for="(w, index) in layoutConfig.currentLayout?.currentItems"
             class="grid-stack-item"
             :gs-x="w.x"
             :gs-y="w.y"
@@ -76,7 +76,6 @@ onMounted(() => {
             layoutConfig.updateItem(changedItem);
         }
         console.log({ changeItems });
-        console.log(layoutConfig.currentLayout.items);
     });
     // grid.on('dragstart', (event: Event, element: any, ...args: any[]) => {
     //     console.log({ event, element, args });
