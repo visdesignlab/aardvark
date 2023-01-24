@@ -9,7 +9,7 @@
 
     <g @mousemove="debug" :clip-path="`url(#${clipPathId})`">
         <path
-            :class="settings.includeBinLine && 'stroke-thin'"
+            :class="settings.includeBinLine ? 'stroke-thin' : ''"
             v-for="(info, i) in offsetInfo"
             :key="i"
             :transform="info.transform"
@@ -22,7 +22,6 @@
 </template>
 
 <script lang="ts">
-import { mapStores } from 'pinia';
 import { computed, defineComponent, ref } from 'vue';
 import { extent as d3Extent } from 'd3-array';
 import { area } from 'd3-shape';

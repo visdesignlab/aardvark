@@ -68,7 +68,7 @@ interface LooneageViewProps {
 const props = withDefaults(defineProps<LooneageViewProps>(), {
     // containerWidth: 800,
     encodeChildSplit: false,
-    initialSpacing: 4,
+    initialSpacing: 2,
     initialRowHeight: 16,
 });
 
@@ -134,6 +134,7 @@ function getReasonableModH(): number {
 }
 const defaultSettings = {
     modHeight: getReasonableModH(),
+    includeBinLine: true,
 };
 
 const mergedHorizonChartSettings = computed(() => {
