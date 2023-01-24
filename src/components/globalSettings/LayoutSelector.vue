@@ -3,10 +3,9 @@
 </template>
 
 <script setup lang="ts">
-import { useCellMetaData, type AnyAttributes } from '@/stores/cellMetaData';
-import { parse, type ParseResult } from 'papaparse';
+import { useLayoutConfig } from '@/stores/layoutConfig';
 
-const cellMetaData = useCellMetaData();
+const layoutConfig = useLayoutConfig();
 </script>
 
 <style scoped lange="scss"></style>

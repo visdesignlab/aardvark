@@ -1,10 +1,13 @@
 implement layout selector
+
 add option to save grid to indexed db
+
 add dark mode option to settings
+
+improve looneage view recalculation issue
 
 look into using track library
 
-scale y more efficiently
 add simple image viewer
 
 add option to filter out parts of tree

@@ -31,17 +31,9 @@ export const useLayoutConfig = defineStore('layoutConfig', () => {
         layoutName: 'default',
         items: [
             {
-                component: 'DatasetSelector',
-                x: 0,
-                y: 0,
-                w: 12,
-                h: 3,
-                id: uuidv4(),
-            },
-            {
                 component: 'LooneageView',
                 x: 0,
-                y: 3,
+                y: 0,
                 w: 12,
                 h: 10,
                 id: uuidv4(),
@@ -53,9 +45,9 @@ export const useLayoutConfig = defineStore('layoutConfig', () => {
             {
                 component: 'SimpleTable',
                 x: 0,
-                y: 13,
+                y: 10,
                 w: 4,
-                h: 4,
+                h: 8,
                 id: uuidv4(),
                 props: {
                     attributeLevel: 'lineage',
@@ -64,9 +56,9 @@ export const useLayoutConfig = defineStore('layoutConfig', () => {
             {
                 component: 'SimpleTable',
                 x: 4,
-                y: 13,
+                y: 10,
                 w: 4,
-                h: 4,
+                h: 8,
                 id: uuidv4(),
                 props: {
                     attributeLevel: 'track',
@@ -75,9 +67,9 @@ export const useLayoutConfig = defineStore('layoutConfig', () => {
             {
                 component: 'SimpleTable',
                 x: 8,
-                y: 13,
+                y: 10,
                 w: 4,
-                h: 4,
+                h: 8,
                 id: uuidv4(),
                 props: {
                     attributeLevel: 'cell',
