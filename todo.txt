@@ -3,7 +3,9 @@ add global toolbar
 add option to save grid to indexed db
 look into using track library
 
+cleanup code
 
+scale y more efficiently
 add simple image viewer
 
 add option to filter out parts of tree
