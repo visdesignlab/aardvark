@@ -13,7 +13,7 @@
             v-for="(info, i) in offsetInfo"
             :key="i"
             :transform="info.transform"
-            :d="areaPath"
+            :d="areaPath ?? ''"
             :fill="info.color"
         ></path>
         <rect></rect>
@@ -65,7 +65,11 @@ export default defineComponent({
         function getReasonableModH(): number {
             const [minVal, maxVal] = d3Extent(
                 props.data,
-                props.valueAccessor
+                props.valueAccessor as (
+                    datum: any,
+                    index: number,
+                    array: Iterable<any>
+                ) => string
             ) as unknown as [number, number];
             return (maxVal - minVal) / props.maxColors;
         }
@@ -83,7 +87,11 @@ export default defineComponent({
         const scaleX = computed(() => {
             const extent = d3Extent(
                 props.data,
-                props.timeAccessor
+                props.timeAccessor as (
+                    datum: any,
+                    index: number,
+                    array: Iterable<any>
+                ) => string
             ) as unknown as [number, number];
             return scaleLinear().domain(extent).range([0, props.chartWidth]);
         });

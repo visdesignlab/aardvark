@@ -1,5 +1,6 @@
 declare module 'd3-flextree' {
     export interface LayoutNode<T> {
+        [x: string]: any;
         depth: number;
         height: number;
         x: number;

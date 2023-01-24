@@ -8,7 +8,7 @@
             :gs-w="w.w"
             :gs-h="w.h"
             :gs-id="w.id"
-            :id="w.id"
+            :id="w.id.toString()"
             :key="index"
         >
             <div class="grid-stack-item-content card" :id="`container-${w.id}`">

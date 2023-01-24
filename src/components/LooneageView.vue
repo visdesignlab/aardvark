@@ -7,7 +7,7 @@
             <g :transform="`translate(0,${-extent[1]})`">
                 <g
                     v-for="node in layoutRoot.descendants()"
-                    :key="node.id"
+                    :key="node.data.trackId"
                     :transform="`translate(${scaleX(node.y)},${node.x})`"
                     :class="`n-${node.depth}`"
                 >
@@ -19,7 +19,7 @@
                         :timeAccessor="cellMetaData.getTime"
                         :valueAccessor="(cell: Cell) => cellMetaData.getNumAttr(cell, attrKey)"
                         :attrKey="attrKey"
-                        :info="node.data.id"
+                        :info="node.data.trackId"
                     ></HorizonChart>
                 </g>
                 <line
