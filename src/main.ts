@@ -3,10 +3,8 @@ import { createPinia } from 'pinia';
 import Vue3EasyDataTable from 'vue3-easy-data-table';
 import 'vue3-easy-data-table/dist/style.css';
 import App from './App.vue';
-import TestComponent1 from './components/TestComponent1.vue';
-import TestComponent2 from './components/TestComponent2.vue';
 import HorizonChart from './components/HorizonChart.vue';
-import DatasetSelector from './components/DatasetSelector.vue';
+import DatasetSelector from './components/globalSettings/DatasetSelector.vue';
 import LooneageView from './components/LooneageView.vue';
 import SimpleTable from './components/SimpleTable.vue';
 import NoDataSplash from './components/NoDataSplash.vue';
@@ -30,8 +28,6 @@ createApp(App)
     .use(createPinia())
     .component('font-awesome-icon', FontAwesomeIcon)
     .component('EasyDataTable', Vue3EasyDataTable)
-    .component('TestComponent1', TestComponent1)
-    .component('TestComponent2', TestComponent2)
     .component('HorizonChart', HorizonChart)
     .component('DatasetSelector', DatasetSelector)
     .component('LooneageView', LooneageView)

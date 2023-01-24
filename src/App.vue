@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref } from 'vue';
 import GridstackLayout from './components/GridstackLayout.vue';
-import GlobalSettingsView from './components/GlobalSettingsView.vue';
+import GlobalSettingsView from './components/globalSettings/GlobalSettingsView.vue';
 
 let fullscreen = ref(false);
 </script>
