@@ -1,10 +1,8 @@
-add layout to store
-add global toolbar
+implement layout selector
 add option to save grid to indexed db
-look into using track library
+add dark mode option to settings
 
-cleanup code
-dark mode
+look into using track library
 
 scale y more efficiently
 add simple image viewer

@@ -16,7 +16,7 @@
         <Transition name="slide-right">
             <div
                 v-if="globalSettings.activePage != null"
-                class="settings-panel ms-2"
+                class="settings-panel p-3"
             >
                 <h5>
                     {{ globalSettings.activePage.name }}

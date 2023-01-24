@@ -25,28 +25,28 @@ export const useGlobalSettings = defineStore('globalSettings', () => {
             faKey: 'fa-table-cells-large',
             id: uuidv4(),
             show: false,
-            component: 'DatasetSelector',
+            component: 'LayoutSelector',
         },
         {
             name: 'General Settings',
             faKey: 'fa-gear',
             id: uuidv4(),
             show: false,
-            component: 'DatasetSelector',
+            component: 'GeneralSettings',
         },
         {
             name: 'Filter Data',
             faKey: 'fa-filter',
             id: uuidv4(),
             show: false,
-            component: 'DatasetSelector',
+            component: 'StubView',
         },
         {
             name: 'Search',
             faKey: 'fa-magnifying-glass',
             id: uuidv4(),
             show: false,
-            component: 'DatasetSelector',
+            component: 'StubView',
         },
     ]);
 
