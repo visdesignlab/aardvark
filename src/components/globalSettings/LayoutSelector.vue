@@ -6,7 +6,9 @@
             :class="listItemClass(layout)"
             @click="() => layoutConfig.resetLayout(layout)"
         >
-            {{ layout.name }}
+            <span>{{ layout.name }}</span>
+            <span class="flex-grow-1"></span>
+            <font-awesome-icon class="hover-show" icon="fa-solid fa-lock" />
         </li>
         <li
             v-for="(layout, index) in layoutConfig.userLayoutOptions"
@@ -14,14 +16,26 @@
             :class="listItemClass(layout)"
             @click="() => layoutConfig.resetLayout(layout)"
         >
-            <span class="flex-grow-1">{{ layout.name }}</span>
-            <!-- <button
-                class="btn btn-outline-dark"
-                @click.stop="() => layoutConfig.deleteLayout(index)"
-            >
-                <font-awesome-icon icon="fa-solid fa-trash-can" />
-            </button> -->
+            <span v-if="!layout.editing" class="me-1">{{ layout.name }}</span>
+            <input
+                v-else
+                v-model="layout.name"
+                type="text"
+                :id="inputNameId(layout)"
+                @click.stop=""
+                @focusout="layout.editing = false"
+                @keyup.enter="layout.editing = false"
+            />
             <button
+                v-if="!layout.editing"
+                :class="buttonIconClass(layout)"
+                @click.stop="makeNameEditable(layout)"
+            >
+                <font-awesome-icon icon="fa-solid fa-pencil" />
+            </button>
+            <span class="flex-grow-1"></span>
+            <button
+                v-if="!layout.editing"
                 :class="buttonIconClass(layout)"
                 @click.stop="() => layoutConfig.deleteLayout(index)"
             >
@@ -32,14 +46,11 @@
 
     <div class="mt-4 d-flex flex-column">
         <div class="btn-group" role="group">
-            <button
-                class="btn btn-outline-dark"
-                @click="layoutConfig.createNew"
-            >
+            <button class="btn btn-outline-dark" @click="onCreateNew">
                 Create New
             </button>
             <button
-                v-if="layoutConfig.currentLayout?.userCreated"
+                v-if="layoutConfig.currentLayout?.editable"
                 class="btn btn-outline-dark"
                 @click="layoutConfig.updateCurrent"
             >
@@ -51,19 +62,53 @@
 
 <script setup lang="ts">
 import { useLayoutConfig, type Layout } from '@/stores/layoutConfig';
+import { nextTick } from 'vue';
 
 const layoutConfig = useLayoutConfig();
 function listItemClass(layout: Layout): string {
-    return `d-flex align-items-center list-group-item ${
+    return `fake-button d-flex align-items-center list-group-item ${
         layout.id == layoutConfig.currentLayout?.id ? 'active' : ''
     }`;
 }
 
 function buttonIconClass(layout: Layout): string {
-    return `btn btn-sm btn-outline-${
+    return `hover-show btn btn-sm btn-outline-${
         layout.id == layoutConfig.currentLayout?.id ? 'light' : 'dark'
     }`;
 }
+
+function makeNameEditable(layout: Layout | null): void {
+    if (layout == null) return;
+    layout.editing = true;
+    nextTick(() => {
+        const elId = inputNameId(layout);
+        const element = document.getElementById(elId) as HTMLInputElement;
+        element?.focus();
+        element?.select();
+    });
+}
+
+function onCreateNew(): void {
+    layoutConfig.createNew();
+    makeNameEditable(layoutConfig.currentLayout);
+}
+
+function inputNameId(layout: Layout): string {
+    return `name-input-${layout.id}`;
+}
 </script>
 
-<style scoped lange="scss"></style>
+<style scoped lange="scss">
+.hover-show {
+    visibility: hidden;
+}
+
+li:hover .hover-show {
+    visibility: visible;
+}
+
+.fake-button {
+    user-select: none;
+    cursor: pointer;
+}
+</style>

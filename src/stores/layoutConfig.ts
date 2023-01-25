@@ -25,7 +25,8 @@ export interface GridstackItem {
 
 export interface Layout {
     name: string;
-    userCreated: boolean;
+    editable: boolean;
+    editing: boolean;
     id: string;
     initialItems: LayoutItem[];
     currentItems: LayoutItem[];
@@ -82,7 +83,8 @@ export const useLayoutConfig = defineStore('layoutConfig', () => {
     const defaultId = 'system_layout_0';
     const defaultLayout: Layout = {
         name: 'Equal Tables',
-        userCreated: false,
+        editable: false,
+        editing: false,
         id: defaultId,
         initialItems: cloneDeep(defaultItems),
         currentItems: cloneDeep(defaultItems),
@@ -126,7 +128,8 @@ export const useLayoutConfig = defineStore('layoutConfig', () => {
     function createNew(): void {
         const newLayout = ref<Layout>({
             name: 'My Custom Layout',
-            userCreated: true,
+            editable: true,
+            editing: false,
             id: uuidv4(),
             initialItems: cloneDeep(currentLayout?.value?.currentItems) ?? [],
             currentItems: cloneDeep(currentLayout?.value?.currentItems) ?? [],
