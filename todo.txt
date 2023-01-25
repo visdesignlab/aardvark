@@ -1,12 +1,12 @@
-implement layout selector
 
-add option to save grid to indexed db
 
-add dark mode option to settings
 
+store settings open/close to local storage
+support command + b to toggle the left settings
 improve looneage view recalculation issue
 
-look into using track library
+integrate track library
+fix table scrollbar issue
 
 add simple image viewer
 

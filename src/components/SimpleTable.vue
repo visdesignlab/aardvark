@@ -7,6 +7,7 @@
         :items="items"
         fixedHeader="true"
         @click-row="selectRow"
+        :table-class-name="globalSettings.darkMode ? 'dark-theme-table' : ''"
     ></EasyDataTable>
     <NoDataSplash></NoDataSplash>
     <!-- </div> -->
@@ -16,8 +17,9 @@
 import { ref, computed } from 'vue';
 import { useCellMetaData, type Lineage } from '@/stores/cellMetaData';
 import type { ClickRowArgument } from 'vue3-easy-data-table';
+import { useGlobalSettings } from '@/stores/globalSettings';
 const cellMetaData = useCellMetaData();
-
+const globalSettings = useGlobalSettings();
 const props = defineProps<{ attributeLevel: 'cell' | 'track' | 'lineage' }>();
 
 const headers = computed(() => {
@@ -51,9 +53,36 @@ function selectRow(item: ClickRowArgument): void {
 }
 </script>
 
-<style scoped lange="scss">
+<style scoped lang="scss">
 .table-container {
     max-height: 300px;
     overflow: auto;
+}
+
+.dark-theme-table {
+    --easy-table-border: 1px solid #8a8a8a;
+    --easy-table-row-border: 1px solid #8a8a8a;
+
+    --easy-table-header-font-color: white;
+    --easy-table-header-background-color: #0c0c0c;
+
+    --easy-table-body-even-row-font-color: white;
+    --easy-table-body-even-row-background-color: #1a1a1a;
+
+    --easy-table-body-row-font-color: white;
+    --easy-table-body-row-background-color: #1a1a1a;
+
+    --easy-table-body-row-hover-font-color: white;
+    --easy-table-body-row-hover-background-color: black;
+
+    --easy-table-footer-background-color: #979797;
+    --easy-table-footer-font-color: black;
+
+    // --easy-table-scrollbar-track-color: #2d3a4f;
+    // --easy-table-scrollbar-color: #2d3a4f;
+    // --easy-table-scrollbar-thumb-color: #4c5d7a;
+    // --easy-table-scrollbar-corner-color: #2d3a4f;
+
+    // --easy-table-loading-mask-background-color: #2d3a4f;
 }
 </style>

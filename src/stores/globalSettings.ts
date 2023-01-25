@@ -1,6 +1,7 @@
 import { ref, computed } from 'vue';
 import { defineStore } from 'pinia';
 import { v4 as uuidv4 } from 'uuid';
+import { useStorage } from '@vueuse/core';
 
 export interface SettingsPage {
     // properties expected by a gridstack item
@@ -71,5 +72,23 @@ export const useGlobalSettings = defineStore('globalSettings', () => {
         }
     }
 
-    return { settingsPages, activePage, toggleShown };
+    const darkMode = useStorage<boolean>('darkMode', false);
+    const btnLight = computed<string>(() => {
+        // dark and light should be inverted depending on
+        // if we are in dark mode or not.
+        return darkMode.value ? 'dark' : 'light';
+    });
+    const btnDark = computed<string>(() => {
+        return darkMode.value ? 'light' : 'dark';
+    });
+    // const darkMode = ref<boolean>(false);
+
+    return {
+        settingsPages,
+        activePage,
+        toggleShown,
+        darkMode,
+        btnLight,
+        btnDark,
+    };
 });

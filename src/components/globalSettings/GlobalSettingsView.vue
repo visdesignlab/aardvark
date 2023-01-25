@@ -6,7 +6,9 @@
                 :key="setting.id"
                 :title="setting.name"
                 :class="`flex-grow-0 btn btn-lg ${
-                    setting.show ? 'btn-dark' : 'btn-light'
+                    setting.show
+                        ? `btn-${globalSettings.btnDark}`
+                        : `btn-${globalSettings.btnLight}`
                 }`"
                 @click="() => globalSettings.toggleShown(setting)"
             >

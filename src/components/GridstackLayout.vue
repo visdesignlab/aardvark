@@ -18,7 +18,7 @@
                         >{{ w.component }}</span
                     >
                     <button
-                        class="btn btn-sm btn-outline-dark float-end"
+                        :class="`btn btn-sm btn-outline-${globalSettings.btnDark} float-end`"
                         @click="toggleFullscreen(`container-${w.id}`)"
                     >
                         <font-awesome-icon
@@ -47,6 +47,8 @@ import { GridStack, type GridStackOptions, type DDDragOpt } from 'gridstack';
 import screenfull from 'screenfull';
 import 'gridstack/dist/gridstack.min.css';
 import { useLayoutConfig } from '@/stores/layoutConfig';
+import { useGlobalSettings } from '@/stores/globalSettings';
+const globalSettings = useGlobalSettings();
 const layoutConfig = useLayoutConfig();
 // useful reference
 // https://stackoverflow.com/questions/72813397/gridstack-js-vue-3-components

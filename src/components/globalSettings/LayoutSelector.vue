@@ -46,12 +46,15 @@
 
     <div class="mt-4 d-flex flex-column">
         <div class="btn-group" role="group">
-            <button class="btn btn-outline-dark" @click="onCreateNew">
+            <button
+                :class="`btn btn-outline-${globalSettings.btnDark}`"
+                @click="onCreateNew"
+            >
                 Create New
             </button>
             <button
                 v-if="layoutConfig.currentLayout?.editable"
-                class="btn btn-outline-dark"
+                :class="`btn btn-outline-${globalSettings.btnDark}`"
                 @click="layoutConfig.updateCurrent"
             >
                 Update Current
@@ -62,9 +65,11 @@
 
 <script setup lang="ts">
 import { useLayoutConfig, type Layout } from '@/stores/layoutConfig';
+import { useGlobalSettings } from '@/stores/globalSettings';
 import { nextTick } from 'vue';
 
 const layoutConfig = useLayoutConfig();
+const globalSettings = useGlobalSettings();
 function listItemClass(layout: Layout): string {
     return `fake-button d-flex align-items-center list-group-item ${
         layout.id == layoutConfig.currentLayout?.id ? 'active' : ''
@@ -73,7 +78,9 @@ function listItemClass(layout: Layout): string {
 
 function buttonIconClass(layout: Layout): string {
     return `hover-show btn btn-sm btn-outline-${
-        layout.id == layoutConfig.currentLayout?.id ? 'light' : 'dark'
+        layout.id == layoutConfig.currentLayout?.id
+            ? 'light'
+            : globalSettings.btnDark
     }`;
 }
 

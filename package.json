@@ -18,7 +18,7 @@
         "@types/d3-hierarchy": "^3.1.1",
         "@types/papaparse": "^5.3.7",
         "@vueuse/core": "^9.11.1",
-        "bootstrap": "^5.2.3",
+        "bootstrap": "^5.3.0-alpha1",
         "d3-array": "^3.2.1",
         "d3-flextree": "^2.1.2",
         "d3-hierarchy": "^3.1.2",
