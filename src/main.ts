@@ -11,6 +11,7 @@ import StubView from './components/globalSettings/StubView.vue';
 import LooneageView from './components/LooneageView.vue';
 import SimpleTable from './components/SimpleTable.vue';
 import NoDataSplash from './components/NoDataSplash.vue';
+import TestComponent from './components/TestComponent.vue';
 
 import './App.scss';
 
@@ -39,4 +40,5 @@ createApp(App)
     .component('SimpleTable', SimpleTable)
     .component('NoDataSplash', NoDataSplash)
     .component('StubView', StubView)
+    .component('TestComponent', TestComponent)
     .mount('#app');

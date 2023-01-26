@@ -1,6 +1,6 @@
-improve looneage view recalculation issue
-
 integrate track library
+
+improve looneage view recalculation issue
 fix table scrollbar issue
 
 switch to server from file upload
