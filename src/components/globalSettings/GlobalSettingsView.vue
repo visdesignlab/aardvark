@@ -34,7 +34,13 @@
 
 <script setup lang="ts">
 import { useGlobalSettings } from '@/stores/globalSettings';
+import { onKeyStroke } from '@vueuse/core';
 const globalSettings = useGlobalSettings();
+onKeyStroke(['b', 'B'], (e: KeyboardEvent) => {
+    if (globalSettings.usingMac && !e.metaKey) return;
+    if (!globalSettings.usingMac && !e.ctrlKey) return;
+    globalSettings.toggleLastActive();
+});
 </script>
 
 <style scoped lang="scss">

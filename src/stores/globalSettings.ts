@@ -51,13 +51,8 @@ export const useGlobalSettings = defineStore('globalSettings', () => {
         },
     ]);
 
-    // const settingsShown = computed<boolean>(() => {
-    //     return settingsPages.value.some(
-    //         (setting: SettingsPage) => setting.show
-    //     );
-    // });
-
     const activePage = ref<SettingsPage | null>(null);
+    const lastActivePage = ref<SettingsPage>(settingsPages.value[0]);
 
     function toggleShown(setting: SettingsPage): void {
         if (setting.show) {
@@ -69,7 +64,12 @@ export const useGlobalSettings = defineStore('globalSettings', () => {
             }
             setting.show = true;
             activePage.value = setting;
+            lastActivePage.value = setting;
         }
+    }
+
+    function toggleLastActive(): void {
+        toggleShown(lastActivePage.value);
     }
 
     const darkMode = useStorage<boolean>('darkMode', false);
@@ -83,12 +83,18 @@ export const useGlobalSettings = defineStore('globalSettings', () => {
     });
     // const darkMode = ref<boolean>(false);
 
+    const usingMac = computed<boolean>(() => {
+        return navigator.userAgent.toLowerCase().includes('mac');
+    });
+
     return {
         settingsPages,
         activePage,
         toggleShown,
+        toggleLastActive,
         darkMode,
         btnLight,
         btnDark,
+        usingMac,
     };
 });

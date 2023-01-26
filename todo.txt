@@ -1,12 +1,11 @@
 
-
-
-store settings open/close to local storage
-support command + b to toggle the left settings
+start requirements doc
 improve looneage view recalculation issue
 
 integrate track library
 fix table scrollbar issue
+
+switch to server from file upload
 
 add simple image viewer
 
