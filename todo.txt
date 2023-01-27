@@ -1,13 +1,12 @@
+improve looneage view recalculation issue
 integrate track library arg.
 
-improve looneage view recalculation issue
 fix table scrollbar issue
 
 switch to server from file upload
 
 add simple image viewer
 
-have settings be sticky
 
 add store to the name of all stores
 

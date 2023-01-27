@@ -1,6 +1,6 @@
 <template>
     <div class="d-flex flex-row">
-        <div class="vh-100">
+        <div class="vh-100 sticky-top">
             <GlobalSettingsView></GlobalSettingsView>
         </div>
         <div class="flex-grow-1">
