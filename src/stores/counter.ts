@@ -10,9 +10,11 @@ export interface CounterState {
 export const useCounterStore = defineStore('counter', () => {
     const count = ref(0);
     const doubleCount = computed(() => count.value * 2);
+    const otherAttribute = ref('blarg');
     function increment() {
         count.value++;
+        // otherAttribute = count.value.toString();
     }
 
-    return { count, doubleCount, increment };
+    return { count, otherAttribute, doubleCount, increment };
 });

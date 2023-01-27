@@ -1,4 +1,4 @@
-integrate track library
+integrate track library arg.
 
 improve looneage view recalculation issue
 fix table scrollbar issue
@@ -6,6 +6,8 @@ fix table scrollbar issue
 switch to server from file upload
 
 add simple image viewer
+
+add close widget option 
 
 add option to filter out parts of tree
 add option to select attribute in looneage
