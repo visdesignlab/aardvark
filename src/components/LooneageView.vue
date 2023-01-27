@@ -18,7 +18,6 @@
                         :settings="mergedHorizonChartSettings"
                         :timeAccessor="cellMetaData.getTime"
                         :valueAccessor="(cell: Cell) => cellMetaData.getNumAttr(cell, attrKey)"
-                        :attrKey="attrKey"
                         :info="node.data.trackId"
                     ></HorizonChart>
                 </g>
@@ -75,11 +74,14 @@ const props = withDefaults(defineProps<LooneageViewProps>(), {
 const verticalScale = ref(1);
 
 const rowHeight = computed(() => {
-    return props.initialRowHeight * verticalScale.value;
+    return Math.round(props.initialRowHeight * verticalScale.value);
 });
 
+const spacingScale = scaleLinear().domain([1, 8]).range([1, 4]);
 const spacing = computed(() => {
-    return props.initialSpacing * verticalScale.value;
+    // return props.initialSpacing;
+    return Math.round(props.initialSpacing * spacingScale(verticalScale.value));
+    // return Math.round(props.initialSpacing * verticalScale.value);
 });
 const { width: containerWidth } = useElementSize(looneageContainer);
 // const containerWidth = computed(() => {

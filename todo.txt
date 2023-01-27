@@ -1,12 +1,12 @@
 improve looneage view recalculation issue
 integrate track library arg.
+reorg meta data to fit trrack and support multidataset selection
 
 fix table scrollbar issue
 
 switch to server from file upload
 
 add simple image viewer
-
 
 add store to the name of all stores
 
@@ -23,3 +23,7 @@ create components
 * folder table component (lineage -> track -> cells)
 * simple image viewer
 * general vis? scatterplot / violin plots?
+
+
+Bugs I shouldn't bother fixing
+* single-column layout causes weirdness on refresh
