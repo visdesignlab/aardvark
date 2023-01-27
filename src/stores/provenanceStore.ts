@@ -12,25 +12,17 @@ export const useProvenanceStore = defineStore('provenanceStore', () => {
     const layoutConfig = useLayoutConfig();
     // const store = useStore();
 
-    //console.log({ layout: cloneDeep(layoutConfig.$state) });
-    //console.log({ global: cloneDeep(globalSettings.$state) });
-
     const initialState = {
         counter: cloneDeep(counterStore.$state),
         globalSettings: cloneDeep(globalSettings.$state),
-        layoutConfig: cloneDeep(layoutConfig.$state), // including this starts producing the error...
-        blarg: 4,
-        blarg2: 5,
-        blarg5: 6,
-        blarg3: 7,
-        blarg4: 8,
+        layoutConfig: cloneDeep(layoutConfig.$state),
         // store: cloneDeep(store.$state),
     };
 
     const skipApply = {
         counter: false,
         globalSettings: false,
-        // layoutConfig: false,
+        layoutConfig: false,
         // store: false,
     };
 
@@ -45,20 +37,16 @@ export const useProvenanceStore = defineStore('provenanceStore', () => {
         'update global settings',
         (trrackState, newGlobalSettings) => {
             console.log(cloneDeep(trrackState));
-            // console.log(;
-            //console.log({ inAction: newGlobalSettings });
-            //console.log({ frozen: Object.isFrozen(newGlobalSettings) });
             trrackState.globalSettings = newGlobalSettings;
         }
     );
 
-    console.log({ updateGlobalSettings });
-    // const updateLayoutConfig = registry.register(
-    //     'update layoutConfig',
-    //     (trrackState, newStore) => {
-    //         trrackState.store = cloneDeep(newStore);
-    //     }
-    // );
+    const updateLayoutConfig = registry.register(
+        'update layoutConfig',
+        (trrackState, newStore) => {
+            trrackState.store = cloneDeep(newStore);
+        }
+    );
     // const updateStore = registry.register(
     //     'update store',
     //     (trrackState, newStore) => {
@@ -71,10 +59,7 @@ export const useProvenanceStore = defineStore('provenanceStore', () => {
     });
 
     counterStore.$subscribe((mutation, state) => {
-        //console.log({ mutation });
-        //console.log('payload', (mutation as any)?.payload);
         if (skipApply.counter) {
-            //console.log('skipped counter apply');
             skipApply.counter = false;
             return;
         }
@@ -82,26 +67,24 @@ export const useProvenanceStore = defineStore('provenanceStore', () => {
     });
     globalSettings.$subscribe((_mutation, state) => {
         if (skipApply.globalSettings) {
-            //console.log('skipped settings apply');
             skipApply.globalSettings = false;
             return;
         }
-        //console.log({ state });
         provenance.apply(
             'global settings change',
             updateGlobalSettings(cloneDeep(state))
         );
     });
-    // layoutConfig.$subscribe((_mutation, state) => {
-    //     if (skipApply.layoutConfig) {
-    //         skipApply.layoutConfig = false;
-    //         return;
-    //     }
-    //     provenance.apply(
-    //         'layout store settings change',
-    //         updateLayoutConfig(state)
-    //     );
-    // });
+    layoutConfig.$subscribe((_mutation, state) => {
+        if (skipApply.layoutConfig) {
+            skipApply.layoutConfig = false;
+            return;
+        }
+        provenance.apply(
+            'layout store settings change',
+            updateLayoutConfig(state)
+        );
+    });
     // store.$subscribe((_mutation, state) => {
     //     if (skipApply.store) {
     //         skipApply.store = false;
@@ -118,12 +101,11 @@ export const useProvenanceStore = defineStore('provenanceStore', () => {
             for (const key in skipApply) {
                 (skipApply as any)[key] = true;
             }
-            //console.log(skipApply);
             counterStore.$state = cloneDeep(provenance.getState().counter);
             globalSettings.$state = cloneDeep(
                 provenance.getState().globalSettings
             );
-            // layoutConfig.$state = cloneDeep(provenance.getState().layoutConfig);
+            layoutConfig.$state = cloneDeep(provenance.getState().layoutConfig);
             // store.$state = cloneDeep(provenance.getState().store);
         }
         nodeIds.add(provNodeId);

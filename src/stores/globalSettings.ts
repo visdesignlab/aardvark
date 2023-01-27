@@ -54,21 +54,20 @@ export const useGlobalSettings = defineStore('globalSettings', () => {
     // const activePage = ref<SettingsPage | null>(null);
     // switching from activePage to activePageIndex and keeping activePage as a computed worked for me.
 
+    const activePageIndex = ref<number | null>(null);
     const activePage = computed<SettingsPage | null>(() => {
         if (activePageIndex.value == null) return null;
         return settingsPages.value[activePageIndex.value];
     });
-    const activePageIndex = ref<number | null>(null);
-    // const lastActivePage = ref<SettingsPage>(settingsPages.value[0]);
-
+    const lastActivePageIndex = ref<number>(0);
+    const lastActivePage = computed<SettingsPage>(() => {
+        return settingsPages.value[lastActivePageIndex.value];
+    });
     function toggleShown(setting: SettingsPage): void {
         if (setting.show) {
             setting.show = false;
 
-            // activePage.value = null;
-            activePageIndex.value = settingsPages.value.findIndex(
-                (page) => page.id === setting.id
-            );
+            activePageIndex.value = null;
         } else {
             for (const s of settingsPages.value) {
                 s.show = false;
@@ -79,6 +78,7 @@ export const useGlobalSettings = defineStore('globalSettings', () => {
             activePageIndex.value = settingsPages.value.findIndex(
                 (page) => page.id === setting.id
             );
+            lastActivePageIndex.value = activePageIndex.value;
 
             // activePage.value = setting;
             // lastActivePage.value = setting;
@@ -86,7 +86,7 @@ export const useGlobalSettings = defineStore('globalSettings', () => {
     }
 
     function toggleLastActive(): void {
-        // toggleShown(lastActivePage.value);
+        toggleShown(lastActivePage.value);
     }
 
     const darkMode = useStorage<boolean>('darkMode', false);
@@ -107,7 +107,7 @@ export const useGlobalSettings = defineStore('globalSettings', () => {
     return {
         settingsPages,
         activePage,
-        // activePageIndex,
+        activePageIndex,
         toggleShown,
         toggleLastActive,
         darkMode,
