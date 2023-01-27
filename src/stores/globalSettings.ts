@@ -51,9 +51,6 @@ export const useGlobalSettings = defineStore('globalSettings', () => {
         },
     ]);
 
-    // const activePage = ref<SettingsPage | null>(null);
-    // switching from activePage to activePageIndex and keeping activePage as a computed worked for me.
-
     const activePageIndex = ref<number | null>(null);
     const activePage = computed<SettingsPage | null>(() => {
         if (activePageIndex.value == null) return null;
@@ -73,15 +70,10 @@ export const useGlobalSettings = defineStore('globalSettings', () => {
                 s.show = false;
             }
             setting.show = true;
-
-            // activePage.value = setting;
             activePageIndex.value = settingsPages.value.findIndex(
                 (page) => page.id === setting.id
             );
             lastActivePageIndex.value = activePageIndex.value;
-
-            // activePage.value = setting;
-            // lastActivePage.value = setting;
         }
     }
 
@@ -98,7 +90,6 @@ export const useGlobalSettings = defineStore('globalSettings', () => {
     const btnDark = computed<string>(() => {
         return darkMode.value ? 'light' : 'dark';
     });
-    // const darkMode = ref<boolean>(false);
 
     const usingMac = computed<boolean>(() => {
         return navigator.userAgent.toLowerCase().includes('mac');
