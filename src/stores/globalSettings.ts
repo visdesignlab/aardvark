@@ -52,24 +52,41 @@ export const useGlobalSettings = defineStore('globalSettings', () => {
     ]);
 
     const activePage = ref<SettingsPage | null>(null);
-    const lastActivePage = ref<SettingsPage>(settingsPages.value[0]);
+    // switching from activePage to activePageIndex and keeping activePage as a computed worked for me.
+
+    // const activePage = computed<SettingsPage | null>(() => {
+    //     if (activePageIndex.value == null) return null;
+    //     return settingsPages.value[activePageIndex.value];
+    // });
+    // const activePageIndex = ref<number | null>(null);
+    // const lastActivePage = ref<SettingsPage>(settingsPages.value[0]);
 
     function toggleShown(setting: SettingsPage): void {
         if (setting.show) {
             setting.show = false;
+
             activePage.value = null;
+            // activePageIndex.value = settingsPages.value.findIndex(
+            //     (page) => page.id === setting.id
+            // );
         } else {
             for (const s of settingsPages.value) {
                 s.show = false;
             }
             setting.show = true;
+
             activePage.value = setting;
-            lastActivePage.value = setting;
+            // activePageIndex.value = settingsPages.value.findIndex(
+            //     (page) => page.id === setting.id
+            // );
+
+            // activePage.value = setting;
+            // lastActivePage.value = setting;
         }
     }
 
     function toggleLastActive(): void {
-        toggleShown(lastActivePage.value);
+        // toggleShown(lastActivePage.value);
     }
 
     const darkMode = useStorage<boolean>('darkMode', false);
@@ -90,6 +107,7 @@ export const useGlobalSettings = defineStore('globalSettings', () => {
     return {
         settingsPages,
         activePage,
+        // activePageIndex,
         toggleShown,
         toggleLastActive,
         darkMode,

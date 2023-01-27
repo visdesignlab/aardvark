@@ -7,6 +7,10 @@ switch to server from file upload
 
 add simple image viewer
 
+have settings be sticky
+
+
+
 add close widget option 
 
 add option to filter out parts of tree
