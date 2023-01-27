@@ -1,21 +1,24 @@
 import { useCounterStore } from './counter';
 import { useGlobalSettings } from './globalSettings';
-import { defineStore } from 'pinia';
+import { defineStore, storeToRefs } from 'pinia';
 import { initializeTrrack, Registry } from '@trrack/core';
 import { cloneDeep } from 'lodash-es';
 
 export const useProvenanceStore = defineStore('provenanceStore', () => {
     const counterStore = useCounterStore();
     const globalSettings = useGlobalSettings();
+    // const store = useStore();
 
     const initialState = {
         counter: cloneDeep(counterStore.$state),
         globalSettings: cloneDeep(globalSettings.$state),
+        // store: cloneDeep(store.$state),
     };
 
     const skipApply = {
         counter: false,
         globalSettings: false,
+        // store: false,
     };
 
     const registry = Registry.create();
@@ -31,6 +34,12 @@ export const useProvenanceStore = defineStore('provenanceStore', () => {
             trrackState.globalSettings = cloneDeep(newGlobalSettings);
         }
     );
+    // const updateStore = registry.register(
+    //     'update store',
+    //     (trrackState, newStore) => {
+    //         trrackState.store = cloneDeep(newStore);
+    //     }
+    // );
     const provenance = initializeTrrack({
         initialState,
         registry,
@@ -50,6 +59,13 @@ export const useProvenanceStore = defineStore('provenanceStore', () => {
         }
         provenance.apply('global settings change', updateGlobalSettings(state));
     });
+    // store.$subscribe((_mutation, state) => {
+    //     if (skipApply.store) {
+    //         skipApply.store = false;
+    //         return;
+    //     }
+    //     provenance.apply('store settings change', updateStore(state));
+    // });
 
     const nodeIds = new Set<string>();
     provenance.currentChange(() => {
@@ -64,6 +80,7 @@ export const useProvenanceStore = defineStore('provenanceStore', () => {
             globalSettings.$state = cloneDeep(
                 provenance.getState().globalSettings
             );
+            // storeToRefs.$state = cloneDeep(provenance.getState().store);
         }
         nodeIds.add(provNodeId);
     });
