@@ -73,6 +73,8 @@ onMounted(() => {
     });
 
     grid.on('change', (event: any, changeItems: any) => {
+        console.log('-------------------------------------------------');
+        console.log('grid.on change');
         if (changeItems == null) return;
         for (let changedItem of changeItems) {
             layoutConfig.updateItem(changedItem);

@@ -44,6 +44,8 @@ export const useProvenanceStore = defineStore('provenanceStore', () => {
     const updateLayoutConfig = registry.register(
         'update layoutConfig',
         (trrackState, newStore) => {
+            console.log('in action');
+            console.log({ trrackState });
             trrackState.store = cloneDeep(newStore);
         }
     );
@@ -76,13 +78,15 @@ export const useProvenanceStore = defineStore('provenanceStore', () => {
         );
     });
     layoutConfig.$subscribe((_mutation, state) => {
+        console.log('layout sub');
         if (skipApply.layoutConfig) {
             skipApply.layoutConfig = false;
             return;
         }
+        console.log({ layout: cloneDeep(state) });
         provenance.apply(
             'layout store settings change',
-            updateLayoutConfig(state)
+            updateLayoutConfig(cloneDeep(state))
         );
     });
     // store.$subscribe((_mutation, state) => {

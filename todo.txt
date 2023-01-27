@@ -9,7 +9,7 @@ add simple image viewer
 
 have settings be sticky
 
-
+add store to the name of all stores
 
 add close widget option 
 
