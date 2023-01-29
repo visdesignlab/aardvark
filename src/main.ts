@@ -13,6 +13,27 @@ import SimpleTable from './components/SimpleTable.vue';
 import NoDataSplash from './components/NoDataSplash.vue';
 import TestComponent from './components/TestComponent.vue';
 
+import { Quasar } from 'quasar';
+// Import icon libraries
+import '@quasar/extras/material-icons/material-icons.css';
+
+// Import Quasar css
+import 'quasar/src/css/index.sass';
+
+// Vuetify
+import 'vuetify/styles';
+import { createVuetify } from 'vuetify';
+import * as components from 'vuetify/components';
+import * as directives from 'vuetify/directives';
+
+import '@mdi/font/css/materialdesignicons.css';
+import 'vuetify/styles';
+const vuetify = createVuetify({
+    components,
+    directives,
+    ssr: true,
+});
+
 import './App.scss';
 
 /* import the fontawesome core */
@@ -30,6 +51,10 @@ library.add(fas);
 
 createApp(App)
     .use(createPinia())
+    .use(vuetify)
+    .use(Quasar, {
+        plugins: {}, // import Quasar plugins and add here
+    })
     .component('font-awesome-icon', FontAwesomeIcon)
     .component('EasyDataTable', Vue3EasyDataTable)
     .component('HorizonChart', HorizonChart)

@@ -1,16 +1,11 @@
 <template>
-    <div class="form-check form-switch">
-        <input
-            class="form-check-input"
-            type="checkbox"
-            role="switch"
-            id="darkModeToggle"
-            v-model="globalSettings.darkMode"
-        />
-        <label class="form-check-label" for="darkModeToggle"
-            >Toggle Dark Mode</label
-        >
-    </div>
+    <q-toggle
+        v-model="globalSettings.darkMode"
+        checked-icon="mdi-weather-night"
+        color="blue"
+        unchecked-icon="mdi-weather-sunny"
+        label="Toggle Dark Mode"
+    />
 </template>
 
 <script setup lang="ts">
