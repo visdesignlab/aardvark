@@ -1,12 +1,24 @@
-improve looneage view recalculation issue
-integrate track library arg.
-reorg meta data to fit trrack and support multidataset selection
-
-fix table scrollbar issue
-
 switch to server from file upload
+[X] scaffold dataset selection store
+[] create basic UI
+     dark mode for quasar?
+[] allow switching between a single data "chunks"
+[] refactor to support multiple "chunks"
+
+investigate marcus new data
 
 add simple image viewer
+reorg meta data to fit trrack and support multidataset selection
+
+add placeholder sliders for filtering
+
+switch to quasar layout.
+improve looneage view recalculation issue
+integrate track library arg.
+
+fix table scrollbar issue (try switching to q-table)
+
+create small fake dataset on gh
 
 add store to the name of all stores
 
@@ -23,6 +35,8 @@ create components
 * folder table component (lineage -> track -> cells)
 * simple image viewer
 * general vis? scatterplot / violin plots?
+* debug/util panel
+* * LocalStorage.clear()
 
 
 Bugs I shouldn't bother fixing
