@@ -2,7 +2,9 @@ import { ref, computed, watch } from 'vue';
 import { defineStore } from 'pinia';
 import { v4 as uuidv4 } from 'uuid';
 import { useStorage } from '@vueuse/core';
+import { parse, type ParseResult } from 'papaparse';
 
+import { useCellMetaData, type AnyAttributes } from '@/stores/cellMetaData';
 export interface ExperimentMetadata {
     name?: string; // user friendly name
     filename: string;
@@ -26,10 +28,10 @@ export interface LocationMetadata {
     location?: string;
     show?: boolean; // if true, include data in interface
 }
-
 export const useDatasetSelectionStore = defineStore(
     'datasetSelectionStore',
     () => {
+        const cellMetaData = useCellMetaData();
         const entryPointFilename = '/aa_index.json';
 
         const serverUrlValid = ref(true);
@@ -40,6 +42,7 @@ export const useDatasetSelectionStore = defineStore(
         const experimentFilenameList = ref<string[]>([]);
         const currentExperimentFilename = ref<string | null>(null);
         const currentExperimentMetadata = ref<ExperimentMetadata | null>(null);
+        const currentLocationMetadata = ref<LocationMetadata | null>(null); // todo - update to support multi-location
 
         const serverUrl = useStorage<string | null>('serverUrl', null);
         if (serverUrl.value !== null && serverUrl.value !== '') {
@@ -129,6 +132,41 @@ export const useDatasetSelectionStore = defineStore(
             currentExperimentMetadata.value = data;
         }
 
+        function selectImagingLocation(location: LocationMetadata): void {
+            if (currentExperimentMetadata.value == null) return;
+            currentLocationMetadata.value = location;
+            for (const loc of currentExperimentMetadata.value
+                .locationMetadataList) {
+                loc.show = false;
+            }
+            // location.show = true;
+            currentLocationMetadata.value.show = true;
+        }
+
+        watch(currentLocationMetadata, () => {
+            const url =
+                'http://' +
+                serverUrl.value +
+                '/' +
+                currentLocationMetadata.value?.tabularDataFilename;
+            console.log(url);
+            // this will probably break if you spam the data selections
+            // could just add a spinner and call it a day 🤷
+            parse(url, {
+                header: true,
+                dynamicTyping: true,
+                skipEmptyLines: true,
+                download: true,
+                complete: (results: ParseResult<AnyAttributes>, file) => {
+                    cellMetaData.init(
+                        results.data,
+                        results.meta.fields as string[]
+                    );
+                    console.log({ results, file });
+                },
+            });
+        });
+
         // function handleFetchExperimentError(message: string): void {
         //     // console.log('ERROR', errorMessage);
         //     errorMessage.value = message;
@@ -146,6 +184,7 @@ export const useDatasetSelectionStore = defineStore(
             currentExperimentFilename,
             currentExperimentMetadata,
             fetchEntryFile,
+            selectImagingLocation,
         };
     }
 );

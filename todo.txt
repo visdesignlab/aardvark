@@ -1,7 +1,7 @@
 switch to server from file upload
 [X] scaffold dataset selection store
-[] create basic UI
-     dark mode for quasar?
+[X] create basic UI
+    [] dark mode for quasar?
 [] allow switching between a single data "chunks"
 [] refactor to support multiple "chunks"
 

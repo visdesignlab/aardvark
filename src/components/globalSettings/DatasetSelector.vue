@@ -44,7 +44,9 @@
                 clickable
                 v-ripple
                 :active="location.show"
-                @click="location.show = !location.show"
+                @click="
+                    () => datasetSelectionStore.selectImagingLocation(location)
+                "
                 ><q-item-section>{{ location.id }}</q-item-section></q-item
             >
         </q-list>
