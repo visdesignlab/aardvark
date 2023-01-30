@@ -17,6 +17,7 @@
         :loading="datasetSelectionStore.fetchingEntryFile"
         :error="!datasetSelectionStore.serverUrlValid"
         :error-message="datasetSelectionStore.errorMessage"
+        :dark="globalSettings.darkMode"
     />
     <q-select
         v-if="
@@ -26,6 +27,7 @@
         label="Experiment"
         v-model="datasetSelectionStore.currentExperimentFilename"
         :options="datasetSelectionStore.experimentFilenameList"
+        :dark="globalSettings.darkMode"
     />
     <div
         v-if="
@@ -36,7 +38,7 @@
         class="mt-3"
     >
         <span>Imaging Locations</span>
-        <q-list bordered separator>
+        <q-list bordered separator :dark="globalSettings.darkMode">
             <q-item
                 v-for="location in datasetSelectionStore
                     .currentExperimentMetadata?.locationMetadataList"
@@ -47,6 +49,7 @@
                 @click="
                     () => datasetSelectionStore.selectImagingLocation(location)
                 "
+                :dark="globalSettings.darkMode"
                 ><q-item-section>{{ location.id }}</q-item-section></q-item
             >
         </q-list>
@@ -61,10 +64,12 @@
 <script setup lang="ts">
 import { ref, watch, computed } from 'vue';
 import { useCellMetaData, type AnyAttributes } from '@/stores/cellMetaData';
+import { useGlobalSettings } from '@/stores/globalSettings';
 import { useDatasetSelectionStore } from '@/stores/datasetSelectionStore';
 import { parse, type ParseResult } from 'papaparse';
 
 const cellMetaData = useCellMetaData();
+const globalSettings = useGlobalSettings();
 const datasetSelectionStore = useDatasetSelectionStore();
 console.log(datasetSelectionStore.entryPointFilename);
 
