@@ -3,8 +3,9 @@ Meeting prep
 [x] get header string mapping functionality working
 [x] add simple way to change current attribute in looneage view
 [x] debug reasonable mod height
+[x] sort jz data
+[x] add ability to select track/cells
 [] add slider for lineage height
-[] sort jz data
 [] add debug layout
 [] simple image viewer
 [] add placeholder sliders for filtering
@@ -35,7 +36,7 @@ Uncategorized
 --
 create small fake dataset on gh
 create (maybe interactive?) legend for horizon chart |/  /  /  /|
-
+add aardvark icon
 
 add close widget option 
 

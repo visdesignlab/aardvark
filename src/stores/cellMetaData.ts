@@ -292,7 +292,11 @@ export const useCellMetaData = defineStore('cellMetaData', () => {
         // as well as building the lineage data list/map
         for (const track of trackArray.value) {
             const parentId = track.parentId;
-            if (parentId == '' || parentId == track.trackId) {
+            if (
+                parentId == '' ||
+                parentId == track.trackId ||
+                parentId == '-404' // my hack for now to indicate there is no parent numerically
+            ) {
                 // founder cell
                 const lineageId = track.trackId;
                 const lineage: Lineage = {
