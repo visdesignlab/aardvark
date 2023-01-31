@@ -1,12 +1,14 @@
 Meeting prep
 [x] investigate / add michael data
 [x] get header string mapping functionality working
-[] add simple way to change current attribute in looneage view
+[x] add simple way to change current attribute in looneage view
+[] debug reasonable mod height
 [] add slider for lineage height
 [] sort jz data
 [] add debug layout
 [] simple image viewer
 [] add placeholder sliders for filtering
+
 
 
 Trrack Integration (on hold)
@@ -21,16 +23,17 @@ quasar ui updatse
 [] item list selection for custom layouts
 [] change widget container to quasar card
 
-Misc fixes
+Misc fixes/enhancements
 [] improve looneage view recalculation issue
 [] fix table scrollbar issue (try switching to q-table)
 [] add store to the name of all stores
-[] debug reasonable mod height
+[] cache large data requests e.g. to tabular data
 
 
 Uncategorized
 --
 create small fake dataset on gh
+create (maybe interactive?) legend for horizon chart |/  /  /  /|
 
 
 add close widget option 
