@@ -55,13 +55,15 @@ const looneageContainer = ref(null);
 
 const cellMetaData = useCellMetaData();
 
+const attrKey = computed(() => cellMetaData.headerKeys.mass);
+
 interface LooneageViewProps {
-    attrKey: string;
+    // attrKey: string;
     // containerWidth: number;
-    encodeChildSplit: boolean;
-    initialSpacing: number;
-    initialRowHeight: number;
-    horizonChartSettings: HorizonChartSettings;
+    encodeChildSplit?: boolean;
+    initialSpacing?: number;
+    initialRowHeight?: number;
+    horizonChartSettings?: HorizonChartSettings;
 }
 
 const props = withDefaults(defineProps<LooneageViewProps>(), {
@@ -86,7 +88,7 @@ const spacing = computed(() => {
 const { width: containerWidth } = useElementSize(looneageContainer);
 // const containerWidth = computed(() => {
 //     const { width } = useElementSize(looneageContainer);
-//     console.log('CONTAINER WIDTH: ', width);
+//     // console.log('CONTAINER WIDTH: ', width);
 //     return 800;
 // });
 
@@ -121,7 +123,7 @@ function getReasonableModH(): number {
         (node: LayoutNode<Track>) =>
             d3Min(
                 node.data.cells,
-                (point: Cell) => point.attrNum[props.attrKey]
+                (point: Cell) => point.attrNum[attrKey.value]
             )
     ) as unknown as number;
     const maxVal = d3Max(
@@ -129,7 +131,7 @@ function getReasonableModH(): number {
         (node: LayoutNode<Track>) =>
             d3Max(
                 node.data.cells,
-                (point: Cell) => point.attrNum[props.attrKey]
+                (point: Cell) => point.attrNum[attrKey.value]
             )
     ) as unknown as number;
     return (maxVal - minVal) / 5;
@@ -182,8 +184,8 @@ const containerHeight = computed<number>(() => {
 
 function getSplitWeight(source: Track, target: Track): number {
     if (!props.encodeChildSplit) return 0;
-    const lastVal = last(source.cells)?.attrNum[props.attrKey] ?? 1;
-    const firstVal = target.cells[0].attrNum[props.attrKey];
+    const lastVal = last(source.cells)?.attrNum[attrKey.value] ?? 1;
+    const firstVal = target.cells[0].attrNum[attrKey.value];
     const basicWeight = firstVal / lastVal;
     return clamp(basicWeight - 0.5, 0, 1);
 }
@@ -201,7 +203,7 @@ function getSplitWeight(source: Track, target: Track): number {
 //     addKeyFrames(props.dataRoot, keyFrames);
 //     let keyFrameList: number[] = Array.from(keyFrames);
 //     keyFrameList = sortBy(keyFrameList);
-//     console.log({ keyFrameList: keyFrameList });
+//     // console.log({ keyFrameList: keyFrameList });
 
 //     return keyFrameList;
 // });

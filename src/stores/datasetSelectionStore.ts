@@ -4,12 +4,16 @@ import { v4 as uuidv4 } from 'uuid';
 import { useStorage } from '@vueuse/core';
 import { parse, type ParseResult } from 'papaparse';
 
-import { useCellMetaData, type AnyAttributes } from '@/stores/cellMetaData';
+import {
+    useCellMetaData,
+    type AnyAttributes,
+    type TextTransforms,
+} from '@/stores/cellMetaData';
 export interface ExperimentMetadata {
     name?: string; // user friendly name
     filename: string;
     headers: string[];
-    specialHeaderMap?: { from: string; to: string }[]; // maps things like "Time (h)" to "time"
+    headerTransforms?: TextTransforms; // maps things like "Time (h)" to "time"
     valueRanges?: { string: { min: number; max: number } };
     // can precompute min/max for each column across experiments
     conditions?: string[];
@@ -54,11 +58,11 @@ export const useDatasetSelectionStore = defineStore(
         });
 
         async function fetchEntryFile(): Promise<void> {
-            console.log('data url change');
-            console.log({ url: serverUrl.value });
+            // console.log('data url change');
+            // console.log({ url: serverUrl.value });
             const fullURL = 'http://' + serverUrl.value + entryPointFilename;
             if (controller) {
-                console.log('abort called');
+                // console.log('abort called');
                 controller.abort('stale request'); // cancel last fetch if it's still trying
             }
             controller = new AbortController();
@@ -79,14 +83,14 @@ export const useDatasetSelectionStore = defineStore(
             }
             fetchingEntryFile.value = false;
             serverUrlValid.value = true;
-            console.log({ response });
+            // console.log({ response });
             const data = await response.json();
-            console.log({ data });
+            // console.log({ data });
             experimentFilenameList.value = data.experiments;
         }
 
         function handleFetchEntryError(message: string): void {
-            // console.log('ERROR', errorMessage);
+            // // console.log('ERROR', errorMessage);
             errorMessage.value = message;
             serverUrlValid.value = false;
             fetchingEntryFile.value = false;
@@ -97,15 +101,15 @@ export const useDatasetSelectionStore = defineStore(
         });
 
         async function fetchCurrentExperimentFile(): Promise<void> {
-            console.log('experiment change');
-            console.log({ file: currentExperimentFilename.value });
+            // console.log('experiment change');
+            // console.log({ file: currentExperimentFilename.value });
             const fullURL =
                 'http://' +
                 serverUrl.value +
                 '/' +
                 currentExperimentFilename.value;
             // if (controller) {
-            //     console.log('abort called');
+            //     // console.log('abort called');
             //     controller.abort('stale request'); // cancel last fetch if it's still trying
             // }
             // controller = new AbortController();
@@ -127,9 +131,9 @@ export const useDatasetSelectionStore = defineStore(
             // }
             // fetchingEntryFile.value = false;
             // serverUrlValid.value = true;
-            console.log({ response });
+            // console.log({ response });
             const data = await response.json();
-            console.log({ data });
+            // console.log({ data });
             currentExperimentMetadata.value = data;
         }
 
@@ -145,12 +149,13 @@ export const useDatasetSelectionStore = defineStore(
         }
 
         watch(currentLocationMetadata, () => {
+            console.log('current location change');
             const url =
                 'http://' +
                 serverUrl.value +
                 '/' +
                 currentLocationMetadata.value?.tabularDataFilename;
-            console.log(url);
+            // console.log(url);
             // this will probably break if you spam the data selections
             // could just add a spinner and call it a day 🤷
             fetchingTabularData.value = true;
@@ -160,19 +165,26 @@ export const useDatasetSelectionStore = defineStore(
                 skipEmptyLines: true,
                 download: true,
                 worker: true,
+                comments: '#',
                 complete: (results: ParseResult<AnyAttributes>, file) => {
+                    console.log('parse complete');
+                    console.log(
+                        'headers',
+                        currentExperimentMetadata.value?.headerTransforms
+                    );
                     cellMetaData.init(
                         results.data,
-                        results.meta.fields as string[]
+                        results.meta.fields as string[],
+                        currentExperimentMetadata.value?.headerTransforms
                     );
-                    console.log({ results, file });
+                    // console.log({ results, file });
                     fetchingTabularData.value = false;
                 },
             });
         });
 
         // function handleFetchExperimentError(message: string): void {
-        //     // console.log('ERROR', errorMessage);
+        //     // // console.log('ERROR', errorMessage);
         //     errorMessage.value = message;
         //     serverUrlValid.value = false;
         //     fetchingEntryFile.value = false;

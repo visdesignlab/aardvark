@@ -1,6 +1,9 @@
 Meeting prep
-[] investigate / add michael data
-[] get header string mapping functionality working
+[x] investigate / add michael data
+[x] get header string mapping functionality working
+[] add simple way to change current attribute in looneage view
+[] add debug layout
+[] add slider for lineage height
 [] sort jz data
 [] simple image viewer
 [] add placeholder sliders for filtering

@@ -35,17 +35,30 @@ export interface AnyAttributes {
     [index: string]: any;
 }
 
+export interface TextTransforms {
+    [index: string]: string;
+}
+
+export interface SpecialHeaders {
+    time: string;
+    trackId: string;
+    parentId: string;
+    mass: string;
+}
+
 // export interface D3CSV extends Array<AnyAttributes> {
 //     // something like this should be in the d3-types, but I'm tired of debugging
 //     // why this isn't importing, so I can just use this one.
 //     columns: string[];
 // }
 export const useCellMetaData = defineStore('cellMetaData', () => {
-    const headerKeys = ref({
+    const defaultHeaders: SpecialHeaders = {
         time: 'time',
         trackId: 'id',
         parentId: 'parent',
-    });
+        mass: 'mass',
+    };
+    const headerKeys = ref<SpecialHeaders>(defaultHeaders);
     const headers = ref<string[]>();
 
     // we might want to wrap these inside a container, so it's convenient to create a list of them.
@@ -132,13 +145,29 @@ export const useCellMetaData = defineStore('cellMetaData', () => {
         return headers;
     });
 
-    function init(rawData: AnyAttributes[], columnHeaders: string[]): void {
+    function init(
+        rawData: AnyAttributes[],
+        columnHeaders: string[],
+        headerTransforms?: TextTransforms
+    ): void {
         headers.value = columnHeaders;
+        initHeaderTransforms(headerTransforms);
         initCells(rawData);
         initTracks();
         initLineages();
         selectedLineage.value = lineageArray?.value?.[0];
         dataInitialized.value = true;
+    }
+
+    function initHeaderTransforms(trans?: TextTransforms): void {
+        headerKeys.value = { ...defaultHeaders };
+        if (trans) {
+            const h = headerKeys.value;
+            if (trans.time) h.time = trans.time;
+            if (trans.id) h.trackId = trans.id;
+            if (trans.parent) h.parentId = trans.parent;
+            if (trans.mass) h.mass = trans.mass;
+        }
     }
 
     function initCells(rawData: AnyAttributes[]): void {

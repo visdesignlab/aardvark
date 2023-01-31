@@ -60,7 +60,7 @@ export default defineComponent({
     },
     setup(props) {
         function debug(): void {
-            console.log(props.info);
+            // console.log(props.info);
         }
         function getReasonableModH(): number {
             const [minVal, maxVal] = d3Extent(
@@ -131,7 +131,7 @@ export default defineComponent({
 
         const areaPath = computed(() => {
             const path = areaGen.value(props.data);
-            console.log({ path });
+            // console.log({ path });
             return path;
         });
 
@@ -182,7 +182,7 @@ export default defineComponent({
                     const color = negativeScale(colorKey);
                     offsetInfo.push({ transform, color });
                 }
-                console.log({ offsetInfo });
+                // console.log({ offsetInfo });
                 return offsetInfo;
             }
         );

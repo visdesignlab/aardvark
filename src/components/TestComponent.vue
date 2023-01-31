@@ -73,7 +73,7 @@ function addOne() {
 
 function copyGridstackCongif() {
     const blarg = cloneDeep(layoutConfig.$state);
-    console.log({ blarg });
+    // console.log({ blarg });
 }
 const label = ref({
     min: -12,

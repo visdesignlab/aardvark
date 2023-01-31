@@ -41,10 +41,10 @@ export const useLayoutConfig = defineStore('layoutConfig', () => {
             w: 12,
             h: 10,
             id: uuidv4(),
-            props: {
-                // attrKey: 'Dry Mass (pg)',
-                attrKey: 'mass',
-            },
+            // props: {
+            //     // attrKey: 'Dry Mass (pg)',
+            //     attrKey: 'mass',
+            // },
         },
         {
             component: 'SimpleTable',
@@ -153,9 +153,9 @@ export const useLayoutConfig = defineStore('layoutConfig', () => {
         );
     }
     function deleteLayout(index: number): void {
-        console.log(currentLayoutId.value);
+        // console.log(currentLayoutId.value);
         const removed = userLayoutOptions.value.splice(index, 1)[0];
-        console.log(currentLayoutId.value);
+        // console.log(currentLayoutId.value);
         if (removed.id == currentLayoutId.value) {
             currentLayoutId.value = defaultId;
         }

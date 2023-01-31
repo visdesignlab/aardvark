@@ -75,7 +75,7 @@ const cellMetaData = useCellMetaData();
 const globalSettings = useGlobalSettings();
 const datasetSelectionStore = useDatasetSelectionStore();
 const $q = useQuasar();
-console.log(datasetSelectionStore.entryPointFilename);
+// console.log(datasetSelectionStore.entryPointFilename);
 
 function onDataUpload(event: Event): void {
     const input = event.target as HTMLInputElement;
@@ -87,7 +87,7 @@ function onDataUpload(event: Event): void {
         skipEmptyLines: true,
         complete: (results: ParseResult<AnyAttributes>, file) => {
             cellMetaData.init(results.data, results.meta.fields as string[]);
-            console.log({ results, file });
+            // console.log({ results, file });
         },
     });
 }
@@ -110,15 +110,15 @@ watch(
 // const dataUrl = ref(null);
 // const data = ref<{ experiments: string[] }>({ experiments: [] });
 // watch(dataUrl, async () => {
-//     console.log('data url change');
-//     console.log({ url: dataUrl.value });
+//     // console.log('data url change');
+//     // console.log({ url: dataUrl.value });
 //     const response = await fetch('http://' + dataUrl.value + '/aa_index.json');
 //     // response.status
 //     data.value = await response.json();
 //     serverInputRef?.value?.validate();
-//     // console.log({ data.value });
-//     // .then((response) => console.log({ blarg: response.json() }))
-//     // .then((data) => console.log({ data }));
+//     // // console.log({ data.value });
+//     // .then((response) => // console.log({ blarg: response.json() }))
+//     // .then((data) => // console.log({ data }));
 // });
 
 // const urlValid = computed(() => data.value.experiments.length > 0);

@@ -73,16 +73,16 @@ onMounted(() => {
     });
 
     grid.on('change', (event: any, changeItems: any) => {
-        console.log('-------------------------------------------------');
-        console.log('grid.on change');
+        // console.log('-------------------------------------------------');
+        // console.log('grid.on change');
         if (changeItems == null) return;
         for (let changedItem of changeItems) {
             layoutConfig.updateItem(changedItem);
         }
-        console.log({ changeItems });
+        // console.log({ changeItems });
     });
     // grid.on('dragstart', (event: Event, element: any, ...args: any[]) => {
-    //     console.log({ event, element, args });
+    //     // console.log({ event, element, args });
     //     // event.preventDefault();
     // });
     // grid.on('dragstop', function (_event: any, element: any) {
