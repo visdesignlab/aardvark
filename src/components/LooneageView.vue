@@ -1,6 +1,12 @@
 <template>
     <NoDataSplash></NoDataSplash>
     <div v-if="cellMetaData.dataInitialized" ref="looneageContainer">
+        <q-select
+            label="Attribute"
+            v-model="attrKey"
+            :options="datasetSelectionStore.currentExperimentMetadata?.headers"
+            :dark="globalSettings.darkMode"
+        />
         <button @click="verticalScale -= 0.1">decrease</button>
         <button @click="verticalScale += 0.1">increase</button>
         <svg :width="containerWidth" :height="containerHeight">
@@ -38,7 +44,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue';
+import { ref, computed, watch } from 'vue';
 import { min as d3Min, max as d3Max, extent as d3Extent } from 'd3-array';
 import { scaleLinear } from 'd3-scale';
 import { clamp, last, sortBy } from 'lodash-es';
@@ -50,12 +56,22 @@ import { flextree, type LayoutNode } from 'd3-flextree';
 
 import { useElementSize } from '@vueuse/core';
 import { useCellMetaData, type Track, type Cell } from '@/stores/cellMetaData';
+import { useGlobalSettings } from '@/stores/globalSettings';
+import { useDatasetSelectionStore } from '@/stores/datasetSelectionStore';
 
 const looneageContainer = ref(null);
 
 const cellMetaData = useCellMetaData();
+const globalSettings = useGlobalSettings();
+const datasetSelectionStore = useDatasetSelectionStore();
 
-const attrKey = computed(() => cellMetaData.headerKeys.mass);
+const attrKey = ref<string>(cellMetaData.headerKeys.mass); // Default to mass
+watch(
+    // todo  - this mostly works, but also is triggered on locastion change...
+    () => cellMetaData.headerKeys,
+    () => (attrKey.value = cellMetaData.headerKeys.mass)
+);
+// const attrKey = computed(() => cellMetaData.headerKeys.mass);
 
 interface LooneageViewProps {
     // attrKey: string;

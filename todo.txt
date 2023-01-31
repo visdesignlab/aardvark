@@ -2,9 +2,9 @@ Meeting prep
 [x] investigate / add michael data
 [x] get header string mapping functionality working
 [] add simple way to change current attribute in looneage view
-[] add debug layout
 [] add slider for lineage height
 [] sort jz data
+[] add debug layout
 [] simple image viewer
 [] add placeholder sliders for filtering
 
@@ -25,8 +25,11 @@ Misc fixes
 [] improve looneage view recalculation issue
 [] fix table scrollbar issue (try switching to q-table)
 [] add store to the name of all stores
+[] debug reasonable mod height
 
 
+Uncategorized
+--
 create small fake dataset on gh
 
 
@@ -34,7 +37,6 @@ add close widget option
 
 add option to filter out parts of tree
 add option to select attribute in looneage
-debug reasonable mod height
 add images to looneage view
 add extra charts to looneage view
 add option to view multiple lineages?

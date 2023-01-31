@@ -1,5 +1,6 @@
 import { ref, computed } from 'vue';
 import { defineStore } from 'pinia';
+import { isEqual } from 'lodash-es';
 export interface Lineage {
     lineageId: string; // should be equal to the founder trackId
     founder: Track;
@@ -44,6 +45,7 @@ export interface SpecialHeaders {
     trackId: string;
     parentId: string;
     mass: string;
+    // changes here require changes to initHeaderTransforms and transformsEqual
 }
 
 // export interface D3CSV extends Array<AnyAttributes> {
@@ -160,6 +162,8 @@ export const useCellMetaData = defineStore('cellMetaData', () => {
     }
 
     function initHeaderTransforms(trans?: TextTransforms): void {
+        if (transformsEqual(trans)) return;
+        // avoid change so watchers won't have extra calls
         headerKeys.value = { ...defaultHeaders };
         if (trans) {
             const h = headerKeys.value;
@@ -168,6 +172,18 @@ export const useCellMetaData = defineStore('cellMetaData', () => {
             if (trans.parent) h.parentId = trans.parent;
             if (trans.mass) h.mass = trans.mass;
         }
+    }
+
+    function transformsEqual(trans?: TextTransforms): boolean {
+        if (trans == null) {
+            return isEqual(headerKeys.value, defaultHeaders);
+        }
+        return (
+            trans.time === headerKeys.value.time &&
+            trans.id === headerKeys.value.trackId &&
+            trans.parent === headerKeys.value.parentId &&
+            trans.mass === headerKeys.value.mass
+        );
     }
 
     function initCells(rawData: AnyAttributes[]): void {
