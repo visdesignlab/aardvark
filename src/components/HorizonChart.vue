@@ -3,7 +3,13 @@
     <clipPath :id="clipPathId">
         <rect x="0" y="0" :width="chartWidth" :height="chartHeight"></rect>
     </clipPath>
-    <rect x="0" y="0" :width="chartWidth" :height="chartHeight">
+    <rect
+        x="0"
+        y="0"
+        :width="chartWidth"
+        :height="chartHeight"
+        :class="selected ? 'selected' : ''"
+    >
         <title>Info: {{ info }}</title>
     </rect>
 
@@ -44,6 +50,7 @@ export default defineComponent({
         data: { type: Array as () => any[], required: true },
         timeAccessor: { type: Function, required: true },
         valueAccessor: { type: Function, required: true },
+        selected: { type: Boolean, required: false }, // move to settings?
         settings: {
             type: Object as () => HorizonChartSettings,
             default: () => {
@@ -213,5 +220,11 @@ rect {
 .stroke-thin {
     stroke: black;
     stroke-width: 0.25;
+}
+
+.selected {
+    // stroke: green;
+    // stroke-width: 4pt;
+    outline: solid forestgreen 4px;
 }
 </style>

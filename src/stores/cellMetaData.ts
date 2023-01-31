@@ -79,6 +79,7 @@ export const useCellMetaData = defineStore('cellMetaData', () => {
     const lineageArray = ref<Lineage[]>();
     const lineageMap = ref<Map<string, Lineage>>();
     const selectedLineage = ref<Lineage>();
+    const selectedTrack = ref<Track | null>(null);
 
     const cellAttributeHeaders = computed<HeaderDef[]>(() => {
         if (!dataInitialized.value) return [];
@@ -362,6 +363,7 @@ export const useCellMetaData = defineStore('cellMetaData', () => {
         trackAttributeHeaders,
         lineageAttributeHeaders,
         selectedLineage,
+        selectedTrack,
         init,
         getTime,
         getNumAttr,

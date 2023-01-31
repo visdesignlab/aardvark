@@ -37,8 +37,9 @@ const headers = computed(() => {
 const items = computed(() => {
     switch (props.attributeLevel) {
         case 'cell':
-            return cellMetaData.cellArray;
+            return cellMetaData.selectedTrack?.cells ?? cellMetaData.cellArray;
         case 'track':
+            if (cellMetaData.selectedTrack) return [cellMetaData.selectedTrack];
             return cellMetaData.trackArray;
         case 'lineage':
             return cellMetaData.lineageArray;
