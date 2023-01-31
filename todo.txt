@@ -2,7 +2,7 @@ Meeting prep
 [x] investigate / add michael data
 [x] get header string mapping functionality working
 [x] add simple way to change current attribute in looneage view
-[] debug reasonable mod height
+[x] debug reasonable mod height
 [] add slider for lineage height
 [] sort jz data
 [] add debug layout
@@ -19,6 +19,7 @@ refactor cell meta data to support selecting multiple locations
 
 
 quasar ui updatse
+[] switch to quasar table
 [] layout/settings panel
 [] item list selection for custom layouts
 [] change widget container to quasar card

@@ -4,11 +4,12 @@
         <q-select
             label="Attribute"
             v-model="attrKey"
-            :options="datasetSelectionStore.currentExperimentMetadata?.headers"
+            :options="attrOptions"
             :dark="globalSettings.darkMode"
+            class="mb-1"
         />
-        <button @click="verticalScale -= 0.1">decrease</button>
-        <button @click="verticalScale += 0.1">increase</button>
+        <!-- <button @click="verticalScale -= 0.1">decrease</button>
+        <button @click="verticalScale += 0.1">increase</button> -->
         <svg :width="containerWidth" :height="containerHeight">
             <g :transform="`translate(0,${-extent[1]})`">
                 <g
@@ -21,7 +22,12 @@
                         :chartWidth="scaleX(getWidth(node.data))"
                         :chartHeight="rowHeight"
                         :data="node.data.cells"
-                        :settings="mergedHorizonChartSettings"
+                        :settings="{
+                            baseline: 0,
+                            modHeight: reasonableModH,
+                            mirrorNegative: false,
+                            includeBinLine: true,
+                        }"
                         :timeAccessor="cellMetaData.getTime"
                         :valueAccessor="(cell: Cell) => cellMetaData.getNumAttr(cell, attrKey)"
                         :info="node.data.trackId"
@@ -71,6 +77,12 @@ watch(
     () => cellMetaData.headerKeys,
     () => (attrKey.value = cellMetaData.headerKeys.mass)
 );
+const attrOptions = computed<string[]>(() => {
+    const numericalHeaders = cellMetaData?.cellAttributeHeaders.filter(
+        (header) => header.type === 'number'
+    );
+    return numericalHeaders.map((header) => header.text);
+});
 // const attrKey = computed(() => cellMetaData.headerKeys.mass);
 
 interface LooneageViewProps {
@@ -132,7 +144,28 @@ const layoutRoot = computed<LayoutNode<Track>>(() => {
     })(tree.value);
 });
 
-function getReasonableModH(): number {
+// function getReasonableModH(): number {
+//     if (!cellMetaData.dataInitialized) return 100;
+//     const minVal = d3Min(
+//         layoutRoot.value.descendants(),
+//         (node: LayoutNode<Track>) =>
+//             d3Min(
+//                 node.data.cells,
+//                 (point: Cell) => point.attrNum[attrKey.value]
+//             )
+//     ) as unknown as number;
+//     const maxVal = d3Max(
+//         layoutRoot.value.descendants(),
+//         (node: LayoutNode<Track>) =>
+//             d3Max(
+//                 node.data.cells,
+//                 (point: Cell) => point.attrNum[attrKey.value]
+//             )
+//     ) as unknown as number;
+//     return (maxVal - minVal) / 5;
+// }
+
+const reasonableModH = computed(() => {
     if (!cellMetaData.dataInitialized) return 100;
     const minVal = d3Min(
         layoutRoot.value.descendants(),
@@ -151,15 +184,16 @@ function getReasonableModH(): number {
             )
     ) as unknown as number;
     return (maxVal - minVal) / 5;
-}
-const defaultSettings = {
-    modHeight: getReasonableModH(),
-    includeBinLine: true,
-};
-
-const mergedHorizonChartSettings = computed(() => {
-    return { ...defaultSettings, ...props.horizonChartSettings };
 });
+
+// const defaultSettings = {
+//     modHeight: reasonableModH,
+//     includeBinLine: true,
+// };
+
+// const mergedHorizonChartSettings = computed(() => {
+//     return { ...defaultSettings, ...props.horizonChartSettings };
+// });
 
 const scaleX = computed(() => {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars

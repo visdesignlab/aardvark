@@ -48,6 +48,13 @@ export interface SpecialHeaders {
     // changes here require changes to initHeaderTransforms and transformsEqual
 }
 
+export interface HeaderDef {
+    text: string;
+    value: string;
+    sortable: boolean;
+    type: 'string' | 'number';
+}
+
 // export interface D3CSV extends Array<AnyAttributes> {
 //     // something like this should be in the d3-types, but I'm tired of debugging
 //     // why this isn't importing, so I can just use this one.
@@ -73,12 +80,17 @@ export const useCellMetaData = defineStore('cellMetaData', () => {
     const lineageMap = ref<Map<string, Lineage>>();
     const selectedLineage = ref<Lineage>();
 
-    const cellAttributeHeaders = computed(() => {
+    const cellAttributeHeaders = computed<HeaderDef[]>(() => {
         if (!dataInitialized.value) return [];
         if (cellArray.value == null) return [];
-        const headers = [
-            { text: 'Row ID', value: 'rowId', sortable: true },
-            { text: 'Track ID', value: 'trackId', sortable: true },
+        const headers: HeaderDef[] = [
+            { text: 'Row ID', value: 'rowId', sortable: true, type: 'string' },
+            {
+                text: 'Track ID',
+                value: 'trackId',
+                sortable: true,
+                type: 'string',
+            },
         ];
         const firstCell = cellArray.value[0];
         for (const key in firstCell.attrNum) {
@@ -86,6 +98,7 @@ export const useCellMetaData = defineStore('cellMetaData', () => {
                 text: key,
                 value: `attrNum.${key}`,
                 sortable: true,
+                type: 'number',
             });
         }
         for (const key in firstCell.attrStr) {
@@ -93,6 +106,7 @@ export const useCellMetaData = defineStore('cellMetaData', () => {
                 text: key,
                 value: `attrStr.${key}`,
                 sortable: true,
+                type: 'string',
             });
         }
         return headers;
