@@ -1,27 +1,31 @@
-switch to server from file upload
-[X] scaffold dataset selection store
-[X] create basic UI
-    [x] dark mode for quasar?
-    [x] add spinner/blocker
-[x] allow switching between a single data "chunks"
-[] refactor to support multiple "chunks"
+Meeting prep
+[] investigate / add michael data
+[] get header string mapping functionality working
+[] sort jz data
+[] simple image viewer
+[] add placeholder sliders for filtering
 
-investigate marcus new data
 
-add simple image viewer
-reorg meta data to fit trrack and support multidataset selection
+Trrack Integration (on hold)
+[] add image selection store
+[] add config layout store
 
-add placeholder sliders for filtering
+refactor cell meta data to support selecting multiple locations
 
-switch to quasar layout.
-improve looneage view recalculation issue
-integrate track library arg.
 
-fix table scrollbar issue (try switching to q-table)
+quasar ui updatse
+[] layout/settings panel
+[] item list selection for custom layouts
+[] change widget container to quasar card
+
+Misc fixes
+[] improve looneage view recalculation issue
+[] fix table scrollbar issue (try switching to q-table)
+[] add store to the name of all stores
+
 
 create small fake dataset on gh
 
-add store to the name of all stores
 
 add close widget option 
 
@@ -41,4 +45,4 @@ create components
 
 
 Bugs I shouldn't bother fixing
-* single-column layout causes weirdness on refresh
+- single-column layout causes weirdness on refresh
