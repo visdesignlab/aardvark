@@ -1,4 +1,5 @@
 <template>
+    <q-btn @click="showLoading">Show loading shield</q-btn>
     <button @click="addOne">Plus 1</button>
     <div>{{ counter.count }}</div>
     <!-- <button @click="copyGridstackCongif">Pcopy</button> -->
@@ -61,6 +62,9 @@ import { useCounterStore } from '@/stores/counter';
 import { useLayoutConfig } from '@/stores/layoutConfig';
 import { cloneDeep } from 'lodash';
 import { ref, computed, reactive } from 'vue';
+import { useQuasar } from 'quasar';
+const $q = useQuasar();
+
 const counter = useCounterStore();
 const layoutConfig = useLayoutConfig();
 function addOne() {
@@ -80,6 +84,10 @@ const first = ref(true);
 const second = ref(true);
 const third = ref(false);
 const fourth = ref(true);
+
+function showLoading(): void {
+    $q.loading.show();
+}
 </script>
 
 <style scoped lang="scss"></style>

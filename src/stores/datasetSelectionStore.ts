@@ -1,4 +1,4 @@
-import { ref, computed, watch } from 'vue';
+import { ref, computed, watch, nextTick } from 'vue';
 import { defineStore } from 'pinia';
 import { v4 as uuidv4 } from 'uuid';
 import { useStorage } from '@vueuse/core';
@@ -36,6 +36,7 @@ export const useDatasetSelectionStore = defineStore(
 
         const serverUrlValid = ref(true);
         const fetchingEntryFile = ref(false);
+        const fetchingTabularData = ref(false);
         const errorMessage = ref('default error message');
         let controller: AbortController;
 
@@ -152,17 +153,20 @@ export const useDatasetSelectionStore = defineStore(
             console.log(url);
             // this will probably break if you spam the data selections
             // could just add a spinner and call it a day 🤷
+            fetchingTabularData.value = true;
             parse(url, {
                 header: true,
                 dynamicTyping: true,
                 skipEmptyLines: true,
                 download: true,
+                worker: true,
                 complete: (results: ParseResult<AnyAttributes>, file) => {
                     cellMetaData.init(
                         results.data,
                         results.meta.fields as string[]
                     );
                     console.log({ results, file });
+                    fetchingTabularData.value = false;
                 },
             });
         });
@@ -183,6 +187,7 @@ export const useDatasetSelectionStore = defineStore(
             experimentFilenameList,
             currentExperimentFilename,
             currentExperimentMetadata,
+            fetchingTabularData,
             fetchEntryFile,
             selectImagingLocation,
         };

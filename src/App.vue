@@ -46,6 +46,10 @@ function setBsTheme(darkMode: boolean): void {
 }
 onBeforeMount(() => {
     setBsTheme(globalSettings.darkMode);
+    document.body.style.overflowY = 'unset';
+    // ☝️ hack. quasar loading is forcing a y scroll on body which is causing
+    // weird relayout issues when a loading screen is triggered. This prevents that.
+    // there is still an awkward reset, but I can live with it.
 });
 </script>
 

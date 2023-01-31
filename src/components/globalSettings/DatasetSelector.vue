@@ -47,7 +47,9 @@
                 v-ripple
                 :active="location.show"
                 @click="
-                    () => datasetSelectionStore.selectImagingLocation(location)
+                    () => {
+                        datasetSelectionStore.selectImagingLocation(location);
+                    }
                 "
                 :dark="globalSettings.darkMode"
                 ><q-item-section>{{ location.id }}</q-item-section></q-item
@@ -63,6 +65,7 @@
 
 <script setup lang="ts">
 import { ref, watch, computed } from 'vue';
+import { useQuasar } from 'quasar';
 import { useCellMetaData, type AnyAttributes } from '@/stores/cellMetaData';
 import { useGlobalSettings } from '@/stores/globalSettings';
 import { useDatasetSelectionStore } from '@/stores/datasetSelectionStore';
@@ -71,6 +74,7 @@ import { parse, type ParseResult } from 'papaparse';
 const cellMetaData = useCellMetaData();
 const globalSettings = useGlobalSettings();
 const datasetSelectionStore = useDatasetSelectionStore();
+const $q = useQuasar();
 console.log(datasetSelectionStore.entryPointFilename);
 
 function onDataUpload(event: Event): void {
@@ -88,6 +92,21 @@ function onDataUpload(event: Event): void {
     });
 }
 const serverInputRef = ref<any>(null);
+const blarg = ref();
+// watch(datasetSelectionStore.fetchingTabularData, () => {
+watch(
+    () => datasetSelectionStore.fetchingTabularData,
+    () => {
+        if (datasetSelectionStore.fetchingTabularData) {
+            $q.loading.show({
+                delay: 0,
+                // customClass: 'my-super-cool-custom-class',
+            });
+        } else {
+            $q.loading.hide();
+        }
+    }
+);
 // const dataUrl = ref(null);
 // const data = ref<{ experiments: string[] }>({ experiments: [] });
 // watch(dataUrl, async () => {

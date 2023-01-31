@@ -13,7 +13,7 @@ import SimpleTable from './components/SimpleTable.vue';
 import NoDataSplash from './components/NoDataSplash.vue';
 import TestComponent from './components/TestComponent.vue';
 
-import { Quasar } from 'quasar';
+import { Quasar, Loading } from 'quasar';
 // Import icon libraries
 import '@quasar/extras/material-icons/material-icons.css';
 
@@ -53,7 +53,14 @@ createApp(App)
     .use(createPinia())
     .use(vuetify)
     .use(Quasar, {
-        plugins: {}, // import Quasar plugins and add here
+        plugins: { Loading }, // import Quasar plugins and add here,
+        config: {
+            loading: {
+                delay: 0,
+                /* look at QuasarConfOptions from the API card.
+                https://quasar.dev/quasar-plugins/loading#api--loading */
+            },
+        },
     })
     .component('font-awesome-icon', FontAwesomeIcon)
     .component('EasyDataTable', Vue3EasyDataTable)

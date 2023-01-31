@@ -2,7 +2,7 @@ switch to server from file upload
 [X] scaffold dataset selection store
 [X] create basic UI
     [x] dark mode for quasar?
-    [] add spinner/blocker
+    [x] add spinner/blocker
 [x] allow switching between a single data "chunks"
 [] refactor to support multiple "chunks"
 
