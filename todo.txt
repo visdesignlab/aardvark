@@ -1,13 +1,7 @@
-Meeting prep
-[x] investigate / add michael data
-[x] get header string mapping functionality working
-[x] add simple way to change current attribute in looneage view
-[x] debug reasonable mod height
-[x] sort jz data
-[x] add ability to select track/cells
+Next
+[] simple image viewer
 [] add slider for lineage height
 [] add debug layout
-[] simple image viewer
 [] add placeholder sliders for filtering
 
 
@@ -30,6 +24,7 @@ Misc fixes/enhancements
 [] fix table scrollbar issue (try switching to q-table)
 [] add store to the name of all stores
 [] cache large data requests e.g. to tabular data
+[] crash when selecting lineage with single length track
 
 
 Uncategorized
@@ -37,6 +32,7 @@ Uncategorized
 create small fake dataset on gh
 create (maybe interactive?) legend for horizon chart |/  /  /  /|
 add aardvark icon
+research filter options (vega, plotly, other)
 
 add close widget option 
 

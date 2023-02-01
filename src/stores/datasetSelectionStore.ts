@@ -16,7 +16,7 @@ export interface ExperimentMetadata {
     headerTransforms?: TextTransforms; // maps things like "Time (h)" to "time"
     valueRanges?: { string: { min: number; max: number } };
     // can precompute min/max for each column across experiments
-    conditions?: string[];
+    conditions?: string[]; // todo - does this need to be 2d?
     locationMetadataList: LocationMetadata[];
 }
 
@@ -26,7 +26,7 @@ export interface LocationMetadata {
     tabularDataFilename: string;
     imageDataFilename?: string;
     name?: string; // user friendly name
-    condition?: string; // experimental condition
+    condition?: string; // experimental condition // todo - does this need to be an array
     plate?: string;
     well?: string;
     location?: string;
