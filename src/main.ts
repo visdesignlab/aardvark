@@ -10,6 +10,7 @@ import GeneralSettings from './components/globalSettings/GeneralSettings.vue';
 import StubView from './components/globalSettings/StubView.vue';
 import LooneageView from './components/LooneageView.vue';
 import SimpleTable from './components/SimpleTable.vue';
+import ImageViewer from './components/ImageViewer.vue';
 import NoDataSplash from './components/NoDataSplash.vue';
 import TestComponent from './components/TestComponent.vue';
 
@@ -68,6 +69,7 @@ createApp(App)
     .component('DatasetSelector', DatasetSelector)
     .component('LayoutSelector', LayoutSelector)
     .component('GeneralSettings', GeneralSettings)
+    .component('ImageViewer', ImageViewer)
     .component('LooneageView', LooneageView)
     .component('SimpleTable', SimpleTable)
     .component('NoDataSplash', NoDataSplash)

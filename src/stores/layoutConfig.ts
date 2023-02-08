@@ -87,6 +87,14 @@ export const useLayoutConfig = defineStore('layoutConfig', () => {
             h: 8,
             id: uuidv4(),
         },
+        {
+            component: 'ImageViewer',
+            x: 0,
+            y: 18,
+            w: 4,
+            h: 8,
+            id: uuidv4(),
+        },
     ];
     const defaultId = 'system_layout_0';
     const defaultLayout: Layout = {
