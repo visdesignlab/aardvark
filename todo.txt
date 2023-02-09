@@ -29,6 +29,7 @@ Misc fixes/enhancements
 
 Uncategorized
 --
+include polynomial curvature as a LLA (lineage level attribute)
 create small fake dataset on gh
 create (maybe interactive?) legend for horizon chart |/  /  /  /|
 add aardvark icon
