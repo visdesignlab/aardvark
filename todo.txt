@@ -27,6 +27,10 @@ Misc fixes/enhancements
 [] crash when selecting lineage with single length track
 
 
+Validator component
+[] sorted
+[] duplicate time
+
 Uncategorized
 --
 include polynomial curvature as a LLA (lineage level attribute)

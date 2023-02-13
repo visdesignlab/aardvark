@@ -1,6 +1,6 @@
 import { ref, computed } from 'vue';
 import { defineStore } from 'pinia';
-import { isEqual } from 'lodash-es';
+import { isEqual, every } from 'lodash-es';
 export interface Lineage {
     lineageId: string; // should be equal to the founder trackId
     founder: Track;
@@ -280,6 +280,11 @@ export const useCellMetaData = defineStore('cellMetaData', () => {
         if (trackArray.value == null) return;
         for (const track of trackArray.value) {
             track.attrNum['track_length'] = track.cells.length;
+            track.attrNum['sorted'] = every(track.cells, (val, index, arr) => {
+                return index === 0 || getTime(arr[index - 1]) <= getTime(val);
+            })
+                ? 1
+                : 0;
         }
     }
 
