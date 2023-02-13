@@ -32,6 +32,7 @@ import {
     getChannelStats,
     getDefaultInitialViewState,
     ImageLayer,
+    AdditiveColormapExtension,
 } from '@hms-dbmi/viv';
 
 import { applyPureReactInVue, applyReactInVue } from 'veaury';
@@ -128,8 +129,8 @@ onMounted(async () => {
     });
     const channelStats = getChannelStats(raster.data);
 
-    // const contrastLimits = [channelStats.contrastLimits];
-    const contrastLimits: [number, number][] = [[153, 539]];
+    const contrastLimits: [number, number][] = [channelStats.contrastLimits];
+    // const contrastLimits: [number, number][] = [[153, 539]];
     // const contrastLimits = [{ begin: 153, end: 539 }];
     console.log({ loader, channelStats, contrastLimits });
     const selections = [{ c: 0, t: 0, z: 0 }];
@@ -155,14 +156,19 @@ onMounted(async () => {
 
     const z = 1;
     const overviewScale = 1;
-    const pixelSource = loader.data[0] as PixelSource<string>;
+    const pixelSource = loader.data[0] as PixelSource<any>;
+    const colormapExtension = new AdditiveColormapExtension();
+    // colormapExtension.updateState({ props: { colormap: 'jet' } });
+    // colormapExtension.colormap =
     const imageLayer = new ImageLayer({
         loader: pixelSource,
-        modelMatrix: new Matrix4().scale(2 ** z * overviewScale),
+        // modelMatrix: new Matrix4().scale(2 ** z * overviewScale),
         id: 'test-image-layer',
         contrastLimits,
         selections,
         channelsVisible,
+        extensions: [colormapExtension],
+        colormap: 'bone',
     });
     console.log({ el: deckGlContainer.value });
     const deckgl = new Deck({
