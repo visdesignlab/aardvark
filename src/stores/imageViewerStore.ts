@@ -12,7 +12,7 @@ export const useImageViewerStore = defineStore('imageViewerStore', () => {
         min: 0,
         max: 0,
     });
-    const contrastLimit = computed(() => {
+    const contrastLimit = computed<[number, number][]>(() => {
         return [[contrastLimitSlider.value.min, contrastLimitSlider.value.max]];
     });
 
