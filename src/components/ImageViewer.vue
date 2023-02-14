@@ -1,9 +1,13 @@
 <template>
     <canvas id="super-cool-unique-id" ref="deckGlContainer"></canvas>
-    <div class="w-25">
+    <div
+        :class="`p-2 w-25 position-relative bg-opacity-75 bg-${globalSettings.btnLight}`"
+    >
         <!-- <div class="d-flex align-center"> -->
         <!-- <h6>Colormap:</h6> -->
-        <q-badge outline color="black">Colormap:</q-badge>
+        <q-badge outline :color="globalSettings.normalizedBlack"
+            >Colormap:</q-badge
+        >
         <q-select
             v-model="imageViewerStore.colormap"
             :options="imageViewerStore.colormapOptions"
@@ -14,7 +18,9 @@
         ></q-select>
         <!-- </div> -->
 
-        <q-badge outline color="black">Dynamic Range:</q-badge>
+        <q-badge outline :color="globalSettings.normalizedBlack"
+            >Dynamic Range:</q-badge
+        >
         <q-range
             v-model="imageViewerStore.contrastLimitSlider"
             :min="imageViewerStore.contrastLimitExtentSlider.min"
@@ -25,7 +31,9 @@
             class="mb-3"
         />
 
-        <q-badge outline color="black">Frame:</q-badge>
+        <q-badge outline :color="globalSettings.normalizedBlack"
+            >Frame:</q-badge
+        >
         <q-slider
             class="force-repeat"
             v-model="imageViewerStore.frameNumber"

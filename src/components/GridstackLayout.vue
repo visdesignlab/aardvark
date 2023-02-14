@@ -32,7 +32,7 @@
                         />
                     </button>
                 </div>
-                <div class="card-body scroll-y">
+                <div class="card-body scroll-y position-relative">
                     <component :is="w.component" v-bind="w.props"></component>
                 </div>
             </div>

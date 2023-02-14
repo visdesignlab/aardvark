@@ -2,6 +2,8 @@ Now
 [] simple image viewer
     [x] clean up code
     [] clean up image viewer settings ui
+        [] dynamic range text box
+        [] toggle visibility
     [] load entire tiff stack
     [] load entire companion.ome
     [] switch between companion.omes

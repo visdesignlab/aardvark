@@ -91,6 +91,10 @@ export const useGlobalSettings = defineStore('globalSettings', () => {
         return darkMode.value ? 'light' : 'dark';
     });
 
+    const normalizedBlack = computed<string>(() => {
+        return darkMode.value ? 'white' : 'black';
+    });
+
     const usingMac = computed<boolean>(() => {
         return navigator.userAgent.toLowerCase().includes('mac');
     });
@@ -104,6 +108,7 @@ export const useGlobalSettings = defineStore('globalSettings', () => {
         darkMode,
         btnLight,
         btnDark,
+        normalizedBlack,
         usingMac,
     };
 });
