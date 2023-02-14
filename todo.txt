@@ -1,8 +1,15 @@
-Next
+Now
 [] simple image viewer
-[] add slider for lineage height
-[] add debug layout
-[] add placeholder sliders for filtering
+    [] clean up code
+    [] clean up image viewer settings ui
+    [] load entire tiff stack
+    [] load entire companion.ome
+    [] switch between companion.omes
+
+Next
+[] Validator view
+[] lineage metadata charts
+
 
 
 
@@ -32,7 +39,9 @@ Validator component
 [] duplicate time
 
 Uncategorized
---
+[] add slider for lineage height
+[] add debug layout
+[] add placeholder sliders for filtering
 include polynomial curvature as a LLA (lineage level attribute)
 create small fake dataset on gh
 create (maybe interactive?) legend for horizon chart |/  /  /  /|
