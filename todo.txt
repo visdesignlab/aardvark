@@ -6,7 +6,7 @@ Now
         [] toggle visibility
         [] remove extra scrollbars
         [] smart resize?
-    [] load entire tiff stack
+    [x] load entire tiff stack
     [] load entire companion.ome
     [] switch between companion.omes
 
