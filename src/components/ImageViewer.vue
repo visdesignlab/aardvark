@@ -1,5 +1,7 @@
 <template>
+    <!-- <div> -->
     <canvas id="super-cool-unique-id" ref="deckGlContainer"></canvas>
+    <!-- </div> -->
     <div
         :class="`p-2 w-25 position-relative bg-opacity-75 bg-${globalSettings.btnLight}`"
     >

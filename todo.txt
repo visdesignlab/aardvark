@@ -4,6 +4,8 @@ Now
     [] clean up image viewer settings ui
         [] dynamic range text box
         [] toggle visibility
+        [] remove extra scrollbars
+        [] smart resize?
     [] load entire tiff stack
     [] load entire companion.ome
     [] switch between companion.omes
@@ -44,6 +46,7 @@ Uncategorized
 [] add slider for lineage height
 [] add debug layout
 [] add placeholder sliders for filtering
+rename btnLight/btnDark to normalizedLight / normalizedDark.
 include polynomial curvature as a LLA (lineage level attribute)
 create small fake dataset on gh
 create (maybe interactive?) legend for horizon chart |/  /  /  /|
