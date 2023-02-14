@@ -1,10 +1,17 @@
 import { ref, computed } from 'vue';
 import { defineStore } from 'pinia';
 
+export interface SelectionIndex {
+    c: number;
+    t: number;
+    z: number;
+}
+
 export const useImageViewerStore = defineStore('imageViewerStore', () => {
     const colormap = ref<string>('jet');
     const colormapOptions = [
         'jet',
+        'viridis',
         'bone',
         'greys',
         'hsv',
@@ -46,6 +53,21 @@ export const useImageViewerStore = defineStore('imageViewerStore', () => {
         return [{ c: 0, t: frameIndex.value, z: 0 }];
     });
 
+    function generateSelectionIndexRange(
+        minT: number,
+        maxT: number
+    ): SelectionIndex[] {
+        const selectionIndexRange: SelectionIndex[] = [];
+        for (let i = minT; i <= maxT; i++) {
+            selectionIndexRange.push({
+                c: 0,
+                t: i,
+                z: 0,
+            });
+        }
+        return selectionIndexRange;
+    }
+
     return {
         colormap,
         colormapOptions,
@@ -55,5 +77,6 @@ export const useImageViewerStore = defineStore('imageViewerStore', () => {
         frameIndex,
         frameNumber,
         selections,
+        generateSelectionIndexRange,
     };
 });

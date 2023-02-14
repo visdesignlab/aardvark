@@ -40,7 +40,7 @@
             class="force-repeat"
             v-model="imageViewerStore.frameNumber"
             :min="1"
-            :max="7"
+            :max="87"
             snap
             markers
             label
@@ -80,15 +80,7 @@ onMounted(async () => {
         // 'http://localhost:9001/michael-2/20221122_fs051_p9_mediaswitch_homebrew_A1_4_Phase.companion.ome',
         [
             [
-                [
-                    { c: 0, t: 0, z: 0 },
-                    { c: 0, t: 1, z: 0 },
-                    { c: 0, t: 2, z: 0 },
-                    { c: 0, t: 3, z: 0 },
-                    { c: 0, t: 4, z: 0 },
-                    { c: 0, t: 5, z: 0 },
-                    { c: 0, t: 6, z: 0 },
-                ],
+                imageViewerStore.generateSelectionIndexRange(0, 87),
                 'http://localhost:9001/michael-2/20221122_fs051_p9_mediaswitch_homebrew_A1_4_Phase1.tif',
             ],
         ]
