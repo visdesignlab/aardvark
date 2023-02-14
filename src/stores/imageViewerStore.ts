@@ -17,6 +17,9 @@ export const useImageViewerStore = defineStore('imageViewerStore', () => {
     });
 
     const frameIndex = ref(0);
+    const selections = computed(() => {
+        return [{ c: 0, t: frameIndex.value, z: 0 }];
+    });
 
     return {
         colormap,
@@ -25,5 +28,6 @@ export const useImageViewerStore = defineStore('imageViewerStore', () => {
         contrastLimitSlider,
         contrastLimitExtentSlider,
         frameIndex,
+        selections,
     };
 });

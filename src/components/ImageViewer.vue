@@ -30,6 +30,7 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted, watch } from 'vue';
+import { cloneDeep } from 'lodash';
 // import { useCellMetaData, type Lineage } from '@/stores/cellMetaData';
 import { useGlobalSettings } from '@/stores/globalSettings';
 import { useImageViewerStore } from '@/stores/imageViewerStore';
@@ -95,7 +96,7 @@ onMounted(async () => {
     // const contrastLimits: [number, number][] = [[153, 539]];
     // const contrastLimits = [{ begin: 153, end: 539 }];
     console.log({ loader, channelStats, contrastLimits });
-    const selections = [{ c: 0, t: 0, z: 0 }];
+    // const selections = [{ c: 0, t: 0, z: 0 }];
     const colors = [[255, 255, 255]];
     const channelsVisible = [true];
     // layoutConfig.value = [
@@ -123,18 +124,16 @@ onMounted(async () => {
     // colormapExtension.updateState({ props: { colormap: 'jet' } });
 
     // colormapExtension.colormap =
-    const imageLayer = ref(
-        new ImageLayer({
-            loader: pixelSource,
-            // modelMatrix: new Matrix4().scale(2 ** z * overviewScale),
-            id: 'test-image-layer',
-            contrastLimits,
-            selections,
-            channelsVisible,
-            extensions: [colormapExtension],
-            colormap: imageViewerStore.colormap,
-        })
-    );
+    const imageLayer = new ImageLayer({
+        loader: pixelSource,
+        // modelMatrix: new Matrix4().scale(2 ** z * overviewScale),
+        id: 'test-image-layer',
+        contrastLimits,
+        selections: imageViewerStore.selections,
+        channelsVisible,
+        extensions: [colormapExtension],
+        colormap: imageViewerStore.colormap,
+    });
     console.log({ el: deckGlContainer.value });
     const deckgl = new Deck({
         initialViewState: INITIAL_VIEW_STATE,
@@ -175,9 +174,21 @@ onMounted(async () => {
         views: [new OrthographicView({ id: 'ortho', controller: true })],
     });
     imageViewerStore.$subscribe(() => {
-        console.log('update colormap');
+        // console.log('image view store changed');
+        // console.log(cloneDeep(imageLayer.value));
+        // deckgl.redraw(true);
         // const pixelSource = loader.data[0] as PixelSource<any>;
-        const selections = [{ c: 0, t: imageViewerStore.frameIndex, z: 0 }];
+        // const selections = [{ c: 0, t: imageViewerStore.frameIndex, z: 0 }];
+        // imageLayer.value.props = {
+        //     loader: pixelSource,
+        //     // modelMatrix: new Matrix4().scale(2 ** z * overviewScale),
+        //     id: 'test-image-layer',
+        //     contrastLimits: imageViewerStore.contrastLimit,
+        //     selections,
+        //     channelsVisible,
+        //     extensions: [colormapExtension],
+        //     colormap: imageViewerStore.colormap,
+        // };
         deckgl.setProps({
             layers: [
                 new ImageLayer({
@@ -185,7 +196,7 @@ onMounted(async () => {
                     // modelMatrix: new Matrix4().scale(2 ** z * overviewScale),
                     id: 'test-image-layer',
                     contrastLimits: imageViewerStore.contrastLimit,
-                    selections,
+                    selections: imageViewerStore.selections,
                     channelsVisible,
                     extensions: [colormapExtension],
                     colormap: imageViewerStore.colormap,
