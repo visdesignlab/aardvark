@@ -1,6 +1,6 @@
 Now
 [] simple image viewer
-    [] clean up code
+    [x] clean up code
     [] clean up image viewer settings ui
     [] load entire tiff stack
     [] load entire companion.ome

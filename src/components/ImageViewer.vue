@@ -1,27 +1,39 @@
 <template>
     <canvas id="super-cool-unique-id" ref="deckGlContainer"></canvas>
     <div class="w-25">
+        <!-- <div class="d-flex align-center"> -->
+        <!-- <h6>Colormap:</h6> -->
+        <q-badge outline color="black">Colormap:</q-badge>
         <q-select
             v-model="imageViewerStore.colormap"
             :options="imageViewerStore.colormapOptions"
             :dark="globalSettings.darkMode"
-            class="mb-2"
+            outlined
+            dense
+            class="mb-3"
         ></q-select>
+        <!-- </div> -->
 
+        <q-badge outline color="black">Dynamic Range:</q-badge>
         <q-range
             v-model="imageViewerStore.contrastLimitSlider"
             :min="imageViewerStore.contrastLimitExtentSlider.min"
             :max="imageViewerStore.contrastLimitExtentSlider.max"
             :step="1"
-            label-always
+            label
             :dark="globalSettings.darkMode"
-            class="mb-2"
+            class="mb-3"
         />
 
+        <q-badge outline color="black">Frame:</q-badge>
         <q-slider
-            v-model="imageViewerStore.frameIndex"
-            :min="0"
-            :max="5"
+            class="force-repeat"
+            v-model="imageViewerStore.frameNumber"
+            :min="1"
+            :max="7"
+            snap
+            markers
+            label
             :dark="globalSettings.darkMode"
         />
     </div>
@@ -124,4 +136,10 @@ onMounted(async () => {
 });
 </script>
 
-<style scoped lang="scss"></style>
+<style lang="scss">
+.force-repeat * {
+    background-repeat: repeat;
+    // * {background-repeat: norepeat} on css reset is causing
+    // slider to not show tick marks
+}
+</style>
