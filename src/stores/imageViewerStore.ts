@@ -16,11 +16,14 @@ export const useImageViewerStore = defineStore('imageViewerStore', () => {
         return [[contrastLimitSlider.value.min, contrastLimitSlider.value.max]];
     });
 
+    const frameIndex = ref(0);
+
     return {
         colormap,
         colormapOptions,
         contrastLimit,
         contrastLimitSlider,
         contrastLimitExtentSlider,
+        frameIndex,
     };
 });

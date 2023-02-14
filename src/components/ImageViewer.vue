@@ -1,23 +1,31 @@
 <template>
     <!-- <StubView></StubView> -->
     <canvas id="super-cool-unique-id" ref="deckGlContainer"></canvas>
+    <div class="w-25">
+        <q-select
+            v-model="imageViewerStore.colormap"
+            :options="imageViewerStore.colormapOptions"
+            :dark="globalSettings.darkMode"
+            class="mb-2"
+        ></q-select>
 
-    <q-select
-        v-model="imageViewerStore.colormap"
-        :options="imageViewerStore.colormapOptions"
-        :dark="globalSettings.darkMode"
-        class="mb-2"
-    ></q-select>
+        <q-range
+            v-model="imageViewerStore.contrastLimitSlider"
+            :min="imageViewerStore.contrastLimitExtentSlider.min"
+            :max="imageViewerStore.contrastLimitExtentSlider.max"
+            :step="1"
+            label-always
+            :dark="globalSettings.darkMode"
+            class="mb-2"
+        />
 
-    <q-range
-        v-model="imageViewerStore.contrastLimitSlider"
-        :min="imageViewerStore.contrastLimitExtentSlider.min"
-        :max="imageViewerStore.contrastLimitExtentSlider.max"
-        :step="1"
-        label-always
-        :dark="globalSettings.darkMode"
-        class="mb-2"
-    />
+        <q-slider
+            v-model="imageViewerStore.frameIndex"
+            :min="0"
+            :max="5"
+            :dark="globalSettings.darkMode"
+        />
+    </div>
 </template>
 
 <script setup lang="ts">
@@ -62,7 +70,15 @@ onMounted(async () => {
         // 'http://localhost:9001/michael-2/20221122_fs051_p9_mediaswitch_homebrew_A1_4_Phase.companion.ome',
         [
             [
-                { c: 0, t: 0, z: 0 },
+                [
+                    { c: 0, t: 0, z: 0 },
+                    { c: 0, t: 1, z: 0 },
+                    { c: 0, t: 2, z: 0 },
+                    { c: 0, t: 3, z: 0 },
+                    { c: 0, t: 4, z: 0 },
+                    { c: 0, t: 5, z: 0 },
+                    { c: 0, t: 6, z: 0 },
+                ],
                 'http://localhost:9001/michael-2/20221122_fs051_p9_mediaswitch_homebrew_A1_4_Phase1.tif',
             ],
         ]
@@ -160,6 +176,8 @@ onMounted(async () => {
     });
     imageViewerStore.$subscribe(() => {
         console.log('update colormap');
+        // const pixelSource = loader.data[0] as PixelSource<any>;
+        const selections = [{ c: 0, t: imageViewerStore.frameIndex, z: 0 }];
         deckgl.setProps({
             layers: [
                 new ImageLayer({
