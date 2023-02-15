@@ -15,6 +15,10 @@ Next
 [] lineage metadata charts
 
 
+Aggregate line chart view
+[] aggregation: min,median, max, avg, total
+[] attribute: mass, perimeter
+[] for: frame, lineage, (tracks?, would not need aggregator)
 
 
 Trrack Integration (on hold)
@@ -33,20 +37,24 @@ quasar ui updatse
 Misc fixes/enhancements
 [] improve looneage view recalculation issue
 [] fix table scrollbar issue (try switching to q-table)
-[] add store to the name of all stores
 [] cache large data requests e.g. to tabular data
 [] crash when selecting lineage with single length track
-
+[] either remove single column layout, or add special logic for it
 
 Validator component
 [] sorted
 [] duplicate time
 
+Code cleanup:
+[] move all code sections to top of vue files
+[] rename btnLight/btnDark to normalizedLight / normalizedDark.
+[] add store to the name of all stores
+
+
 Uncategorized
 [] add slider for lineage height
 [] add debug layout
 [] add placeholder sliders for filtering
-rename btnLight/btnDark to normalizedLight / normalizedDark.
 include polynomial curvature as a LLA (lineage level attribute)
 create small fake dataset on gh
 create (maybe interactive?) legend for horizon chart |/  /  /  /|

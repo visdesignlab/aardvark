@@ -40,9 +40,8 @@
             class="force-repeat"
             v-model="imageViewerStore.frameNumber"
             :min="1"
-            :max="87"
+            :max="80"
             snap
-            markers
             label
             :dark="globalSettings.darkMode"
         />
@@ -83,6 +82,14 @@ onMounted(async () => {
                 imageViewerStore.generateSelectionIndexRange(0, 87),
                 'http://localhost:9001/michael-2/20221122_fs051_p9_mediaswitch_homebrew_A1_4_Phase1.tif',
             ],
+            // [
+            //     imageViewerStore.generateSelectionIndexRange(88, 175),
+            //     'http://localhost:9001/michael-2/20221122_fs051_p9_mediaswitch_homebrew_A1_4_Phase2.tif',
+            // ],
+            // [
+            //     imageViewerStore.generateSelectionIndexRange(176, 212),
+            //     'http://localhost:9001/michael-2/20221122_fs051_p9_mediaswitch_homebrew_A1_4_Phase3.tif',
+            // ],
         ]
     );
     const raster: PixelData = await loader.data[0].getRaster({
@@ -102,37 +109,67 @@ onMounted(async () => {
     const pixelSource = loader.data[0] as PixelSource<any>;
     const colormapExtension = new AdditiveColormapExtension();
 
-    const imageLayer = new ImageLayer({
-        loader: pixelSource,
-        id: 'test-image-layer',
-        contrastLimits,
-        selections: imageViewerStore.selections,
-        channelsVisible,
-        extensions: [colormapExtension],
-        colormap: imageViewerStore.colormap,
-    });
+    const imageLayer = ref(
+        new ImageLayer({
+            loader: pixelSource,
+            id: 'test-image-layer',
+            contrastLimits: imageViewerStore.contrastLimit,
+            selections: imageViewerStore.selections,
+            channelsVisible,
+            extensions: [colormapExtension],
+            // @ts-ignore
+            colormap: imageViewerStore.colormap,
+            onClick: () => console.log('layer.onClick'),
+            onViewportLoad: () => console.log('layer.onViewportLoad'),
+        })
+    );
     // console.log({ el: deckGlContainer.value });
+    const debugFunction = (msg: string) => console.log(msg);
     const deckgl = new Deck({
         initialViewState: INITIAL_VIEW_STATE,
-        canvas: deckGlContainer.value.id,
+        // @ts-ignore
+        canvas: deckGlContainer.value?.id, // todo actually fix this ts error
         controller: true,
-        layers: [imageLayer],
+        layers: [imageLayer.value],
         views: [new OrthographicView({ id: 'ortho', controller: true })],
+        // debug: true,
+        onBeforeRender: (gl: any) => {
+            console.count('before');
+            console.log(gl);
+        },
+        onAfterRender: (gl: any) => {
+            console.count('after');
+            console.log(gl);
+        },
+        onError: (error: any, _layer: any) => {
+            console.error('ERROR');
+            console.log(error);
+        },
+        onWebGLInitialized: () => console.log('onWebGLInitialized'),
+        onViewStateChange: () => console.log('onViewStateChange'),
+        onInteractionStateChange: () => console.log('onInteractionStateChange'),
+        onLoad: () => console.log('onLoad'),
     });
 
-    imageViewerStore.$subscribe(() => {
+    // imageViewerStore.$subscribe(() => {
+    watch(imageViewerStore.$state, (_state: any) => {
+        console.count('update in subscribe');
+        imageLayer.value?.state?.abortController?.abort();
+        imageLayer.value = new ImageLayer({
+            loader: pixelSource,
+            id: 'test-image-layer',
+            contrastLimits: imageViewerStore.contrastLimit,
+            selections: imageViewerStore.selections,
+            channelsVisible,
+            extensions: [colormapExtension],
+            // @ts-ignore
+            colormap: imageViewerStore.colormap,
+            onClick: () => console.log('layer.onClick'),
+            onViewportLoad: () => console.log('layer.onViewportLoad'),
+            onError: () => console.log('layer.onError'),
+        });
         deckgl.setProps({
-            layers: [
-                new ImageLayer({
-                    loader: pixelSource,
-                    id: 'test-image-layer',
-                    contrastLimits: imageViewerStore.contrastLimit,
-                    selections: imageViewerStore.selections,
-                    channelsVisible,
-                    extensions: [colormapExtension],
-                    colormap: imageViewerStore.colormap,
-                }),
-            ],
+            layers: [imageLayer.value],
         });
     });
 });
