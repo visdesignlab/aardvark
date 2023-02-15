@@ -1,18 +1,9 @@
-Now
-[] simple image viewer
-    [x] clean up code
-    [] clean up image viewer settings ui
-        [] dynamic range text box
-        [] toggle visibility
-        [] remove extra scrollbars
-        [] smart resize?
-    [x] load entire tiff stack
-    [] load entire companion.ome
-    [] switch between companion.omes
-
 Next
+[] email about data
 [] Validator view
 [] lineage metadata charts
+[] trrack Integration
+[]
 
 
 Aggregate line chart view
@@ -26,6 +17,17 @@ Trrack Integration (on hold)
 [] add config layout store
 
 refactor cell meta data to support selecting multiple locations
+
+simple image viewer
+    [x] clean up code
+    [] clean up image viewer settings ui
+        [] dynamic range text box
+        [] toggle visibility
+        [] remove extra scrollbars
+        [] smart resize?
+    [x] load entire tiff stack
+    [] load entire companion.ome
+    [] switch between companion.omes
 
 
 quasar ui updatse
