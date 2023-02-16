@@ -1,8 +1,8 @@
 Next
 [x] email about data
-[] Validator view
 [] lineage metadata charts
 [] trrack Integration
+[] Validator view
 []
 
 

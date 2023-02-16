@@ -65,7 +65,7 @@ export const useImageViewerStore = defineStore('imageViewerStore', () => {
                 z: 0,
             });
         }
-        console.log({ selectionIndexRange });
+        //console.log({ selectionIndexRange });
         return selectionIndexRange;
     }
 

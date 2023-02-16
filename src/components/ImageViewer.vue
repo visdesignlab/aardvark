@@ -119,8 +119,8 @@ onMounted(async () => {
             extensions: [colormapExtension],
             // @ts-ignore
             colormap: imageViewerStore.colormap,
-            onClick: () => console.log('layer.onClick'),
-            onViewportLoad: () => console.log('layer.onViewportLoad'),
+            // onClick: () => console.log('layer.onClick'),
+            // onViewportLoad: () => console.log('layer.onViewportLoad'),
         })
     );
     // console.log({ el: deckGlContainer.value });
@@ -133,22 +133,22 @@ onMounted(async () => {
         layers: [imageLayer.value],
         views: [new OrthographicView({ id: 'ortho', controller: true })],
         // debug: true,
-        onBeforeRender: (gl: any) => {
-            console.count('before');
-            console.log(gl);
-        },
-        onAfterRender: (gl: any) => {
-            console.count('after');
-            console.log(gl);
-        },
-        onError: (error: any, _layer: any) => {
-            console.error('ERROR');
-            console.log(error);
-        },
-        onWebGLInitialized: () => console.log('onWebGLInitialized'),
-        onViewStateChange: () => console.log('onViewStateChange'),
-        onInteractionStateChange: () => console.log('onInteractionStateChange'),
-        onLoad: () => console.log('onLoad'),
+        // onBeforeRender: (gl: any) => {
+        //     console.count('before');
+        //     console.log(gl);
+        // },
+        // onAfterRender: (gl: any) => {
+        //     console.count('after');
+        //     console.log(gl);
+        // },
+        // onError: (error: any, _layer: any) => {
+        //     console.error('ERROR');
+        //     console.log(error);
+        // },
+        // onWebGLInitialized: () => console.log('onWebGLInitialized'),
+        // onViewStateChange: () => console.log('onViewStateChange'),
+        // onInteractionStateChange: () => console.log('onInteractionStateChange'),
+        // onLoad: () => console.log('onLoad'),
     });
 
     // imageViewerStore.$subscribe(() => {
@@ -164,9 +164,9 @@ onMounted(async () => {
             extensions: [colormapExtension],
             // @ts-ignore
             colormap: imageViewerStore.colormap,
-            onClick: () => console.log('layer.onClick'),
-            onViewportLoad: () => console.log('layer.onViewportLoad'),
-            onError: () => console.log('layer.onError'),
+            // onClick: () => console.log('layer.onClick'),
+            // onViewportLoad: () => console.log('layer.onViewportLoad'),
+            // onError: () => console.log('layer.onError'),
         });
         deckgl.setProps({
             layers: [imageLayer.value],
