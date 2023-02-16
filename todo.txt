@@ -52,6 +52,7 @@ Code cleanup:
 [x] move all code sections to top of vue files
 [] rename btnLight/btnDark to normalizedLight / normalizedDark.
 [] add store to the name of all stores
+[x] delete old files
 
 
 Uncategorized
