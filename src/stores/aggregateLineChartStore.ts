@@ -83,16 +83,33 @@ function storeSetup() {
                 return [singleLine];
             }
             case 'cell lineages': {
+                if (!cellMetaData?.lineageArray) return [];
                 const result: AggLineData[] = [];
-                // for (const lineage of cellMetaData?.lineageArray) {
 
-                // }
-                // todo
+                for (const lineage of cellMetaData.lineageArray) {
+                    const aggLineData: AggLineData = [];
+                    const cells = cellMetaData.makeLineageCellIterator(
+                        lineage.founder
+                    );
+                    const lineageFrameMap = cellMetaData.createFrameMap(cells);
+                    const frameList =
+                        cellMetaData.getSortedKeys(lineageFrameMap);
+                    for (const frame of frameList) {
+                        const cellsAtFrame = lineageFrameMap.get(frame);
+                        if (!cellsAtFrame) continue;
+                        const count = cellsAtFrame.length;
+                        if (!aggregator.value) continue;
+                        const value = aggregator.value(cellsAtFrame);
+                        if (!value) continue;
+                        aggLineData.push({ frame, value, count });
+                    }
+                    result.push(aggLineData);
+                }
                 return result;
             }
             case 'cell tracks': {
-                const result: AggLineData[] = [];
                 if (!cellMetaData?.trackArray) return [];
+                const result: AggLineData[] = [];
                 for (const track of cellMetaData.trackArray) {
                     const aggLineData: AggLineData = [];
                     for (const cell of track.cells) {

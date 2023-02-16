@@ -4,8 +4,8 @@ Next
     [x] plot current data
     [x] get correct initial value for mass
     [x] add all aggregators
-    [] add lineage target
-    [] add track target
+    [x] add lineage target
+    [x] add track target
     [] consider switch to candygraph
     [] add axes
     [] add variance/count mapping to width/color

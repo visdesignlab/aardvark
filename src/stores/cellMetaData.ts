@@ -87,7 +87,12 @@ export const useCellMetaData = defineStore('cellMetaData', () => {
         const map = new Map<number, Cell[]>();
         if (!dataInitialized.value) return map;
         if (!cellArray.value) return map;
-        for (const cell of cellArray.value) {
+        return createFrameMap(cellArray.value);
+    });
+
+    function createFrameMap(cells: Iterable<Cell>): Map<number, Cell[]> {
+        const map = new Map<number, Cell[]>();
+        for (const cell of cells) {
             const key = getFrame(cell);
             if (!map.has(key)) {
                 map.set(key, []);
@@ -95,10 +100,36 @@ export const useCellMetaData = defineStore('cellMetaData', () => {
             map.get(key)?.push(cell);
         }
         return map;
-    });
+    }
+
     const frameList = computed<number[]>(() => {
-        return sortBy([...frameMap.value.keys()]);
+        return getSortedKeys(frameMap.value);
     });
+
+    function getSortedKeys(map: Map<number, any>): number[] {
+        return sortBy([...frameMap.value.keys()]);
+    }
+
+    function* makeLineageCellIterator(founder: Track) {
+        const iterator: Generator<Track, void, unknown> =
+            makeLineageTrackIterator(founder);
+        for (const track of iterator) {
+            for (const cell of track.cells) {
+                yield cell;
+            }
+        }
+    }
+
+    function* makeLineageTrackIterator(founder: Track) {
+        yield founder;
+        for (const daughter of founder.children) {
+            const iterator: Generator<Track, void, unknown> =
+                makeLineageTrackIterator(daughter);
+            for (const track of iterator) {
+                yield track;
+            }
+        }
+    }
 
     const cellAttributeHeaders = computed<HeaderDef[]>(() => {
         if (!dataInitialized.value) return [];
@@ -408,5 +439,9 @@ export const useCellMetaData = defineStore('cellMetaData', () => {
         getTime,
         getFrame,
         getNumAttr,
+        createFrameMap,
+        makeLineageTrackIterator,
+        makeLineageCellIterator,
+        getSortedKeys,
     };
 });

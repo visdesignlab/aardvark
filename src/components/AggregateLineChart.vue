@@ -22,9 +22,9 @@ const { width: containerWidth, height: outerContainerHeight } = useElementSize(
 
 // container height must be less than the outer container height in order for
 // height to shrink when the outer container is reduced in height. Without
-// the -5 neither height will reduce.
+// the -10 neither height will reduce.
 const containerHeight = computed(() =>
-    Math.max(outerContainerHeight.value - 5, 0)
+    Math.max(outerContainerHeight.value - 10, 0)
 );
 const margin = ref({ top: 30, left: 30, bottom: 30, right: 30 });
 const chartWidth = computed(
