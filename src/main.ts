@@ -11,6 +11,7 @@ import StubView from './components/globalSettings/StubView.vue';
 import LooneageView from './components/LooneageView.vue';
 import SimpleTable from './components/SimpleTable.vue';
 import ImageViewer from './components/ImageViewer.vue';
+import AggregateLineChart from './components/AggregateLineChart.vue';
 import NoDataSplash from './components/NoDataSplash.vue';
 import TestComponent from './components/TestComponent.vue';
 
@@ -70,6 +71,7 @@ createApp(App)
     .component('LayoutSelector', LayoutSelector)
     .component('GeneralSettings', GeneralSettings)
     .component('ImageViewer', ImageViewer)
+    .component('AggregateLineChart', AggregateLineChart)
     .component('LooneageView', LooneageView)
     .component('SimpleTable', SimpleTable)
     .component('NoDataSplash', NoDataSplash)

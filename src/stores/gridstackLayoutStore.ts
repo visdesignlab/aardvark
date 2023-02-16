@@ -35,25 +35,21 @@ export interface Layout {
 export const useGridstackLayoutStore = defineStore(
     'gridstackLayoutStore',
     () => {
-        const defaultItems: LayoutItem[] = [
+        const allEqualItems: LayoutItem[] = [
             {
                 component: 'LooneageView',
                 x: 0,
                 y: 0,
-                w: 12,
-                h: 10,
+                w: 3,
+                h: 5,
                 id: uuidv4(),
-                // props: {
-                //     // attrKey: 'Dry Mass (pg)',
-                //     attrKey: 'mass',
-                // },
             },
             {
                 component: 'SimpleTable',
-                x: 0,
-                y: 10,
-                w: 4,
-                h: 8,
+                x: 3,
+                y: 0,
+                w: 3,
+                h: 5,
                 id: uuidv4(),
                 props: {
                     attributeLevel: 'lineage',
@@ -61,10 +57,10 @@ export const useGridstackLayoutStore = defineStore(
             },
             {
                 component: 'SimpleTable',
-                x: 4,
-                y: 10,
-                w: 4,
-                h: 8,
+                x: 6,
+                y: 0,
+                w: 3,
+                h: 5,
                 id: uuidv4(),
                 props: {
                     attributeLevel: 'track',
@@ -72,29 +68,37 @@ export const useGridstackLayoutStore = defineStore(
             },
             {
                 component: 'SimpleTable',
-                x: 8,
-                y: 10,
-                w: 4,
-                h: 8,
+                x: 9,
+                y: 0,
+                w: 3,
+                h: 5,
                 id: uuidv4(),
                 props: {
                     attributeLevel: 'cell',
                 },
             },
             {
-                component: 'TestComponent',
-                x: 8,
-                y: 18,
-                w: 4,
-                h: 8,
+                component: 'AggregateLineChart',
+                x: 0,
+                y: 5,
+                w: 3,
+                h: 5,
                 id: uuidv4(),
             },
             {
                 component: 'ImageViewer',
-                x: 0,
-                y: 18,
-                w: 4,
-                h: 8,
+                x: 3,
+                y: 5,
+                w: 3,
+                h: 5,
+                id: uuidv4(),
+            },
+            {
+                component: 'TestComponent',
+                x: 6,
+                y: 5,
+                w: 3,
+                h: 5,
                 id: uuidv4(),
             },
         ];
@@ -104,8 +108,8 @@ export const useGridstackLayoutStore = defineStore(
             editable: false,
             editing: false,
             id: defaultId,
-            initialItems: cloneDeep(defaultItems),
-            currentItems: cloneDeep(defaultItems),
+            initialItems: cloneDeep(allEqualItems),
+            currentItems: cloneDeep(allEqualItems),
         };
 
         const currentLayoutId = useStorage<string>(
