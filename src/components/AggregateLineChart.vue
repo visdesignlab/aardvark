@@ -98,9 +98,6 @@ const areaGen = computed(() => {
                         :key="index"
                         :d="areaGen(aggLine) ?? ''"
                     ></path>
-                    <text>
-                        {{ aggregateLineChartStore.aggLineDataList[0] }}
-                    </text>
                 </g>
             </svg>
         </div>

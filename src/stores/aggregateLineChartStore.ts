@@ -1,4 +1,4 @@
-import { ref, computed } from 'vue';
+import { ref, computed, watch } from 'vue';
 import { defineStore } from 'pinia';
 import { useCellMetaData, type Cell } from '@/stores/cellMetaData';
 import { min, max, mean } from 'd3-array';
@@ -15,10 +15,15 @@ function storeSetup() {
     // the only reason I've separated this function is to reduce indendation :shrug:
     const cellMetaData = useCellMetaData();
 
-    const aggregatorKey = ref<string>('total');
+    const aggregatorKey = ref<string>('average');
     const aggregatorOptions = ['average', 'total', 'min', 'median', 'max'];
 
     const attributeKey = ref<string>(cellMetaData.headerKeys.mass);
+    watch(
+        // todo  - this mostly works, but also is triggered on location change...
+        () => cellMetaData.headerKeys,
+        () => (attributeKey.value = cellMetaData.headerKeys.mass)
+    );
     const targetKey = ref<string>('entire location');
 
     const targetOptions = [

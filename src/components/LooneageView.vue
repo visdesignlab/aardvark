@@ -22,7 +22,7 @@ const datasetSelectionStore = useDatasetSelectionStore();
 
 const attrKey = ref<string>(cellMetaData.headerKeys.mass); // Default to mass
 watch(
-    // todo  - this mostly works, but also is triggered on locastion change...
+    // todo  - this mostly works, but also is triggered on location change...
     () => cellMetaData.headerKeys,
     () => (attrKey.value = cellMetaData.headerKeys.mass)
 );
