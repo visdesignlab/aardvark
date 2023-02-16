@@ -61,6 +61,7 @@ const areaGen = computed(() => {
         <div class="d-flex align-center">
             <span class="me-2">Show</span>
             <q-select
+                v-if="aggregateLineChartStore.targetKey !== 'cell tracks'"
                 v-model="aggregateLineChartStore.aggregatorKey"
                 :options="aggregateLineChartStore.aggregatorOptions"
                 :dark="globalSettings.darkMode"

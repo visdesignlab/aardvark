@@ -406,6 +406,7 @@ export const useCellMetaData = defineStore('cellMetaData', () => {
         selectedTrack,
         init,
         getTime,
+        getFrame,
         getNumAttr,
     };
 });

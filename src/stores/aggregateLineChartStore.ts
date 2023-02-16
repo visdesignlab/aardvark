@@ -27,59 +27,86 @@ function storeSetup() {
     const targetKey = ref<string>('entire location');
 
     const targetOptions = [
-        'cell tracks',
-        'cell lineages',
-        'entire location',
         'entire condition',
+        'entire location',
+        'cell lineages',
+        'cell tracks',
     ];
 
-    const aggLineDataList = computed<AggLineData[]>(() => {
-        const result: AggLineData[] = [];
-        if (targetKey.value == 'entire location') {
-            const singleLine: AggLineData = [];
-            for (const frame of cellMetaData?.frameList ?? []) {
-                const cellsAtFrame = cellMetaData.frameMap.get(frame);
-                if (!cellsAtFrame) continue;
-                const count = cellsAtFrame.length;
-                let value: number | undefined;
-                switch (aggregatorKey.value) {
-                    case 'average':
-                        value = mean(
-                            cellsAtFrame,
-                            (cell: Cell) => cell.attrNum[attributeKey.value]
-                        );
-                        break;
-                    case 'total':
-                        value = sum(
-                            cellsAtFrame,
-                            (cell: Cell) => cell.attrNum[attributeKey.value]
-                        );
-                        break;
-                    case 'min':
-                        value = min(
-                            cellsAtFrame,
-                            (cell: Cell) => cell.attrNum[attributeKey.value]
-                        );
-                        break;
-                    case 'median':
-                        value = median(
-                            cellsAtFrame,
-                            (cell: Cell) => cell.attrNum[attributeKey.value]
-                        );
-                        break;
-                    case 'max':
-                        value = max(
-                            cellsAtFrame,
-                            (cell: Cell) => cell.attrNum[attributeKey.value]
-                        );
-                        break;
-                }
-                if (!value) continue;
-                singleLine.push({ frame, value, count });
-            }
-            result.push(singleLine);
+    const aggregator = computed(() => {
+        switch (aggregatorKey.value) {
+            case 'average':
+                return (cellList: Cell[]) => {
+                    return mean(cellList, accessor.value);
+                };
+            case 'total':
+                return (cellList: Cell[]) => {
+                    return sum(cellList, accessor.value);
+                };
+            case 'min':
+                return (cellList: Cell[]) => {
+                    return min(cellList, accessor.value);
+                };
+            case 'median':
+                return (cellList: Cell[]) => {
+                    return median(cellList, accessor.value);
+                };
+            case 'max':
+                return (cellList: Cell[]) => {
+                    return max(cellList, accessor.value);
+                };
         }
-        return result;
+        return null;
+    });
+
+    const accessor = computed(() => {
+        return (cell: Cell) => cell.attrNum[attributeKey.value];
+    });
+
+    const aggLineDataList = computed<AggLineData[]>(() => {
+        switch (targetKey.value) {
+            case 'entire condition': {
+                // todo
+                return [];
+            }
+            case 'entire location': {
+                const singleLine: AggLineData = [];
+                for (const frame of cellMetaData?.frameList ?? []) {
+                    const cellsAtFrame = cellMetaData.frameMap.get(frame);
+                    if (!cellsAtFrame) continue;
+                    const count = cellsAtFrame.length;
+                    if (!aggregator.value) continue;
+                    const value = aggregator.value(cellsAtFrame);
+                    if (!value) continue;
+                    singleLine.push({ frame, value, count });
+                }
+                return [singleLine];
+            }
+            case 'cell lineages': {
+                const result: AggLineData[] = [];
+                // for (const lineage of cellMetaData?.lineageArray) {
+
+                // }
+                // todo
+                return result;
+            }
+            case 'cell tracks': {
+                const result: AggLineData[] = [];
+                if (!cellMetaData?.trackArray) return [];
+                for (const track of cellMetaData.trackArray) {
+                    const aggLineData: AggLineData = [];
+                    for (const cell of track.cells) {
+                        const frame = cellMetaData.getFrame(cell);
+                        const value = accessor.value(cell);
+                        const count = 1;
+                        aggLineData.push({ frame, value, count });
+                    }
+                    result.push(aggLineData);
+                }
+                return result;
+            }
+        }
+        return [];
     });
 
     const aggLineDataListExtent = computed(() => {
