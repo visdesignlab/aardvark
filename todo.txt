@@ -1,5 +1,5 @@
 Next
-[] email about data
+[x] email about data
 [] Validator view
 [] lineage metadata charts
 [] trrack Integration
@@ -12,9 +12,10 @@ Aggregate line chart view
 [] for: frame, lineage, (tracks?, would not need aggregator)
 
 
-Trrack Integration (on hold)
+Trrack Integration
 [] add image selection store
 [] add config layout store
+[] add track vis
 
 refactor cell meta data to support selecting multiple locations
 
