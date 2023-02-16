@@ -1,3 +1,9 @@
+<script setup lang="ts">
+import { useGlobalSettings } from '@/stores/globalSettings';
+
+const globalSettings = useGlobalSettings();
+</script>
+
 <template>
     <q-toggle
         v-model="globalSettings.darkMode"
@@ -7,11 +13,5 @@
         label="Toggle Dark Mode"
     />
 </template>
-
-<script setup lang="ts">
-import { useGlobalSettings } from '@/stores/globalSettings';
-
-const globalSettings = useGlobalSettings();
-</script>
 
 <style scoped lange="scss"></style>

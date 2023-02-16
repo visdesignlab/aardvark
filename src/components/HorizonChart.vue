@@ -1,32 +1,3 @@
-<template>
-    <!-- <svg :width="chartWidth" :height="chartHeight"> -->
-    <clipPath :id="clipPathId">
-        <rect x="0" y="0" :width="chartWidth" :height="chartHeight"></rect>
-    </clipPath>
-    <rect
-        x="0"
-        y="0"
-        :width="chartWidth"
-        :height="chartHeight"
-        :class="selected ? 'selected' : ''"
-    >
-        <title>Info: {{ info }}</title>
-    </rect>
-
-    <g @mousemove="debug" :clip-path="`url(#${clipPathId})`">
-        <path
-            :class="settings.includeBinLine ? 'stroke-thin' : ''"
-            v-for="(info, i) in offsetInfo"
-            :key="i"
-            :transform="info.transform"
-            :d="areaPath ?? ''"
-            :fill="info.color"
-        ></path>
-        <rect></rect>
-    </g>
-    <!-- </svg> -->
-</template>
-
 <script lang="ts">
 import { computed, defineComponent, ref } from 'vue';
 import { extent as d3Extent } from 'd3-array';
@@ -208,6 +179,35 @@ export default defineComponent({
     },
 });
 </script>
+
+<template>
+    <!-- <svg :width="chartWidth" :height="chartHeight"> -->
+    <clipPath :id="clipPathId">
+        <rect x="0" y="0" :width="chartWidth" :height="chartHeight"></rect>
+    </clipPath>
+    <rect
+        x="0"
+        y="0"
+        :width="chartWidth"
+        :height="chartHeight"
+        :class="selected ? 'selected' : ''"
+    >
+        <title>Info: {{ info }}</title>
+    </rect>
+
+    <g @mousemove="debug" :clip-path="`url(#${clipPathId})`">
+        <path
+            :class="settings.includeBinLine ? 'stroke-thin' : ''"
+            v-for="(info, i) in offsetInfo"
+            :key="i"
+            :transform="info.transform"
+            :d="areaPath ?? ''"
+            :fill="info.color"
+        ></path>
+        <rect></rect>
+    </g>
+    <!-- </svg> -->
+</template>
 
 <!-- Add "scoped" attribute to limit CSS to this component only -->
 <style scoped lang="scss">

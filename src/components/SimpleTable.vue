@@ -1,18 +1,3 @@
-<template>
-    <!-- <div class="table-container"> -->
-    <h3>{{ props.attributeLevel }}</h3>
-    <EasyDataTable
-        v-if="cellMetaData.dataInitialized"
-        :headers="headers"
-        :items="items"
-        fixedHeader="true"
-        @click-row="selectRow"
-        :table-class-name="globalSettings.darkMode ? 'dark-theme-table' : ''"
-    ></EasyDataTable>
-    <NoDataSplash></NoDataSplash>
-    <!-- </div> -->
-</template>
-
 <script setup lang="ts">
 import { ref, computed } from 'vue';
 import { useCellMetaData, type Lineage } from '@/stores/cellMetaData';
@@ -53,6 +38,20 @@ function selectRow(item: ClickRowArgument): void {
     }
 }
 </script>
+<template>
+    <!-- <div class="table-container"> -->
+    <h3>{{ props.attributeLevel }}</h3>
+    <EasyDataTable
+        v-if="cellMetaData.dataInitialized"
+        :headers="headers"
+        :items="items"
+        fixedHeader="true"
+        @click-row="selectRow"
+        :table-class-name="globalSettings.darkMode ? 'dark-theme-table' : ''"
+    ></EasyDataTable>
+    <NoDataSplash></NoDataSplash>
+    <!-- </div> -->
+</template>
 
 <style scoped lang="scss">
 .table-container {

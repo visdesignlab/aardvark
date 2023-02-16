@@ -1,14 +1,3 @@
-<template>
-    <div class="d-flex flex-row">
-        <div class="vh-100 sticky-top">
-            <GlobalSettingsView></GlobalSettingsView>
-        </div>
-        <div class="flex-grow-1">
-            <GridstackLayout></GridstackLayout>
-        </div>
-    </div>
-</template>
-
 <script setup lang="ts">
 import { useGlobalSettings } from '@/stores/globalSettings';
 import { watch, onBeforeMount } from 'vue';
@@ -52,6 +41,17 @@ onBeforeMount(() => {
     // there is still an awkward reset, but I can live with it.
 });
 </script>
+
+<template>
+    <div class="d-flex flex-row">
+        <div class="vh-100 sticky-top">
+            <GlobalSettingsView></GlobalSettingsView>
+        </div>
+        <div class="flex-grow-1">
+            <GridstackLayout></GridstackLayout>
+        </div>
+    </div>
+</template>
 
 <style scoped>
 .flex-grow-1 {

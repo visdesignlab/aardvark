@@ -1,3 +1,35 @@
+<script setup lang="ts">
+import { useCounterStore } from '@/stores/counter';
+import { useLayoutConfig } from '@/stores/layoutConfig';
+import { cloneDeep } from 'lodash';
+import { ref, computed, reactive } from 'vue';
+import { useQuasar } from 'quasar';
+const $q = useQuasar();
+
+const counter = useCounterStore();
+const layoutConfig = useLayoutConfig();
+function addOne() {
+    counter.increment();
+}
+
+function copyGridstackCongif() {
+    const blarg = cloneDeep(layoutConfig.$state);
+    // console.log({ blarg });
+}
+const label = ref({
+    min: -12,
+    max: 8,
+});
+
+const first = ref(true);
+const second = ref(true);
+const third = ref(false);
+const fourth = ref(true);
+
+function showLoading(): void {
+    $q.loading.show();
+}
+</script>
 <template>
     <q-btn @click="showLoading">Show loading shield</q-btn>
     <button @click="addOne">Plus 1</button>
@@ -56,38 +88,5 @@
         </div>
     </div>
 </template>
-
-<script setup lang="ts">
-import { useCounterStore } from '@/stores/counter';
-import { useLayoutConfig } from '@/stores/layoutConfig';
-import { cloneDeep } from 'lodash';
-import { ref, computed, reactive } from 'vue';
-import { useQuasar } from 'quasar';
-const $q = useQuasar();
-
-const counter = useCounterStore();
-const layoutConfig = useLayoutConfig();
-function addOne() {
-    counter.increment();
-}
-
-function copyGridstackCongif() {
-    const blarg = cloneDeep(layoutConfig.$state);
-    // console.log({ blarg });
-}
-const label = ref({
-    min: -12,
-    max: 8,
-});
-
-const first = ref(true);
-const second = ref(true);
-const third = ref(false);
-const fourth = ref(true);
-
-function showLoading(): void {
-    $q.loading.show();
-}
-</script>
 
 <style scoped lang="scss"></style>

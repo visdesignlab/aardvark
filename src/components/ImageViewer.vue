@@ -1,53 +1,3 @@
-<template>
-    <!-- <div> -->
-    <canvas id="super-cool-unique-id" ref="deckGlContainer"></canvas>
-    <!-- </div> -->
-    <div
-        :class="`p-2 w-25 position-relative bg-opacity-75 bg-${globalSettings.btnLight}`"
-    >
-        <!-- <div class="d-flex align-center"> -->
-        <!-- <h6>Colormap:</h6> -->
-        <q-badge outline :color="globalSettings.normalizedBlack"
-            >Colormap:</q-badge
-        >
-        <q-select
-            v-model="imageViewerStore.colormap"
-            :options="imageViewerStore.colormapOptions"
-            :dark="globalSettings.darkMode"
-            outlined
-            dense
-            class="mb-3"
-        ></q-select>
-        <!-- </div> -->
-
-        <q-badge outline :color="globalSettings.normalizedBlack"
-            >Dynamic Range:</q-badge
-        >
-        <q-range
-            v-model="imageViewerStore.contrastLimitSlider"
-            :min="imageViewerStore.contrastLimitExtentSlider.min"
-            :max="imageViewerStore.contrastLimitExtentSlider.max"
-            :step="1"
-            label
-            :dark="globalSettings.darkMode"
-            class="mb-3"
-        />
-
-        <q-badge outline :color="globalSettings.normalizedBlack"
-            >Frame:</q-badge
-        >
-        <q-slider
-            class="force-repeat"
-            v-model="imageViewerStore.frameNumber"
-            :min="1"
-            :max="80"
-            snap
-            label
-            :dark="globalSettings.darkMode"
-        />
-    </div>
-</template>
-
 <script setup lang="ts">
 import { ref, computed, onMounted, watch } from 'vue';
 // import { useCellMetaData, type Lineage } from '@/stores/cellMetaData';
@@ -174,6 +124,56 @@ onMounted(async () => {
     });
 });
 </script>
+
+<template>
+    <!-- <div> -->
+    <canvas id="super-cool-unique-id" ref="deckGlContainer"></canvas>
+    <!-- </div> -->
+    <div
+        :class="`p-2 w-25 position-relative bg-opacity-75 bg-${globalSettings.btnLight}`"
+    >
+        <!-- <div class="d-flex align-center"> -->
+        <!-- <h6>Colormap:</h6> -->
+        <q-badge outline :color="globalSettings.normalizedBlack"
+            >Colormap:</q-badge
+        >
+        <q-select
+            v-model="imageViewerStore.colormap"
+            :options="imageViewerStore.colormapOptions"
+            :dark="globalSettings.darkMode"
+            outlined
+            dense
+            class="mb-3"
+        ></q-select>
+        <!-- </div> -->
+
+        <q-badge outline :color="globalSettings.normalizedBlack"
+            >Dynamic Range:</q-badge
+        >
+        <q-range
+            v-model="imageViewerStore.contrastLimitSlider"
+            :min="imageViewerStore.contrastLimitExtentSlider.min"
+            :max="imageViewerStore.contrastLimitExtentSlider.max"
+            :step="1"
+            label
+            :dark="globalSettings.darkMode"
+            class="mb-3"
+        />
+
+        <q-badge outline :color="globalSettings.normalizedBlack"
+            >Frame:</q-badge
+        >
+        <q-slider
+            class="force-repeat"
+            v-model="imageViewerStore.frameNumber"
+            :min="1"
+            :max="80"
+            snap
+            label
+            :dark="globalSettings.darkMode"
+        />
+    </div>
+</template>
 
 <style lang="scss">
 .force-repeat * {

@@ -1,3 +1,45 @@
+<script setup lang="ts">
+import { useLayoutConfig, type Layout } from '@/stores/layoutConfig';
+import { useGlobalSettings } from '@/stores/globalSettings';
+import { nextTick } from 'vue';
+
+const layoutConfig = useLayoutConfig();
+const globalSettings = useGlobalSettings();
+function listItemClass(layout: Layout): string {
+    return `fake-button d-flex align-items-center list-group-item ${
+        layout.id == layoutConfig.currentLayout?.id ? 'active' : ''
+    }`;
+}
+
+function buttonIconClass(layout: Layout): string {
+    return `hover-show btn btn-sm btn-outline-${
+        layout.id == layoutConfig.currentLayout?.id
+            ? 'light'
+            : globalSettings.btnDark
+    }`;
+}
+
+function makeNameEditable(layout: Layout | null): void {
+    if (layout == null) return;
+    layout.editing = true;
+    nextTick(() => {
+        const elId = inputNameId(layout);
+        const element = document.getElementById(elId) as HTMLInputElement;
+        element?.focus();
+        element?.select();
+    });
+}
+
+function onCreateNew(): void {
+    layoutConfig.createNew();
+    makeNameEditable(layoutConfig.currentLayout);
+}
+
+function inputNameId(layout: Layout): string {
+    return `name-input-${layout.id}`;
+}
+</script>
+
 <template>
     <ul class="list-group">
         <li
@@ -62,49 +104,6 @@
         </div>
     </div>
 </template>
-
-<script setup lang="ts">
-import { useLayoutConfig, type Layout } from '@/stores/layoutConfig';
-import { useGlobalSettings } from '@/stores/globalSettings';
-import { nextTick } from 'vue';
-
-const layoutConfig = useLayoutConfig();
-const globalSettings = useGlobalSettings();
-function listItemClass(layout: Layout): string {
-    return `fake-button d-flex align-items-center list-group-item ${
-        layout.id == layoutConfig.currentLayout?.id ? 'active' : ''
-    }`;
-}
-
-function buttonIconClass(layout: Layout): string {
-    return `hover-show btn btn-sm btn-outline-${
-        layout.id == layoutConfig.currentLayout?.id
-            ? 'light'
-            : globalSettings.btnDark
-    }`;
-}
-
-function makeNameEditable(layout: Layout | null): void {
-    if (layout == null) return;
-    layout.editing = true;
-    nextTick(() => {
-        const elId = inputNameId(layout);
-        const element = document.getElementById(elId) as HTMLInputElement;
-        element?.focus();
-        element?.select();
-    });
-}
-
-function onCreateNew(): void {
-    layoutConfig.createNew();
-    makeNameEditable(layoutConfig.currentLayout);
-}
-
-function inputNameId(layout: Layout): string {
-    return `name-input-${layout.id}`;
-}
-</script>
-
 <style scoped lange="scss">
 .hover-show {
     visibility: hidden;

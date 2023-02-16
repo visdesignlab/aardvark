@@ -1,45 +1,3 @@
-<template>
-    <div class="grid-stack">
-        <div
-            v-for="(w, index) in layoutConfig.currentLayout?.currentItems"
-            class="grid-stack-item"
-            :gs-x="w.x"
-            :gs-y="w.y"
-            :gs-w="w.w"
-            :gs-h="w.h"
-            :gs-id="w.id"
-            :id="w.id.toString()"
-            :key="index"
-        >
-            <div class="grid-stack-item-content card" :id="`container-${w.id}`">
-                <div class="card-header drag-target d-flex">
-                    <span
-                        class="flex-grow-1 d-flex flex-column justify-content-center"
-                        >{{ w.component }}</span
-                    >
-                    <button
-                        :class="`btn btn-sm btn-outline-${globalSettings.btnDark} float-end`"
-                        @click="toggleFullscreen(`container-${w.id}`)"
-                    >
-                        <font-awesome-icon
-                            v-if="!isFullScreen"
-                            font-awesome-icon
-                            icon="expand"
-                        />
-                        <font-awesome-icon
-                            v-if="isFullScreen"
-                            icon="compress"
-                        />
-                    </button>
-                </div>
-                <div class="card-body scroll-y position-relative">
-                    <component :is="w.component" v-bind="w.props"></component>
-                </div>
-            </div>
-        </div>
-    </div>
-</template>
-
 <script setup lang="ts">
 import { ref, computed, reactive } from 'vue';
 import { onMounted } from 'vue';
@@ -100,6 +58,47 @@ async function toggleFullscreen(elementId: string) {
 }
 </script>
 
+<template>
+    <div class="grid-stack">
+        <div
+            v-for="(w, index) in layoutConfig.currentLayout?.currentItems"
+            class="grid-stack-item"
+            :gs-x="w.x"
+            :gs-y="w.y"
+            :gs-w="w.w"
+            :gs-h="w.h"
+            :gs-id="w.id"
+            :id="w.id.toString()"
+            :key="index"
+        >
+            <div class="grid-stack-item-content card" :id="`container-${w.id}`">
+                <div class="card-header drag-target d-flex">
+                    <span
+                        class="flex-grow-1 d-flex flex-column justify-content-center"
+                        >{{ w.component }}</span
+                    >
+                    <button
+                        :class="`btn btn-sm btn-outline-${globalSettings.btnDark} float-end`"
+                        @click="toggleFullscreen(`container-${w.id}`)"
+                    >
+                        <font-awesome-icon
+                            v-if="!isFullScreen"
+                            font-awesome-icon
+                            icon="expand"
+                        />
+                        <font-awesome-icon
+                            v-if="isFullScreen"
+                            icon="compress"
+                        />
+                    </button>
+                </div>
+                <div class="card-body scroll-y position-relative">
+                    <component :is="w.component" v-bind="w.props"></component>
+                </div>
+            </div>
+        </div>
+    </div>
+</template>
 <style scoped lang="scss">
 .drag-target {
     cursor: move;

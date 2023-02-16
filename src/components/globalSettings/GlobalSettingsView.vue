@@ -1,3 +1,14 @@
+<script setup lang="ts">
+import { useGlobalSettings } from '@/stores/globalSettings';
+import { onKeyStroke } from '@vueuse/core';
+const globalSettings = useGlobalSettings();
+onKeyStroke(['b', 'B'], (e: KeyboardEvent) => {
+    if (globalSettings.usingMac && !e.metaKey) return;
+    if (!globalSettings.usingMac && !e.ctrlKey) return;
+    globalSettings.toggleLastActive();
+});
+</script>
+
 <template>
     <div class="d-flex ps-1 pt-1 pb-1 h-100">
         <div class="btn-group-vertical justify-content-start" role="group">
@@ -31,17 +42,6 @@
         </Transition>
     </div>
 </template>
-
-<script setup lang="ts">
-import { useGlobalSettings } from '@/stores/globalSettings';
-import { onKeyStroke } from '@vueuse/core';
-const globalSettings = useGlobalSettings();
-onKeyStroke(['b', 'B'], (e: KeyboardEvent) => {
-    if (globalSettings.usingMac && !e.metaKey) return;
-    if (!globalSettings.usingMac && !e.ctrlKey) return;
-    globalSettings.toggleLastActive();
-});
-</script>
 
 <style scoped lang="scss">
 $panel-width: 300px;

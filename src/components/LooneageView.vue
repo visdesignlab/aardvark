@@ -1,90 +1,3 @@
-<template>
-    <NoDataSplash></NoDataSplash>
-    <div v-if="cellMetaData.dataInitialized" ref="looneageContainer">
-        <q-select
-            label="Attribute"
-            v-model="attrKey"
-            :options="attrOptions"
-            :dark="globalSettings.darkMode"
-            class="mb-1"
-        />
-        <!-- <button @click="verticalScale -= 0.1">decrease</button>
-        <button @click="verticalScale += 0.1">increase</button> -->
-        <svg
-            :width="containerWidth"
-            :height="containerHeight"
-            @click="() => onHorizonChartClick(null)"
-        >
-            <g :transform="`translate(0,${-extent[1]})`">
-                <g
-                    v-for="node in selectedNodes"
-                    :key="node.data.trackId"
-                    :transform="`translate(${scaleX(node.y)},${node.x})`"
-                    :class="`n-${node.depth}`"
-                    @click.stop="() => onHorizonChartClick(node)"
-                >
-                    <HorizonChart
-                        :chartWidth="scaleX(getWidth(node.data))"
-                        :chartHeight="rowHeight"
-                        :data="node.data.cells"
-                        :selected="
-                            node.data.trackId ===
-                            cellMetaData.selectedTrack?.trackId
-                        "
-                        :settings="{
-                            baseline: 0,
-                            modHeight: reasonableModH,
-                            mirrorNegative: false,
-                            includeBinLine: true,
-                        }"
-                        :timeAccessor="cellMetaData.getTime"
-                        :valueAccessor="(cell: Cell) => cellMetaData.getNumAttr(cell, attrKey)"
-                        :info="node.data.trackId"
-                    ></HorizonChart>
-                </g>
-
-                <line
-                    v-for="({ source, target }, i) in layoutRoot.links()"
-                    :key="i"
-                    :x1="scaleX(source.y + getWidth(source.data))"
-                    :y1="source.x + rowHeight / 2"
-                    :x2="scaleX(target.y)"
-                    :y2="target.x + rowHeight / 2"
-                    :stroke-width="
-                        2 + 36 * getSplitWeight(source.data, target.data)
-                    "
-                ></line>
-                <g
-                    v-for="node in unselectedNodes"
-                    :key="node.data.trackId"
-                    :transform="`translate(${scaleX(node.y)},${node.x})`"
-                    :class="`n-${node.depth}`"
-                    @click.stop="() => onHorizonChartClick(node)"
-                >
-                    <HorizonChart
-                        :chartWidth="scaleX(getWidth(node.data))"
-                        :chartHeight="rowHeight"
-                        :data="node.data.cells"
-                        :selected="
-                            node.data.trackId ===
-                            cellMetaData.selectedTrack?.trackId
-                        "
-                        :settings="{
-                            baseline: 0,
-                            modHeight: reasonableModH,
-                            mirrorNegative: false,
-                            includeBinLine: true,
-                        }"
-                        :timeAccessor="cellMetaData.getTime"
-                        :valueAccessor="(cell: Cell) => cellMetaData.getNumAttr(cell, attrKey)"
-                        :info="node.data.trackId"
-                    ></HorizonChart>
-                </g>
-            </g>
-        </svg>
-    </div>
-</template>
-
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue';
 import { min as d3Min, max as d3Max, extent as d3Extent } from 'd3-array';
@@ -318,6 +231,93 @@ const unselectedNodes = computed(() =>
 //     return keyFrameList;
 // });
 </script>
+
+<template>
+    <NoDataSplash></NoDataSplash>
+    <div v-if="cellMetaData.dataInitialized" ref="looneageContainer">
+        <q-select
+            label="Attribute"
+            v-model="attrKey"
+            :options="attrOptions"
+            :dark="globalSettings.darkMode"
+            class="mb-1"
+        />
+        <!-- <button @click="verticalScale -= 0.1">decrease</button>
+        <button @click="verticalScale += 0.1">increase</button> -->
+        <svg
+            :width="containerWidth"
+            :height="containerHeight"
+            @click="() => onHorizonChartClick(null)"
+        >
+            <g :transform="`translate(0,${-extent[1]})`">
+                <g
+                    v-for="node in selectedNodes"
+                    :key="node.data.trackId"
+                    :transform="`translate(${scaleX(node.y)},${node.x})`"
+                    :class="`n-${node.depth}`"
+                    @click.stop="() => onHorizonChartClick(node)"
+                >
+                    <HorizonChart
+                        :chartWidth="scaleX(getWidth(node.data))"
+                        :chartHeight="rowHeight"
+                        :data="node.data.cells"
+                        :selected="
+                            node.data.trackId ===
+                            cellMetaData.selectedTrack?.trackId
+                        "
+                        :settings="{
+                            baseline: 0,
+                            modHeight: reasonableModH,
+                            mirrorNegative: false,
+                            includeBinLine: true,
+                        }"
+                        :timeAccessor="cellMetaData.getTime"
+                        :valueAccessor="(cell: Cell) => cellMetaData.getNumAttr(cell, attrKey)"
+                        :info="node.data.trackId"
+                    ></HorizonChart>
+                </g>
+
+                <line
+                    v-for="({ source, target }, i) in layoutRoot.links()"
+                    :key="i"
+                    :x1="scaleX(source.y + getWidth(source.data))"
+                    :y1="source.x + rowHeight / 2"
+                    :x2="scaleX(target.y)"
+                    :y2="target.x + rowHeight / 2"
+                    :stroke-width="
+                        2 + 36 * getSplitWeight(source.data, target.data)
+                    "
+                ></line>
+                <g
+                    v-for="node in unselectedNodes"
+                    :key="node.data.trackId"
+                    :transform="`translate(${scaleX(node.y)},${node.x})`"
+                    :class="`n-${node.depth}`"
+                    @click.stop="() => onHorizonChartClick(node)"
+                >
+                    <HorizonChart
+                        :chartWidth="scaleX(getWidth(node.data))"
+                        :chartHeight="rowHeight"
+                        :data="node.data.cells"
+                        :selected="
+                            node.data.trackId ===
+                            cellMetaData.selectedTrack?.trackId
+                        "
+                        :settings="{
+                            baseline: 0,
+                            modHeight: reasonableModH,
+                            mirrorNegative: false,
+                            includeBinLine: true,
+                        }"
+                        :timeAccessor="cellMetaData.getTime"
+                        :valueAccessor="(cell: Cell) => cellMetaData.getNumAttr(cell, attrKey)"
+                        :info="node.data.trackId"
+                    ></HorizonChart>
+                </g>
+            </g>
+        </svg>
+    </div>
+</template>
 
 <!-- Add "scoped" attribute to limit CSS to this component only -->
 <style scoped lang="scss">

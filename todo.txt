@@ -78,7 +78,3 @@ create components
 * general vis? scatterplot / violin plots?
 * debug/util panel
 * * LocalStorage.clear()
-
-
-Bugs I shouldn't bother fixing
-- single-column layout causes weirdness on refresh
