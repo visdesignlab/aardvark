@@ -1,6 +1,11 @@
 Next
-[x] email about data
 [] lineage metadata charts
+    [] create computed property for current data (for at least one agg/target)
+    [] plot current data
+    [] add other aggs/targets
+    [] add variance/count mapping to width/color
+
+
 [] trrack Integration
 [] Validator view
 []
@@ -20,13 +25,12 @@ Trrack Integration
 refactor cell meta data to support selecting multiple locations
 
 simple image viewer
-    [x] clean up code
+    [] fix deckgl crash (probs in loading code)
     [] clean up image viewer settings ui
         [] dynamic range text box
         [] toggle visibility
         [] remove extra scrollbars
         [] smart resize?
-    [x] load entire tiff stack
     [] load entire companion.ome
     [] switch between companion.omes
 
@@ -49,10 +53,8 @@ Validator component
 [] duplicate time
 
 Code cleanup:
-[x] move all code sections to top of vue files
 [] rename btnLight/btnDark to normalizedLight / normalizedDark.
 [] add store to the name of all stores
-[x] delete old files
 
 
 Uncategorized
