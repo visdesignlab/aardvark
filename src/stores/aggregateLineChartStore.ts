@@ -1,7 +1,7 @@
 import { ref, computed, watch } from 'vue';
 import { defineStore } from 'pinia';
 import { useCellMetaData, type Cell } from '@/stores/cellMetaData';
-import { min, max, mean } from 'd3-array';
+import { min, max, mean, sum, median } from 'd3-array';
 
 export interface AggLineData extends Array<AggDataPoint> {}
 export interface AggDataPoint {
@@ -41,14 +41,40 @@ function storeSetup() {
                 const cellsAtFrame = cellMetaData.frameMap.get(frame);
                 if (!cellsAtFrame) continue;
                 const count = cellsAtFrame.length;
-                let value: number = -1;
-                if (aggregatorKey.value == 'average') {
-                    value =
-                        mean(
+                let value: number | undefined;
+                switch (aggregatorKey.value) {
+                    case 'average':
+                        value = mean(
                             cellsAtFrame,
                             (cell: Cell) => cell.attrNum[attributeKey.value]
-                        ) ?? 0;
+                        );
+                        break;
+                    case 'total':
+                        value = sum(
+                            cellsAtFrame,
+                            (cell: Cell) => cell.attrNum[attributeKey.value]
+                        );
+                        break;
+                    case 'min':
+                        value = min(
+                            cellsAtFrame,
+                            (cell: Cell) => cell.attrNum[attributeKey.value]
+                        );
+                        break;
+                    case 'median':
+                        value = median(
+                            cellsAtFrame,
+                            (cell: Cell) => cell.attrNum[attributeKey.value]
+                        );
+                        break;
+                    case 'max':
+                        value = max(
+                            cellsAtFrame,
+                            (cell: Cell) => cell.attrNum[attributeKey.value]
+                        );
+                        break;
                 }
+                if (!value) continue;
                 singleLine.push({ frame, value, count });
             }
             result.push(singleLine);

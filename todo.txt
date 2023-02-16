@@ -2,9 +2,12 @@ Next
 [] lineage metadata charts
     [x] create computed property for current data (for at least one agg/target)
     [x] plot current data
-    [] get correct initial value for mass
+    [x] get correct initial value for mass
+    [x] add all aggregators
+    [] add lineage target
+    [] add track target
+    [] consider switch to candygraph
     [] add axes
-    [] add other aggs/targets
     [] add variance/count mapping to width/color
     [] add option for smoothing
 
