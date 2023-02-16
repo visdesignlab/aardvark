@@ -1,13 +1,13 @@
 <script setup lang="ts">
 import { useCounterStore } from '@/stores/counter';
-import { useLayoutConfig } from '@/stores/layoutConfig';
+import { useGridstackLayoutStore } from '@/stores/gridstackLayoutStore';
 import { cloneDeep } from 'lodash';
 import { ref, computed, reactive } from 'vue';
 import { useQuasar } from 'quasar';
 const $q = useQuasar();
 
 const counter = useCounterStore();
-const layoutConfig = useLayoutConfig();
+const layoutConfig = useGridstackLayoutStore();
 function addOne() {
     counter.increment();
 }

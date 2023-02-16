@@ -1,4 +1,4 @@
-import { useLayoutConfig } from './layoutConfig';
+import { useGridstackLayoutStore } from './gridstackLayoutStore';
 import { useCounterStore } from './counter';
 import { useGlobalSettings } from './globalSettings';
 import { defineStore } from 'pinia';
@@ -9,13 +9,13 @@ import { cloneDeep } from 'lodash-es';
 export const useProvenanceStore = defineStore('provenanceStore', () => {
     const counterStore = useCounterStore();
     const globalSettings = useGlobalSettings();
-    const layoutConfig = useLayoutConfig();
+    const gridstackLayoutStore = useGridstackLayoutStore();
     // const store = useStore();
 
     const initialState = {
         counter: cloneDeep(counterStore.$state),
         globalSettings: cloneDeep(globalSettings.$state),
-        layoutConfig: cloneDeep(layoutConfig.$state),
+        layoutConfig: cloneDeep(gridstackLayoutStore.$state),
         // store: cloneDeep(store.$state),
     };
 
@@ -77,7 +77,7 @@ export const useProvenanceStore = defineStore('provenanceStore', () => {
             updateGlobalSettings(cloneDeep(state))
         );
     });
-    layoutConfig.$subscribe((_mutation, state) => {
+    gridstackLayoutStore.$subscribe((_mutation, state) => {
         // console.log('layout sub');
         if (skipApply.layoutConfig) {
             skipApply.layoutConfig = false;
@@ -109,7 +109,9 @@ export const useProvenanceStore = defineStore('provenanceStore', () => {
             globalSettings.$state = cloneDeep(
                 provenance.getState().globalSettings
             );
-            layoutConfig.$state = cloneDeep(provenance.getState().layoutConfig);
+            gridstackLayoutStore.$state = cloneDeep(
+                provenance.getState().layoutConfig
+            );
             // store.$state = cloneDeep(provenance.getState().store);
         }
         nodeIds.add(provNodeId);

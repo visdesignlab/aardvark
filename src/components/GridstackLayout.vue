@@ -4,10 +4,10 @@ import { onMounted } from 'vue';
 import { GridStack, type GridStackOptions, type DDDragOpt } from 'gridstack';
 import screenfull from 'screenfull';
 import 'gridstack/dist/gridstack.min.css';
-import { useLayoutConfig } from '@/stores/layoutConfig';
+import { useGridstackLayoutStore } from '@/stores/gridstackLayoutStore';
 import { useGlobalSettings } from '@/stores/globalSettings';
 const globalSettings = useGlobalSettings();
-const layoutConfig = useLayoutConfig();
+const gridstackLayoutStore = useGridstackLayoutStore();
 // useful reference
 // https://stackoverflow.com/questions/72813397/gridstack-js-vue-3-components
 
@@ -35,7 +35,7 @@ onMounted(() => {
         // console.log('grid.on change');
         if (changeItems == null) return;
         for (let changedItem of changeItems) {
-            layoutConfig.updateItem(changedItem);
+            gridstackLayoutStore.updateItem(changedItem);
         }
         // console.log({ changeItems });
     });
@@ -61,7 +61,8 @@ async function toggleFullscreen(elementId: string) {
 <template>
     <div class="grid-stack">
         <div
-            v-for="(w, index) in layoutConfig.currentLayout?.currentItems"
+            v-for="(w, index) in gridstackLayoutStore.currentLayout
+                ?.currentItems"
             class="grid-stack-item"
             :gs-x="w.x"
             :gs-y="w.y"

@@ -1,19 +1,22 @@
 <script setup lang="ts">
-import { useLayoutConfig, type Layout } from '@/stores/layoutConfig';
+import {
+    useGridstackLayoutStore,
+    type Layout,
+} from '@/stores/gridstackLayoutStore';
 import { useGlobalSettings } from '@/stores/globalSettings';
 import { nextTick } from 'vue';
 
-const layoutConfig = useLayoutConfig();
+const gridstackLayoutStore = useGridstackLayoutStore();
 const globalSettings = useGlobalSettings();
 function listItemClass(layout: Layout): string {
     return `fake-button d-flex align-items-center list-group-item ${
-        layout.id == layoutConfig.currentLayout?.id ? 'active' : ''
+        layout.id == gridstackLayoutStore.currentLayout?.id ? 'active' : ''
     }`;
 }
 
 function buttonIconClass(layout: Layout): string {
     return `hover-show btn btn-sm btn-outline-${
-        layout.id == layoutConfig.currentLayout?.id
+        layout.id == gridstackLayoutStore.currentLayout?.id
             ? 'light'
             : globalSettings.btnDark
     }`;
@@ -31,8 +34,8 @@ function makeNameEditable(layout: Layout | null): void {
 }
 
 function onCreateNew(): void {
-    layoutConfig.createNew();
-    makeNameEditable(layoutConfig.currentLayout);
+    gridstackLayoutStore.createNew();
+    makeNameEditable(gridstackLayoutStore.currentLayout);
 }
 
 function inputNameId(layout: Layout): string {
@@ -43,20 +46,20 @@ function inputNameId(layout: Layout): string {
 <template>
     <ul class="list-group">
         <li
-            v-for="(layout, index) in layoutConfig.systemLayoutOptions"
+            v-for="(layout, index) in gridstackLayoutStore.systemLayoutOptions"
             :key="index"
             :class="listItemClass(layout)"
-            @click="() => layoutConfig.resetLayout(layout)"
+            @click="() => gridstackLayoutStore.resetLayout(layout)"
         >
             <span>{{ layout.name }}</span>
             <span class="flex-grow-1"></span>
             <font-awesome-icon class="hover-show" icon="fa-solid fa-lock" />
         </li>
         <li
-            v-for="(layout, index) in layoutConfig.userLayoutOptions"
+            v-for="(layout, index) in gridstackLayoutStore.userLayoutOptions"
             :key="index"
             :class="listItemClass(layout)"
-            @click="() => layoutConfig.resetLayout(layout)"
+            @click="() => gridstackLayoutStore.resetLayout(layout)"
         >
             <span v-if="!layout.editing" class="me-1">{{ layout.name }}</span>
             <input
@@ -79,7 +82,7 @@ function inputNameId(layout: Layout): string {
             <button
                 v-if="!layout.editing"
                 :class="buttonIconClass(layout)"
-                @click.stop="() => layoutConfig.deleteLayout(index)"
+                @click.stop="() => gridstackLayoutStore.deleteLayout(index)"
             >
                 <font-awesome-icon icon="fa-solid fa-trash-can" />
             </button>
@@ -95,9 +98,9 @@ function inputNameId(layout: Layout): string {
                 Create New
             </button>
             <button
-                v-if="layoutConfig.currentLayout?.editable"
+                v-if="gridstackLayoutStore.currentLayout?.editable"
                 :class="`btn btn-outline-${globalSettings.btnDark}`"
-                @click="layoutConfig.updateCurrent"
+                @click="gridstackLayoutStore.updateCurrent"
             >
                 Update Current
             </button>
