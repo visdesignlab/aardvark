@@ -1,6 +1,7 @@
 import { ref, computed } from 'vue';
 import { defineStore } from 'pinia';
-import { isEqual, every } from 'lodash-es';
+import { isEqual, every, sortBy } from 'lodash-es';
+import { sort } from 'd3-array';
 export interface Lineage {
     lineageId: string; // should be equal to the founder trackId
     founder: Track;
@@ -45,6 +46,7 @@ export interface SpecialHeaders {
     trackId: string;
     parentId: string;
     mass: string;
+    frame: string;
     // changes here require changes to initHeaderTransforms and transformsEqual
 }
 
@@ -66,6 +68,7 @@ export const useCellMetaData = defineStore('cellMetaData', () => {
         trackId: 'id',
         parentId: 'parent',
         mass: 'mass',
+        frame: 'frame',
     };
     const headerKeys = ref<SpecialHeaders>(defaultHeaders);
     const headers = ref<string[]>();
@@ -80,6 +83,22 @@ export const useCellMetaData = defineStore('cellMetaData', () => {
     const lineageMap = ref<Map<string, Lineage>>();
     const selectedLineage = ref<Lineage>();
     const selectedTrack = ref<Track | null>(null);
+    const frameMap = computed<Map<number, Cell[]>>(() => {
+        const map = new Map<number, Cell[]>();
+        if (!dataInitialized.value) return map;
+        if (!cellArray.value) return map;
+        for (const cell of cellArray.value) {
+            const key = getFrame(cell);
+            if (!map.has(key)) {
+                map.set(key, []);
+            }
+            map.get(key)?.push(cell);
+        }
+        return map;
+    });
+    const frameList = computed<number[]>(() => {
+        return sortBy([...frameMap.value.keys()]);
+    });
 
     const cellAttributeHeaders = computed<HeaderDef[]>(() => {
         if (!dataInitialized.value) return [];
@@ -193,6 +212,7 @@ export const useCellMetaData = defineStore('cellMetaData', () => {
             if (trans.id) h.trackId = trans.id;
             if (trans.parent) h.parentId = trans.parent;
             if (trans.mass) h.mass = trans.mass;
+            if (trans.frame) h.frame = trans.frame;
         }
     }
 
@@ -204,7 +224,8 @@ export const useCellMetaData = defineStore('cellMetaData', () => {
             trans.time === headerKeys.value.time &&
             trans.id === headerKeys.value.trackId &&
             trans.parent === headerKeys.value.parentId &&
-            trans.mass === headerKeys.value.mass
+            trans.mass === headerKeys.value.mass &&
+            trans.frame === headerKeys.value.frame
         );
     }
 
@@ -358,6 +379,10 @@ export const useCellMetaData = defineStore('cellMetaData', () => {
         return cell.attrNum[headerKeys.value.time];
     }
 
+    function getFrame(cell: Cell): number {
+        return cell.attrNum[headerKeys.value.frame];
+    }
+
     function getNumAttr(obj: Cell | Track | Lineage, attr: string): number {
         return obj.attrNum[attr];
     }
@@ -371,6 +396,8 @@ export const useCellMetaData = defineStore('cellMetaData', () => {
         trackMap,
         lineageArray,
         lineageMap,
+        frameList,
+        frameMap,
         cellAttributeHeaders,
         cellNumAttributeHeaderNames,
         trackAttributeHeaders,

@@ -1,7 +1,8 @@
 Next
 [] lineage metadata charts
-    [] create computed property for current data (for at least one agg/target)
-    [] plot current data
+    [x] create computed property for current data (for at least one agg/target)
+    [x] plot current data
+    [] add axes
     [] add other aggs/targets
     [] add variance/count mapping to width/color
 

@@ -3,7 +3,14 @@ import { ref, computed, watch, onMounted } from 'vue';
 import { useElementSize } from '@vueuse/core';
 import { useCellMetaData } from '@/stores/cellMetaData';
 import { useGlobalSettings } from '@/stores/globalSettings';
-import { useAggregateLineChartStore } from '@/stores/aggregateLineChartStore';
+import {
+    useAggregateLineChartStore,
+    type AggDataPoint,
+} from '@/stores/aggregateLineChartStore';
+import { scaleLinear } from 'd3-scale';
+import { extent } from 'd3-array';
+import { area } from 'd3-shape';
+
 const cellMetaData = useCellMetaData();
 const globalSettings = useGlobalSettings();
 const aggregateLineChartStore = useAggregateLineChartStore();
@@ -16,7 +23,36 @@ const { width: containerWidth, height: outerContainerHeight } = useElementSize(
 // container height must be less than the outer container height in order for
 // height to shrink when the outer container is reduced in height. Without
 // the -5 neither height will reduce.
-const containerHeight = computed(() => outerContainerHeight.value - 5);
+const containerHeight = computed(() =>
+    Math.max(outerContainerHeight.value - 5, 0)
+);
+const margin = ref({ top: 30, left: 30, bottom: 30, right: 30 });
+const chartWidth = computed(
+    () => containerWidth.value - margin.value.left - margin.value.right
+);
+const chartHeight = computed(
+    () => containerHeight.value - margin.value.top - margin.value.bottom
+);
+
+const scaleX = computed(() => {
+    return scaleLinear()
+        .domain(extent(cellMetaData.frameList) as [number, number])
+        .range([0, chartWidth.value]);
+});
+
+const scaleY = computed(() => {
+    return scaleLinear()
+        .domain(
+            aggregateLineChartStore.aggLineDataListExtent as [number, number]
+        )
+        .range([chartHeight.value, 0]);
+});
+
+const areaGen = computed(() => {
+    return area<AggDataPoint>()
+        .x((aggPoint) => scaleX.value(aggPoint.frame))
+        .y((aggPoint) => scaleY.value(aggPoint.value));
+});
 </script>
 
 <template>
@@ -52,9 +88,28 @@ const containerHeight = computed(() => outerContainerHeight.value - 5);
                 :width="containerWidth"
                 :height="containerHeight"
                 class="border"
-            ></svg>
+            >
+                <g :transform="`translate(${margin.left},${margin.top})`">
+                    <path
+                        class="agg-line"
+                        v-for="(
+                            aggLine, index
+                        ) in aggregateLineChartStore.aggLineDataList"
+                        :key="index"
+                        :d="areaGen(aggLine) ?? ''"
+                    ></path>
+                    <text>
+                        {{ aggregateLineChartStore.aggLineDataList[0] }}
+                    </text>
+                </g>
+            </svg>
         </div>
     </div>
 </template>
 
-<style scoped lang="scss"></style>
+<style scoped lang="scss">
+.agg-line {
+    stroke: black;
+    stroke-width: 3px;
+}
+</style>
