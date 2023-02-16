@@ -113,6 +113,13 @@ export const useCellMetaData = defineStore('cellMetaData', () => {
         return headers;
     });
 
+    const cellNumAttributeHeaderNames = computed<string[]>(() => {
+        const numericalHeaders = cellAttributeHeaders.value.filter(
+            (header) => header.type === 'number'
+        );
+        return numericalHeaders.map((header) => header.text);
+    });
+
     const trackAttributeHeaders = computed(() => {
         if (!dataInitialized.value) return [];
         if (trackArray.value == null) return [];
@@ -365,6 +372,7 @@ export const useCellMetaData = defineStore('cellMetaData', () => {
         lineageArray,
         lineageMap,
         cellAttributeHeaders,
+        cellNumAttributeHeaderNames,
         trackAttributeHeaders,
         lineageAttributeHeaders,
         selectedLineage,

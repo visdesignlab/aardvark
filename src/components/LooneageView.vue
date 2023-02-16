@@ -26,12 +26,6 @@ watch(
     () => cellMetaData.headerKeys,
     () => (attrKey.value = cellMetaData.headerKeys.mass)
 );
-const attrOptions = computed<string[]>(() => {
-    const numericalHeaders = cellMetaData?.cellAttributeHeaders.filter(
-        (header) => header.type === 'number'
-    );
-    return numericalHeaders.map((header) => header.text);
-});
 // const attrKey = computed(() => cellMetaData.headerKeys.mass);
 
 interface LooneageViewProps {
@@ -238,7 +232,7 @@ const unselectedNodes = computed(() =>
         <q-select
             label="Attribute"
             v-model="attrKey"
-            :options="attrOptions"
+            :options="cellMetaData.cellNumAttributeHeaderNames"
             :dark="globalSettings.darkMode"
             class="mb-1"
         />
