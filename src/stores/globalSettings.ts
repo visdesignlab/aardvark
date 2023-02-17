@@ -85,10 +85,18 @@ export const useGlobalSettings = defineStore('globalSettings', () => {
     const btnLight = computed<string>(() => {
         // dark and light should be inverted depending on
         // if we are in dark mode or not.
-        return darkMode.value ? 'dark' : 'light';
+        return normalizedLight.value;
     });
+    // btnDark/btnLight are redundant and could be removed
     const btnDark = computed<string>(() => {
+        return normalizedDark.value;
+    });
+
+    const normalizedDark = computed<string>(() => {
         return darkMode.value ? 'light' : 'dark';
+    });
+    const normalizedLight = computed<string>(() => {
+        return darkMode.value ? 'dark' : 'light';
     });
 
     const normalizedBlack = computed<string>(() => {
@@ -109,6 +117,8 @@ export const useGlobalSettings = defineStore('globalSettings', () => {
         btnLight,
         btnDark,
         normalizedBlack,
+        normalizedDark,
+        normalizedLight,
         usingMac,
     };
 });

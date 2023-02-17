@@ -26,7 +26,7 @@ const { width: containerWidth, height: outerContainerHeight } = useElementSize(
 const containerHeight = computed(() =>
     Math.max(outerContainerHeight.value - 10, 0)
 );
-const margin = ref({ top: 30, left: 30, bottom: 30, right: 30 });
+const margin = ref({ top: 30, left: 50, bottom: 50, right: 30 });
 const chartWidth = computed(
     () => containerWidth.value - margin.value.left - margin.value.right
 );
@@ -92,7 +92,7 @@ const areaGen = computed(() => {
             >
                 <g :transform="`translate(${margin.left},${margin.top})`">
                     <path
-                        class="agg-line"
+                        :class="`agg-line ${globalSettings.normalizedDark}`"
                         v-for="(
                             aggLine, index
                         ) in aggregateLineChartStore.aggLineDataList"
@@ -107,7 +107,14 @@ const areaGen = computed(() => {
 
 <style scoped lang="scss">
 .agg-line {
-    stroke: black;
     stroke-width: 3px;
+}
+
+.dark {
+    stroke: hsl(0, 0%, 10%);
+}
+
+.light {
+    stroke: hsl(0, 0%, 90%);
 }
 </style>
