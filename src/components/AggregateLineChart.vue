@@ -10,6 +10,9 @@ import {
 import { scaleLinear } from 'd3-scale';
 import { extent } from 'd3-array';
 import { area } from 'd3-shape';
+import { axisBottom, axisLeft } from 'd3-axis';
+import { select } from 'd3-selection';
+import { format } from 'd3-format';
 
 const cellMetaData = useCellMetaData();
 const globalSettings = useGlobalSettings();
@@ -53,6 +56,29 @@ const areaGen = computed(() => {
         .x((aggPoint) => scaleX.value(aggPoint.frame))
         .y((aggPoint) => scaleY.value(aggPoint.value));
 });
+
+const yAxisContainer = ref<SVGGElement | null>(null);
+const xAxisContainer = ref<SVGGElement | null>(null);
+const xAxisGen = computed(() => {
+    return axisBottom(scaleX.value).ticks(Math.max(1, chartWidth.value / 80));
+});
+const yAxisGen = computed(() => {
+    return axisLeft(scaleY.value)
+        .ticks(Math.max(1, chartHeight.value / 80))
+        .tickFormat(format('~s'));
+});
+
+const axisPading = ref(8);
+
+watch(xAxisGen, () => {
+    if (!xAxisContainer.value) return;
+    select(xAxisContainer.value).call(xAxisGen.value);
+});
+
+watch(yAxisGen, () => {
+    if (!yAxisContainer.value) return;
+    select(yAxisContainer.value).call(yAxisGen.value);
+});
 </script>
 
 <template>
@@ -85,11 +111,22 @@ const areaGen = computed(() => {
             ></q-select>
         </div>
         <div ref="aggLineChartContainer" class="mt-3 h-100">
-            <svg
-                :width="containerWidth"
-                :height="containerHeight"
-                class="border"
-            >
+            <svg :width="containerWidth" :height="containerHeight">
+                <g
+                    ref="yAxisContainer"
+                    class="no-select"
+                    :transform="`translate(${margin.left - axisPading}, ${
+                        margin.top
+                    })`"
+                ></g>
+                <g
+                    ref="xAxisContainer"
+                    class="no-select"
+                    :transform="`translate(${margin.left}, ${
+                        margin.top + chartHeight + axisPading
+                    })`"
+                ></g>
+
                 <g :transform="`translate(${margin.left},${margin.top})`">
                     <path
                         :class="`agg-line ${globalSettings.normalizedDark}`"
@@ -108,6 +145,7 @@ const areaGen = computed(() => {
 <style scoped lang="scss">
 .agg-line {
     stroke-width: 3px;
+    stroke-linejoin: round;
 }
 
 .dark {

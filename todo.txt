@@ -9,7 +9,8 @@ Next
     [x] consider switch to candygraph
         - no for now. The most important use case for us has limited lines, so the benefit
         seems limited, and there are risks of this being a small and not fully released
-    [] add axes
+    [x] add axes
+    [] send email with update
     [] add variance/count mapping to width/color
     [] add option for smoothing
 

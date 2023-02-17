@@ -53,8 +53,12 @@ onBeforeMount(() => {
     </div>
 </template>
 
-<style scoped>
+<style>
 .flex-grow-1 {
     flex-grow: 1;
+}
+
+.no-select {
+    user-select: none;
 }
 </style>
