@@ -45,6 +45,8 @@ simple image viewer
         [] smart resize?
     [] load entire companion.ome
     [] switch between companion.omes
+    [] add center dots
+    [] add region outlines
 
 
 quasar ui updatse

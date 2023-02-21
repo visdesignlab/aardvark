@@ -1,13 +1,23 @@
 import { ref, computed, watch } from 'vue';
 import { defineStore } from 'pinia';
 import { useCellMetaData, type Cell } from '@/stores/cellMetaData';
-import { min, max, mean, sum, median } from 'd3-array';
+import {
+    min,
+    max,
+    mean,
+    sum,
+    median,
+    quantile,
+    variance,
+    deviation,
+} from 'd3-array';
 
 export interface AggLineData extends Array<AggDataPoint> {}
 export interface AggDataPoint {
     frame: number;
     value: number; // avg or total or median or ...
     count: number;
+    variance?: [number, number];
     // todo some measure of variance? std dev, extent etc.
 }
 
@@ -59,6 +69,17 @@ function storeSetup() {
         return null;
     });
 
+    const varianceCalculator = computed(() => {
+        return (cellList: Cell[], value: number) => {
+            const std = deviation(cellList, accessor.value) ?? 0;
+            return [value - std, value + std] as const;
+            // return [
+            //     quantile(cellList, 0.48, accessor.value),
+            //     quantile(cellList, 0.52, accessor.value),
+            // ] as const;
+        };
+    });
+
     const accessor = computed(() => {
         return (cell: Cell) => cell.attrNum[attributeKey.value];
     });
@@ -78,7 +99,11 @@ function storeSetup() {
                     if (!aggregator.value) continue;
                     const value = aggregator.value(cellsAtFrame);
                     if (!value) continue;
-                    singleLine.push({ frame, value, count });
+                    const variance = varianceCalculator.value(
+                        cellsAtFrame,
+                        value
+                    ) as [number, number];
+                    singleLine.push({ frame, value, count, variance });
                 }
                 return [singleLine];
             }
@@ -130,13 +155,19 @@ function storeSetup() {
         const minVal = min(
             aggLineDataList.value,
             (aggLineData: AggLineData) => {
-                return min(aggLineData, (point) => point.value);
+                return min(aggLineData, (point) => {
+                    if (point.variance) return point.variance[0];
+                    return point.value;
+                });
             }
         );
         const maxVal = max(
             aggLineDataList.value,
             (aggLineData: AggLineData) => {
-                return max(aggLineData, (point) => point.value);
+                return max(aggLineData, (point) => {
+                    if (point.variance) return point.variance[1];
+                    return point.value;
+                });
             }
         );
         return [minVal, maxVal] as const;

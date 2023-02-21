@@ -44,6 +44,8 @@ const scaleX = computed(() => {
 });
 
 const scaleY = computed(() => {
+    console.log(aggregateLineChartStore.aggLineDataListExtent);
+    console.log(aggregateLineChartStore.aggLineDataList);
     return scaleLinear()
         .domain(
             aggregateLineChartStore.aggLineDataListExtent as [number, number]
@@ -62,6 +64,20 @@ const areaGen = computed(() => {
         .y1((aggPoint) =>
             scaleY.value(aggPoint.value - temp.value * aggPoint.count)
         );
+});
+
+const varianceAreaGen = computed(() => {
+    return area<AggDataPoint>()
+        .x((aggPoint) => scaleX.value(aggPoint.frame))
+        .y0((aggPoint) => scaleY.value(aggPoint.variance?.[0] ?? 0))
+        .y1((aggPoint) => scaleY.value(aggPoint?.variance?.[1] ?? 0));
+});
+
+const showVarianceBand = computed(() => {
+    return (
+        aggregateLineChartStore.aggregatorKey == 'average' &&
+        aggregateLineChartStore.targetKey == 'entire location'
+    );
 });
 
 const yAxisContainer = ref<SVGGElement | null>(null);
@@ -133,7 +149,19 @@ watch(yAxisGen, () => {
                         margin.top + chartHeight + axisPading
                     })`"
                 ></g>
-
+                <g
+                    v-if="showVarianceBand"
+                    :transform="`translate(${margin.left},${margin.top})`"
+                >
+                    <path
+                        :class="`variance-band ${globalSettings.normalizedDark}`"
+                        v-for="(
+                            aggLine, index
+                        ) in aggregateLineChartStore.aggLineDataList"
+                        :key="index"
+                        :d="varianceAreaGen(aggLine) ?? ''"
+                    ></path>
+                </g>
                 <g :transform="`translate(${margin.left},${margin.top})`">
                     <path
                         :class="`agg-line ${globalSettings.normalizedDark}`"
@@ -150,6 +178,11 @@ watch(yAxisGen, () => {
 </template>
 
 <style scoped lang="scss">
+.variance-band {
+    stroke-width: 1px;
+    stroke-linejoin: round;
+    opacity: 0.25;
+}
 .agg-line {
     stroke-width: 1px;
     stroke-linejoin: round;
