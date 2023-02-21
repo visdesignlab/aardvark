@@ -51,10 +51,17 @@ const scaleY = computed(() => {
         .range([chartHeight.value, 0]);
 });
 
+const temp = ref(0);
+
 const areaGen = computed(() => {
     return area<AggDataPoint>()
         .x((aggPoint) => scaleX.value(aggPoint.frame))
-        .y((aggPoint) => scaleY.value(aggPoint.value));
+        .y0((aggPoint) =>
+            scaleY.value(aggPoint.value + temp.value * aggPoint.count)
+        )
+        .y1((aggPoint) =>
+            scaleY.value(aggPoint.value - temp.value * aggPoint.count)
+        );
 });
 
 const yAxisContainer = ref<SVGGElement | null>(null);
@@ -144,15 +151,18 @@ watch(yAxisGen, () => {
 
 <style scoped lang="scss">
 .agg-line {
-    stroke-width: 3px;
+    stroke-width: 1px;
     stroke-linejoin: round;
+    // opacity: 0.25;
 }
 
 .dark {
     stroke: hsl(0, 0%, 10%);
+    fill: hsl(0, 0%, 10%);
 }
 
 .light {
     stroke: hsl(0, 0%, 90%);
+    fill: hsl(0, 0%, 90%);
 }
 </style>

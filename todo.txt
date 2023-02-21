@@ -10,7 +10,7 @@ Next
         - no for now. The most important use case for us has limited lines, so the benefit
         seems limited, and there are risks of this being a small and not fully released
     [x] add axes
-    [] send email with update
+    [x] send email with update
     [] add variance/count mapping to width/color
     [] add option for smoothing
 
@@ -35,6 +35,9 @@ refactor cell meta data to support selecting multiple locations
 
 simple image viewer
     [] fix deckgl crash (probs in loading code)
+        [] test with viv recommended server
+        [] consider batch loading frames into different layers
+        [] maybe this is exposed because of low latency??? (Could try simulating?)
     [] clean up image viewer settings ui
         [] dynamic range text box
         [] toggle visibility
