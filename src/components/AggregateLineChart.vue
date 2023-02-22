@@ -44,8 +44,6 @@ const scaleX = computed(() => {
 });
 
 const scaleY = computed(() => {
-    console.log(aggregateLineChartStore.aggLineDataListExtent);
-    console.log(aggregateLineChartStore.aggLineDataList);
     return scaleLinear()
         .domain(
             aggregateLineChartStore.aggLineDataListExtent as [number, number]
@@ -143,6 +141,17 @@ watch(yAxisGen, () => {
                 class="me-2"
             ></q-select>
         </div>
+        <div class="d-flex align-center">
+            <span class="me-3">Smooth: </span>
+            <q-slider
+                v-model="aggregateLineChartStore.smoothWindow"
+                :min="0"
+                :max="20"
+                label
+                :dark="globalSettings.darkMode"
+                class="mw-250"
+            />
+        </div>
         <div ref="aggLineChartContainer" class="mt-3 h-100">
             <svg :width="containerWidth" :height="containerHeight">
                 <g
@@ -207,5 +216,9 @@ watch(yAxisGen, () => {
 .light {
     stroke: hsl(0, 0%, 90%);
     fill: hsl(0, 0%, 90%);
+}
+
+.mw-250 {
+    max-width: 250px;
 }
 </style>

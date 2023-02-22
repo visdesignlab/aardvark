@@ -60,6 +60,8 @@ function storeSetup() {
         'cell tracks',
     ];
 
+    const smoothWindow = ref(0);
+
     const aggregator = computed(() => {
         switch (aggregatorKey.value) {
             case 'average':
@@ -168,7 +170,7 @@ function storeSetup() {
                     ) as [number, number] | undefined;
                     singleLine.push({ frame, value, count, variance });
                 }
-                return [singleLine];
+                return [medianFilterSmooth(singleLine)];
             }
             case 'cell lineages': {
                 if (!cellMetaData?.lineageArray) return [];
@@ -191,7 +193,7 @@ function storeSetup() {
                         if (!value) continue;
                         aggLineData.push({ frame, value, count });
                     }
-                    result.push(aggLineData);
+                    result.push(medianFilterSmooth(aggLineData));
                 }
                 return result;
             }
@@ -206,7 +208,7 @@ function storeSetup() {
                         const count = 1;
                         aggLineData.push({ frame, value, count });
                     }
-                    result.push(aggLineData);
+                    result.push(medianFilterSmooth(aggLineData));
                 }
                 return result;
             }
@@ -236,6 +238,17 @@ function storeSetup() {
         return [minVal, maxVal] as const;
     });
 
+    function medianFilterSmooth(points: AggDataPoint[]): AggDataPoint[] {
+        if (smoothWindow.value <= 0) return points;
+        return points.map((point, index) => {
+            const start = Math.max(0, index - smoothWindow.value);
+            const end = Math.min(points.length, index + smoothWindow.value + 1);
+            const slice = points.slice(start, end);
+            const newVal = median(slice, (point) => point.value) ?? point.value;
+            return { ...point, value: newVal };
+        });
+    }
+
     return {
         aggregatorKey,
         aggregatorOptions,
@@ -244,6 +257,7 @@ function storeSetup() {
         targetOptions,
         varianceKey,
         varianceOptions,
+        smoothWindow,
         aggLineDataList,
         aggLineDataListExtent,
     };
