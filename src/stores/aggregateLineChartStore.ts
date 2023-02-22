@@ -9,7 +9,7 @@ export interface AggDataPoint {
     value: number; // avg or total or median or ...
     count: number;
     variance?: [number, number];
-    // todo some measure of variance? std dev, extent etc.
+    // TODO: some measure of variance? std dev, extent etc.
 }
 
 function storeSetup() {
@@ -47,7 +47,7 @@ function storeSetup() {
 
     const attributeKey = ref<string>(cellMetaData.headerKeys.mass);
     watch(
-        // todo  - this mostly works, but also is triggered on location change...
+        // TODO:  - this mostly works, but also is triggered on location change...
         () => cellMetaData.headerKeys,
         () => (attributeKey.value = cellMetaData.headerKeys.mass)
     );
@@ -152,7 +152,7 @@ function storeSetup() {
     const aggLineDataList = computed<AggLineData[]>(() => {
         switch (targetKey.value) {
             case 'entire condition': {
-                // todo
+                // TODO:
                 return [];
             }
             case 'entire location': {

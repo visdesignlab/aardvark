@@ -1,40 +1,11 @@
 Next
-[] lineage metadata charts
-    [x] create computed property for current data (for at least one agg/target)
-    [x] plot current data
-    [x] get correct initial value for mass
-    [x] add all aggregators
-    [x] add lineage target
-    [x] add track target
-    [x] consider switch to candygraph
-        - no for now. The most important use case for us has limited lines, so the benefit
-        seems limited, and there are risks of this being a small and not fully released
-    [x] add axes
-    [x] send email with update
-    [x] variance
-        [x] 90, 95, 99, 100 quantile for median
-        [x] 1 std, 2 std, 3std, SE for average
-    [] add option for smoothing?
-        [] median filter
-        [] average filter
-    [] interactions
-        [] tooltip (cell count)
-        [] show lineage
-        [] select current time on all charts
-
-
-
-
 [] trrack Integration
-[] Validator view
-[] move stuff to toolbars, research quasar comps. 
 
 
-Aggregate line chart view
-[] aggregation: min,median, max, avg, total
-[] attribute: mass, perimeter
-[] for: frame, lineage, (tracks?, would not need aggregator)
-
+Line Chart Interactions
+    [] tooltip (cell count)
+    [] show lineage
+    [] select current time on all charts
 
 Trrack Integration
 [] add image selection store
@@ -64,6 +35,7 @@ quasar ui updatse
 [] layout/settings panel
 [] item list selection for custom layouts
 [] change widget container to quasar card
+[] potentially move widget actions to toolbar
 
 Misc fixes/enhancements
 [] improve looneage view recalculation issue

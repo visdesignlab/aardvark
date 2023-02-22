@@ -78,7 +78,7 @@ onMounted(async () => {
     const deckgl = new Deck({
         initialViewState: INITIAL_VIEW_STATE,
         // @ts-ignore
-        canvas: deckGlContainer.value?.id, // todo actually fix this ts error
+        canvas: deckGlContainer.value?.id, // TODO: actually fix this ts error
         controller: true,
         layers: [imageLayer.value],
         views: [new OrthographicView({ id: 'ortho', controller: true })],
