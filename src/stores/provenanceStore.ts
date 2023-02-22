@@ -29,7 +29,7 @@ export const useProvenanceStore = defineStore('provenanceStore', () => {
         const storeId = store.$id;
         initialState[storeId] = cloneDeep(store.$state);
         registerActions[storeId] = registry.register(
-            `update ${storeId}`,
+            storeId,
             (trrackState, newPiniaState) => {
                 trrackState[storeId] = cloneDeep(newPiniaState);
             }
