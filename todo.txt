@@ -1,6 +1,8 @@
 Trrack Integration
-[] get working code from branch
+[x] get working code from branch
 [] refactor
+[] ask about different texts?
+[] ask about url param sharing
 [] add image selection store
 [] agg line chart store
 [] add track vis
