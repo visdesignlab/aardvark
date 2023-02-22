@@ -1,16 +1,15 @@
-Next
-[] trrack Integration
-
+Trrack Integration
+[] get working code from branch
+[] refactor
+[] add image selection store
+[] agg line chart store
+[] add track vis
+[] table vis store?
 
 Line Chart Interactions
     [] tooltip (cell count)
     [] show lineage
     [] select current time on all charts
-
-Trrack Integration
-[] add image selection store
-[] add config layout store
-[] add track vis
 
 refactor cell meta data to support selecting multiple locations
 
@@ -28,7 +27,6 @@ simple image viewer
     [] switch between companion.omes
     [] add center dots
     [] add region outlines
-
 
 quasar ui updatse
 [] switch to quasar table
