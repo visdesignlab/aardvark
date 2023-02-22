@@ -4,14 +4,10 @@ import { useGlobalSettings } from './globalSettings';
 import { defineStore } from 'pinia';
 import { initializeTrrack, Registry } from '@trrack/core';
 // import { toRaw } from 'vue';
-import { cloneDeep } from 'lodash-es';
+import { cloneDeep, isEqual } from 'lodash-es';
 
 export interface SubStores {
     [storeId: string]: Object;
-}
-
-export interface SkipStoreApplyTracker {
-    [storeId: string]: Boolean;
 }
 
 export interface RegisterActions {
@@ -27,13 +23,11 @@ export const useProvenanceStore = defineStore('provenanceStore', () => {
     ];
 
     const initialState: SubStores = {};
-    const skipApply: SkipStoreApplyTracker = {};
     const registerActions: RegisterActions = {};
     const registry = Registry.create();
     for (const store of storesToTrrack) {
         const storeId = store.$id;
         initialState[storeId] = cloneDeep(store.$state);
-        skipApply[storeId] = false;
         registerActions[storeId] = registry.register(
             `update ${storeId}`,
             (trrackState, newPiniaState) => {
@@ -50,8 +44,7 @@ export const useProvenanceStore = defineStore('provenanceStore', () => {
     for (const store of storesToTrrack) {
         store.$subscribe((mutation, state) => {
             const storeId = mutation.storeId;
-            if (skipApply[storeId]) {
-                skipApply[storeId] = false;
+            if (isEqual(state, provenance.getState()[storeId])) {
                 return;
             }
             provenance.apply(
@@ -66,9 +59,6 @@ export const useProvenanceStore = defineStore('provenanceStore', () => {
         const provNodeId = provenance.current.id;
         const jumpedToNode: boolean = nodeIds.has(provNodeId);
         if (jumpedToNode) {
-            for (const key in skipApply) {
-                skipApply[key] = true;
-            }
             for (const store of storesToTrrack) {
                 store.$state = cloneDeep(
                     provenance.getState()[store.$id]
