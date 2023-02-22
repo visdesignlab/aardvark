@@ -20,7 +20,11 @@ export interface RegisterActions {
 }
 
 export const useProvenanceStore = defineStore('provenanceStore', () => {
-    const storesToTrrack = [useGlobalSettings(), useGridstackLayoutStore()];
+    const storesToTrrack = [
+        useGlobalSettings(),
+        useGridstackLayoutStore(),
+        useCounterStore(),
+    ];
 
     const initialState: SubStores = {};
     const skipApply: SkipStoreApplyTracker = {};
