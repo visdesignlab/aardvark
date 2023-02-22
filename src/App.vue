@@ -5,17 +5,17 @@ import GridstackLayout from './components/GridstackLayout.vue';
 import GlobalSettingsView from './components/globalSettings/GlobalSettingsView.vue';
 import { useProvenanceStore } from '@/stores/provenanceStore';
 import { onKeyStroke } from '@vueuse/core';
-// const provenanceStore = useProvenanceStore();
+const provenanceStore = useProvenanceStore();
 
-// onKeyStroke(['z', 'Z'], (e: KeyboardEvent) => {
-//     if (globalSettings.usingMac && !e.metaKey) return;
-//     if (!globalSettings.usingMac && !e.ctrlKey) return;
-//     if (e.shiftKey) {
-//         provenanceStore.provenance.redo();
-//     } else {
-//         provenanceStore.provenance.undo();
-//     }
-// });
+onKeyStroke(['z', 'Z'], (e: KeyboardEvent) => {
+    if (globalSettings.usingMac && !e.metaKey) return;
+    if (!globalSettings.usingMac && !e.ctrlKey) return;
+    if (e.shiftKey) {
+        provenanceStore.provenance.redo();
+    } else {
+        provenanceStore.provenance.undo();
+    }
+});
 
 const globalSettings = useGlobalSettings();
 watch(

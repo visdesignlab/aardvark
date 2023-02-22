@@ -34,8 +34,10 @@ function makeNameEditable(layout: Layout | null): void {
 }
 
 function onCreateNew(): void {
-    gridstackLayoutStore.createNew();
-    makeNameEditable(gridstackLayoutStore.currentLayout);
+    gridstackLayoutStore.$patch(() => {
+        gridstackLayoutStore.createNew();
+        makeNameEditable(gridstackLayoutStore.currentLayout);
+    });
 }
 
 function inputNameId(layout: Layout): string {
@@ -64,12 +66,15 @@ function inputNameId(layout: Layout): string {
             <span v-if="!layout.editing" class="me-1">{{ layout.name }}</span>
             <input
                 v-else
-                v-model="layout.name"
+                v-model.lazy="layout.name"
                 type="text"
                 :id="inputNameId(layout)"
-                @click.stop=""
-                @focusout="layout.editing = false"
-                @keyup.enter="layout.editing = false"
+                @focusout="
+                    gridstackLayoutStore.$patch(() => (layout.editing = false))
+                "
+                @keyup.enter="
+                    gridstackLayoutStore.$patch(() => (layout.editing = false))
+                "
             />
             <button
                 v-if="!layout.editing"
@@ -82,7 +87,12 @@ function inputNameId(layout: Layout): string {
             <button
                 v-if="!layout.editing"
                 :class="buttonIconClass(layout)"
-                @click.stop="() => gridstackLayoutStore.deleteLayout(index)"
+                @click.stop="
+                    () =>
+                        gridstackLayoutStore.$patch(() =>
+                            gridstackLayoutStore.deleteLayout(index)
+                        )
+                "
             >
                 <font-awesome-icon icon="fa-solid fa-trash-can" />
             </button>

@@ -46,7 +46,7 @@ export const useProvenanceStore = defineStore('provenanceStore', () => {
         (trrackState, newStore) => {
             // console.log('in action');
             // console.log({ trrackState });
-            trrackState.store = cloneDeep(newStore);
+            trrackState.layoutConfig = cloneDeep(newStore);
         }
     );
     // const updateStore = registry.register(
