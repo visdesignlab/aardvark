@@ -75,7 +75,8 @@ const varianceAreaGen = computed(() => {
 
 const showVarianceBand = computed(() => {
     return (
-        aggregateLineChartStore.aggregatorKey == 'average' &&
+        (aggregateLineChartStore.aggregatorKey == 'average' ||
+            aggregateLineChartStore.aggregatorKey == 'median') &&
         aggregateLineChartStore.targetKey == 'entire location'
     );
 });
@@ -128,6 +129,15 @@ watch(yAxisGen, () => {
             <q-select
                 v-model="aggregateLineChartStore.targetKey"
                 :options="aggregateLineChartStore.targetOptions"
+                :dark="globalSettings.darkMode"
+                dense
+                class="me-2"
+            ></q-select>
+            <span v-if="showVarianceBand" class="me-2">with</span>
+            <q-select
+                v-if="showVarianceBand"
+                v-model="aggregateLineChartStore.varianceKey"
+                :options="aggregateLineChartStore.varianceOptions"
                 :dark="globalSettings.darkMode"
                 dense
                 class="me-2"

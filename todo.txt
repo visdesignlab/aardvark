@@ -11,13 +11,23 @@ Next
         seems limited, and there are risks of this being a small and not fully released
     [x] add axes
     [x] send email with update
-    [] add variance/count mapping to width/color
-    [] add option for smoothing
+    [x] variance
+        [x] 90, 95, 99, 100 quantile for median
+        [x] 1 std, 2 std, 3std, SE for average
+    [] add option for smoothing?
+        [] median filter
+        [] average filter
+    [] interactions
+        [] tooltip (cell count)
+        [] show lineage
+        [] select current time on all charts
+
+
 
 
 [] trrack Integration
 [] Validator view
-[]
+[] move stuff to toolbars, research quasar comps. 
 
 
 Aggregate line chart view

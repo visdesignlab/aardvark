@@ -1,16 +1,7 @@
 import { ref, computed, watch } from 'vue';
 import { defineStore } from 'pinia';
 import { useCellMetaData, type Cell } from '@/stores/cellMetaData';
-import {
-    min,
-    max,
-    mean,
-    sum,
-    median,
-    quantile,
-    variance,
-    deviation,
-} from 'd3-array';
+import { min, max, mean, sum, median, quantile, deviation } from 'd3-array';
 
 export interface AggLineData extends Array<AggDataPoint> {}
 export interface AggDataPoint {
@@ -27,6 +18,32 @@ function storeSetup() {
 
     const aggregatorKey = ref<string>('average');
     const aggregatorOptions = ['average', 'total', 'min', 'median', 'max'];
+
+    const varianceKey = ref<string>('one standard deviation');
+    const averageVarianceOptions = [
+        'one standard deviation',
+        'two standard deviations',
+        'three standard deviations',
+        'standard error',
+    ];
+
+    const medianVarianceOptions = [
+        '90/10 percentile',
+        '95/5 percentile',
+        '99/1 percentile',
+        '100/0 percentile',
+    ];
+    const varianceOptions = computed(() => {
+        if (aggregatorKey.value == 'average') {
+            return averageVarianceOptions;
+        } else if (aggregatorKey.value == 'median') {
+            return medianVarianceOptions;
+        }
+        return [];
+    });
+    watch(varianceOptions, () => {
+        varianceKey.value = varianceOptions.value[0];
+    });
 
     const attributeKey = ref<string>(cellMetaData.headerKeys.mass);
     watch(
@@ -70,14 +87,60 @@ function storeSetup() {
     });
 
     const varianceCalculator = computed(() => {
-        return (cellList: Cell[], value: number) => {
-            const std = deviation(cellList, accessor.value) ?? 0;
-            return [value - std, value + std] as const;
-            // return [
-            //     quantile(cellList, 0.48, accessor.value),
-            //     quantile(cellList, 0.52, accessor.value),
-            // ] as const;
-        };
+        switch (varianceKey.value) {
+            case 'one standard deviation':
+                return (cellList: Cell[], value: number) => {
+                    const std = deviation(cellList, accessor.value) ?? 0;
+                    return [value - std, value + std] as const;
+                };
+
+            case 'two standard deviations':
+                return (cellList: Cell[], value: number) => {
+                    const std = deviation(cellList, accessor.value) ?? 0;
+                    return [value - 2 * std, value + 2 * std] as const;
+                };
+
+            case 'three standard deviations':
+                return (cellList: Cell[], value: number) => {
+                    const std = deviation(cellList, accessor.value) ?? 0;
+                    return [value - 3 * std, value + 3 * std] as const;
+                };
+            case 'standard error':
+                return (cellList: Cell[], value: number) => {
+                    const std = deviation(cellList, accessor.value) ?? 0;
+                    const se = std / Math.sqrt(cellList.length);
+                    return [value - se, value + se] as const;
+                };
+            case '90/10 percentile':
+                return (cellList: Cell[], value: number) => {
+                    return [
+                        quantile(cellList, 0.1, accessor.value),
+                        quantile(cellList, 0.9, accessor.value),
+                    ] as const;
+                };
+            case '95/5 percentile':
+                return (cellList: Cell[], value: number) => {
+                    return [
+                        quantile(cellList, 0.05, accessor.value),
+                        quantile(cellList, 0.95, accessor.value),
+                    ] as const;
+                };
+            case '99/1 percentile':
+                return (cellList: Cell[], value: number) => {
+                    return [
+                        quantile(cellList, 0.01, accessor.value),
+                        quantile(cellList, 0.98, accessor.value),
+                    ] as const;
+                };
+            case '100/0 percentile':
+                return (cellList: Cell[], value: number) => {
+                    return [
+                        min(cellList, accessor.value),
+                        max(cellList, accessor.value),
+                    ] as const;
+                };
+        }
+        return () => undefined;
     });
 
     const accessor = computed(() => {
@@ -102,7 +165,7 @@ function storeSetup() {
                     const variance = varianceCalculator.value(
                         cellsAtFrame,
                         value
-                    ) as [number, number];
+                    ) as [number, number] | undefined;
                     singleLine.push({ frame, value, count, variance });
                 }
                 return [singleLine];
@@ -179,6 +242,8 @@ function storeSetup() {
         attributeKey,
         targetKey,
         targetOptions,
+        varianceKey,
+        varianceOptions,
         aggLineDataList,
         aggLineDataListExtent,
     };
