@@ -4,8 +4,8 @@ Trrack Integration
 [x] ask about different texts?
 [x] ask about url param sharing
 [] add image selection store
-[] agg line chart store
-[x] add track vis
+[x] agg line chart store
+[] add track vis
 [] add url param tracking
 [] table vis store?
 
