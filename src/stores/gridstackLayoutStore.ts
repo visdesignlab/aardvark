@@ -101,6 +101,14 @@ export const useGridstackLayoutStore = defineStore(
                 h: 5,
                 id: uuidv4(),
             },
+            {
+                component: 'TrrackVisWrapper',
+                x: 9,
+                y: 5,
+                w: 3,
+                h: 5,
+                id: uuidv4(),
+            },
         ];
         const defaultId = 'system_layout_0';
         const defaultLayout: Layout = {

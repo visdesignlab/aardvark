@@ -50,10 +50,7 @@ export const useProvenanceStore = defineStore('provenanceStore', () => {
             if (isEqual(state, provenance.getState()[storeId])) {
                 return;
             }
-            provenance.apply(
-                `${storeId} changed`,
-                registerActions[storeId](state)
-            );
+            provenance.apply(storeId, registerActions[storeId](state));
         });
     }
 
