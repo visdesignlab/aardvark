@@ -5,15 +5,16 @@ Trrack Integration
 [x] ask about url param sharing
 [] add image selection store
 [] agg line chart store
-[] add track vis
+[x] add track vis
+[] add url param tracking
 [] table vis store?
+
+refactor cell meta data to support selecting multiple locations
 
 Line Chart Interactions
     [] tooltip (cell count)
     [] show lineage
     [] select current time on all charts
-
-refactor cell meta data to support selecting multiple locations
 
 simple image viewer
     [] fix deckgl crash (probs in loading code)

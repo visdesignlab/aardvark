@@ -101,6 +101,19 @@ watch(yAxisGen, () => {
     if (!yAxisContainer.value) return;
     select(yAxisContainer.value).call(yAxisGen.value);
 });
+
+const currentKey = computed({
+    get() {
+        return aggregateLineChartStore.aggregatorKey;
+    },
+    set(val: string) {
+        aggregateLineChartStore.$patch(() => {
+            // patch so prov store gets one update
+            // this might trigger multiple otherwise due to dependencies
+            aggregateLineChartStore.aggregatorKey = val;
+        });
+    },
+});
 </script>
 
 <template>
@@ -110,7 +123,7 @@ watch(yAxisGen, () => {
             <span class="me-2">Show</span>
             <q-select
                 v-if="aggregateLineChartStore.targetKey !== 'cell tracks'"
-                v-model="aggregateLineChartStore.aggregatorKey"
+                v-model="currentKey"
                 :options="aggregateLineChartStore.aggregatorOptions"
                 :dark="globalSettings.darkMode"
                 dense

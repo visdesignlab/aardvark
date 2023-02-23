@@ -42,7 +42,12 @@ function storeSetup() {
         return [];
     });
     watch(varianceOptions, () => {
-        varianceKey.value = varianceOptions.value[0];
+        if (
+            aggregatorKey.value == 'average' ||
+            aggregatorKey.value == 'median'
+        ) {
+            varianceKey.value = varianceOptions.value[0];
+        }
     });
 
     const attributeKey = ref<string>(cellMetaData.headerKeys.mass);

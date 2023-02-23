@@ -1,6 +1,7 @@
 import { useGridstackLayoutStore } from './gridstackLayoutStore';
 import { useCounterStore } from './counter';
 import { useGlobalSettings } from './globalSettings';
+import { useAggregateLineChartStore } from './aggregateLineChartStore';
 import { defineStore } from 'pinia';
 import { initializeTrrack, Registry } from '@trrack/core';
 // import { toRaw } from 'vue';
@@ -20,6 +21,7 @@ export const useProvenanceStore = defineStore('provenanceStore', () => {
         useGlobalSettings(),
         useGridstackLayoutStore(),
         useCounterStore(),
+        useAggregateLineChartStore(),
     ];
 
     const initialState: SubStores = {};
