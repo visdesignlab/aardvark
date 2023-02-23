@@ -2,9 +2,9 @@ import { useGridstackLayoutStore } from './gridstackLayoutStore';
 import { useCounterStore } from './counter';
 import { useGlobalSettings } from './globalSettings';
 import { useAggregateLineChartStore } from './aggregateLineChartStore';
+import { useImageViewerStore } from './imageViewerStore';
 import { defineStore } from 'pinia';
 import { initializeTrrack, Registry } from '@trrack/core';
-// import { toRaw } from 'vue';
 import { cloneDeep, isEqual } from 'lodash-es';
 
 export interface SubStores {
@@ -22,6 +22,7 @@ export const useProvenanceStore = defineStore('provenanceStore', () => {
         useGridstackLayoutStore(),
         useCounterStore(),
         useAggregateLineChartStore(),
+        useImageViewerStore(),
     ];
 
     const initialState: SubStores = {};

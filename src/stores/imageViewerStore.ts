@@ -1,5 +1,6 @@
 import { ref, computed } from 'vue';
 import { defineStore } from 'pinia';
+import { debounce } from 'lodash-es';
 
 export interface SelectionIndex {
     c: number;
@@ -32,7 +33,20 @@ export const useImageViewerStore = defineStore('imageViewerStore', () => {
         min: 0,
         max: 0,
     });
+    // maybe move the computed prop to the view?
+    // const contrastLimitSlider = computed<{ min: number; max: number }>({
+    //     get() {
+    //         return contrastLimitSliderRaw.value;
+    //     },
+    //     set: debounce((newVal) => {
+    //         console.log('update raw: ', newVal);
+    //         contrastLimitSliderRaw.value = newVal;
+    //     }, 250),
+    // });
+
     const contrastLimitExtentSlider = ref<{ min: number; max: number }>({
+        // TODO: this should be handled more gracefully, this is causing
+        // this to be stored in the trrack state.
         min: 0,
         max: 0,
     });
