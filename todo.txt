@@ -3,11 +3,14 @@ Trrack Integration
 [x] refactor
 [x] ask about different texts?
 [x] ask about url param sharing
-[] add image selection store
+[x] add image selection store
 [x] agg line chart store
 [] add track vis
 [] add url param tracking
 [] table vis store?
+[] image view state to store?
+[] debug image slider debounce
+[] add cell metadata store (but only the trrackable parts)
 
 refactor cell meta data to support selecting multiple locations
 
