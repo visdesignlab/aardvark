@@ -47,6 +47,7 @@ export const useProvenanceStore = defineStore('provenanceStore', () => {
     for (const store of storesToTrrack) {
         store.$subscribe((mutation, state) => {
             const storeId = mutation.storeId;
+            // console.log({ storeId, state });
             if (isEqual(state, provenance.getState()[storeId])) {
                 return;
             }

@@ -29,29 +29,16 @@ export const useImageViewerStore = defineStore('imageViewerStore', () => {
         'rainbow',
     ];
     // all options: https://github.com/glslify/glsl-colormap#glsl-colormap
-    const contrastLimitSlider = ref<{ min: number; max: number }>({
+    const contrastLimitSliderDebounced = ref<{ min: number; max: number }>({
         min: 0,
         max: 0,
     });
-    // maybe move the computed prop to the view?
-    // const contrastLimitSlider = computed<{ min: number; max: number }>({
-    //     get() {
-    //         return contrastLimitSliderRaw.value;
-    //     },
-    //     set: debounce((newVal) => {
-    //         console.log('update raw: ', newVal);
-    //         contrastLimitSliderRaw.value = newVal;
-    //     }, 250),
-    // });
 
     const contrastLimitExtentSlider = ref<{ min: number; max: number }>({
         // TODO: this should be handled more gracefully, this is causing
         // this to be stored in the trrack state.
         min: 0,
         max: 0,
-    });
-    const contrastLimit = computed<[number, number][]>(() => {
-        return [[contrastLimitSlider.value.min, contrastLimitSlider.value.max]];
     });
 
     const frameIndex = ref(0);
@@ -86,8 +73,7 @@ export const useImageViewerStore = defineStore('imageViewerStore', () => {
     return {
         colormap,
         colormapOptions,
-        contrastLimit,
-        contrastLimitSlider,
+        contrastLimitSliderDebounced,
         contrastLimitExtentSlider,
         frameIndex,
         frameNumber,

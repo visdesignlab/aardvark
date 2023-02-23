@@ -3,6 +3,7 @@ import { ref, computed, onMounted, watch } from 'vue';
 // import { useCellMetaData, type Lineage } from '@/stores/cellMetaData';
 import { useGlobalSettings } from '@/stores/globalSettings';
 import { useImageViewerStore } from '@/stores/imageViewerStore';
+import { debounce } from 'lodash-es';
 import {
     loadMultiTiff,
     getChannelStats,
@@ -24,6 +25,34 @@ const globalSettings = useGlobalSettings();
 const imageViewerStore = useImageViewerStore();
 
 const deckGlContainer = ref(null);
+
+const contrastLimitSlider = ref<{ min: number; max: number }>({
+    min: 0,
+    max: 0,
+});
+watch(
+    contrastLimitSlider,
+    debounce(() => {
+        // only update store periodically so provStore is
+        // not overwhelmed with new nodes
+        imageViewerStore.contrastLimitSliderDebounced =
+            contrastLimitSlider.value;
+    }, 500)
+);
+watch(
+    () => imageViewerStore.contrastLimitSliderDebounced,
+    () => {
+        // if the store changes (via a traversal in the prov tree)
+        // update the slider
+        contrastLimitSlider.value =
+            imageViewerStore.contrastLimitSliderDebounced;
+    }
+);
+
+const contrastLimit = computed<[number, number][]>(() => {
+    return [[contrastLimitSlider.value.min, contrastLimitSlider.value.max]];
+});
+
 onMounted(async () => {
     const loader = await loadMultiTiff(
         // 'http://localhost:9001/michael-2/20221122_fs051_p9_mediaswitch_homebrew_A1_4_Phase.companion.ome',
@@ -46,8 +75,8 @@ onMounted(async () => {
         selection: { c: 0, t: 0, z: 0 },
     });
     const channelStats = getChannelStats(raster.data);
-    imageViewerStore.contrastLimitSlider.min = channelStats.contrastLimits[0];
-    imageViewerStore.contrastLimitSlider.max = channelStats.contrastLimits[1];
+    contrastLimitSlider.value.min = channelStats.contrastLimits[0];
+    contrastLimitSlider.value.max = channelStats.contrastLimits[1];
     imageViewerStore.contrastLimitExtentSlider.min = channelStats.domain[0];
     imageViewerStore.contrastLimitExtentSlider.max = channelStats.domain[1];
     const contrastLimits: [number, number][] = [
@@ -63,7 +92,7 @@ onMounted(async () => {
         new ImageLayer({
             loader: pixelSource,
             id: 'test-image-layer',
-            contrastLimits: imageViewerStore.contrastLimit,
+            contrastLimits: contrastLimit.value,
             selections: imageViewerStore.selections,
             channelsVisible,
             extensions: [colormapExtension],
@@ -74,7 +103,7 @@ onMounted(async () => {
         })
     );
     // console.log({ el: deckGlContainer.value });
-    const debugFunction = (msg: string) => console.log(msg);
+    // const debugFunction = (msg: string) => console.log(msg);
     const deckgl = new Deck({
         initialViewState: INITIAL_VIEW_STATE,
         // @ts-ignore
@@ -100,15 +129,13 @@ onMounted(async () => {
         // onInteractionStateChange: () => console.log('onInteractionStateChange'),
         // onLoad: () => console.log('onLoad'),
     });
-
-    // imageViewerStore.$subscribe(() => {
-    watch(imageViewerStore.$state, (_state: any) => {
+    const renderDeckGL = (_state: any) => {
         console.count('update in subscribe');
         imageLayer.value?.state?.abortController?.abort();
         imageLayer.value = new ImageLayer({
             loader: pixelSource,
             id: 'test-image-layer',
-            contrastLimits: imageViewerStore.contrastLimit,
+            contrastLimits: contrastLimit.value,
             selections: imageViewerStore.selections,
             channelsVisible,
             extensions: [colormapExtension],
@@ -121,7 +148,10 @@ onMounted(async () => {
         deckgl.setProps({
             layers: [imageLayer.value],
         });
-    });
+    };
+    // imageViewerStore.$subscribe(() => {
+    watch(imageViewerStore.$state, renderDeckGL);
+    watch(contrastLimitSlider, renderDeckGL);
 });
 </script>
 
@@ -151,7 +181,7 @@ onMounted(async () => {
             >Dynamic Range:</q-badge
         >
         <q-range
-            v-model="imageViewerStore.contrastLimitSlider"
+            v-model="contrastLimitSlider"
             :min="imageViewerStore.contrastLimitExtentSlider.min"
             :max="imageViewerStore.contrastLimitExtentSlider.max"
             :step="1"
