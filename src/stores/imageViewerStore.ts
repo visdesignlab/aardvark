@@ -30,6 +30,7 @@ export const useImageViewerStore = defineStore('imageViewerStore', () => {
     ];
     // all options: https://github.com/glslify/glsl-colormap#glsl-colormap
     const contrastLimitSliderDebounced = ref<{ min: number; max: number }>({
+        // TODO: this is also a bit problematic
         min: 0,
         max: 0,
     });

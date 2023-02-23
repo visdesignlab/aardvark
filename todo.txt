@@ -6,7 +6,7 @@ Trrack Integration
 [x] add image selection store
 [x] agg line chart store
 [x] add track vis
-[] improve ephemeral trracking
+[x] improve ephemeral trracking
 [] add url param tracking
 [] table vis store?
 [] image view state to store?
