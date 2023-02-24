@@ -7,12 +7,12 @@ Trrack Integration
 [x] agg line chart store
 [x] add track vis
 [x] improve ephemeral trracking
+[x] debug image slider debounce
 [] add url param tracking
-[] table vis store?
-[] image view state to store?
-[] debug image slider debounce
 [] add cell metadata store (but only the trrackable parts)
 [] add looneage view to trrack vis
+[] table vis store?
+[] image view state to store?
 
 refactor cell meta data to support selecting multiple locations
 
