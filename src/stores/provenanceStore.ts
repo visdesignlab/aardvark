@@ -38,22 +38,37 @@ export const useProvenanceStore = defineStore('provenanceStore', () => {
             }
         );
     }
+    let trrackPrevious;
+    const localStorageTrrack = localStorage.getItem('trrack');
+    if (localStorageTrrack !== null) {
+        trrackPrevious = JSON.parse(localStorageTrrack);
+    } else {
+        trrackPrevious = initialState;
+    }
 
+    console.log({ trrackPrevious });
     const provenance = initializeTrrack({
-        initialState,
+        initialState: trrackPrevious,
         registry,
     });
+    window.prov = provenance;
 
     for (const store of storesToTrrack) {
         store.$subscribe((mutation, state) => {
             const storeId = mutation.storeId;
-            // console.log({ storeId, state });
+            console.log({ storeId, state });
+            console.log({ prvState: provenance.getState() });
             if (isEqual(state, provenance.getState()[storeId])) {
                 return;
             }
             provenance.apply(storeId, registerActions[storeId](state));
         });
     }
+
+    provenance.currentChange(() => {
+        localStorage.setItem('trrack', provenance.export());
+        // replace with JSON.stringify(provenance.getState()) to only save the last state
+    });
 
     const nodeIds = new Set<string>([provenance.root.id]);
     provenance.currentChange(() => {

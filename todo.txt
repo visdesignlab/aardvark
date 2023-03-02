@@ -13,6 +13,7 @@ Trrack Integration
 [] add looneage view to trrack vis
 [] table vis store?
 [] image view state to store?
+[] update trrack vis to newer version
 
 refactor cell meta data to support selecting multiple locations
 

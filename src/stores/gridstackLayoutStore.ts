@@ -42,7 +42,7 @@ export const useGridstackLayoutStore = defineStore(
                 y: 0,
                 w: 3,
                 h: 5,
-                id: uuidv4(),
+                id: 'LooneageView',
             },
             {
                 component: 'SimpleTable',
@@ -50,7 +50,7 @@ export const useGridstackLayoutStore = defineStore(
                 y: 0,
                 w: 3,
                 h: 5,
-                id: uuidv4(),
+                id: 'SimpleTable-lineage',
                 props: {
                     attributeLevel: 'lineage',
                 },
@@ -61,7 +61,7 @@ export const useGridstackLayoutStore = defineStore(
                 y: 0,
                 w: 3,
                 h: 5,
-                id: uuidv4(),
+                id: 'SimpleTable-track',
                 props: {
                     attributeLevel: 'track',
                 },
@@ -72,7 +72,7 @@ export const useGridstackLayoutStore = defineStore(
                 y: 0,
                 w: 3,
                 h: 5,
-                id: uuidv4(),
+                id: 'SimpleTable-cell',
                 props: {
                     attributeLevel: 'cell',
                 },
@@ -83,7 +83,7 @@ export const useGridstackLayoutStore = defineStore(
                 y: 5,
                 w: 3,
                 h: 5,
-                id: uuidv4(),
+                id: 'AggregateLineChart',
             },
             {
                 component: 'ImageViewer',
@@ -91,7 +91,7 @@ export const useGridstackLayoutStore = defineStore(
                 y: 5,
                 w: 3,
                 h: 5,
-                id: uuidv4(),
+                id: 'ImageViewer',
             },
             {
                 component: 'TestComponent',
@@ -99,7 +99,7 @@ export const useGridstackLayoutStore = defineStore(
                 y: 5,
                 w: 3,
                 h: 5,
-                id: uuidv4(),
+                id: 'TestComponent',
             },
             {
                 component: 'TrrackVisWrapper',
@@ -107,7 +107,7 @@ export const useGridstackLayoutStore = defineStore(
                 y: 5,
                 w: 3,
                 h: 5,
-                id: uuidv4(),
+                id: 'TrrackVisWrapper',
             },
         ];
         const defaultId = 'system_layout_0';

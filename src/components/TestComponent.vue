@@ -3,11 +3,13 @@ import { useCounterStore } from '@/stores/counter';
 import { useGridstackLayoutStore } from '@/stores/gridstackLayoutStore';
 import { cloneDeep } from 'lodash';
 import { ref, computed, reactive } from 'vue';
-import { useQuasar } from 'quasar';
+import { LocalStorage, useQuasar } from 'quasar';
+import { useGlobalSettings } from '@/stores/globalSettings';
 const $q = useQuasar();
 
 const counter = useCounterStore();
 const layoutConfig = useGridstackLayoutStore();
+const globalSettings = useGlobalSettings();
 function addOne() {
     counter.increment();
 }
@@ -29,9 +31,17 @@ const fourth = ref(true);
 function showLoading(): void {
     $q.loading.show();
 }
+
+function clearLocalStorage(): void {
+    localStorage.clear();
+}
 </script>
 <template>
-    <q-btn @click="showLoading">Show loading shield</q-btn>
+    <q-btn @click="clearLocalStorage" outline rounded
+        >Clear local storage</q-btn
+    >
+    <q-separator class="m-1" color="black"></q-separator>
+    <!-- <q-btn @click="showLoading">Show loading shield</q-btn> -->
     <button @click="addOne">Plus 1</button>
     <div>{{ counter.count }}</div>
     <!-- <button @click="copyGridstackCongif">Pcopy</button> -->
