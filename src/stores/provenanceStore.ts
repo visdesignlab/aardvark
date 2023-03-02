@@ -51,6 +51,9 @@ export const useProvenanceStore = defineStore('provenanceStore', () => {
         initialState: trrackPrevious,
         registry,
     });
+    if (localStorageTrrack !== null) {
+        updateVueState();
+    }
     window.prov = provenance;
 
     for (const store of storesToTrrack) {
@@ -66,7 +69,8 @@ export const useProvenanceStore = defineStore('provenanceStore', () => {
     }
 
     provenance.currentChange(() => {
-        localStorage.setItem('trrack', provenance.export());
+        // localStorage.setItem('trrack', provenance.export());
+        localStorage.setItem('trrack', JSON.stringify(provenance.getState()));
         // replace with JSON.stringify(provenance.getState()) to only save the last state
     });
 
@@ -75,14 +79,16 @@ export const useProvenanceStore = defineStore('provenanceStore', () => {
         const provNodeId = provenance.current.id;
         const jumpedToNode: boolean = nodeIds.has(provNodeId);
         if (jumpedToNode) {
-            for (const store of storesToTrrack) {
-                store.$state = cloneDeep(
-                    provenance.getState()[store.$id]
-                ) as any;
-            }
+            updateVueState();
         }
         nodeIds.add(provNodeId);
     });
+
+    function updateVueState(): void {
+        for (const store of storesToTrrack) {
+            store.$state = cloneDeep(provenance.getState()[store.$id]) as any;
+        }
+    }
 
     return {
         provenance,
