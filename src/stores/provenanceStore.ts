@@ -6,6 +6,7 @@ import { useImageViewerStore } from './imageViewerStore';
 import { defineStore } from 'pinia';
 import { initializeTrrack, Registry } from '@trrack/core';
 import { cloneDeep, isEqual } from 'lodash-es';
+import { compress, decompress } from 'lz-string';
 
 export interface SubStores {
     [storeId: string]: Object;
@@ -41,7 +42,7 @@ export const useProvenanceStore = defineStore('provenanceStore', () => {
     let trrackPrevious;
     const localStorageTrrack = localStorage.getItem('trrack');
     if (localStorageTrrack !== null) {
-        trrackPrevious = JSON.parse(localStorageTrrack);
+        trrackPrevious = JSON.parse(decompress(localStorageTrrack) ?? '');
     } else {
         trrackPrevious = initialState;
     }
@@ -70,7 +71,10 @@ export const useProvenanceStore = defineStore('provenanceStore', () => {
 
     provenance.currentChange(() => {
         // localStorage.setItem('trrack', provenance.export());
-        localStorage.setItem('trrack', JSON.stringify(provenance.getState()));
+        localStorage.setItem(
+            'trrack',
+            compress(JSON.stringify(provenance.getState()))
+        );
         // replace with JSON.stringify(provenance.getState()) to only save the last state
     });
 
