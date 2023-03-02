@@ -6,7 +6,12 @@ import { useImageViewerStore } from './imageViewerStore';
 import { defineStore } from 'pinia';
 import { initializeTrrack, Registry } from '@trrack/core';
 import { cloneDeep, isEqual } from 'lodash-es';
-import { compress, decompress } from 'lz-string';
+import {
+    compress,
+    decompress,
+    compressToEncodedURIComponent,
+    decompressFromEncodedURIComponent,
+} from 'lz-string';
 
 export interface SubStores {
     [storeId: string]: Object;
@@ -40,9 +45,19 @@ export const useProvenanceStore = defineStore('provenanceStore', () => {
         );
     }
     let trrackPrevious;
-    const localStorageTrrack = localStorage.getItem('trrack');
-    if (localStorageTrrack !== null) {
-        trrackPrevious = JSON.parse(decompress(localStorageTrrack) ?? '');
+    // const localStorageTrrack = localStorage.getItem('trrack');
+
+    const url = new URL(window.location.href);
+    const searchParams = new URLSearchParams(url.search);
+
+    const urlParamTrrack = searchParams.get('state');
+    // url.search = searchParams.toString();
+    // window.history.replaceState(null, '', url);
+
+    if (urlParamTrrack) {
+        trrackPrevious = JSON.parse(
+            decompressFromEncodedURIComponent(urlParamTrrack) ?? ''
+        );
     } else {
         trrackPrevious = initialState;
     }
@@ -52,10 +67,10 @@ export const useProvenanceStore = defineStore('provenanceStore', () => {
         initialState: trrackPrevious,
         registry,
     });
-    if (localStorageTrrack !== null) {
+    if (urlParamTrrack) {
         updateVueState();
     }
-    window.prov = provenance;
+    // window.prov = provenance;
 
     for (const store of storesToTrrack) {
         store.$subscribe((mutation, state) => {
@@ -71,10 +86,19 @@ export const useProvenanceStore = defineStore('provenanceStore', () => {
 
     provenance.currentChange(() => {
         // localStorage.setItem('trrack', provenance.export());
-        localStorage.setItem(
-            'trrack',
-            compress(JSON.stringify(provenance.getState()))
+        const url = new URL(window.location.href);
+        const searchParams = new URLSearchParams(url.search);
+
+        searchParams.set(
+            'state',
+            compressToEncodedURIComponent(JSON.stringify(provenance.getState()))
         );
+        url.search = searchParams.toString();
+        window.history.replaceState(null, '', url);
+        // localStorage.setItem(
+        //     'trrack',
+        //     compress(JSON.stringify(provenance.getState()))
+        // );
         // replace with JSON.stringify(provenance.getState()) to only save the last state
     });
 
