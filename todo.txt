@@ -9,7 +9,7 @@ Trrack Integration
 [x] improve ephemeral trracking
 [x] debug image slider debounce
 [x] add url param tracking
-[] update trrack vis to newer version
+[x] update trrack vis to newer version
 [] add cell metadata store (but only the trrackable parts)
 [] add looneage view to trrack vis
 [] table vis store?
@@ -69,6 +69,7 @@ create small fake dataset on gh
 create (maybe interactive?) legend for horizon chart |/  /  /  /|
 add aardvark icon
 research filter options (vega, plotly, other)
+generic min-size protection
 
 add close widget option 
 
