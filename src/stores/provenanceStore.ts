@@ -7,8 +7,6 @@ import { defineStore } from 'pinia';
 import { initializeTrrack, Registry } from '@trrack/core';
 import { cloneDeep, isEqual } from 'lodash-es';
 import {
-    compress,
-    decompress,
     compressToEncodedURIComponent,
     decompressFromEncodedURIComponent,
 } from 'lz-string';
@@ -44,16 +42,11 @@ export const useProvenanceStore = defineStore('provenanceStore', () => {
             }
         );
     }
-    let trrackPrevious;
-    // const localStorageTrrack = localStorage.getItem('trrack');
 
+    let trrackPrevious;
     const url = new URL(window.location.href);
     const searchParams = new URLSearchParams(url.search);
-
     const urlParamTrrack = searchParams.get('state');
-    // url.search = searchParams.toString();
-    // window.history.replaceState(null, '', url);
-
     if (urlParamTrrack) {
         trrackPrevious = JSON.parse(
             decompressFromEncodedURIComponent(urlParamTrrack) ?? ''
@@ -62,7 +55,6 @@ export const useProvenanceStore = defineStore('provenanceStore', () => {
         trrackPrevious = initialState;
     }
 
-    console.log({ trrackPrevious });
     const provenance = initializeTrrack({
         initialState: trrackPrevious,
         registry,
@@ -70,7 +62,6 @@ export const useProvenanceStore = defineStore('provenanceStore', () => {
     if (urlParamTrrack) {
         updateVueState();
     }
-    // window.prov = provenance;
 
     for (const store of storesToTrrack) {
         store.$subscribe((mutation, state) => {
@@ -85,21 +76,14 @@ export const useProvenanceStore = defineStore('provenanceStore', () => {
     }
 
     provenance.currentChange(() => {
-        // localStorage.setItem('trrack', provenance.export());
         const url = new URL(window.location.href);
         const searchParams = new URLSearchParams(url.search);
-
         searchParams.set(
             'state',
             compressToEncodedURIComponent(JSON.stringify(provenance.getState()))
         );
         url.search = searchParams.toString();
         window.history.replaceState(null, '', url);
-        // localStorage.setItem(
-        //     'trrack',
-        //     compress(JSON.stringify(provenance.getState()))
-        // );
-        // replace with JSON.stringify(provenance.getState()) to only save the last state
     });
 
     const nodeIds = new Set<string>([provenance.root.id]);
