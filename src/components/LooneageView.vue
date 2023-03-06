@@ -12,13 +12,11 @@ import { flextree, type LayoutNode } from 'd3-flextree';
 import { useElementSize } from '@vueuse/core';
 import { useCellMetaData, type Track, type Cell } from '@/stores/cellMetaData';
 import { useGlobalSettings } from '@/stores/globalSettings';
-import { useDatasetSelectionStore } from '@/stores/datasetSelectionStore';
 
 const looneageContainer = ref(null);
 
 const cellMetaData = useCellMetaData();
 const globalSettings = useGlobalSettings();
-const datasetSelectionStore = useDatasetSelectionStore();
 
 const attrKey = ref<string>(cellMetaData.headerKeys.mass); // Default to mass
 watch(

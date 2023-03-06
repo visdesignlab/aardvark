@@ -3,32 +3,16 @@ import { ref, watch, computed } from 'vue';
 import { useQuasar } from 'quasar';
 import { useCellMetaData, type AnyAttributes } from '@/stores/cellMetaData';
 import { useGlobalSettings } from '@/stores/globalSettings';
+import { useDatasetSelectionTrrackedStore } from '@/stores/datasetSelectionTrrackedStore';
 import { useDatasetSelectionStore } from '@/stores/datasetSelectionStore';
-import { parse, type ParseResult } from 'papaparse';
 
-const cellMetaData = useCellMetaData();
 const globalSettings = useGlobalSettings();
 const datasetSelectionStore = useDatasetSelectionStore();
-const $q = useQuasar();
-// console.log(datasetSelectionStore.entryPointFilename);
 
-function onDataUpload(event: Event): void {
-    const input = event.target as HTMLInputElement;
-    if (input === null || input.files === null) return;
-    const dataFile = input.files[0];
-    parse(dataFile, {
-        header: true,
-        dynamicTyping: true,
-        skipEmptyLines: true,
-        complete: (results: ParseResult<AnyAttributes>, file) => {
-            cellMetaData.init(results.data, results.meta.fields as string[]);
-            // console.log({ results, file });
-        },
-    });
-}
+const datasetSelectionTrrackedStore = useDatasetSelectionTrrackedStore();
+const $q = useQuasar();
+
 const serverInputRef = ref<any>(null);
-const blarg = ref();
-// watch(datasetSelectionStore.fetchingTabularData, () => {
 watch(
     () => datasetSelectionStore.fetchingTabularData,
     () => {
@@ -42,39 +26,21 @@ watch(
         }
     }
 );
-// const dataUrl = ref(null);
-// const data = ref<{ experiments: string[] }>({ experiments: [] });
-// watch(dataUrl, async () => {
-//     // console.log('data url change');
-//     // console.log({ url: dataUrl.value });
-//     const response = await fetch('http://' + dataUrl.value + '/aa_index.json');
-//     // response.status
-//     data.value = await response.json();
-//     serverInputRef?.value?.validate();
-//     // // console.log({ data.value });
-//     // .then((response) => // console.log({ blarg: response.json() }))
-//     // .then((data) => // console.log({ data }));
-// });
 
-// const urlValid = computed(() => data.value.experiments.length > 0);
-// const urlRules = ref([() => urlValid.value || 'url is notr valuid']);
+function onClickLocation(location: any) {
+    // console.log('clicked location: ', location);
+    datasetSelectionStore.selectImagingLocation(location);
+}
 </script>
 
 <template>
-    <!-- <label class="form-label" for="dataInput">Select metadata csv file:</label>
-    <inputinput url
-        type="file"
-        class="form-control"
-        id="dataInput"
-        @input="onDataUpload"
-    /> -->
     <q-input
         ref="serverInputRef"
-        v-model="datasetSelectionStore.serverUrl"
+        v-model="datasetSelectionTrrackedStore.serverUrl"
         filled
         type="url"
         label="http://"
-        :suffix="datasetSelectionStore.entryPointFilename"
+        :suffix="datasetSelectionTrrackedStore.entryPointFilename"
         debounce="1000"
         :loading="datasetSelectionStore.fetchingEntryFile"
         :error="!datasetSelectionStore.serverUrlValid"
@@ -84,10 +50,10 @@ watch(
     <q-select
         v-if="
             datasetSelectionStore.serverUrlValid &&
-            datasetSelectionStore.serverUrl
+            datasetSelectionTrrackedStore.serverUrl
         "
         label="Experiment"
-        v-model="datasetSelectionStore.currentExperimentFilename"
+        v-model="datasetSelectionTrrackedStore.currentExperimentFilename"
         :options="datasetSelectionStore.experimentFilenameList"
         :dark="globalSettings.darkMode"
     />
@@ -107,10 +73,14 @@ watch(
                 :key="location.id"
                 clickable
                 v-ripple
-                :active="location.show"
+                :active="
+                    datasetSelectionTrrackedStore.selectedLocationIds[
+                        location.id
+                    ]
+                "
                 @click="
                     () => {
-                        datasetSelectionStore.selectImagingLocation(location);
+                        onClickLocation(location);
                     }
                 "
                 :dark="globalSettings.darkMode"
@@ -118,11 +88,6 @@ watch(
             >
         </q-list>
     </div>
-    <!-- <hr />
-    <div>debug info</div>
-    <div>
-        {{ JSON.stringify(datasetSelectionStore.currentExperimentMetadata) }}
-    </div> -->
 </template>
 
 <style scoped lange="scss"></style>

@@ -1,26 +1,10 @@
 Trrack Integration
-[x] get working code from branch
-[x] refactor
-[x] ask about different texts?
-[x] ask about url param sharing
-[x] add image selection store
-[x] agg line chart store
-[x] add track vis
-[x] improve ephemeral trracking
-[x] debug image slider debounce
-[x] add url param tracking
-[x] update trrack vis to newer version
-[] add cell metadata store (but only the trrackable parts)
+[x] add cell metadata store (but only the trrackable parts)
 [] add looneage view to trrack vis
 [] table vis store?
 [] image view state to store?
 
 refactor cell meta data to support selecting multiple locations
-
-Line Chart Interactions
-    [] tooltip (cell count)
-    [] show lineage
-    [] select current time on all charts
 
 simple image viewer
     [] fix deckgl crash (probs in loading code)
@@ -36,6 +20,12 @@ simple image viewer
     [] switch between companion.omes
     [] add center dots
     [] add region outlines
+    [] add tree in image
+
+Line Chart Interactions
+    [] tooltip (cell count)
+    [] show lineage
+    [] select current time on all charts
 
 quasar ui updatse
 [] switch to quasar table
@@ -50,6 +40,7 @@ Misc fixes/enhancements
 [] cache large data requests e.g. to tabular data
 [] crash when selecting lineage with single length track
 [] either remove single column layout, or add special logic for it
+[] debounce smoothing for trracking
 
 Validator component
 [] sorted

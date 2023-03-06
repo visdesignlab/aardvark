@@ -1,7 +1,6 @@
 import { ref, computed } from 'vue';
 import { defineStore } from 'pinia';
 import { isEqual, every, sortBy } from 'lodash-es';
-import { sort } from 'd3-array';
 export interface Lineage {
     lineageId: string; // should be equal to the founder trackId
     founder: Track;

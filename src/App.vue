@@ -12,8 +12,10 @@ onKeyStroke(['z', 'Z'], (e: KeyboardEvent) => {
     if (!globalSettings.usingMac && !e.ctrlKey) return;
     if (e.shiftKey) {
         provenanceStore.provenance.redo();
+        e.preventDefault();
     } else {
         provenanceStore.provenance.undo();
+        e.preventDefault();
     }
 });
 

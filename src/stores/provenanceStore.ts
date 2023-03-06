@@ -1,7 +1,9 @@
+import { useDatasetSelectionTrrackedStore } from './datasetSelectionTrrackedStore';
 import { useGridstackLayoutStore } from './gridstackLayoutStore';
 import { useCounterStore } from './counter';
 import { useGlobalSettings } from './globalSettings';
 import { useAggregateLineChartStore } from './aggregateLineChartStore';
+import { useDatasetSelectionStore } from './datasetSelectionStore';
 import { useImageViewerStore } from './imageViewerStore';
 import { defineStore } from 'pinia';
 import { initializeTrrack, Registry } from '@trrack/core';
@@ -27,6 +29,7 @@ export const useProvenanceStore = defineStore('provenanceStore', () => {
         useCounterStore(),
         useAggregateLineChartStore(),
         useImageViewerStore(),
+        useDatasetSelectionTrrackedStore(),
     ];
 
     const initialState: SubStores = {};
@@ -60,13 +63,17 @@ export const useProvenanceStore = defineStore('provenanceStore', () => {
         registry,
     });
     if (urlParamTrrack) {
+        useDatasetSelectionStore();
+        // not tracked, but needs to be initialized for the case
+        // where you open url and data is loaded but DatasetSelector.vue
+        // is not initialized since it is hidden.
         updateVueState();
     }
 
     for (const store of storesToTrrack) {
         store.$subscribe((mutation, state) => {
             const storeId = mutation.storeId;
-            console.log({ storeId, state });
+            console.log({ storeId, state, mutation });
             console.log({ prvState: provenance.getState() });
             if (isEqual(state, provenance.getState()[storeId])) {
                 return;

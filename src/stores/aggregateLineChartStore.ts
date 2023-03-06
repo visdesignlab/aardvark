@@ -9,7 +9,6 @@ export interface AggDataPoint {
     value: number; // avg or total or median or ...
     count: number;
     variance?: [number, number];
-    // TODO: some measure of variance? std dev, extent etc.
 }
 
 function storeSetup() {
@@ -56,6 +55,7 @@ function storeSetup() {
         () => cellMetaData.headerKeys,
         () => (attributeKey.value = cellMetaData.headerKeys.mass)
     );
+    // TODO: I think this watch is causing the extra node in the prov graph on first dataset load.
     const targetKey = ref<string>('entire location');
 
     const targetOptions = [

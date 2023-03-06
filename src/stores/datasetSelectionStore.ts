@@ -1,14 +1,17 @@
 import { ref, computed, watch, nextTick } from 'vue';
 import { defineStore } from 'pinia';
-import { v4 as uuidv4 } from 'uuid';
-import { useStorage } from '@vueuse/core';
+import { asyncComputed, useStorage } from '@vueuse/core';
 import { parse, type ParseResult } from 'papaparse';
+import { cloneDeep } from 'lodash-es';
 
+import { computedAsync } from '@vueuse/core';
 import {
     useCellMetaData,
     type AnyAttributes,
     type TextTransforms,
 } from '@/stores/cellMetaData';
+import { useDatasetSelectionTrrackedStore } from '@/stores/datasetSelectionTrrackedStore';
+
 export interface ExperimentMetadata {
     name?: string; // user friendly name
     filename: string;
@@ -30,39 +33,28 @@ export interface LocationMetadata {
     plate?: string;
     well?: string;
     location?: string;
-    show?: boolean; // if true, include data in interface
 }
+
 export const useDatasetSelectionStore = defineStore(
     'datasetSelectionStore',
     () => {
-        const cellMetaData = useCellMetaData();
-        const entryPointFilename = '/aa_index.json';
-
         const serverUrlValid = ref(true);
         const fetchingEntryFile = ref(false);
-        const fetchingTabularData = ref(false);
         const errorMessage = ref('default error message');
+
+        const cellMetaData = useCellMetaData();
+        const datasetSelectionTrrackedStore =
+            useDatasetSelectionTrrackedStore();
+        const fetchingTabularData = ref(false);
         let controller: AbortController;
 
-        const experimentFilenameList = ref<string[]>([]);
-        const currentExperimentFilename = ref<string | null>(null);
-        const currentExperimentMetadata = ref<ExperimentMetadata | null>(null);
-        const currentLocationMetadata = ref<LocationMetadata | null>(null); // TODO: - update to support multi-location
-
-        const serverUrl = useStorage<string | null>('serverUrl', null);
-        if (serverUrl.value !== null && serverUrl.value !== '') {
-            fetchEntryFile();
-        }
-        watch(serverUrl, async () => {
-            fetchEntryFile();
-        });
-
-        async function fetchEntryFile(): Promise<void> {
-            // console.log('data url change');
-            // console.log({ url: serverUrl.value });
-            const fullURL = 'http://' + serverUrl.value + entryPointFilename;
+        const experimentFilenameList = asyncComputed<string[]>(async () => {
+            if (datasetSelectionTrrackedStore.serverUrl == null) return null;
+            const fullURL =
+                'http://' +
+                datasetSelectionTrrackedStore.serverUrl +
+                datasetSelectionTrrackedStore.entryPointFilename;
             if (controller) {
-                // console.log('abort called');
                 controller.abort('stale request'); // cancel last fetch if it's still trying
             }
             controller = new AbortController();
@@ -83,11 +75,9 @@ export const useDatasetSelectionStore = defineStore(
             }
             fetchingEntryFile.value = false;
             serverUrlValid.value = true;
-            // console.log({ response });
             const data = await response.json();
-            // console.log({ data });
-            experimentFilenameList.value = data.experiments;
-        }
+            return data.experiments;
+        }, []);
 
         function handleFetchEntryError(message: string): void {
             // // console.log('ERROR', errorMessage);
@@ -96,111 +86,122 @@ export const useDatasetSelectionStore = defineStore(
             fetchingEntryFile.value = false;
         }
 
-        watch(currentExperimentFilename, async () => {
-            fetchCurrentExperimentFile();
-        });
-
-        async function fetchCurrentExperimentFile(): Promise<void> {
-            // console.log('experiment change');
-            // console.log({ file: currentExperimentFilename.value });
-            const fullURL =
-                'http://' +
-                serverUrl.value +
-                '/' +
-                currentExperimentFilename.value;
-            // if (controller) {
-            //     // console.log('abort called');
-            //     controller.abort('stale request'); // cancel last fetch if it's still trying
-            // }
-            // controller = new AbortController();
-            // fetchingEntryFile.value = true;
-            const response = await fetch(fullURL, {
-                // signal: controller.signal, // link controller so can cancel if need to
+        const currentExperimentMetadata =
+            computedAsync<ExperimentMetadata | null>(async () => {
+                // console.log('updating exp metadata');
+                if (
+                    datasetSelectionTrrackedStore.currentExperimentFilename ==
+                    null
+                )
+                    return null;
+                const fullURL =
+                    'http://' +
+                    datasetSelectionTrrackedStore.serverUrl +
+                    '/' +
+                    datasetSelectionTrrackedStore.currentExperimentFilename;
+                const response = await fetch(fullURL, {});
+                const data = await response.json();
+                return data;
             });
-            // .catch((error: Error) => {
-            //     handleFetchExperimentError(
-            //         `Could not access ${fullURL}. "${error.message}"`
-            //     );
-            // });
-            // if (response == null) return;
-            // if (!response.ok) {
-            //     handleFetchExperimentError(
-            //         `Server Error. "${response.status}: ${response.statusText}"`
-            //     );
-            //     return;
-            // }
-            // fetchingEntryFile.value = false;
-            // serverUrlValid.value = true;
-            // console.log({ response });
-            const data = await response.json();
-            // console.log({ data });
-            currentExperimentMetadata.value = data;
-        }
 
         function selectImagingLocation(location: LocationMetadata): void {
-            if (currentExperimentMetadata.value == null) return;
-            currentLocationMetadata.value = location;
-            for (const loc of currentExperimentMetadata.value
-                .locationMetadataList) {
-                loc.show = false;
-            }
-            // location.show = true;
-            currentLocationMetadata.value.show = true;
+            // console.log('select imaging location');
+            datasetSelectionTrrackedStore.$patch(() => {
+                for (const key in datasetSelectionTrrackedStore.selectedLocationIds) {
+                    datasetSelectionTrrackedStore.selectedLocationIds[key] =
+                        false;
+                }
+                datasetSelectionTrrackedStore.selectedLocationIds[location.id] =
+                    true;
+            });
+            // console.log(cloneDeep(datasetSelectionTrrackedStore.$state));
         }
 
-        watch(currentLocationMetadata, () => {
-            console.log('current location change');
-            const url =
-                'http://' +
-                serverUrl.value +
-                '/' +
-                currentLocationMetadata.value?.tabularDataFilename;
-            // console.log(url);
-            // this will probably break if you spam the data selections
-            // could just add a spinner and call it a day 🤷
-            fetchingTabularData.value = true;
-            parse(url, {
-                header: true,
-                dynamicTyping: true,
-                skipEmptyLines: true,
-                download: true,
-                worker: true,
-                comments: '#',
-                complete: (results: ParseResult<AnyAttributes>, file) => {
-                    console.log('parse complete');
-                    console.log(
-                        'headers',
-                        currentExperimentMetadata.value?.headerTransforms
-                    );
-                    cellMetaData.init(
-                        results.data,
-                        results.meta.fields as string[],
-                        currentExperimentMetadata.value?.headerTransforms
-                    );
-                    // console.log({ results, file });
-                    fetchingTabularData.value = false;
-                },
-            });
-        });
+        // watch(
+        //     () => datasetSelectionTrrackedStore.selectedLocationIds,
+        //     () => {
+        //         if (currentExperimentMetadata.value == null) return;
+        //         for (const location of currentExperimentMetadata.value
+        //             .locationMetadataList) {
+        //             if (
+        //                 datasetSelectionTrrackedStore.selectedLocationIds[
+        //                     location.id
+        //                 ]
+        //             ) {
+        //                 currentLocationMetadata.value = location;
+        //                 return;
+        //             }
+        //         }
+        //     },
+        //     { deep: true }
+        // );
+        // TODO: - update to support multi-location
+        const currentLocationMetadata = computed<LocationMetadata | null>(
+            () => {
+                if (currentExperimentMetadata.value == null) return null;
+                for (const location of currentExperimentMetadata.value
+                    .locationMetadataList) {
+                    if (
+                        datasetSelectionTrrackedStore.selectedLocationIds[
+                            location.id
+                        ]
+                    ) {
+                        return location;
+                    }
+                }
+                return null;
+            }
+        );
 
-        // function handleFetchExperimentError(message: string): void {
-        //     // // console.log('ERROR', errorMessage);
-        //     errorMessage.value = message;
-        //     serverUrlValid.value = false;
-        //     fetchingEntryFile.value = false;
-        // }
+        watch(
+            currentLocationMetadata,
+            () => {
+                // console.log('current location change');
+                if (!currentLocationMetadata.value?.tabularDataFilename) {
+                    cellMetaData.dataInitialized = false;
+                    return;
+                }
+                const url =
+                    'http://' +
+                    datasetSelectionTrrackedStore.serverUrl +
+                    '/' +
+                    currentLocationMetadata.value?.tabularDataFilename;
+
+                fetchingTabularData.value = true;
+                console.log({ url });
+                parse(url, {
+                    header: true,
+                    dynamicTyping: true,
+                    skipEmptyLines: true,
+                    download: true,
+                    worker: true,
+                    comments: '#',
+                    complete: (results: ParseResult<AnyAttributes>, file) => {
+                        // console.log('parse complete');
+                        // console.log(
+                        //     'headers',
+                        //     currentExperimentMetadata.value?.headerTransforms
+                        // );
+                        cellMetaData.init(
+                            results.data,
+                            results.meta.fields as string[],
+                            currentExperimentMetadata.value?.headerTransforms
+                        );
+                        // console.log({ results, file });
+                        fetchingTabularData.value = false;
+                    },
+                });
+            }
+            // { deep: true }
+        );
 
         return {
-            serverUrl,
             serverUrlValid,
             errorMessage,
             fetchingEntryFile,
-            entryPointFilename,
             experimentFilenameList,
-            currentExperimentFilename,
             currentExperimentMetadata,
             fetchingTabularData,
-            fetchEntryFile,
             selectImagingLocation,
         };
     }

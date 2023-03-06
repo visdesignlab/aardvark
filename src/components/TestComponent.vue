@@ -35,11 +35,18 @@ function showLoading(): void {
 function clearLocalStorage(): void {
     localStorage.clear();
 }
+
+function statelessRefresh(): void {
+    window.history.replaceState(null, '', window.location.pathname);
+    location.reload();
+}
 </script>
 <template>
     <q-btn @click="clearLocalStorage" outline rounded
         >Clear local storage</q-btn
     >
+    <q-separator class="m-1" color="black"></q-separator>
+    <q-btn @click="statelessRefresh" outline rounded>Stateless refresh</q-btn>
     <q-separator class="m-1" color="black"></q-separator>
     <!-- <q-btn @click="showLoading">Show loading shield</q-btn> -->
     <button @click="addOne">Plus 1</button>
