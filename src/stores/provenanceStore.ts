@@ -79,13 +79,13 @@ export const useProvenanceStore = defineStore('provenanceStore', () => {
     for (const store of storesToTrrack) {
         store.$subscribe((mutation, state) => {
             const storeId = mutation.storeId;
-            console.log({ storeId, state, mutation });
+            // console.log({ storeId, state, mutation });
             if (skipTrackingMap.map.get(storeId)) {
                 skipTrackingMap.map.set(storeId, false);
                 // console.count('SKIPPED');
                 return;
             }
-            console.log({ prvState: provenance.getState() });
+            // console.log({ prvState: provenance.getState() });
             if (isEqual(state, provenance.getState()[storeId])) {
                 return;
             }

@@ -3,6 +3,7 @@ import { defineStore } from 'pinia';
 import { useCellMetaData, type Cell } from '@/stores/cellMetaData';
 import { useSkipTrackingMap } from '@/stores/skipTrackingMap';
 import { min, max, mean, sum, median, quantile, deviation } from 'd3-array';
+import { debounce } from 'lodash-es';
 
 export interface AggLineData extends Array<AggDataPoint> {}
 export interface AggDataPoint {
@@ -71,6 +72,31 @@ function storeSetup() {
     ];
 
     const smoothWindow = ref(0);
+    const smoothWindowComputed = computed({
+        get() {
+            return smoothWindow.value;
+        },
+        set(val) {
+            // console.log('smooth set start');
+            skipTrackingMap.map.set(storeId, true);
+            smoothWindow.value = val;
+            // console.log('smooth set end');
+        },
+        // set: debounce((val) => {
+        //     console.log('debounce: ', val);
+        //     smoothWindow.value = val;
+        // }, 100),
+    });
+    function onSmoothWindowChange() {
+        // console.log('smooth window change');
+        // hack to trigger a $subscribe and subsequent
+        // update in provenance store
+        const val = smoothWindow.value;
+        smoothWindow.value = -1;
+        smoothWindow.value = val;
+
+        // smoothWindow.value = smoothWindowComputed.value;
+    }
 
     const aggregator = computed(() => {
         switch (aggregatorKey.value) {
@@ -268,6 +294,8 @@ function storeSetup() {
         varianceKey,
         varianceOptions,
         smoothWindow,
+        smoothWindowComputed,
+        onSmoothWindowChange,
         aggLineDataList,
         aggLineDataListExtent,
     };

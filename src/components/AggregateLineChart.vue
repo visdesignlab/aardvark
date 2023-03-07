@@ -157,7 +157,8 @@ const currentKey = computed({
         <div class="d-flex align-center">
             <span class="me-3">Smooth: </span>
             <q-slider
-                v-model="aggregateLineChartStore.smoothWindow"
+                v-model="aggregateLineChartStore.smoothWindowComputed"
+                @change="aggregateLineChartStore.onSmoothWindowChange"
                 :min="0"
                 :max="20"
                 label

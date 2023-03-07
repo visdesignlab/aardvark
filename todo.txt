@@ -6,6 +6,7 @@ Trrack Integration
 [] image view state to store?
 [] update trrack library to use new trigger api
 
+
 refactor cell meta data to support selecting multiple locations
 
 simple image viewer
@@ -56,6 +57,8 @@ Uncategorized
 [] add slider for lineage height
 [] add debug layout
 [] add placeholder sliders for filtering
+[] deploy
+[] rename windows / storeids in interface
 include polynomial curvature as a LLA (lineage level attribute)
 create small fake dataset on gh
 create (maybe interactive?) legend for horizon chart |/  /  /  /|
