@@ -4,9 +4,14 @@ Trrack Integration
 [x] debounce smoothing for trracking
 [x] trrack data point selections
 [x] table vis store? (update to q-table at same time?)
-[] image view state to store?
+[] sticky column
+[] sticky header/footer
 [] update trrack library to use new trigger api
 
+
+Trracking enhancements
+[] image view state to store?
+[] table state (which column sorted)
 
 refactor cell meta data to support selecting multiple locations
 
