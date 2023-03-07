@@ -34,7 +34,7 @@ const items = computed(() => {
 
 function selectRow(item: ClickRowArgument): void {
     if (props.attributeLevel == 'lineage') {
-        cellMetaData.selectedLineage = item as Lineage;
+        cellMetaData.selectLineage(item as Lineage);
     }
 }
 </script>

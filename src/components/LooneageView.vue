@@ -177,9 +177,9 @@ function getSplitWeight(source: Track, target: Track): number {
 
 function onHorizonChartClick(node: LayoutNode<Track> | null): void {
     if (node === null) {
-        cellMetaData.selectedTrack = null;
+        cellMetaData.selectTrack(null);
     } else {
-        cellMetaData.selectedTrack = node.data;
+        cellMetaData.selectTrack(node.data);
     }
     // console.log('hr clicked!', { node });
 }

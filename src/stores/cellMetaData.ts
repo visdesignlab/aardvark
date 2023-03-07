@@ -1,6 +1,7 @@
 import { ref, computed } from 'vue';
 import { defineStore } from 'pinia';
 import { isEqual, every, sortBy } from 'lodash-es';
+import { useDataPointSelection } from './dataPointSelection';
 export interface Lineage {
     lineageId: string; // should be equal to the founder trackId
     founder: Track;
@@ -62,6 +63,7 @@ export interface HeaderDef {
 //     columns: string[];
 // }
 export const useCellMetaData = defineStore('cellMetaData', () => {
+    const dataPointSelection = useDataPointSelection();
     const defaultHeaders: SpecialHeaders = {
         time: 'time',
         trackId: 'id',
@@ -80,8 +82,37 @@ export const useCellMetaData = defineStore('cellMetaData', () => {
     const trackMap = ref<Map<string, Track>>();
     const lineageArray = ref<Lineage[]>();
     const lineageMap = ref<Map<string, Lineage>>();
-    const selectedLineage = ref<Lineage>();
-    const selectedTrack = ref<Track | null>(null);
+
+    const selectedLineage = computed<Lineage | null>(() => {
+        if (!dataInitialized.value) return null;
+        if (dataPointSelection.selectedLineageId == null) return null;
+        const lineage = lineageMap.value?.get(
+            dataPointSelection.selectedLineageId
+        );
+        return lineage ?? null;
+    });
+    function selectLineage(lineage: Lineage | null) {
+        if (lineage == null) {
+            dataPointSelection.selectedLineageId = null;
+            return;
+        }
+        dataPointSelection.selectedLineageId = lineage.lineageId;
+    }
+
+    const selectedTrack = computed<Track | null>(() => {
+        if (!dataInitialized.value) return null;
+        if (dataPointSelection.selectedTrackId == null) return null;
+        const track = trackMap.value?.get(dataPointSelection.selectedTrackId);
+        return track ?? null;
+    });
+    function selectTrack(track: Track | null) {
+        if (track == null) {
+            dataPointSelection.selectedTrackId = null;
+            return;
+        }
+        dataPointSelection.selectedTrackId = track.trackId;
+    }
+
     const frameMap = computed<Map<number, Cell[]>>(() => {
         const map = new Map<number, Cell[]>();
         if (!dataInitialized.value) return map;
@@ -228,7 +259,7 @@ export const useCellMetaData = defineStore('cellMetaData', () => {
         initCells(rawData);
         initTracks();
         initLineages();
-        selectedLineage.value = lineageArray?.value?.[0];
+        selectLineage(lineageArray?.value?.[0] ?? null);
         dataInitialized.value = true;
     }
 
@@ -421,19 +452,21 @@ export const useCellMetaData = defineStore('cellMetaData', () => {
         headerKeys,
         headers,
         dataInitialized,
-        cellArray,
-        trackArray,
-        trackMap,
-        lineageArray,
-        lineageMap,
-        frameList,
-        frameMap,
+        cellArray, // TODO: expand to handle multiple locations
+        trackArray, // TODO: expand to handle multiple locations
+        trackMap, // TODO: expand to handle multiple locations
+        lineageArray, // TODO: expand to handle multiple locations
+        lineageMap, // TODO: expand to handle multiple locations
+        frameList, // TODO: expand to handle multiple locations
+        frameMap, // TODO: expand to handle multiple locations
         cellAttributeHeaders,
         cellNumAttributeHeaderNames,
         trackAttributeHeaders,
         lineageAttributeHeaders,
         selectedLineage,
+        selectLineage,
         selectedTrack,
+        selectTrack,
         init,
         getTime,
         getFrame,

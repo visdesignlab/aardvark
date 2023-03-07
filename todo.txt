@@ -1,8 +1,9 @@
 Trrack Integration
 [x] add cell metadata store (but only the trrackable parts)
 [x] add looneage view to trrack vis
-[] debounce smoothing for trracking
-[] table vis store?
+[x] debounce smoothing for trracking
+[x] trrack data point selections
+[] table vis store? (update to q-table at same time?)
 [] image view state to store?
 [] update trrack library to use new trigger api
 
