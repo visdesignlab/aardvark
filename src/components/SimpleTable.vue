@@ -31,12 +31,6 @@ const items = computed(() => {
     return [];
 });
 
-function selectRow(item: ClickRowArgument): void {
-    if (props.attributeLevel == 'lineage') {
-        cellMetaData.selectLineage(item as Lineage);
-    }
-}
-
 const selection = computed<Lineage[]>({
     get() {
         if (cellMetaData.selectLineage == null) return [];
