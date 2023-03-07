@@ -45,6 +45,7 @@ const selection = computed<Lineage[]>({
 </script>
 <template>
     <q-table
+        class="sticky-column-table"
         :title="`${props.attributeLevel} level attributes`"
         :rows="items"
         :columns="headers"
@@ -56,4 +57,27 @@ const selection = computed<Lineage[]>({
     ></q-table>
 </template>
 
-<style scoped lang="scss"></style>
+<style lang="scss">
+.sticky-column-table thead tr:first-child th {
+    background-color: white;
+}
+
+.q-dark thead tr:first-child th {
+    background-color: var(--q-dark) !important;
+}
+
+.sticky-column-table td:first-child {
+    background-color: white;
+    border-width: 0 1px 0 0;
+}
+.q-dark td:first-child {
+    background-color: var(--q-dark) !important;
+}
+.sticky-column-table th:first-child,
+.sticky-column-table td:first-child {
+    position: sticky;
+    left: 0;
+    z-index: 1;
+}
+// }
+</style>

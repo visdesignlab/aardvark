@@ -4,7 +4,7 @@ Trrack Integration
 [x] debounce smoothing for trracking
 [x] trrack data point selections
 [x] table vis store? (update to q-table at same time?)
-[] sticky column
+[x] sticky column
 [] sticky header/footer
 [] update trrack library to use new trigger api
 
