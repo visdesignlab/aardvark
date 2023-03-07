@@ -12,19 +12,13 @@ import { flextree, type LayoutNode } from 'd3-flextree';
 import { useElementSize } from '@vueuse/core';
 import { useCellMetaData, type Track, type Cell } from '@/stores/cellMetaData';
 import { useGlobalSettings } from '@/stores/globalSettings';
+import { useLooneageViewStore } from '@/stores/looneageViewStore';
 
 const looneageContainer = ref(null);
 
 const cellMetaData = useCellMetaData();
 const globalSettings = useGlobalSettings();
-
-const attrKey = ref<string>(cellMetaData.headerKeys.mass); // Default to mass
-watch(
-    // TODO:  - this mostly works, but also is triggered on location change...
-    () => cellMetaData.headerKeys,
-    () => (attrKey.value = cellMetaData.headerKeys.mass)
-);
-// const attrKey = computed(() => cellMetaData.headerKeys.mass);
+const looneageViewStore = useLooneageViewStore();
 
 interface LooneageViewProps {
     // attrKey: string;
@@ -92,7 +86,7 @@ const layoutRoot = computed<LayoutNode<Track>>(() => {
 //         (node: LayoutNode<Track>) =>
 //             d3Min(
 //                 node.data.cells,
-//                 (point: Cell) => point.attrNum[attrKey.value]
+//                 (point: Cell) => point.attrNum[looneageViewStore.attrKey]
 //             )
 //     ) as unknown as number;
 //     const maxVal = d3Max(
@@ -100,7 +94,7 @@ const layoutRoot = computed<LayoutNode<Track>>(() => {
 //         (node: LayoutNode<Track>) =>
 //             d3Max(
 //                 node.data.cells,
-//                 (point: Cell) => point.attrNum[attrKey.value]
+//                 (point: Cell) => point.attrNum[looneageViewStore.attrKey]
 //             )
 //     ) as unknown as number;
 //     return (maxVal - minVal) / 5;
@@ -113,7 +107,7 @@ const reasonableModH = computed(() => {
         (node: LayoutNode<Track>) =>
             d3Min(
                 node.data.cells,
-                (point: Cell) => point.attrNum[attrKey.value]
+                (point: Cell) => point.attrNum[looneageViewStore.attrKey]
             )
     ) as unknown as number;
     const maxVal = d3Max(
@@ -121,7 +115,7 @@ const reasonableModH = computed(() => {
         (node: LayoutNode<Track>) =>
             d3Max(
                 node.data.cells,
-                (point: Cell) => point.attrNum[attrKey.value]
+                (point: Cell) => point.attrNum[looneageViewStore.attrKey]
             )
     ) as unknown as number;
     return (maxVal - minVal) / 5;
@@ -175,8 +169,8 @@ const containerHeight = computed<number>(() => {
 
 function getSplitWeight(source: Track, target: Track): number {
     if (!props.encodeChildSplit) return 0;
-    const lastVal = last(source.cells)?.attrNum[attrKey.value] ?? 1;
-    const firstVal = target.cells[0].attrNum[attrKey.value];
+    const lastVal = last(source.cells)?.attrNum[looneageViewStore.attrKey] ?? 1;
+    const firstVal = target.cells[0].attrNum[looneageViewStore.attrKey];
     const basicWeight = firstVal / lastVal;
     return clamp(basicWeight - 0.5, 0, 1);
 }
@@ -229,7 +223,7 @@ const unselectedNodes = computed(() =>
     <div v-if="cellMetaData.dataInitialized" ref="looneageContainer">
         <q-select
             label="Attribute"
-            v-model="attrKey"
+            v-model="looneageViewStore.attrKey"
             :options="cellMetaData.cellNumAttributeHeaderNames"
             :dark="globalSettings.darkMode"
             class="mb-1"
@@ -264,7 +258,7 @@ const unselectedNodes = computed(() =>
                             includeBinLine: true,
                         }"
                         :timeAccessor="cellMetaData.getTime"
-                        :valueAccessor="(cell: Cell) => cellMetaData.getNumAttr(cell, attrKey)"
+                        :valueAccessor="(cell: Cell) => cellMetaData.getNumAttr(cell, looneageViewStore.attrKey)"
                         :info="node.data.trackId"
                     ></HorizonChart>
                 </g>
@@ -302,7 +296,7 @@ const unselectedNodes = computed(() =>
                             includeBinLine: true,
                         }"
                         :timeAccessor="cellMetaData.getTime"
-                        :valueAccessor="(cell: Cell) => cellMetaData.getNumAttr(cell, attrKey)"
+                        :valueAccessor="(cell: Cell) => cellMetaData.getNumAttr(cell, looneageViewStore.attrKey)"
                         :info="node.data.trackId"
                     ></HorizonChart>
                 </g>

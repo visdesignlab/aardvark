@@ -1,21 +1,26 @@
 <script setup lang="ts">
 import { useGlobalSettings } from '@/stores/globalSettings';
 import { watch, onBeforeMount } from 'vue';
+import { useQuasar } from 'quasar';
 import GridstackLayout from './components/GridstackLayout.vue';
 import GlobalSettingsView from './components/globalSettings/GlobalSettingsView.vue';
 import { useProvenanceStore } from '@/stores/provenanceStore';
 import { onKeyStroke } from '@vueuse/core';
+
+const $q = useQuasar();
 const provenanceStore = useProvenanceStore();
 
 onKeyStroke(['z', 'Z'], (e: KeyboardEvent) => {
     if (globalSettings.usingMac && !e.metaKey) return;
     if (!globalSettings.usingMac && !e.ctrlKey) return;
     if (e.shiftKey) {
+        e.preventDefault();
+        if ($q.loading.isActive) return;
         provenanceStore.provenance.redo();
-        e.preventDefault();
     } else {
-        provenanceStore.provenance.undo();
         e.preventDefault();
+        if ($q.loading.isActive) return;
+        provenanceStore.provenance.undo();
     }
 });
 

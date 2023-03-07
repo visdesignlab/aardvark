@@ -5,6 +5,8 @@ import { useGlobalSettings } from './globalSettings';
 import { useAggregateLineChartStore } from './aggregateLineChartStore';
 import { useDatasetSelectionStore } from './datasetSelectionStore';
 import { useImageViewerStore } from './imageViewerStore';
+import { useLooneageViewStore } from './looneageViewStore';
+import { useSkipTrackingMap } from '@/stores/skipTrackingMap';
 import { defineStore } from 'pinia';
 import { initializeTrrack, Registry } from '@trrack/core';
 import { cloneDeep, isEqual } from 'lodash-es';
@@ -23,6 +25,9 @@ export interface RegisterActions {
 }
 
 export const useProvenanceStore = defineStore('provenanceStore', () => {
+    const skipTrackingMap = useSkipTrackingMap();
+    // not tracked. Used to skip tracking programatic changes to stores
+
     const storesToTrrack = [
         useGlobalSettings(),
         useGridstackLayoutStore(),
@@ -30,6 +35,7 @@ export const useProvenanceStore = defineStore('provenanceStore', () => {
         useAggregateLineChartStore(),
         useImageViewerStore(),
         useDatasetSelectionTrrackedStore(),
+        useLooneageViewStore(),
     ];
 
     const initialState: SubStores = {};
@@ -74,6 +80,11 @@ export const useProvenanceStore = defineStore('provenanceStore', () => {
         store.$subscribe((mutation, state) => {
             const storeId = mutation.storeId;
             console.log({ storeId, state, mutation });
+            if (skipTrackingMap.map.get(storeId)) {
+                skipTrackingMap.map.set(storeId, false);
+                // console.count('SKIPPED');
+                return;
+            }
             console.log({ prvState: provenance.getState() });
             if (isEqual(state, provenance.getState()[storeId])) {
                 return;

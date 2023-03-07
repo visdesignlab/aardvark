@@ -1,6 +1,7 @@
 import { ref, computed, watch } from 'vue';
 import { defineStore } from 'pinia';
 import { useCellMetaData, type Cell } from '@/stores/cellMetaData';
+import { useSkipTrackingMap } from '@/stores/skipTrackingMap';
 import { min, max, mean, sum, median, quantile, deviation } from 'd3-array';
 
 export interface AggLineData extends Array<AggDataPoint> {}
@@ -14,6 +15,7 @@ export interface AggDataPoint {
 function storeSetup() {
     // the only reason I've separated this function is to reduce indendation :shrug:
     const cellMetaData = useCellMetaData();
+    const skipTrackingMap = useSkipTrackingMap();
 
     const aggregatorKey = ref<string>('average');
     const aggregatorOptions = ['average', 'total', 'min', 'median', 'max'];
@@ -50,12 +52,15 @@ function storeSetup() {
     });
 
     const attributeKey = ref<string>(cellMetaData.headerKeys.mass);
-    watch(
-        // TODO:  - this mostly works, but also is triggered on location change...
-        () => cellMetaData.headerKeys,
-        () => (attributeKey.value = cellMetaData.headerKeys.mass)
-    );
-    // TODO: I think this watch is causing the extra node in the prov graph on first dataset load.
+    watch(() => cellMetaData.headerKeys, setDefaultAttrKey);
+    watch(attributeKey, setDefaultAttrKey);
+    function setDefaultAttrKey() {
+        if (!cellMetaData.dataInitialized) return;
+        if (cellMetaData.headers?.includes(attributeKey.value)) return;
+        skipTrackingMap.map.set(storeId, true);
+        attributeKey.value = cellMetaData.headerKeys.mass;
+    }
+
     const targetKey = ref<string>('entire location');
 
     const targetOptions = [
@@ -267,8 +272,5 @@ function storeSetup() {
         aggLineDataListExtent,
     };
 }
-
-export const useAggregateLineChartStore = defineStore(
-    'aggregateLineChartStore',
-    storeSetup
-);
+const storeId = 'aggregateLineChartStore';
+export const useAggregateLineChartStore = defineStore(storeId, storeSetup);
