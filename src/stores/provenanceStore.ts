@@ -6,6 +6,7 @@ import { useAggregateLineChartStore } from './aggregateLineChartStore';
 import { useDatasetSelectionStore } from './datasetSelectionStore';
 import { useImageViewerStore } from './imageViewerStore';
 import { useLooneageViewStore } from './looneageViewStore';
+import { useDataPointSelection } from './dataPointSelection';
 import { useSkipTrackingMap } from '@/stores/skipTrackingMap';
 import { defineStore } from 'pinia';
 import { initializeTrrack, Registry } from '@trrack/core';
@@ -36,6 +37,7 @@ export const useProvenanceStore = defineStore('provenanceStore', () => {
         useImageViewerStore(),
         useDatasetSelectionTrrackedStore(),
         useLooneageViewStore(),
+        useDataPointSelection(),
     ];
 
     const initialState: SubStores = {};

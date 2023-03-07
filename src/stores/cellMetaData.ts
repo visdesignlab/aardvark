@@ -259,7 +259,9 @@ export const useCellMetaData = defineStore('cellMetaData', () => {
         initCells(rawData);
         initTracks();
         initLineages();
-        selectLineage(lineageArray?.value?.[0] ?? null);
+        if (dataPointSelection.selectedLineageId === null) {
+            selectLineage(lineageArray?.value?.[0] ?? null);
+        }
         dataInitialized.value = true;
     }
 
