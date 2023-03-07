@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue';
 import { useCellMetaData, type Lineage } from '@/stores/cellMetaData';
-import type { ClickRowArgument } from 'vue3-easy-data-table';
 import { useGlobalSettings } from '@/stores/globalSettings';
 const cellMetaData = useCellMetaData();
 const globalSettings = useGlobalSettings();
