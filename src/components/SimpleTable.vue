@@ -37,52 +37,30 @@ function selectRow(item: ClickRowArgument): void {
         cellMetaData.selectLineage(item as Lineage);
     }
 }
+
+const selection = computed<Lineage[]>({
+    get() {
+        if (cellMetaData.selectLineage == null) return [];
+        return [cellMetaData.selectedLineage as Lineage];
+    },
+    set(val) {
+        if (props.attributeLevel == 'lineage') {
+            cellMetaData.selectLineage(val[0] as Lineage);
+        }
+    },
+});
 </script>
 <template>
-    <!-- <div class="table-container"> -->
-    <h3>{{ props.attributeLevel }}</h3>
-    <EasyDataTable
-        v-if="cellMetaData.dataInitialized"
-        :headers="headers"
-        :items="items"
-        fixedHeader="true"
-        @click-row="selectRow"
-        :table-class-name="globalSettings.darkMode ? 'dark-theme-table' : ''"
-    ></EasyDataTable>
-    <NoDataSplash></NoDataSplash>
-    <!-- </div> -->
+    <q-table
+        :title="`${props.attributeLevel} level attributes`"
+        :rows="items"
+        :columns="headers"
+        row-key="lineageId"
+        :selection="props.attributeLevel === 'lineage' ? 'single' : 'none'"
+        v-model:selected="selection"
+        :dark="globalSettings.darkMode"
+        flat
+    ></q-table>
 </template>
 
-<style scoped lang="scss">
-.table-container {
-    max-height: 300px;
-    overflow: auto;
-}
-
-.dark-theme-table {
-    --easy-table-border: 1px solid #8a8a8a;
-    --easy-table-row-border: 1px solid #8a8a8a;
-
-    --easy-table-header-font-color: white;
-    --easy-table-header-background-color: #0c0c0c;
-
-    --easy-table-body-even-row-font-color: white;
-    --easy-table-body-even-row-background-color: #1a1a1a;
-
-    --easy-table-body-row-font-color: white;
-    --easy-table-body-row-background-color: #1a1a1a;
-
-    --easy-table-body-row-hover-font-color: white;
-    --easy-table-body-row-hover-background-color: black;
-
-    --easy-table-footer-background-color: #979797;
-    --easy-table-footer-font-color: black;
-
-    // --easy-table-scrollbar-track-color: #2d3a4f;
-    // --easy-table-scrollbar-color: #2d3a4f;
-    // --easy-table-scrollbar-thumb-color: #4c5d7a;
-    // --easy-table-scrollbar-corner-color: #2d3a4f;
-
-    // --easy-table-loading-mask-background-color: #2d3a4f;
-}
-</style>
+<style scoped lang="scss"></style>

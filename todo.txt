@@ -3,7 +3,7 @@ Trrack Integration
 [x] add looneage view to trrack vis
 [x] debounce smoothing for trracking
 [x] trrack data point selections
-[] table vis store? (update to q-table at same time?)
+[x] table vis store? (update to q-table at same time?)
 [] image view state to store?
 [] update trrack library to use new trigger api
 
@@ -32,7 +32,7 @@ Line Chart Interactions
     [] select current time on all charts
 
 quasar ui updatse
-[] switch to quasar table
+[x] switch to quasar table
 [] layout/settings panel
 [] item list selection for custom layouts
 [] change widget container to quasar card

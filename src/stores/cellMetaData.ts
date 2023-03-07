@@ -51,9 +51,10 @@ export interface SpecialHeaders {
 }
 
 export interface HeaderDef {
-    text: string;
-    value: string;
+    name: string;
+    label: string;
     sortable: boolean;
+    field: string | Function;
     type: 'string' | 'number';
 }
 
@@ -165,10 +166,17 @@ export const useCellMetaData = defineStore('cellMetaData', () => {
         if (!dataInitialized.value) return [];
         if (cellArray.value == null) return [];
         const headers: HeaderDef[] = [
-            { text: 'Row ID', value: 'rowId', sortable: true, type: 'string' },
             {
-                text: 'Track ID',
-                value: 'trackId',
+                label: 'Row ID',
+                name: 'rowId',
+                field: 'rowId',
+                sortable: true,
+                type: 'string',
+            },
+            {
+                label: 'Track ID',
+                name: 'trackId',
+                field: 'trackId',
                 sortable: true,
                 type: 'string',
             },
@@ -176,16 +184,18 @@ export const useCellMetaData = defineStore('cellMetaData', () => {
         const firstCell = cellArray.value[0];
         for (const key in firstCell.attrNum) {
             headers.push({
-                text: key,
-                value: `attrNum.${key}`,
+                label: key,
+                name: `attrNum.${key}`,
+                field: (row: Cell) => row.attrNum[key],
                 sortable: true,
                 type: 'number',
             });
         }
         for (const key in firstCell.attrStr) {
             headers.push({
-                text: key,
-                value: `attrStr.${key}`,
+                label: key,
+                name: `attrStr.${key}`,
+                field: (row: Cell) => row.attrStr[key],
                 sortable: true,
                 type: 'string',
             });
@@ -197,53 +207,79 @@ export const useCellMetaData = defineStore('cellMetaData', () => {
         const numericalHeaders = cellAttributeHeaders.value.filter(
             (header) => header.type === 'number'
         );
-        return numericalHeaders.map((header) => header.text);
+        return numericalHeaders.map((header) => header.label);
     });
 
-    const trackAttributeHeaders = computed(() => {
+    const trackAttributeHeaders = computed<HeaderDef[]>(() => {
         if (!dataInitialized.value) return [];
         if (trackArray.value == null) return [];
-        const headers = [
-            { text: 'Track ID', value: 'trackId', sortable: true },
-            { text: 'Parent ID', value: 'parentId', sortable: true },
+        const headers: HeaderDef[] = [
+            {
+                label: 'Track ID',
+                name: 'trackId',
+                field: 'trackId',
+                sortable: true,
+                type: 'string',
+            },
+            {
+                label: 'Parent ID',
+                name: 'parentId',
+                field: 'parentId',
+                sortable: true,
+                type: 'string',
+            },
         ];
         const firstTrack = trackArray.value[0];
         for (const key in firstTrack.attrNum) {
             headers.push({
-                text: key,
-                value: `attrNum.${key}`,
+                label: key,
+                name: `attrNum.${key}`,
+                field: (row: Track) => row.attrNum[key],
                 sortable: true,
+                type: 'number',
             });
         }
         for (const key in firstTrack.attrStr) {
             headers.push({
-                text: key,
-                value: `attrStr.${key}`,
+                label: key,
+                name: `attrStr.${key}`,
+                field: (row: Track) => row.attrStr[key],
                 sortable: true,
+                type: 'string',
             });
         }
         return headers;
     });
 
-    const lineageAttributeHeaders = computed(() => {
+    const lineageAttributeHeaders = computed<HeaderDef[]>(() => {
         if (!dataInitialized.value) return [];
         if (lineageArray.value == null) return [];
-        const headers = [
-            { text: 'Lineage ID', value: 'lineageId', sortable: true },
+        const headers: HeaderDef[] = [
+            {
+                label: 'Lineage ID',
+                name: 'lineageId',
+                field: 'lineageId',
+                sortable: true,
+                type: 'string',
+            },
         ];
         const firstLineage = lineageArray.value[0];
         for (const key in firstLineage.attrNum) {
             headers.push({
-                text: key,
-                value: `attrNum.${key}`,
+                label: key,
+                name: `attrNum.${key}`,
+                field: (row: Lineage) => row.attrNum[key],
                 sortable: true,
+                type: 'number',
             });
         }
         for (const key in firstLineage.attrStr) {
             headers.push({
-                text: key,
-                value: `attrStr.${key}`,
+                label: key,
+                name: `attrStr.${key}`,
+                field: (row: Lineage) => row.attrStr[key],
                 sortable: true,
+                type: 'string',
             });
         }
         return headers;
