@@ -5,7 +5,8 @@ Trrack Integration
 [x] trrack data point selections
 [x] table vis store? (update to q-table at same time?)
 [x] sticky column
-[] sticky header/footer
+[x] sticky header/footer
+[] dynamic table height
 [] update trrack library to use new trigger api
 
 
