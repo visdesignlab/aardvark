@@ -106,10 +106,9 @@ export const useProvenanceStore = defineStore('provenanceStore', () => {
         window.history.replaceState(null, '', url);
     });
 
-    provenance.currentChange((trigger?: Trigger) => {
-        if (trigger === 'new') return; // skip store update
+    provenance.currentChange(() => {
         updateVueState();
-    });
+    }, true);
 
     function updateVueState(): void {
         for (const store of storesToTrrack) {
