@@ -21,7 +21,7 @@
         "@luma.gl/core": "^8.5.18",
         "@mdi/font": "^7.1.96",
         "@quasar/extras": "^1.15.10",
-        "@trrack/core": "^1.0.1",
+        "@trrack/core": "^1.1.0",
         "@trrack/vis-react": "^1.1.0",
         "@types/d3-hierarchy": "^3.1.1",
         "@types/papaparse": "^5.3.7",

@@ -7,7 +7,7 @@ Trrack Integration
 [x] sticky column
 [x] sticky header/footer
 [x] dynamic table height
-[] update trrack library to use new trigger api
+[x] update trrack library to use new trigger api
 [] switching datasets crashes now (related to lineageid changes I think)
 
 Trracking enhancements

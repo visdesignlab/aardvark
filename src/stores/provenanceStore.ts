@@ -9,7 +9,7 @@ import { useLooneageViewStore } from './looneageViewStore';
 import { useDataPointSelection } from './dataPointSelection';
 import { useSkipTrackingMap } from '@/stores/skipTrackingMap';
 import { defineStore } from 'pinia';
-import { initializeTrrack, Registry } from '@trrack/core';
+import { initializeTrrack, Registry, type Trigger } from '@trrack/core';
 import { cloneDeep, isEqual } from 'lodash-es';
 import {
     compressToEncodedURIComponent,
@@ -106,14 +106,9 @@ export const useProvenanceStore = defineStore('provenanceStore', () => {
         window.history.replaceState(null, '', url);
     });
 
-    const nodeIds = new Set<string>([provenance.root.id]);
-    provenance.currentChange(() => {
-        const provNodeId = provenance.current.id;
-        const jumpedToNode: boolean = nodeIds.has(provNodeId);
-        if (jumpedToNode) {
-            updateVueState();
-        }
-        nodeIds.add(provNodeId);
+    provenance.currentChange((trigger?: Trigger) => {
+        if (trigger === 'new') return; // skip store update
+        updateVueState();
     });
 
     function updateVueState(): void {
