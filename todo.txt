@@ -1,5 +1,5 @@
 Next
-[] send emails about datasets
+[x] send emails about datasets
 [] debug/fix: switching datasets crashes now (related to lineageid changes I think)
 
 Refactor cell meta data to support selecting multiple locations
