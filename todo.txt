@@ -6,9 +6,9 @@ Trrack Integration
 [x] table vis store? (update to q-table at same time?)
 [x] sticky column
 [x] sticky header/footer
-[] dynamic table height
+[x] dynamic table height
 [] update trrack library to use new trigger api
-
+[] switching datasets crashes now (related to lineageid changes I think)
 
 Trracking enhancements
 [] image view state to store?

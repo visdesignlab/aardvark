@@ -2,6 +2,8 @@
 import { ref, computed } from 'vue';
 import { useCellMetaData, type Lineage } from '@/stores/cellMetaData';
 import { useGlobalSettings } from '@/stores/globalSettings';
+import { useElementSize } from '@vueuse/core';
+
 const cellMetaData = useCellMetaData();
 const globalSettings = useGlobalSettings();
 const props = defineProps<{ attributeLevel: 'cell' | 'track' | 'lineage' }>();
@@ -42,31 +44,43 @@ const selection = computed<Lineage[]>({
         }
     },
 });
+
+const tableContainer = ref(null);
+const { width: _containerWidth, height: containerHeight } =
+    useElementSize(tableContainer);
+const initialPagination = ref({
+    page: 1,
+    rowsPerPage: 25,
+});
+const rowsPerPageOptions = ref([5, 25, 50, 100]);
 </script>
 <template>
-    <q-table
-        class="sticky-column-table"
-        :title="`${props.attributeLevel} level attributes`"
-        :rows="items"
-        :columns="headers"
-        row-key="lineageId"
-        :selection="props.attributeLevel === 'lineage' ? 'single' : 'none'"
-        v-model:selected="selection"
-        :dark="globalSettings.darkMode"
-        flat
-    ></q-table>
+    <div ref="tableContainer" class="aardvark-table-wrapper">
+        <q-table
+            class="sticky-column-table"
+            :title="`${props.attributeLevel} level attributes`"
+            :rows="items"
+            :columns="headers"
+            row-key="lineageId"
+            :selection="props.attributeLevel === 'lineage' ? 'single' : 'none'"
+            v-model:selected="selection"
+            :dark="globalSettings.darkMode"
+            flat
+            :style="`max-height: ${containerHeight}px`"
+            :pagination="initialPagination"
+            :rows-per-page-options="rowsPerPageOptions"
+        ></q-table>
+    </div>
 </template>
 
 <style lang="scss">
 // Modified from: https://quasar.dev/vue-components/table#sticky-header-column
 
-//  STICKY HEADER
-.sticky-column-table {
-    height: 500px;
+.aardvark-table-wrapper {
+    height: 100%;
 }
 
 .sticky-column-table td:first-child {
-    /* bg color is important for td; just specify one */
     background-color: white !important;
 }
 
@@ -78,7 +92,6 @@ const selection = computed<Lineage[]>({
     position: sticky;
     /* higher than z-index for td below */
     z-index: 2;
-    /* bg color is important; just specify one */
     background: white;
 }
 
@@ -104,6 +117,7 @@ const selection = computed<Lineage[]>({
 
 .sticky-column-table td:first-child {
     z-index: 1;
+    border-width: 0 2px 0 0;
 }
 
 .sticky-column-table td:first-child,
