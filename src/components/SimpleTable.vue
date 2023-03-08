@@ -66,6 +66,7 @@ const rowsPerPageOptions = ref([5, 25, 50, 100]);
             v-model:selected="selection"
             :dark="globalSettings.darkMode"
             flat
+            dense
             :style="`max-height: ${containerHeight}px`"
             :pagination="initialPagination"
             :rows-per-page-options="rowsPerPageOptions"
