@@ -3,6 +3,7 @@ import { ref, computed } from 'vue';
 import { useCellMetaData, type Lineage } from '@/stores/cellMetaData';
 import { useGlobalSettings } from '@/stores/globalSettings';
 import { useElementSize } from '@vueuse/core';
+import NoDataSplash from './NoDataSplash.vue';
 
 const cellMetaData = useCellMetaData();
 const globalSettings = useGlobalSettings();
@@ -57,6 +58,7 @@ const rowsPerPageOptions = ref([5, 25, 50, 100]);
 <template>
     <div ref="tableContainer" class="aardvark-table-wrapper">
         <q-table
+            v-if="cellMetaData.dataInitialized"
             class="sticky-column-table"
             :title="`${props.attributeLevel} level attributes`"
             :rows="items"
@@ -71,6 +73,7 @@ const rowsPerPageOptions = ref([5, 25, 50, 100]);
             :pagination="initialPagination"
             :rows-per-page-options="rowsPerPageOptions"
         ></q-table>
+        <no-data-splash></no-data-splash>
     </div>
 </template>
 

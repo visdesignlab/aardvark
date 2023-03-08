@@ -1,20 +1,9 @@
-Trrack Integration
-[x] add cell metadata store (but only the trrackable parts)
-[x] add looneage view to trrack vis
-[x] debounce smoothing for trracking
-[x] trrack data point selections
-[x] table vis store? (update to q-table at same time?)
-[x] sticky column
-[x] sticky header/footer
-[x] dynamic table height
-[x] update trrack library to use new trigger api
-[] switching datasets crashes now (related to lineageid changes I think)
+Next
+[] send emails about datasets
+[] debug/fix: switching datasets crashes now (related to lineageid changes I think)
 
-Trracking enhancements
-[] image view state to store?
-[] table state (which column sorted)
-
-refactor cell meta data to support selecting multiple locations
+Refactor cell meta data to support selecting multiple locations
+[] break down into smaller tasks
 
 simple image viewer
     [] fix deckgl crash (probs in loading code)
@@ -37,8 +26,11 @@ Line Chart Interactions
     [] show lineage
     [] select current time on all charts
 
+Trracking enhancements
+[] image view state to store?
+[] table state (which column sorted, page size, page number)
+
 quasar ui updatse
-[x] switch to quasar table
 [] layout/settings panel
 [] item list selection for custom layouts
 [] change widget container to quasar card
@@ -46,7 +38,6 @@ quasar ui updatse
 
 Misc fixes/enhancements
 [] improve looneage view recalculation issue
-[] fix table scrollbar issue (try switching to q-table)
 [] cache large data requests e.g. to tabular data
 [] crash when selecting lineage with single length track
 [] either remove single column layout, or add special logic for it
@@ -72,7 +63,7 @@ create (maybe interactive?) legend for horizon chart |/  /  /  /|
 add aardvark icon
 research filter options (vega, plotly, other)
 generic min-size protection
-
+no-data-splash, but with sad aardvarks
 add close widget option 
 
 add option to filter out parts of tree
