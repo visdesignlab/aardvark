@@ -59,7 +59,7 @@ onMounted(async () => {
         [
             [
                 imageViewerStore.generateSelectionIndexRange(0, 87),
-                'http://localhost:9001/michael-2/20221122_fs051_p9_mediaswitch_homebrew_A1_4_Phase1.tif',
+                'https://localhost:9001/michael-2/20221122_fs051_p9_mediaswitch_homebrew_A1_4_Phase1.tif',
             ],
             // [
             //     imageViewerStore.generateSelectionIndexRange(88, 175),

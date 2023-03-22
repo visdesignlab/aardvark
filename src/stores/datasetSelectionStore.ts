@@ -51,7 +51,7 @@ export const useDatasetSelectionStore = defineStore(
         const experimentFilenameList = asyncComputed<string[]>(async () => {
             if (datasetSelectionTrrackedStore.serverUrl == null) return null;
             const fullURL =
-                'http://' +
+                'https://' +
                 datasetSelectionTrrackedStore.serverUrl +
                 datasetSelectionTrrackedStore.entryPointFilename;
             if (controller) {
@@ -95,7 +95,7 @@ export const useDatasetSelectionStore = defineStore(
                 )
                     return null;
                 const fullURL =
-                    'http://' +
+                    'https://' +
                     datasetSelectionTrrackedStore.serverUrl +
                     '/' +
                     datasetSelectionTrrackedStore.currentExperimentFilename;
@@ -162,7 +162,7 @@ export const useDatasetSelectionStore = defineStore(
                     return;
                 }
                 const url =
-                    'http://' +
+                    'https://' +
                     datasetSelectionTrrackedStore.serverUrl +
                     '/' +
                     currentLocationMetadata.value?.tabularDataFilename;
