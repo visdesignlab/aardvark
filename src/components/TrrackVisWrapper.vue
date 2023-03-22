@@ -4,7 +4,7 @@ import { useProvenanceStore } from '@/stores/provenanceStore';
 import { ProvVisCreator } from '@trrack/vis-react';
 import type { NodeId } from '@trrack/core';
 const provenanceStore = useProvenanceStore();
-const trrackVisContainer = ref(null);
+const trrackVisContainer = ref<Element | null>(null);
 
 // Store this somewhere. Maybe local storage?
 const bookmarkedNodes: NodeId[] = [];
@@ -27,11 +27,16 @@ onMounted(() => {
     const isBookmarkedCallback = (id: NodeId) => {
         return bookmarkedNodes.includes(id);
     };
-
-    ProvVisCreator(trrackVisContainer.value, provenanceStore.provenance, {
-        isBookmarked: isBookmarkedCallback,
-        bookmarkNode: bookmarkNodeCallback,
-    });
+    if (trrackVisContainer.value) {
+        ProvVisCreator(
+            trrackVisContainer.value,
+            provenanceStore.provenance as any,
+            {
+                isBookmarked: isBookmarkedCallback,
+                bookmarkNode: bookmarkNodeCallback,
+            }
+        );
+    }
 });
 </script>
 

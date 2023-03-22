@@ -62,7 +62,7 @@ const rowsPerPageOptions = ref([5, 25, 50, 100]);
             class="sticky-column-table"
             :title="`${props.attributeLevel} level attributes`"
             :rows="items"
-            :columns="headers"
+            :columns="headers as any"
             row-key="lineageId"
             :selection="props.attributeLevel === 'lineage' ? 'single' : 'none'"
             v-model:selected="selection"
