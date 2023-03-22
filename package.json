@@ -52,6 +52,7 @@
         "vuetify": "^3.1.2"
     },
     "devDependencies": {
+        "@types/react": "file:stub/types__react",
         "@quasar/vite-plugin": "^1.3.0",
         "@rushstack/eslint-patch": "^1.1.4",
         "@types/d3-array": "^3.0.4",
