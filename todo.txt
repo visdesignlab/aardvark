@@ -1,6 +1,7 @@
 Next
 [x] send emails about datasets
 [] debug/fix: switching datasets crashes now (related to lineageid changes I think)
+   fixing this may require doing the next refactor anyway, so I'm just going to do that.
 
 Refactor cell meta data to support selecting multiple locations
 [] break down into smaller tasks

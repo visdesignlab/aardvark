@@ -2,6 +2,8 @@ import { ref, computed } from 'vue';
 import { defineStore } from 'pinia';
 import { isEqual, every, sortBy } from 'lodash-es';
 import { useDataPointSelection } from './dataPointSelection';
+
+export type NestedLineageArray = Map<string, Lineage[]>;
 export interface Lineage {
     lineageId: string; // should be equal to the founder trackId
     founder: Track;
@@ -9,6 +11,7 @@ export interface Lineage {
     attrStr: StringAttributes;
 }
 
+export type NestedTrackArray = Map<string, Track[]>;
 export interface Track {
     trackId: string; // unique id for the cell track
     attrNum: NumericalAttributes;
@@ -18,6 +21,7 @@ export interface Track {
     children: Track[]; // daughter tracks if they exist
 }
 
+export type NestedCellArray = Map<string, Cell[]>;
 export interface Cell {
     rowId: string;
     trackId: string;
@@ -78,10 +82,10 @@ export const useCellMetaData = defineStore('cellMetaData', () => {
     // we might want to wrap these inside a container, so it's convenient to create a list of them.
     // e.g. there's a different table for each condition or each well. hmm maybe start with this and add later.
     const dataInitialized = ref(false);
-    const cellArray = ref<Cell[]>();
-    const trackArray = ref<Track[]>();
+    const nestedCellArray = ref<NestedCellArray>();
+    const nestedTrackArray = ref<NestedTrackArray>();
     const trackMap = ref<Map<string, Track>>();
-    const lineageArray = ref<Lineage[]>();
+    const nestedLineageArray = ref<NestedLineageArray>();
     const lineageMap = ref<Map<string, Lineage>>();
 
     const selectedLineage = computed<Lineage | null>(() => {
@@ -286,6 +290,7 @@ export const useCellMetaData = defineStore('cellMetaData', () => {
     });
 
     function init(
+        locationId: string,
         rawData: AnyAttributes[],
         columnHeaders: string[],
         headerTransforms?: TextTransforms
@@ -295,6 +300,7 @@ export const useCellMetaData = defineStore('cellMetaData', () => {
         initCells(rawData);
         initTracks();
         initLineages();
+        // TODO: this logic is wrong with current single location setup. check again after switch to multi-location setup.
         if (dataPointSelection.selectedLineageId === null) {
             selectLineage(lineageArray?.value?.[0] ?? null);
         }
