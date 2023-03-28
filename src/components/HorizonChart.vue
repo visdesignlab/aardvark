@@ -49,7 +49,9 @@ export default defineComponent({
                     array: Iterable<any>
                 ) => string
             ) as unknown as [number, number];
-            return (maxVal - minVal) / props.maxColors;
+            const extent = maxVal - minVal;
+            if (extent === 0) return 1;
+            return extent / props.maxColors;
         }
         const defaultSettings: HorizonChartSettings = {
             baseline: 0,
@@ -124,8 +126,9 @@ export default defineComponent({
                         mergedSettings.value.modHeight
                 );
                 const positiveScale = scaleOrdinal(schemeReds[props.maxColors]);
-
+                // console.count('offsetInfo');
                 for (let i = 0; i < positiveCount; i++) {
+                    // console.count('offsetInfo.for');
                     const verticalOffset = i * props.chartHeight;
                     const transform = `translate(0,${verticalOffset})`;
                     const colorKey = Math.min(

@@ -188,6 +188,7 @@ export const useDatasetSelectionStore = defineStore(
                             currentExperimentMetadata.value?.headerTransforms
                         );
                         // console.log({ results, file });
+                        // console.log(cellMetaData);
                         fetchingTabularData.value = false;
                     },
                 });

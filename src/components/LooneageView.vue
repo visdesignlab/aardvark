@@ -118,7 +118,9 @@ const reasonableModH = computed(() => {
                 (point: Cell) => point.attrNum[looneageViewStore.attrKey]
             )
     ) as unknown as number;
-    return (maxVal - minVal) / 5;
+    const extent = maxVal - minVal;
+    if (extent === 0) return 1;
+    return extent / 5;
 });
 
 // const defaultSettings = {
