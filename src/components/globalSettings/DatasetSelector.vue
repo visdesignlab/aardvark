@@ -34,7 +34,7 @@ function onClickLocation(location: any) {
 
 const shortExpName = computed<string>(() => {
     let shortName = datasetSelectionTrrackedStore.currentExperimentFilename;
-    if (shortName === null) return '<NULL>';
+    if (shortName === null) return '';
     shortName = shortName.split('.')[0];
     const maxChar = 24;
     if (shortName.length > maxChar) {
