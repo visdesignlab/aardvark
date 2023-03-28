@@ -31,6 +31,17 @@ function onClickLocation(location: any) {
     // console.log('clicked location: ', location);
     datasetSelectionStore.selectImagingLocation(location);
 }
+
+const shortExpName = computed<string>(() => {
+    let shortName = datasetSelectionTrrackedStore.currentExperimentFilename;
+    if (shortName === null) return '<NULL>';
+    shortName = shortName.split('.')[0];
+    const maxChar = 24;
+    if (shortName.length > maxChar) {
+        shortName = shortName.slice(0, maxChar) + '...';
+    }
+    return shortName;
+});
 </script>
 
 <template>
@@ -54,6 +65,7 @@ function onClickLocation(location: any) {
         "
         label="Experiment"
         v-model="datasetSelectionTrrackedStore.currentExperimentFilename"
+        :display-value="shortExpName"
         :options="datasetSelectionStore.experimentFilenameList"
         :dark="globalSettings.darkMode"
     />
