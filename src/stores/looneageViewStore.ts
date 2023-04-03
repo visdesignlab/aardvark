@@ -2,6 +2,7 @@ import { ref, watch } from 'vue';
 import { defineStore } from 'pinia';
 import { useCellMetaData } from '@/stores/cellMetaData';
 import { useSkipTrackingMap } from '@/stores/skipTrackingMap';
+import { schemeReds, schemeBlues } from 'd3-scale-chromatic';
 
 const storeId = 'looneageViewStore';
 export const useLooneageViewStore = defineStore(storeId, () => {
@@ -20,7 +21,12 @@ export const useLooneageViewStore = defineStore(storeId, () => {
         attrKey.value = cellMetaData.headerKeys.mass;
     }
 
+    const positiveColorScheme = ref({ label: 'Red', value: schemeReds });
+    const negativeColorScheme = ref({ label: 'Blue', value: schemeBlues });
+
     return {
         attrKey,
+        positiveColorScheme,
+        negativeColorScheme,
     };
 });

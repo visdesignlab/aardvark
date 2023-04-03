@@ -13,6 +13,14 @@ import { useElementSize } from '@vueuse/core';
 import { useCellMetaData, type Track, type Cell } from '@/stores/cellMetaData';
 import { useGlobalSettings } from '@/stores/globalSettings';
 import { useLooneageViewStore } from '@/stores/looneageViewStore';
+import {
+    schemeReds,
+    schemeBlues,
+    schemeGreens,
+    schemeGreys,
+    schemeOranges,
+    schemePurples,
+} from 'd3-scale-chromatic';
 
 const looneageContainer = ref(null);
 
@@ -218,6 +226,15 @@ const unselectedNodes = computed(() =>
 
 //     return keyFrameList;
 // });
+
+const colorSchemeOptions = [
+    { label: 'Red', value: schemeReds },
+    { label: 'Blue', value: schemeBlues },
+    { label: 'Green', value: schemeGreens },
+    { label: 'Grey', value: schemeGreys },
+    { label: 'Orange', value: schemeOranges },
+    { label: 'Purple', value: schemePurples },
+];
 </script>
 
 <template>
@@ -230,6 +247,21 @@ const unselectedNodes = computed(() =>
             :dark="globalSettings.darkMode"
             class="mb-1"
         />
+        <q-select
+            label="Negative Color Scale"
+            v-model="looneageViewStore.negativeColorScheme"
+            :options="colorSchemeOptions"
+            :dark="globalSettings.darkMode"
+            class="mb-1"
+        />
+        <q-select
+            label="Positive Color Scale"
+            v-model="looneageViewStore.positiveColorScheme"
+            :options="colorSchemeOptions"
+            :dark="globalSettings.darkMode"
+            class="mb-1"
+        />
+
         <!-- <button @click="verticalScale -= 0.1">decrease</button>
         <button @click="verticalScale += 0.1">increase</button> -->
         <svg
@@ -258,6 +290,10 @@ const unselectedNodes = computed(() =>
                             modHeight: reasonableModH,
                             mirrorNegative: false,
                             includeBinLine: true,
+                            positiveColorScheme:
+                                looneageViewStore.positiveColorScheme.value,
+                            negativeColorScheme:
+                                looneageViewStore.negativeColorScheme.value,
                         }"
                         :timeAccessor="cellMetaData.getTime"
                         :valueAccessor="(cell: Cell) => cellMetaData.getNumAttr(cell, looneageViewStore.attrKey)"
@@ -296,6 +332,8 @@ const unselectedNodes = computed(() =>
                             modHeight: reasonableModH,
                             mirrorNegative: false,
                             includeBinLine: true,
+                            positiveColorScheme: schemeReds,
+                            negativeColorScheme: schemeBlues,
                         }"
                         :timeAccessor="cellMetaData.getTime"
                         :valueAccessor="(cell: Cell) => cellMetaData.getNumAttr(cell, looneageViewStore.attrKey)"

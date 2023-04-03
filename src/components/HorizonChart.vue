@@ -11,6 +11,8 @@ export interface HorizonChartSettings {
     modHeight: number;
     mirrorNegative: boolean;
     includeBinLine: boolean;
+    positiveColorScheme: readonly (readonly string[])[];
+    negativeColorScheme: readonly (readonly string[])[];
 }
 
 export default defineComponent({
@@ -30,6 +32,8 @@ export default defineComponent({
                     modHeight: null,
                     mirrorNegative: false,
                     includeBinLine: true,
+                    positiveColorScheme: schemeReds,
+                    negativeColorScheme: schemeBlues,
                 };
             },
         },
@@ -58,6 +62,8 @@ export default defineComponent({
             modHeight: getReasonableModH(),
             mirrorNegative: false,
             includeBinLine: true,
+            positiveColorScheme: schemeReds,
+            negativeColorScheme: schemeBlues,
         };
 
         const mergedSettings = computed(() => {
@@ -125,7 +131,9 @@ export default defineComponent({
                     (maxVal - mergedSettings.value.baseline) /
                         mergedSettings.value.modHeight
                 );
-                const positiveScale = scaleOrdinal(schemeReds[props.maxColors]);
+                const positiveScale = scaleOrdinal(
+                    props.settings.positiveColorScheme[props.maxColors]
+                );
                 // console.count('offsetInfo');
                 for (let i = 0; i < positiveCount; i++) {
                     // console.count('offsetInfo.for');
@@ -144,7 +152,7 @@ export default defineComponent({
                         mergedSettings.value.modHeight
                 );
                 const negativeScale = scaleOrdinal(
-                    schemeBlues[props.maxColors]
+                    props.settings.negativeColorScheme[props.maxColors]
                 );
 
                 for (let i = 0; i < negativeCount; i++) {
