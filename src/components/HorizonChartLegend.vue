@@ -15,7 +15,7 @@ interface HorizonChartLegendProps {
     // containerHeight: number;
     chartWidth: number;
     chartHeight: number;
-    modHeight: number;
+    // modHeight: number;
     includeNegatives: boolean;
 }
 const containerHeight = 40;
@@ -33,7 +33,6 @@ const fakeData = computed(() => {
     }
     return [0, 1, 2, 3, 4, 5, 6];
 });
-// [-6, -5, -4, -3, -2, -1, 0, 1, 2, 3, 4, 5, 6];
 const props = defineProps<HorizonChartLegendProps>();
 const scaleX = computed(() => {
     return scaleLinear()
@@ -41,7 +40,7 @@ const scaleX = computed(() => {
         .range([0, props.chartWidth]);
 });
 function getLegendLabel(val: number): string {
-    const trueValue = val * props.modHeight;
+    const trueValue = val * looneageViewStore.modHeight;
     const label = format('.2s')(trueValue);
     if (val === -6) return label + ' <';
     if (val === 6) return label + '+';
@@ -98,13 +97,12 @@ function getLegendLabel(val: number): string {
             </text>
         </g>
     </svg>
-    <q-input
+    <!-- <q-input
         label="Bin Size"
-        v-model.number="props.modHeight"
+        v-model.number="modHeightValidate"
         type="number"
-        readonly
         :dark="globalSettings.darkMode"
-    />
+    /> -->
 </template>
 
 <style scoped lange="scss">

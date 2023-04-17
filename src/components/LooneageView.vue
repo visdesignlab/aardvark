@@ -111,31 +111,31 @@ const layoutRoot = computed<LayoutNode<Track>>(() => {
 //     return (maxVal - minVal) / 5;
 // }
 
-const minVal = computed<number>(() => {
-    return d3Min(layoutRoot.value.descendants(), (node: LayoutNode<Track>) =>
-        d3Min(
-            node.data.cells,
-            (point: Cell) => point.attrNum[looneageViewStore.attrKey]
-        )
-    ) as unknown as number;
-});
+// const minVal = computed<number>(() => {
+//     return (
+//         d3Min(
+//             cellMetaData.cellArray ?? [],
+//             (point: Cell) => point.attrNum[looneageViewStore.attrKey]
+//         ) ?? NaN
+//     );
+// });
 
-const maxVal = computed<number>(() => {
-    return d3Max(layoutRoot.value.descendants(), (node: LayoutNode<Track>) =>
-        d3Max(
-            node.data.cells,
-            (point: Cell) => point.attrNum[looneageViewStore.attrKey]
-        )
-    ) as unknown as number;
-});
+// const maxVal = computed<number>(() => {
+//     return (
+//         d3Max(
+//             cellMetaData.cellArray ?? [],
+//             (point: Cell) => point.attrNum[looneageViewStore.attrKey]
+//         ) ?? NaN
+//     );
+// });
 
-const reasonableModH = computed(() => {
-    if (!cellMetaData.dataInitialized) return 100;
+// const reasonableModH = computed(() => {
+//     if (!cellMetaData.dataInitialized) return 100;
 
-    const extent = maxVal.value - minVal.value;
-    if (extent === 0) return 1;
-    return extent / 5;
-});
+//     const extent = maxVal.value - minVal.value;
+//     if (extent === 0) return 1;
+//     return extent / 5;
+// });
 
 // const defaultSettings = {
 //     modHeight: reasonableModH,
@@ -241,6 +241,19 @@ const colorSchemeOptions = [
     { label: 'Orange', value: schemeOranges },
     { label: 'Purple', value: schemePurples },
 ];
+
+const maxBands = 15;
+const minModHeight = computed(() => {
+    return (looneageViewStore.maxVal - looneageViewStore.minVal) / maxBands;
+});
+const modHeightValidate = computed({
+    get() {
+        return looneageViewStore.modHeight;
+    },
+    set(value) {
+        looneageViewStore.modHeight = Math.max(value, minModHeight.value);
+    },
+});
 </script>
 
 <template>
@@ -266,6 +279,13 @@ const colorSchemeOptions = [
             :options="colorSchemeOptions"
             :dark="globalSettings.darkMode"
             class="mb-1"
+        />
+        <q-input
+            label="Bin Size"
+            v-model.number="modHeightValidate"
+            type="number"
+            :dark="globalSettings.darkMode"
+            debounce="100"
         />
 
         <!-- <button @click="verticalScale -= 0.1">decrease</button>
@@ -293,7 +313,7 @@ const colorSchemeOptions = [
                         "
                         :settings="{
                             baseline: 0,
-                            modHeight: reasonableModH,
+                            modHeight: looneageViewStore.modHeight,
                             mirrorNegative: false,
                             includeBinLine: true,
                             positiveColorScheme:
@@ -335,7 +355,7 @@ const colorSchemeOptions = [
                         "
                         :settings="{
                             baseline: 0,
-                            modHeight: reasonableModH,
+                            modHeight: looneageViewStore.modHeight,
                             mirrorNegative: false,
                             includeBinLine: true,
                             positiveColorScheme: schemeReds,
@@ -352,7 +372,6 @@ const colorSchemeOptions = [
             :containerWidth="containerWidth"
             :chartWidth="legendWidth"
             :chartHeight="rowHeight"
-            :modHeight="reasonableModH"
             :includeNegatives="minVal < 0"
         ></HorizonChartLegend>
     </div>
