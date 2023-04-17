@@ -6,6 +6,7 @@ import { clamp, last, sortBy } from 'lodash-es';
 import HorizonChart, {
     type HorizonChartSettings,
 } from '@/components/HorizonChart.vue';
+import HorizonChartLegend from '@/components/HorizonChartLegend.vue';
 import { hierarchy } from 'd3-hierarchy';
 import { flextree, type LayoutNode } from 'd3-flextree';
 
@@ -57,6 +58,8 @@ const spacing = computed(() => {
     // return Math.round(props.initialSpacing * verticalScale.value);
 });
 const { width: containerWidth } = useElementSize(looneageContainer);
+// const legendWidth = computed(() => Math.min(containerWidth.value, 300));
+const legendWidth = computed(() => containerWidth.value);
 // const containerWidth = computed(() => {
 //     const { width } = useElementSize(looneageContainer);
 //     // console.log('CONTAINER WIDTH: ', width);
@@ -108,25 +111,28 @@ const layoutRoot = computed<LayoutNode<Track>>(() => {
 //     return (maxVal - minVal) / 5;
 // }
 
+const minVal = computed<number>(() => {
+    return d3Min(layoutRoot.value.descendants(), (node: LayoutNode<Track>) =>
+        d3Min(
+            node.data.cells,
+            (point: Cell) => point.attrNum[looneageViewStore.attrKey]
+        )
+    ) as unknown as number;
+});
+
+const maxVal = computed<number>(() => {
+    return d3Max(layoutRoot.value.descendants(), (node: LayoutNode<Track>) =>
+        d3Max(
+            node.data.cells,
+            (point: Cell) => point.attrNum[looneageViewStore.attrKey]
+        )
+    ) as unknown as number;
+});
+
 const reasonableModH = computed(() => {
     if (!cellMetaData.dataInitialized) return 100;
-    const minVal = d3Min(
-        layoutRoot.value.descendants(),
-        (node: LayoutNode<Track>) =>
-            d3Min(
-                node.data.cells,
-                (point: Cell) => point.attrNum[looneageViewStore.attrKey]
-            )
-    ) as unknown as number;
-    const maxVal = d3Max(
-        layoutRoot.value.descendants(),
-        (node: LayoutNode<Track>) =>
-            d3Max(
-                node.data.cells,
-                (point: Cell) => point.attrNum[looneageViewStore.attrKey]
-            )
-    ) as unknown as number;
-    const extent = maxVal - minVal;
+
+    const extent = maxVal.value - minVal.value;
     if (extent === 0) return 1;
     return extent / 5;
 });
@@ -342,11 +348,22 @@ const colorSchemeOptions = [
                 </g>
             </g>
         </svg>
+        <HorizonChartLegend
+            :containerWidth="containerWidth"
+            :chartWidth="legendWidth"
+            :chartHeight="rowHeight"
+            :modHeight="reasonableModH"
+            :includeNegatives="minVal < 0"
+        ></HorizonChartLegend>
     </div>
 </template>
 
 <!-- Add "scoped" attribute to limit CSS to this component only -->
 <style scoped lang="scss">
+svg {
+    overflow: visible !important;
+}
+
 line {
     stroke: #525252;
     stroke-linecap: round;
