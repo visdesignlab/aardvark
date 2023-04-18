@@ -1,8 +1,8 @@
 <script setup lang="ts">
-import { ref, computed, watch } from 'vue';
+import { ref, computed } from 'vue';
 import { min as d3Min, max as d3Max, extent as d3Extent } from 'd3-array';
 import { scaleLinear } from 'd3-scale';
-import { clamp, last, sortBy } from 'lodash-es';
+import { clamp, last } from 'lodash-es';
 import HorizonChart, {
     type HorizonChartSettings,
 } from '@/components/HorizonChart.vue';
@@ -30,8 +30,6 @@ const globalSettings = useGlobalSettings();
 const looneageViewStore = useLooneageViewStore();
 
 interface LooneageViewProps {
-    // attrKey: string;
-    // containerWidth: number;
     encodeChildSplit?: boolean;
     initialSpacing?: number;
     initialRowHeight?: number;
@@ -39,7 +37,6 @@ interface LooneageViewProps {
 }
 
 const props = withDefaults(defineProps<LooneageViewProps>(), {
-    // containerWidth: 800,
     encodeChildSplit: false,
     initialSpacing: 2,
     initialRowHeight: 16,
@@ -53,18 +50,11 @@ const rowHeight = computed(() => {
 
 const spacingScale = scaleLinear().domain([1, 8]).range([1, 4]);
 const spacing = computed(() => {
-    // return props.initialSpacing;
     return Math.round(props.initialSpacing * spacingScale(verticalScale.value));
-    // return Math.round(props.initialSpacing * verticalScale.value);
 });
 const { width: containerWidth } = useElementSize(looneageContainer);
 // const legendWidth = computed(() => Math.min(containerWidth.value, 300));
 const legendWidth = computed(() => containerWidth.value);
-// const containerWidth = computed(() => {
-//     const { width } = useElementSize(looneageContainer);
-//     // console.log('CONTAINER WIDTH: ', width);
-//     return 800;
-// });
 
 const tree = computed(() => {
     if (cellMetaData.selectedLineage == null) return null;
@@ -90,62 +80,6 @@ const layoutRoot = computed<LayoutNode<Track> | null>(() => {
         spacing: spacing.value,
     })(tree.value);
 });
-
-// function getReasonableModH(): number {
-//     if (!cellMetaData.dataInitialized) return 100;
-//     const minVal = d3Min(
-//         layoutRoot.value.descendants(),
-//         (node: LayoutNode<Track>) =>
-//             d3Min(
-//                 node.data.cells,
-//                 (point: Cell) => point.attrNum[looneageViewStore.attrKey]
-//             )
-//     ) as unknown as number;
-//     const maxVal = d3Max(
-//         layoutRoot.value.descendants(),
-//         (node: LayoutNode<Track>) =>
-//             d3Max(
-//                 node.data.cells,
-//                 (point: Cell) => point.attrNum[looneageViewStore.attrKey]
-//             )
-//     ) as unknown as number;
-//     return (maxVal - minVal) / 5;
-// }
-
-// const minVal = computed<number>(() => {
-//     return (
-//         d3Min(
-//             cellMetaData.cellArray ?? [],
-//             (point: Cell) => point.attrNum[looneageViewStore.attrKey]
-//         ) ?? NaN
-//     );
-// });
-
-// const maxVal = computed<number>(() => {
-//     return (
-//         d3Max(
-//             cellMetaData.cellArray ?? [],
-//             (point: Cell) => point.attrNum[looneageViewStore.attrKey]
-//         ) ?? NaN
-//     );
-// });
-
-// const reasonableModH = computed(() => {
-//     if (!cellMetaData.dataInitialized) return 100;
-
-//     const extent = maxVal.value - minVal.value;
-//     if (extent === 0) return 1;
-//     return extent / 5;
-// });
-
-// const defaultSettings = {
-//     modHeight: reasonableModH,
-//     includeBinLine: true,
-// };
-
-// const mergedHorizonChartSettings = computed(() => {
-//     return { ...defaultSettings, ...props.horizonChartSettings };
-// });
 
 const scaleX = computed(() => {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -218,24 +152,6 @@ const unselectedNodes = computed(() => {
             (node) => node.data.trackId === cellMetaData.selectedTrack?.trackId
         );
 });
-// const imageFrames = computed<number[]>(() => {
-//     const keyFrames = new Set<number>();
-//     function addKeyFrames(node: Track, set: Set<number>) {
-//         set.add(node.cells[0].attrNum['frame'] + 1);
-//         set.add(node.cells[node.cells.length - 1].attrNum['frame'] + 1);
-//         if (node.children) {
-//             for (const child of node.children) {
-//                 addKeyFrames(child, set);
-//             }
-//         }
-//     }
-//     addKeyFrames(props.dataRoot, keyFrames);
-//     let keyFrameList: number[] = Array.from(keyFrames);
-//     keyFrameList = sortBy(keyFrameList);
-//     // console.log({ keyFrameList: keyFrameList });
-
-//     return keyFrameList;
-// });
 
 const colorSchemeOptions = [
     { label: 'Red', value: schemeReds },
@@ -399,13 +315,4 @@ line {
     stroke: #525252;
     stroke-linecap: round;
 }
-
-// svg {
-// border: solid green 3px;
-// }
-
-// .image-container {
-// border: solid black 3px;
-// overflow: hidden;
-// }
 </style>

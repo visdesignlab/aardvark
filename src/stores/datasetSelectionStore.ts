@@ -1,8 +1,7 @@
-import { ref, computed, watch, nextTick } from 'vue';
+import { ref, computed, watch } from 'vue';
 import { defineStore } from 'pinia';
-import { asyncComputed, useStorage } from '@vueuse/core';
+import { asyncComputed } from '@vueuse/core';
 import { parse, type ParseResult } from 'papaparse';
-import { cloneDeep } from 'lodash-es';
 
 import { computedAsync } from '@vueuse/core';
 import {
@@ -117,24 +116,6 @@ export const useDatasetSelectionStore = defineStore(
             // console.log(cloneDeep(datasetSelectionTrrackedStore.$state));
         }
 
-        // watch(
-        //     () => datasetSelectionTrrackedStore.selectedLocationIds,
-        //     () => {
-        //         if (currentExperimentMetadata.value == null) return;
-        //         for (const location of currentExperimentMetadata.value
-        //             .locationMetadataList) {
-        //             if (
-        //                 datasetSelectionTrrackedStore.selectedLocationIds[
-        //                     location.id
-        //                 ]
-        //             ) {
-        //                 currentLocationMetadata.value = location;
-        //                 return;
-        //             }
-        //         }
-        //     },
-        //     { deep: true }
-        // );
         // TODO: - update to support multi-location
         const currentLocationMetadata = computed<LocationMetadata | null>(
             () => {

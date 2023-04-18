@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import { ref, watch, computed } from 'vue';
 import { useQuasar } from 'quasar';
-import { useCellMetaData, type AnyAttributes } from '@/stores/cellMetaData';
 import { useGlobalSettings } from '@/stores/globalSettings';
 import { useDatasetSelectionTrrackedStore } from '@/stores/datasetSelectionTrrackedStore';
 import { useDatasetSelectionStore } from '@/stores/datasetSelectionStore';
@@ -19,7 +18,6 @@ watch(
         if (datasetSelectionStore.fetchingTabularData) {
             $q.loading.show({
                 delay: 0,
-                // customClass: 'my-super-cool-custom-class',
             });
         } else {
             $q.loading.hide();

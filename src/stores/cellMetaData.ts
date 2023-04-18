@@ -58,11 +58,6 @@ export interface HeaderDef {
     type: 'string' | 'number';
 }
 
-// export interface D3CSV extends Array<AnyAttributes> {
-//     // something like this should be in the d3-types, but I'm tired of debugging
-//     // why this isn't importing, so I can just use this one.
-//     columns: string[];
-// }
 export const useCellMetaData = defineStore('cellMetaData', () => {
     const dataPointSelection = useDataPointSelection();
     const defaultHeaders: SpecialHeaders = {

@@ -1,6 +1,6 @@
 Next
 [x] send emails about datasets
-[] debug/fix: switching datasets crashes now (related to lineageid changes I think)
+[x] debug/fix: switching datasets crashes now (related to lineageid changes I think)
 
 Refactor cell meta data to support selecting multiple locations
 [] break down into smaller tasks
@@ -27,8 +27,8 @@ Line Chart Interactions
     [] select current time on all charts
 
 Trracking enhancements
-[] image view state to store?
-[] table state (which column sorted, page size, page number)
+[-] image view state to store?
+[-] table state (which column sorted, page size, page number)
 
 quasar ui updatse
 [] layout/settings panel
@@ -39,7 +39,7 @@ quasar ui updatse
 Misc fixes/enhancements
 [] improve looneage view recalculation issue
 [] cache large data requests e.g. to tabular data
-[] crash when selecting lineage with single length track
+[x] crash when selecting lineage with single length track
 [] either remove single column layout, or add special logic for it
 
 Validator component

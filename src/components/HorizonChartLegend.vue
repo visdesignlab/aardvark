@@ -1,21 +1,17 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue';
+import { computed } from 'vue';
 import HorizonChart from '@/components/HorizonChart.vue';
 import { scaleLinear } from 'd3-scale';
 import { format } from 'd3-format';
 
 import { useLooneageViewStore } from '@/stores/looneageViewStore';
 
-import { useGlobalSettings } from '@/stores/globalSettings';
 const looneageViewStore = useLooneageViewStore();
-const globalSettings = useGlobalSettings();
 
 interface HorizonChartLegendProps {
     containerWidth: number;
-    // containerHeight: number;
     chartWidth: number;
     chartHeight: number;
-    // modHeight: number;
     includeNegatives: boolean;
 }
 const containerHeight = 40;
@@ -97,12 +93,6 @@ function getLegendLabel(val: number): string {
             </text>
         </g>
     </svg>
-    <!-- <q-input
-        label="Bin Size"
-        v-model.number="modHeightValidate"
-        type="number"
-        :dark="globalSettings.darkMode"
-    /> -->
 </template>
 
 <style scoped lange="scss">

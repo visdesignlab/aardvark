@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import { ref, computed, reactive } from 'vue';
+import { ref } from 'vue';
 import { onMounted } from 'vue';
-import { GridStack, type GridStackOptions, type DDDragOpt } from 'gridstack';
+import { GridStack } from 'gridstack';
 import screenfull from 'screenfull';
 import 'gridstack/dist/gridstack.min.css';
 import { useGridstackLayoutStore } from '@/stores/gridstackLayoutStore';
