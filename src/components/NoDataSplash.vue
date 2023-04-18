@@ -1,8 +1,15 @@
 <script setup lang="ts">
 import { useCellMetaData } from '@/stores/cellMetaData';
+import { useGlobalSettings } from '@/stores/globalSettings';
 const cellMetaData = useCellMetaData();
+const globalSettings = useGlobalSettings();
 </script>
 
 <template>
-    <div v-if="!cellMetaData.dataInitialized">No data to display...</div>
+    <q-banner
+        v-if="!cellMetaData.dataInitialized"
+        rounded
+        :class="globalSettings.darkMode ? 'm-3 bg-grey-9' : 'm-3 bg-grey-3'"
+        >Select dataset to visualize.</q-banner
+    >
 </template>

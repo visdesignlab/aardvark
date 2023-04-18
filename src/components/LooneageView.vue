@@ -294,90 +294,98 @@ const modHeightValidate = computed({
 
         <!-- <button @click="verticalScale -= 0.1">decrease</button>
         <button @click="verticalScale += 0.1">increase</button> -->
-        <svg
-            :width="containerWidth"
-            :height="containerHeight"
-            @click="() => onHorizonChartClick(null)"
-        >
-            <g :transform="`translate(0,${-extent[1]})`">
-                <g
-                    v-for="node in selectedNodes"
-                    :key="node.data.trackId"
-                    :transform="`translate(${scaleX(node.y)},${node.x})`"
-                    :class="`n-${node.depth}`"
-                    @click.stop="() => onHorizonChartClick(node)"
-                >
-                    <HorizonChart
-                        :chartWidth="scaleX(getWidth(node.data))"
-                        :chartHeight="rowHeight"
-                        :data="node.data.cells"
-                        :selected="
-                            node.data.trackId ===
-                            cellMetaData.selectedTrack?.trackId
-                        "
-                        :settings="{
-                            baseline: 0,
-                            modHeight: looneageViewStore.modHeight,
-                            mirrorNegative: false,
-                            includeBinLine: true,
-                            positiveColorScheme:
-                                looneageViewStore.positiveColorScheme.value,
-                            negativeColorScheme:
-                                looneageViewStore.negativeColorScheme.value,
-                        }"
-                        :timeAccessor="cellMetaData.getTime"
-                        :valueAccessor="(cell: Cell) => cellMetaData.getNumAttr(cell, looneageViewStore.attrKey)"
-                        :info="node.data.trackId"
-                    ></HorizonChart>
-                </g>
+        <div v-if="cellMetaData.selectedLineage !== null">
+            <svg
+                :width="containerWidth"
+                :height="containerHeight"
+                @click="() => onHorizonChartClick(null)"
+            >
+                <g :transform="`translate(0,${-extent[1]})`">
+                    <g
+                        v-for="node in selectedNodes"
+                        :key="node.data.trackId"
+                        :transform="`translate(${scaleX(node.y)},${node.x})`"
+                        :class="`n-${node.depth}`"
+                        @click.stop="() => onHorizonChartClick(node)"
+                    >
+                        <HorizonChart
+                            :chartWidth="scaleX(getWidth(node.data))"
+                            :chartHeight="rowHeight"
+                            :data="node.data.cells"
+                            :selected="
+                                node.data.trackId ===
+                                cellMetaData.selectedTrack?.trackId
+                            "
+                            :settings="{
+                                baseline: 0,
+                                modHeight: looneageViewStore.modHeight,
+                                mirrorNegative: false,
+                                includeBinLine: true,
+                                positiveColorScheme:
+                                    looneageViewStore.positiveColorScheme.value,
+                                negativeColorScheme:
+                                    looneageViewStore.negativeColorScheme.value,
+                            }"
+                            :timeAccessor="cellMetaData.getTime"
+                            :valueAccessor="(cell: Cell) => cellMetaData.getNumAttr(cell, looneageViewStore.attrKey)"
+                            :info="node.data.trackId"
+                        ></HorizonChart>
+                    </g>
 
-                <line
-                    v-for="({ source, target }, i) in layoutRoot?.links()"
-                    :key="i"
-                    :x1="scaleX(source.y + getWidth(source.data))"
-                    :y1="source.x + rowHeight / 2"
-                    :x2="scaleX(target.y)"
-                    :y2="target.x + rowHeight / 2"
-                    :stroke-width="
-                        2 + 36 * getSplitWeight(source.data, target.data)
-                    "
-                ></line>
-                <g
-                    v-for="node in unselectedNodes"
-                    :key="node.data.trackId"
-                    :transform="`translate(${scaleX(node.y)},${node.x})`"
-                    :class="`n-${node.depth}`"
-                    @click.stop="() => onHorizonChartClick(node)"
-                >
-                    <HorizonChart
-                        :chartWidth="scaleX(getWidth(node.data))"
-                        :chartHeight="rowHeight"
-                        :data="node.data.cells"
-                        :selected="
-                            node.data.trackId ===
-                            cellMetaData.selectedTrack?.trackId
+                    <line
+                        v-for="({ source, target }, i) in layoutRoot?.links()"
+                        :key="i"
+                        :x1="scaleX(source.y + getWidth(source.data))"
+                        :y1="source.x + rowHeight / 2"
+                        :x2="scaleX(target.y)"
+                        :y2="target.x + rowHeight / 2"
+                        :stroke-width="
+                            2 + 36 * getSplitWeight(source.data, target.data)
                         "
-                        :settings="{
-                            baseline: 0,
-                            modHeight: looneageViewStore.modHeight,
-                            mirrorNegative: false,
-                            includeBinLine: true,
-                            positiveColorScheme: schemeReds,
-                            negativeColorScheme: schemeBlues,
-                        }"
-                        :timeAccessor="cellMetaData.getTime"
-                        :valueAccessor="(cell: Cell) => cellMetaData.getNumAttr(cell, looneageViewStore.attrKey)"
-                        :info="node.data.trackId"
-                    ></HorizonChart>
+                    ></line>
+                    <g
+                        v-for="node in unselectedNodes"
+                        :key="node.data.trackId"
+                        :transform="`translate(${scaleX(node.y)},${node.x})`"
+                        :class="`n-${node.depth}`"
+                        @click.stop="() => onHorizonChartClick(node)"
+                    >
+                        <HorizonChart
+                            :chartWidth="scaleX(getWidth(node.data))"
+                            :chartHeight="rowHeight"
+                            :data="node.data.cells"
+                            :selected="
+                                node.data.trackId ===
+                                cellMetaData.selectedTrack?.trackId
+                            "
+                            :settings="{
+                                baseline: 0,
+                                modHeight: looneageViewStore.modHeight,
+                                mirrorNegative: false,
+                                includeBinLine: true,
+                                positiveColorScheme: schemeReds,
+                                negativeColorScheme: schemeBlues,
+                            }"
+                            :timeAccessor="cellMetaData.getTime"
+                            :valueAccessor="(cell: Cell) => cellMetaData.getNumAttr(cell, looneageViewStore.attrKey)"
+                            :info="node.data.trackId"
+                        ></HorizonChart>
+                    </g>
                 </g>
-            </g>
-        </svg>
-        <HorizonChartLegend
-            :containerWidth="containerWidth"
-            :chartWidth="legendWidth"
-            :chartHeight="rowHeight"
-            :includeNegatives="looneageViewStore.minVal < 0"
-        ></HorizonChartLegend>
+            </svg>
+            <HorizonChartLegend
+                :containerWidth="containerWidth"
+                :chartWidth="legendWidth"
+                :chartHeight="rowHeight"
+                :includeNegatives="looneageViewStore.minVal < 0"
+            ></HorizonChartLegend>
+        </div>
+        <q-banner
+            v-else
+            rounded
+            :class="globalSettings.darkMode ? 'm-3 bg-grey-9' : 'm-3 bg-grey-3'"
+            >Select lineage to visualize.</q-banner
+        >
     </div>
 </template>
 
