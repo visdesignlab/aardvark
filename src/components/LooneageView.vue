@@ -372,7 +372,7 @@ const modHeightValidate = computed({
             :containerWidth="containerWidth"
             :chartWidth="legendWidth"
             :chartHeight="rowHeight"
-            :includeNegatives="minVal < 0"
+            :includeNegatives="looneageViewStore.minVal < 0"
         ></HorizonChartLegend>
     </div>
 </template>
