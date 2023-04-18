@@ -36,7 +36,7 @@ const items = computed(() => {
 
 const selection = computed<Lineage[]>({
     get() {
-        if (cellMetaData.selectLineage == null) return [];
+        if (cellMetaData.selectedLineage == null) return [];
         return [cellMetaData.selectedLineage as Lineage];
     },
     set(val) {

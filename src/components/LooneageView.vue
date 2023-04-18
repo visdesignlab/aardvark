@@ -80,7 +80,8 @@ function getWidth(node: Track): number {
     const timeWidth = maxTime - minTime;
     return timeWidth;
 }
-const layoutRoot = computed<LayoutNode<Track>>(() => {
+const layoutRoot = computed<LayoutNode<Track> | null>(() => {
+    if (cellMetaData.selectedLineage == null) return null;
     return flextree<Track>({
         nodeSize: (node: LayoutNode<Track>) => {
             const timeWidth = getWidth(node.data);
@@ -153,7 +154,8 @@ const scaleX = computed(() => {
 });
 
 const extent = computed<[number, number, number, number]>(() => {
-    if (!cellMetaData.dataInitialized) return [0, 0, 100, 100];
+    if (!cellMetaData.dataInitialized || layoutRoot.value === null)
+        return [0, 0, 100, 100];
     const minX = d3Min(
         layoutRoot.value.descendants(),
         (n: LayoutNode<Track>) => n.y
@@ -200,20 +202,22 @@ function onHorizonChartClick(node: LayoutNode<Track> | null): void {
     // console.log('hr clicked!', { node });
 }
 
-const selectedNodes = computed(() =>
-    layoutRoot.value
+const selectedNodes = computed(() => {
+    if (layoutRoot.value === null) return [];
+    return layoutRoot.value
         .descendants()
         .filter(
             (node) => node.data.trackId !== cellMetaData.selectedTrack?.trackId
-        )
-);
-const unselectedNodes = computed(() =>
-    layoutRoot.value
+        );
+});
+const unselectedNodes = computed(() => {
+    if (layoutRoot.value === null) return [];
+    return layoutRoot.value
         .descendants()
         .filter(
             (node) => node.data.trackId === cellMetaData.selectedTrack?.trackId
-        )
-);
+        );
+});
 // const imageFrames = computed<number[]>(() => {
 //     const keyFrames = new Set<number>();
 //     function addKeyFrames(node: Track, set: Set<number>) {
@@ -285,7 +289,7 @@ const modHeightValidate = computed({
             v-model.number="modHeightValidate"
             type="number"
             :dark="globalSettings.darkMode"
-            debounce="100"
+            debounce="400"
         />
 
         <!-- <button @click="verticalScale -= 0.1">decrease</button>
@@ -328,7 +332,7 @@ const modHeightValidate = computed({
                 </g>
 
                 <line
-                    v-for="({ source, target }, i) in layoutRoot.links()"
+                    v-for="({ source, target }, i) in layoutRoot?.links()"
                     :key="i"
                     :x1="scaleX(source.y + getWidth(source.data))"
                     :y1="source.x + rowHeight / 2"
