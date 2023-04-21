@@ -210,7 +210,7 @@ const modHeightValidate = computed({
 
         <!-- <button @click="verticalScale -= 0.1">decrease</button>
         <button @click="verticalScale += 0.1">increase</button> -->
-        <div v-if="cellMetaData.selectedLineage !== null">
+        <div v-if="cellMetaData.selectedLineage !== null" class="mt-3">
             <svg
                 :width="containerWidth"
                 :height="containerHeight"
