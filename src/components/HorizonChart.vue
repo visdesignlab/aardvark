@@ -192,7 +192,6 @@ export default defineComponent({
 </script>
 
 <template>
-    <!-- <svg :width="chartWidth" :height="chartHeight"> -->
     <clipPath :id="clipPathId">
         <rect
             fill="#ececec"
@@ -225,7 +224,6 @@ export default defineComponent({
         ></path>
         <rect fill="#ececec"></rect>
     </g>
-    <!-- </svg> -->
 </template>
 
 <!-- Add "scoped" attribute to limit CSS to this component only -->

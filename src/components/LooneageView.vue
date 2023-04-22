@@ -183,7 +183,9 @@ const horizonChartLegend = ref<typeof HorizonChartLegend | null>(null);
 function exportSvg() {
     // https://stackoverflow.com/questions/19885213/how-to-download-the-current-documents-innerhtml-as-a-file/19885344#19885344
     if (looneageSvgContainer.value === null) return;
-    const svgString = looneageSvgContainer.value.outerHTML;
+    const svgString =
+        '<?xml version="1.0" standalone="no"?>\r\n' +
+        looneageSvgContainer.value.outerHTML;
     const link = document.createElement('a');
     link.download = `lineage_${datasetSelectionTrrackedStore.selectedLocationId}_${cellMetaData.selectedLineage?.lineageId}.svg`; // TODO: cell id
     link.href = 'data:image/svg+xml;utf8,' + encodeURIComponent(svgString);

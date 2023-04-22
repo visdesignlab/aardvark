@@ -47,7 +47,9 @@ const svgContainer = ref<SVGElement | null>(null);
 function exportSvg(): void {
     console.log('exportSVg called');
     if (svgContainer.value === null) return;
-    const svgString = svgContainer.value.outerHTML;
+    const svgString =
+        '<?xml version="1.0" standalone="no"?>\r\n' +
+        svgContainer.value.outerHTML;
     const link = document.createElement('a');
     link.download = `legend.svg`;
     link.href = 'data:image/svg+xml;utf8,' + encodeURIComponent(svgString);
@@ -60,6 +62,7 @@ defineExpose({ exportSvg });
     <span>Legend</span>
     <svg
         ref="svgContainer"
+        xmlns="http://www.w3.org/2000/svg"
         :width="props.containerWidth"
         :height="containerHeight"
     >
