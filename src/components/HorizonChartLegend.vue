@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed } from 'vue';
+import { computed, ref } from 'vue';
 import HorizonChart from '@/components/HorizonChart.vue';
 import { scaleLinear } from 'd3-scale';
 import { format } from 'd3-format';
@@ -42,11 +42,27 @@ function getLegendLabel(val: number): string {
     if (val === 6) return label + '+';
     return label;
 }
+
+const svgContainer = ref<SVGElement | null>(null);
+function exportSvg(): void {
+    console.log('exportSVg called');
+    if (svgContainer.value === null) return;
+    const svgString = svgContainer.value.outerHTML;
+    const link = document.createElement('a');
+    link.download = `legend.svg`;
+    link.href = 'data:image/svg+xml;utf8,' + encodeURIComponent(svgString);
+    link.click();
+}
+defineExpose({ exportSvg });
 </script>
 
 <template>
     <span>Legend</span>
-    <svg :width="props.containerWidth" :height="containerHeight">
+    <svg
+        ref="svgContainer"
+        :width="props.containerWidth"
+        :height="containerHeight"
+    >
         <HorizonChart
             :chartWidth="props.chartWidth"
             :chartHeight="props.chartHeight"
@@ -68,7 +84,6 @@ function getLegendLabel(val: number): string {
         ></HorizonChart>
 
         <g
-            class="svg-text-below"
             font-size="10"
             font-family="sans-serif"
             :transform="`translate(0, ${props.chartHeight + 5})`"
@@ -88,6 +103,8 @@ function getLegendLabel(val: number): string {
                 :x="scaleX(val)"
                 y="0"
                 fill="currentColor"
+                text-anchor="middle"
+                dominant-baseline="hanging"
             >
                 {{ getLegendLabel(val) }}
             </text>
@@ -100,8 +117,8 @@ svg {
     overflow: visible !important;
 }
 
-.svg-text-below {
+/* .svg-text-below {
     text-anchor: middle;
     dominant-baseline: hanging;
-}
+} */
 </style>

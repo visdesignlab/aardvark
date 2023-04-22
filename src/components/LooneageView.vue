@@ -14,6 +14,7 @@ import { useElementSize } from '@vueuse/core';
 import { useCellMetaData, type Track, type Cell } from '@/stores/cellMetaData';
 import { useGlobalSettings } from '@/stores/globalSettings';
 import { useLooneageViewStore } from '@/stores/looneageViewStore';
+import { useDatasetSelectionTrrackedStore } from '@/stores/datasetSelectionTrrackedStore';
 import {
     schemeReds,
     schemeBlues,
@@ -28,6 +29,7 @@ const looneageContainer = ref(null);
 const cellMetaData = useCellMetaData();
 const globalSettings = useGlobalSettings();
 const looneageViewStore = useLooneageViewStore();
+const datasetSelectionTrrackedStore = useDatasetSelectionTrrackedStore();
 
 interface LooneageViewProps {
     encodeChildSplit?: boolean;
@@ -166,6 +168,7 @@ const maxBands = 15;
 const minModHeight = computed(() => {
     return (looneageViewStore.maxVal - looneageViewStore.minVal) / maxBands;
 });
+
 const modHeightValidate = computed({
     get() {
         return looneageViewStore.modHeight;
@@ -174,6 +177,20 @@ const modHeightValidate = computed({
         looneageViewStore.modHeight = Math.max(value, minModHeight.value);
     },
 });
+
+const looneageSvgContainer = ref<SVGElement | null>(null);
+const horizonChartLegend = ref<typeof HorizonChartLegend | null>(null);
+function exportSvg() {
+    // https://stackoverflow.com/questions/19885213/how-to-download-the-current-documents-innerhtml-as-a-file/19885344#19885344
+    if (looneageSvgContainer.value === null) return;
+    const svgString = looneageSvgContainer.value.outerHTML;
+    const link = document.createElement('a');
+    link.download = `lineage_${datasetSelectionTrrackedStore.selectedLocationId}_${cellMetaData.selectedLineage?.lineageId}.svg`; // TODO: cell id
+    link.href = 'data:image/svg+xml;utf8,' + encodeURIComponent(svgString);
+    link.click();
+    if (horizonChartLegend.value === null) return;
+    horizonChartLegend.value.exportSvg();
+}
 </script>
 
 <template>
@@ -207,15 +224,23 @@ const modHeightValidate = computed({
             :dark="globalSettings.darkMode"
             debounce="400"
         />
+        <q-btn class="mt-1" @click="exportSvg" outline rounded
+            >Export SVG</q-btn
+        >
 
         <!-- <button @click="verticalScale -= 0.1">decrease</button>
         <button @click="verticalScale += 0.1">increase</button> -->
         <div v-if="cellMetaData.selectedLineage !== null" class="mt-3">
             <svg
+                ref="looneageSvgContainer"
                 :width="containerWidth"
                 :height="containerHeight"
-                @click="() => onHorizonChartClick(null)"
+                stroke="#525252"
+                stroke-linecap="round"
+                version="1.1"
+                xmlns="http://www.w3.org/2000/svg"
             >
+                @click="() => onHorizonChartClick(null)" >
                 <g :transform="`translate(0,${-extent[1]})`">
                     <g
                         v-for="node in selectedNodes"
@@ -290,6 +315,7 @@ const modHeightValidate = computed({
                 </g>
             </svg>
             <HorizonChartLegend
+                ref="horizonChartLegend"
                 :containerWidth="containerWidth"
                 :chartWidth="legendWidth"
                 :chartHeight="rowHeight"

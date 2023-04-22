@@ -194,9 +194,16 @@ export default defineComponent({
 <template>
     <!-- <svg :width="chartWidth" :height="chartHeight"> -->
     <clipPath :id="clipPathId">
-        <rect x="0" y="0" :width="chartWidth" :height="chartHeight"></rect>
+        <rect
+            fill="#ececec"
+            x="0"
+            y="0"
+            :width="chartWidth"
+            :height="chartHeight"
+        ></rect>
     </clipPath>
     <rect
+        fill="#ececec"
         x="0"
         y="0"
         :width="chartWidth"
@@ -208,30 +215,31 @@ export default defineComponent({
 
     <g @mousemove="debug" :clip-path="`url(#${clipPathId})`">
         <path
-            :class="settings.includeBinLine ? 'stroke-thin' : ''"
+            stroke="black"
+            stroke-width="0.25"
             v-for="(info, i) in offsetInfo"
             :key="i"
             :transform="info.transform"
             :d="areaPath ?? ''"
             :fill="info.color"
         ></path>
-        <rect></rect>
+        <rect fill="#ececec"></rect>
     </g>
     <!-- </svg> -->
 </template>
 
 <!-- Add "scoped" attribute to limit CSS to this component only -->
 <style scoped lang="scss">
-rect {
-    // fill: #f7ecec;
-    // fill: #f4eef1;
-    fill: #ececec;
-}
+// rect {
+//     // fill: #f7ecec;
+//     // fill: #f4eef1;
+//     fill: #ececec;
+// }
 
-.stroke-thin {
-    stroke: black;
-    stroke-width: 0.25;
-}
+// .stroke-thin {
+//     stroke: black;
+//     stroke-width: 0.25;
+// }
 
 .selected {
     // stroke: green;
