@@ -241,8 +241,8 @@ function exportSvg() {
                 stroke-linecap="round"
                 version="1.1"
                 xmlns="http://www.w3.org/2000/svg"
+                @click="() => onHorizonChartClick(null)"
             >
-                @click="() => onHorizonChartClick(null)" >
                 <g :transform="`translate(0,${-extent[1]})`">
                     <g
                         v-for="node in selectedNodes"
