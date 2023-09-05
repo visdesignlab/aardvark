@@ -4,6 +4,7 @@ Next
 
 Refactor cell meta data to support selecting multiple locations
 [] break down into smaller tasks
+[] do I need to do this? Or can I just merge multiple locations as a preprocessing step?
 
 simple image viewer
     [] fix deckgl crash (probs in loading code)
@@ -20,6 +21,11 @@ simple image viewer
     [] add center dots
     [] add region outlines
     [] add tree in image
+
+Looneage
+    [] embed images inside vis
+    [] multiple time scale options.
+
 
 Line Chart Interactions
     [] tooltip (cell count)

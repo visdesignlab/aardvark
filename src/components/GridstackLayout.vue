@@ -95,7 +95,7 @@ async function toggleFullscreen(elementId: string) {
                         />
                     </button>
                 </div>
-                <div class="card-body scroll-y position-relative">
+                <div class="h-100 scroll-y position-relative">
                     <component :is="w.component" v-bind="w.props"></component>
                 </div>
             </div>

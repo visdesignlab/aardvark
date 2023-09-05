@@ -118,7 +118,10 @@ const currentKey = computed({
 
 <template>
     <NoDataSplash></NoDataSplash>
-    <div v-if="cellMetaData.dataInitialized" class="d-flex flex-column h-100">
+    <div
+        v-if="cellMetaData.dataInitialized"
+        class="d-flex flex-column h-100 p-3"
+    >
         <div class="d-flex align-center">
             <span class="me-2">Show</span>
             <q-select

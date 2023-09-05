@@ -197,7 +197,11 @@ function exportSvg() {
 
 <template>
     <NoDataSplash></NoDataSplash>
-    <div v-if="cellMetaData.dataInitialized" ref="looneageContainer">
+    <div
+        v-if="cellMetaData.dataInitialized"
+        ref="looneageContainer"
+        class="p-3"
+    >
         <q-select
             label="Attribute"
             v-model="looneageViewStore.attrKey"
