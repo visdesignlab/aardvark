@@ -5,11 +5,14 @@ import { useGlobalSettings } from '@/stores/globalSettings';
 import { useImageViewerStore } from '@/stores/imageViewerStore';
 import { debounce } from 'lodash-es';
 import {
-    loadMultiTiff,
-    getChannelStats,
+    // loadMultiTiff,
+    // getChannelStats,
     ImageLayer,
     AdditiveColormapExtension,
 } from '@hms-dbmi/viv';
+
+import { loadMultiTiff, getChannelStats } from '@vdl-vivjs/loaders';
+// import { ImageLayer } from '@vivjs/monorepo/packages/layers';
 
 import type { PixelData, PixelSource } from '@vivjs/types';
 import { Deck, OrthographicView } from '@deck.gl/core';
