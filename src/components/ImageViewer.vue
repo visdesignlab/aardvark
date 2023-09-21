@@ -1,6 +1,9 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, watch } from 'vue';
-// import { useCellMetaData, type Lineage } from '@/stores/cellMetaData';
+import { storeToRefs } from 'pinia';
+import { useCellMetaData, type Lineage } from '@/stores/cellMetaData';
+import { useDataPointSelection } from '@/stores/dataPointSelection';
+
 import { useGlobalSettings } from '@/stores/globalSettings';
 import { useImageViewerStore } from '@/stores/imageViewerStore';
 import { debounce } from 'lodash-es';
@@ -17,8 +20,8 @@ import {
 // import { AdditiveColormapExtension } from '../tempLib/viv/packages/extensions';
 
 import type { PixelData, PixelSource } from '@vivjs/types';
-import { Deck, OrthographicView } from '@deck.gl/core';
-import { GeoJsonLayer } from '@deck.gl/layers';
+import { Deck, OrthographicView, type PickingInfo } from '@deck.gl/core/typed';
+import { GeoJsonLayer } from '@deck.gl/layers/typed';
 
 const INITIAL_VIEW_STATE = {
     zoom: 0,
@@ -26,7 +29,9 @@ const INITIAL_VIEW_STATE = {
     target: [767 / 2, 767 / 2, 0],
 };
 
-// const cellMetaData = useCellMetaData();
+const cellMetaData = useCellMetaData();
+
+const dataPointSelection = useDataPointSelection();
 const globalSettings = useGlobalSettings();
 const imageViewerStore = useImageViewerStore();
 
@@ -119,10 +124,73 @@ onMounted(async () => {
             opacity: 0.4,
             stroked: true,
             filled: true,
-            getFillColor: [255, 0, 0, 128],
-            getLineColor: [0, 0, 255, 255],
+            getFillColor: (info) => {
+                if (
+                    info.properties?.ID.toString() ===
+                    cellMetaData.hoveredTrackId
+                ) {
+                    return [255, 255, 255, 128];
+                }
+                return [0, 0, 0, 0];
+            },
+            getLineColor: (info) => {
+                if (
+                    info.properties?.ID.toString() ===
+                    dataPointSelection.selectedTrackId
+                ) {
+                    return [0, 255, 0];
+                }
+                return [0, 0, 255];
+            },
+            getLineWidth: (info) => {
+                if (
+                    info.properties?.ID.toString() ===
+                    dataPointSelection.selectedTrackId
+                ) {
+                    return 2;
+                }
+                return 1;
+            },
             pickable: true,
+            onHover: onHover,
+            onClick: onClick,
+            updateTriggers: {
+                getFillColor: cellMetaData.hoveredTrackId,
+                getLineColor: dataPointSelection.selectedTrackId,
+                getLineWidth: dataPointSelection.selectedTrackId,
+            },
         });
+    }
+
+    interface GeoJsonFeature {
+        type: 'Feature';
+        bbox: [number, number, number, number]; // left, bottom, right, top
+        properties: { ID: number }; // could be anything, but mine should have ID
+    }
+
+    function onHover(info: PickingInfo): void {
+        if (!info.object) {
+            cellMetaData.hoveredTrackId = null;
+            return;
+        }
+        const geoJsonFeature = info.object as GeoJsonFeature;
+        // console.log(geoJsonFeature);
+        cellMetaData.hoveredTrackId = geoJsonFeature.properties.ID.toString();
+    }
+
+    function onClick(info: PickingInfo): void {
+        if (!info.object) {
+            dataPointSelection.selectedTrackId = null;
+            return;
+        }
+        const geoJsonFeature = info.object as GeoJsonFeature;
+        dataPointSelection.selectedTrackId =
+            geoJsonFeature.properties.ID.toString();
+
+        const lineageId = cellMetaData.getLineageId(
+            cellMetaData.selectedTrack!
+        );
+        dataPointSelection.selectedLineageId = lineageId;
     }
 
     const imageLayer = ref(createBaseImageLayer());
@@ -167,13 +235,22 @@ onMounted(async () => {
         });
     }
 
+    const { hoveredTrackId } = storeToRefs(cellMetaData);
+    watch(hoveredTrackId, renderDeckGL);
+    watch(dataPointSelection.$state, renderDeckGL);
     watch(imageViewerStore.$state, renderDeckGL);
     watch(contrastLimitSlider, renderDeckGL);
 });
 </script>
 
 <template>
-    <canvas id="super-cool-unique-id" ref="deckGlContainer"></canvas>
+    <canvas
+        id="super-cool-unique-id"
+        ref="deckGlContainer"
+        :class="
+            cellMetaData.hoveredTrackId !== null ? 'force-default-cursor' : ''
+        "
+    ></canvas>
     <div
         :class="`p-2 w-25 position-relative bg-opacity-75 bg-${globalSettings.btnLight}`"
     >
@@ -225,5 +302,9 @@ onMounted(async () => {
     background-repeat: repeat;
     // * {background-repeat: norepeat} on css reset is causing
     // slider to not show tick marks
+}
+
+.force-default-cursor {
+    cursor: default !important;
 }
 </style>

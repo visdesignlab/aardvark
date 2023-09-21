@@ -95,6 +95,18 @@ export const useCellMetaData = defineStore('cellMetaData', () => {
         dataPointSelection.selectedLineageId = lineage.lineageId;
     }
 
+    function getLineageId(track: Track): string {
+        let founderCell = track;
+        while (hasParent(founderCell)) {
+            const parent = trackMap.value?.get(founderCell.parentId);
+            if (!parent) {
+                throw new Error('unable to get lineageId');
+            }
+            founderCell = parent;
+        }
+        return founderCell.trackId;
+    }
+
     const selectedTrack = computed<Track | null>(() => {
         if (!dataInitialized.value) return null;
         if (dataPointSelection.selectedTrackId == null) return null;
@@ -108,6 +120,9 @@ export const useCellMetaData = defineStore('cellMetaData', () => {
         }
         dataPointSelection.selectedTrackId = track.trackId;
     }
+
+    const hoveredTrackId = ref<string | null>(null);
+    // this is not in dataPointSelection because I don't want to trrrrack it.
 
     const frameMap = computed<Map<number, Cell[]>>(() => {
         const map = new Map<number, Cell[]>();
@@ -419,12 +434,7 @@ export const useCellMetaData = defineStore('cellMetaData', () => {
         // this populates the children attribute of the tracks
         // as well as building the lineage data list/map
         for (const track of trackArray.value) {
-            const parentId = track.parentId;
-            if (
-                parentId == '' ||
-                parentId == track.trackId ||
-                parentId == '-404' // my hack for now to indicate there is no parent numerically
-            ) {
+            if (!hasParent(track)) {
                 // founder cell
                 const lineageId = track.trackId;
                 const lineage: Lineage = {
@@ -437,11 +447,19 @@ export const useCellMetaData = defineStore('cellMetaData', () => {
                 lineageMap.value.set(lineageId, lineage);
             } else {
                 // daughter cell
-                const parentTrack = trackMap.value.get(parentId);
+                const parentTrack = trackMap.value.get(track.parentId);
                 parentTrack?.children.push(track);
             }
         }
         computeLineageLevelAttributes();
+    }
+
+    function hasParent(track: Track): boolean {
+        const parentId = track.parentId;
+        // -404 is a hack to indicate that there is no parent numerically
+        return (
+            parentId !== '' && parentId !== track.trackId && parentId !== '-404'
+        );
     }
 
     function computeLineageLevelAttributes(): void {
@@ -485,6 +503,7 @@ export const useCellMetaData = defineStore('cellMetaData', () => {
         headerKeys,
         headers,
         dataInitialized,
+        hoveredTrackId,
         cellArray, // TODO: expand to handle multiple locations
         trackArray, // TODO: expand to handle multiple locations
         trackMap, // TODO: expand to handle multiple locations
@@ -498,6 +517,7 @@ export const useCellMetaData = defineStore('cellMetaData', () => {
         lineageAttributeHeaders,
         selectedLineage,
         selectLineage,
+        getLineageId,
         selectedTrack,
         selectTrack,
         init,
