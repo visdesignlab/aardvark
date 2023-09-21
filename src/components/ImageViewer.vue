@@ -4,7 +4,6 @@ import { ref, computed, onMounted, watch } from 'vue';
 import { useGlobalSettings } from '@/stores/globalSettings';
 import { useImageViewerStore } from '@/stores/imageViewerStore';
 import { debounce } from 'lodash-es';
-// import { Pool } from 'ucsc-xena-geotiff';
 import { Pool } from 'geotiff';
 
 import {
@@ -14,14 +13,6 @@ import {
     ImageLayer,
     AdditiveColormapExtension,
 } from '@hms-dbmi/viv';
-
-// import {
-//     loadMultiTiff,
-//     loadOmeTiff,
-//     getChannelStats,
-// } from '../loaderFork/loaders';
-
-// import { ImageLayer } from '../tempLib/viv/packages/layers';
 
 // import { AdditiveColormapExtension } from '../tempLib/viv/packages/extensions';
 
@@ -70,7 +61,7 @@ const contrastLimit = computed<[number, number][]>(() => {
 
 onMounted(async () => {
     // const loader = await loadOmeTiff(
-    //     'http://localhost:3000/michael-2/20221122_fs051_p9_mediaswitch_homebrew_A1_4_Phase.companion.ome',
+    //     'https://localhost:9001/michael_pma_vs_hmgs2/pma_to_pma/20221122_fs051_p9_mediaswitch_homebrew_A1_4_Phase.companion.ome',
     //     { pool: new Pool() }
     // );
 
@@ -78,15 +69,15 @@ onMounted(async () => {
         [
             [
                 imageViewerStore.generateSelectionIndexRange(0, 88),
-                'http://127.0.0.1:3000/michael-2/20221122_fs051_p9_mediaswitch_homebrew_A1_4_Phase1.tif',
+                'https://127.0.0.1:9001/michael-2/20221122_fs051_p9_mediaswitch_homebrew_A1_4_Phase1.tif',
             ],
             [
                 imageViewerStore.generateSelectionIndexRange(89, 177),
-                'http://127.0.0.1:3000/michael-2/20221122_fs051_p9_mediaswitch_homebrew_A1_4_Phase2.tif',
+                'https://127.0.0.1:9001/michael-2/20221122_fs051_p9_mediaswitch_homebrew_A1_4_Phase2.tif',
             ],
             [
                 imageViewerStore.generateSelectionIndexRange(178, 215),
-                'http://127.0.0.1:3000/michael-2/20221122_fs051_p9_mediaswitch_homebrew_A1_4_Phase3.tif',
+                'https://127.0.0.1:9001/michael-2/20221122_fs051_p9_mediaswitch_homebrew_A1_4_Phase3.tif',
             ],
         ],
         { pool: new Pool() }
@@ -108,38 +99,40 @@ onMounted(async () => {
     const pixelSource = loader.data[0] as PixelSource<any>;
     const colormapExtension = new AdditiveColormapExtension();
 
-    const imageLayer = ref(
-        new ImageLayer({
+    function createBaseImageLayer(): typeof ImageLayer {
+        return new ImageLayer({
             loader: pixelSource,
-            id: 'test-image-layer',
+            id: 'base-image-layer',
             contrastLimits: contrastLimit.value,
             selections: imageViewerStore.selections,
             channelsVisible,
             extensions: [colormapExtension],
             // @ts-ignore
             colormap: imageViewerStore.colormap,
-            // onClick: () => console.log('layer.onClick'),
-            // onViewportLoad: () => console.log('layer.onViewportLoad'),
-        })
-    );
+        });
+    }
 
-    const segmentationLayer = new GeoJsonLayer({
-        data: 'https://127.0.0.1:9001/michael_pma_vs_hmgs2/pma_to_pma/20221122_fs051_p9_mediaswitch_homebrew_A1_4_Phase/1.json',
-        id: 'segmentations',
-        opacity: 0.4,
-        stroked: true,
-        filled: true,
-        extruded: false,
-        wireframe: false,
-        //   getElevation: f => Math.sqrt(f.properties.valuePerSqm) * 10,
-        getFillColor: [255, 0, 0, 128],
-        getLineColor: [0, 0, 255, 255],
-        pickable: true,
-        onError: () => console.log('segmentation layer error'),
-    });
+    function createSegmentationsLayer(): typeof GeoJsonLayer {
+        return new GeoJsonLayer({
+            data: `https://127.0.0.1:9001/michael_pma_vs_hmgs2/pma_to_pma/20221122_fs051_p9_mediaswitch_homebrew_A1_4_Phase/${imageViewerStore.frameNumber}.json`,
+            id: 'segmentations',
+            opacity: 0.4,
+            stroked: true,
+            filled: true,
+            extruded: false,
+            wireframe: false,
+            //   getElevation: f => Math.sqrt(f.properties.valuePerSqm) * 10,
+            getFillColor: [255, 0, 0, 128],
+            getLineColor: [0, 0, 255, 255],
+            pickable: true,
+            onError: () => console.log('segmentation layer error'),
+        });
+    }
 
-    // console.log({ el: deckGlContainer.value });
-    // const debugFunction = (msg: string) => console.log(msg);
+    const imageLayer = ref(createBaseImageLayer());
+
+    const segmentationLayer = createSegmentationsLayer();
+
     const deckgl = new Deck({
         initialViewState: INITIAL_VIEW_STATE,
         // @ts-ignore
@@ -166,51 +159,18 @@ onMounted(async () => {
         // onInteractionStateChange: () => console.log('onInteractionStateChange'),
         // onLoad: () => console.log('onLoad'),
     });
-    const renderDeckGL = (_state: any) => {
+    function renderDeckGL(_state: any): void {
         console.count('update in subscribe');
-        console.log(imageViewerStore.selections);
-        console.log(imageViewerStore.frameNumber);
         imageLayer.value?.state?.abortController?.abort();
-        imageLayer.value = new ImageLayer({
-            loader: pixelSource,
-            id: 'test-image-layer',
-            contrastLimits: contrastLimit.value,
-            selections: imageViewerStore.selections,
-            channelsVisible,
-            extensions: [colormapExtension],
-            // @ts-ignore
-            colormap: imageViewerStore.colormap,
-            // onClick: () => console.log('layer.onClick'),
-            // onViewportLoad: () => console.log('layer.onViewportLoad'),
-            onError: () => console.log('imageLayer.onError'),
-        });
+        imageLayer.value = createBaseImageLayer();
 
-        const segDataUrl = `https://127.0.0.1:9001/michael_pma_vs_hmgs2/pma_to_pma/20221122_fs051_p9_mediaswitch_homebrew_A1_4_Phase/${imageViewerStore.frameNumber}.json`;
-        console.log('segmentation url: ', segDataUrl);
-
-        const segmentationLayer = new GeoJsonLayer({
-            data: segDataUrl,
-            id: 'segmentations',
-            opacity: 0.4,
-            stroked: true,
-            filled: true,
-            extruded: false,
-            wireframe: false,
-            //   getElevation: f => Math.sqrt(f.properties.valuePerSqm) * 10,
-            getFillColor: [255, 0, 0, 128],
-            getLineColor: [0, 0, 255, 255],
-            pickable: true,
-            onError: () => console.log('segmentation layer error'),
-        });
+        const segmentationLayer = createSegmentationsLayer();
 
         deckgl.setProps({
             layers: [imageLayer.value, segmentationLayer],
-            // layers: [segmentationLayer],
         });
-    };
+    }
 
-    // renderDeckGL(null);
-    // imageViewerStore.$subscribe(() => {
     watch(imageViewerStore.$state, renderDeckGL);
     watch(contrastLimitSlider, renderDeckGL);
 });
