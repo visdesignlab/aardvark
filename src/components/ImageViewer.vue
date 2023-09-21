@@ -119,13 +119,9 @@ onMounted(async () => {
             opacity: 0.4,
             stroked: true,
             filled: true,
-            extruded: false,
-            wireframe: false,
-            //   getElevation: f => Math.sqrt(f.properties.valuePerSqm) * 10,
             getFillColor: [255, 0, 0, 128],
             getLineColor: [0, 0, 255, 255],
             pickable: true,
-            onError: () => console.log('segmentation layer error'),
         });
     }
 
