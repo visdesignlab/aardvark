@@ -47,6 +47,8 @@ export interface SpecialHeaders {
     parentId: string;
     mass: string;
     frame: string;
+    x: string;
+    y: string;
     // changes here require changes to initHeaderTransforms and transformsEqual
 }
 
@@ -66,6 +68,8 @@ export const useCellMetaData = defineStore('cellMetaData', () => {
         parentId: 'parent',
         mass: 'mass',
         frame: 'frame',
+        x: 'x',
+        y: 'y',
     };
     const headerKeys = ref<SpecialHeaders>(defaultHeaders);
     const headers = ref<string[]>();
@@ -322,6 +326,8 @@ export const useCellMetaData = defineStore('cellMetaData', () => {
             if (trans.parent) h.parentId = trans.parent;
             if (trans.mass) h.mass = trans.mass;
             if (trans.frame) h.frame = trans.frame;
+            if (trans.x) h.x = trans.x;
+            if (trans.y) h.y = trans.y;
         }
     }
 
@@ -334,7 +340,9 @@ export const useCellMetaData = defineStore('cellMetaData', () => {
             trans.id === headerKeys.value.trackId &&
             trans.parent === headerKeys.value.parentId &&
             trans.mass === headerKeys.value.mass &&
-            trans.frame === headerKeys.value.frame
+            trans.frame === headerKeys.value.frame &&
+            trans.x === headerKeys.value.x &&
+            trans.y === headerKeys.value.y
         );
     }
 
@@ -495,6 +503,13 @@ export const useCellMetaData = defineStore('cellMetaData', () => {
         return cell.attrNum[headerKeys.value.frame];
     }
 
+    function getPosition(cell: Cell): [number, number] {
+        return [
+            cell.attrNum[headerKeys.value.x],
+            cell.attrNum[headerKeys.value.y],
+        ];
+    }
+
     function getNumAttr(obj: Cell | Track | Lineage, attr: string): number {
         return obj.attrNum[attr];
     }
@@ -523,6 +538,7 @@ export const useCellMetaData = defineStore('cellMetaData', () => {
         init,
         getTime,
         getFrame,
+        getPosition,
         getNumAttr,
         createFrameMap,
         makeLineageTrackIterator,

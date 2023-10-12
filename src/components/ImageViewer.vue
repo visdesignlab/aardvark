@@ -1,7 +1,12 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, watch } from 'vue';
 import { storeToRefs } from 'pinia';
-import { useCellMetaData, type Lineage } from '@/stores/cellMetaData';
+import {
+    useCellMetaData,
+    type Lineage,
+    type Track,
+    type Cell,
+} from '@/stores/cellMetaData';
 import { useDataPointSelection } from '@/stores/dataPointSelection';
 
 import { useGlobalSettings } from '@/stores/globalSettings';
@@ -21,7 +26,8 @@ import {
 
 import type { PixelData, PixelSource } from '@vivjs/types';
 import { Deck, OrthographicView, type PickingInfo } from '@deck.gl/core/typed';
-import { GeoJsonLayer } from '@deck.gl/layers/typed';
+import { GeoJsonLayer, LineLayer } from '@deck.gl/layers/typed';
+import { TripsLayer } from '@deck.gl/geo-layers';
 
 const INITIAL_VIEW_STATE = {
     zoom: 0,
@@ -72,6 +78,10 @@ onMounted(async () => {
 
     const loader = await loadMultiTiff(
         [
+            // [
+            //     imageViewerStore.generateSelectionIndexRange(0, 2880),
+            //     'https://127.0.0.1:9001/JZ_Loc_4_Well_23/images.tif',
+            // ],
             [
                 imageViewerStore.generateSelectionIndexRange(0, 88),
                 'https://127.0.0.1:9001/michael-2/20221122_fs051_p9_mediaswitch_homebrew_A1_4_Phase1.tif',
@@ -120,13 +130,14 @@ onMounted(async () => {
     function createSegmentationsLayer(): typeof GeoJsonLayer {
         return new GeoJsonLayer({
             data: `https://127.0.0.1:9001/michael_pma_vs_hmgs2/pma_to_pma/20221122_fs051_p9_mediaswitch_homebrew_A1_4_Phase/${imageViewerStore.frameNumber}.json`,
+            // data: `https://127.0.0.1:9001/JZ_Loc_4_Well_23/images/${imageViewerStore.frameNumber}.json`,
             id: 'segmentations',
             opacity: 0.4,
             stroked: true,
             filled: true,
             getFillColor: (info) => {
                 if (
-                    info.properties?.ID.toString() ===
+                    info.properties?.ID?.toString() ===
                     cellMetaData.hoveredTrackId
                 ) {
                     return [255, 255, 255, 128];
@@ -135,7 +146,7 @@ onMounted(async () => {
             },
             getLineColor: (info) => {
                 if (
-                    info.properties?.ID.toString() ===
+                    info.properties?.ID?.toString() ===
                     dataPointSelection.selectedTrackId
                 ) {
                     return [0, 255, 0];
@@ -144,7 +155,7 @@ onMounted(async () => {
             },
             getLineWidth: (info) => {
                 if (
-                    info.properties?.ID.toString() ===
+                    info.properties?.ID?.toString() ===
                     dataPointSelection.selectedTrackId
                 ) {
                     return 2;
@@ -175,7 +186,7 @@ onMounted(async () => {
         }
         const geoJsonFeature = info.object as GeoJsonFeature;
         // console.log(geoJsonFeature);
-        cellMetaData.hoveredTrackId = geoJsonFeature.properties.ID.toString();
+        cellMetaData.hoveredTrackId = geoJsonFeature.properties.ID?.toString();
     }
 
     function onClick(info: PickingInfo): void {
@@ -185,7 +196,7 @@ onMounted(async () => {
         }
         const geoJsonFeature = info.object as GeoJsonFeature;
         dataPointSelection.selectedTrackId =
-            geoJsonFeature.properties.ID.toString();
+            geoJsonFeature.properties.ID?.toString();
 
         const lineageId = cellMetaData.getLineageId(
             cellMetaData.selectedTrack!
@@ -193,16 +204,95 @@ onMounted(async () => {
         dataPointSelection.selectedLineageId = lineageId;
     }
 
+    const lineageLineSegments = computed<Segment[]>(() => {
+        console.log('computed lineageLineSegments');
+        const segments: Segment[] = [];
+        if (cellMetaData.selectedLineage == null) {
+            console.log('null selectedLineage');
+            return segments;
+        }
+        addSegmentsFromTrack(cellMetaData.selectedLineage.founder, segments);
+        return segments;
+    });
+
+    interface Segment {
+        trackId: string;
+        from: [number, number];
+        to: [number, number];
+    }
+
+    function addSegmentsFromTrack(track: Track, segments: Segment[]): void {
+        for (let i = 0; i < track.cells.length - 1; i++) {
+            const start = track.cells[i];
+            const end = track.cells[i + 1];
+            segments.push({
+                trackId: track.trackId,
+                from: cellMetaData.getPosition(start),
+                to: cellMetaData.getPosition(end),
+            });
+        }
+        if (!track.children) return;
+        for (let child of track.children) {
+            addSegmentsFromTrack(child, segments);
+        }
+    }
+
+    function createTrajectoryLayer(): LineLayer {
+        // const data = [
+        //     { from: { coordinates: [0, 0] }, to: { coordinates: [200, 400] } },
+        // ];
+        // const data = cellMetaData.trackArray;
+        // console.log('createTrajectoryLayer');
+        return new LineLayer({
+            id: 'line-layer',
+            data: lineageLineSegments.value,
+            pickable: false,
+            getWidth: 3,
+            getSourcePosition: (d: Segment) => d.from,
+            getTargetPosition: (d: Segment) => d.to,
+            // getColor: (d) => [Math.sqrt(d.inbound + d.outbound), 140, 0],
+            getColor: [25, 228, 73],
+        });
+    }
+
+    function createAnimatedTrajectoryLayer(): TripsLayer {
+        return new TripsLayer({
+            id: 'trips-layer',
+            data: cellMetaData.trackArray,
+            pickable: false,
+            getWidth: 5,
+            getPath: (d: Track) =>
+                d.cells.map((cell: Cell) => cellMetaData.getPosition(cell)),
+            // deduct start timestamp from each data point to avoid overflow
+            getTimestamps: (d: Track) =>
+                d.cells.map((cell: Cell) => cellMetaData.getFrame(cell)),
+            getColor: [253, 128, 93],
+            opacity: 0.8,
+            // widthMinPixels: 5,
+            rounded: true,
+            fadeTrail: true,
+            trailLength: 10,
+            currentTime: imageViewerStore.frameNumber,
+        });
+    }
+
     const imageLayer = ref(createBaseImageLayer());
 
     const segmentationLayer = createSegmentationsLayer();
+    const trajectoryLayer = createTrajectoryLayer();
+    const animatedTrajectoryLayer = createAnimatedTrajectoryLayer();
 
     const deckgl = new Deck({
         initialViewState: INITIAL_VIEW_STATE,
         // @ts-ignore
         canvas: deckGlContainer.value?.id, // TODO: actually fix this ts error
         controller: true,
-        layers: [imageLayer.value, segmentationLayer],
+        layers: [
+            imageLayer.value,
+            segmentationLayer,
+            // trajectoryLayer,
+            animatedTrajectoryLayer,
+        ],
         // layers: [segmentationLayer],
         views: [new OrthographicView({ id: 'ortho', controller: true })],
         // debug: true,
@@ -224,14 +314,21 @@ onMounted(async () => {
         // onLoad: () => console.log('onLoad'),
     });
     function renderDeckGL(_state: any): void {
-        console.count('update in subscribe');
+        // console.count('update in subscribe');
         imageLayer.value?.state?.abortController?.abort();
         imageLayer.value = createBaseImageLayer();
 
         const segmentationLayer = createSegmentationsLayer();
+        const trajectoryLayer = createTrajectoryLayer();
+        const animatedTrajectoryLayer = createAnimatedTrajectoryLayer();
 
         deckgl.setProps({
-            layers: [imageLayer.value, segmentationLayer],
+            layers: [
+                imageLayer.value,
+                segmentationLayer,
+                // trajectoryLayer,
+                animatedTrajectoryLayer,
+            ],
         });
     }
 
@@ -289,7 +386,7 @@ onMounted(async () => {
             class="force-repeat"
             v-model="imageViewerStore.frameNumber"
             :min="1"
-            :max="212"
+            :max="2881"
             snap
             label
             :dark="globalSettings.darkMode"
