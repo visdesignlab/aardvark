@@ -12,13 +12,13 @@ import {
 import { useDatasetSelectionTrrackedStore } from '@/stores/datasetSelectionTrrackedStore';
 
 export interface ExperimentMetadata {
-    name?: string; // user friendly name
+    // name?: string; // user friendly name
     filename: string;
     headers: string[];
     headerTransforms?: TextTransforms; // maps things like "Time (h)" to "time"
-    valueRanges?: { string: { min: number; max: number } };
+    // valueRanges?: { string: { min: number; max: number } };
     // can precompute min/max for each column across experiments
-    conditions?: string[]; // TODO: - does this need to be 2d?
+    // conditions?: string[]; // TODO: - does this need to be 2d?
     locationMetadataList: LocationMetadata[];
 }
 
@@ -27,11 +27,25 @@ export interface LocationMetadata {
     id: string;
     tabularDataFilename: string;
     imageDataFilename?: string;
-    name?: string; // user friendly name
-    condition?: string; // experimental condition // TODO: - does this need to be an array
-    plate?: string;
-    well?: string;
-    location?: string;
+    segmentationsFolder?: string;
+    // name?: string; // user friendly name
+    // condition?: string; // experimental condition // TODO: - does this need to be an array
+    // plate?: string;
+    // well?: string;
+    // location?: string;
+}
+
+export interface ImageStackMetadata {
+    sizeX: number;
+    sizeY: number;
+    sizeT: number;
+    imageFrames: ImageFrameMetadata[];
+}
+
+export interface ImageFrameMetadata {
+    start: number;
+    end: number;
+    filename: string;
 }
 
 export const useDatasetSelectionStore = defineStore(
@@ -49,10 +63,9 @@ export const useDatasetSelectionStore = defineStore(
 
         const experimentFilenameList = asyncComputed<string[]>(async () => {
             if (datasetSelectionTrrackedStore.serverUrl == null) return null;
-            const fullURL =
-                'https://' +
-                datasetSelectionTrrackedStore.serverUrl +
-                datasetSelectionTrrackedStore.entryPointFilename;
+            const fullURL = getServerUrl(
+                datasetSelectionTrrackedStore.entryPointFilename
+            );
             if (controller) {
                 controller.abort('stale request'); // cancel last fetch if it's still trying
             }
@@ -93,11 +106,9 @@ export const useDatasetSelectionStore = defineStore(
                     null
                 )
                     return null;
-                const fullURL =
-                    'https://' +
-                    datasetSelectionTrrackedStore.serverUrl +
-                    '/' +
-                    datasetSelectionTrrackedStore.currentExperimentFilename;
+                const fullURL = getServerUrl(
+                    datasetSelectionTrrackedStore.currentExperimentFilename
+                );
                 const response = await fetch(fullURL, {});
                 const data = await response.json();
                 return data;
@@ -142,11 +153,9 @@ export const useDatasetSelectionStore = defineStore(
                     cellMetaData.dataInitialized = false;
                     return;
                 }
-                const url =
-                    'https://' +
-                    datasetSelectionTrrackedStore.serverUrl +
-                    '/' +
-                    currentLocationMetadata.value?.tabularDataFilename;
+                const url = getServerUrl(
+                    currentLocationMetadata.value?.tabularDataFilename
+                );
 
                 fetchingTabularData.value = true;
                 console.log({ url });
@@ -177,14 +186,45 @@ export const useDatasetSelectionStore = defineStore(
             // { deep: true }
         );
 
+        const currentImageStackMetadata =
+            computedAsync<ImageStackMetadata | null>(async () => {
+                if (
+                    datasetSelectionTrrackedStore.currentExperimentFilename ==
+                        null ||
+                    currentLocationMetadata.value == null ||
+                    typeof currentLocationMetadata.value.imageDataFilename ==
+                        'undefined'
+                )
+                    return null;
+                const fullURL = getServerUrl(
+                    currentLocationMetadata.value.imageDataFilename
+                );
+
+                const response = await fetch(fullURL, {});
+                const data = await response.json();
+                return data;
+            });
+
+        function getServerUrl(path: string): string {
+            return (
+                'https://' +
+                datasetSelectionTrrackedStore.serverUrl +
+                '/' +
+                path
+            );
+        }
+
         return {
             serverUrlValid,
             errorMessage,
             fetchingEntryFile,
             experimentFilenameList,
             currentExperimentMetadata,
+            currentLocationMetadata,
+            currentImageStackMetadata,
             fetchingTabularData,
             selectImagingLocation,
+            getServerUrl,
         };
     }
 );
