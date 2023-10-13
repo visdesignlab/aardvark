@@ -29,7 +29,8 @@ import { Deck, OrthographicView, type PickingInfo } from '@deck.gl/core/typed';
 import {
     GeoJsonLayer,
     LineLayer,
-    ScatterplotLayer,
+    // ScatterplotLayer,
+    TextLayer,
 } from '@deck.gl/layers/typed';
 import { TripsLayer } from '@deck.gl/geo-layers';
 
@@ -132,6 +133,7 @@ const pixelSource = ref<any | null>(null);
 watch(currentImageStackMetadata, async () => {
     if (currentImageStackMetadata.value == null) return;
     if (deckgl == null) return;
+    renderLoadingDeckGL();
     imageViewerStore.frameIndex = 0;
     pixelSource.value = null;
 
@@ -348,6 +350,42 @@ function renderDeckGL(): void {
             // trajectoryLayer,
             animatedTrajectoryLayer,
         ],
+
+        controller: true,
+    });
+}
+
+function renderLoadingDeckGL(): void {
+    if (deckgl == null) return;
+    deckgl.setProps({
+        layers: [
+            new TextLayer({
+                id: 'loading-screen-layer',
+                data: ['Loading...'], // one hardcoded item
+                pickable: false,
+                getPosition: [0, 0],
+                getText: (d) => d,
+                getSize: 32,
+                getAngle: 0,
+                getTextAnchor: 'middle',
+                getAlignmentBaseline: 'center',
+            }),
+        ],
+        initialViewState: {
+            zoom: 0,
+            target: [0, 0, 0],
+            minZoom: 0,
+            maxZoom: 0,
+        },
+        controller: {
+            scrollZoom: false,
+            dragPan: false,
+            dragRotate: false,
+            doubleClickZoom: false,
+            touchZoom: false,
+            touchRotate: false,
+            keyboard: false,
+        }, // controller: false didn't seem to work..
     });
 }
 
