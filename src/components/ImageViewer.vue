@@ -13,7 +13,7 @@ import { useDataPointSelection } from '@/stores/dataPointSelection';
 import { useGlobalSettings } from '@/stores/globalSettings';
 import { useImageViewerStore } from '@/stores/imageViewerStore';
 import { useDatasetSelectionStore } from '@/stores/datasetSelectionStore';
-import { debounce } from 'lodash-es';
+import { clamp, debounce } from 'lodash-es';
 import { Pool } from 'geotiff';
 
 import {
@@ -79,14 +79,32 @@ onMounted(() => {
         initialViewState: {
             zoom: 0,
             target: [0, 0, 0],
+            minZoom: -8,
+            maxZoom: 8,
         },
         // @ts-ignore
         canvas: deckGlContainer.value?.id, // TODO: actually fix this ts error
         controller: true,
         layers: [],
-        views: [new OrthographicView({ id: 'ortho', controller: true })],
+        views: [
+            new OrthographicView({
+                id: 'ortho',
+                controller: true,
+            }),
+        ],
         onViewStateChange: ({ viewState }) => {
-            console.log(viewState);
+            if (currentImageStackMetadata.value == null) return viewState;
+            viewState.target[0] = clamp(
+                viewState.target[0],
+                0,
+                currentImageStackMetadata.value.sizeX
+            );
+            viewState.target[1] = clamp(
+                viewState.target[1],
+                0,
+                currentImageStackMetadata.value.sizeY
+            );
+            // viewState.zoom = clamp(viewState.zoom, -8, 8);
             return viewState;
         },
         debug: false,
@@ -351,6 +369,8 @@ function resetView() {
                     Math.random() * 0.001,
                 0,
             ],
+            minZoom: -8,
+            maxZoom: 8,
         },
     });
 }
