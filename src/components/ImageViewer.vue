@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, watch } from 'vue';
 import { storeToRefs } from 'pinia';
+import { useElementSize } from '@vueuse/core';
 import {
     useCellMetaData,
     type Lineage,
@@ -41,6 +42,8 @@ const datasetSelectionStore = useDatasetSelectionStore();
 const { currentImageStackMetadata } = storeToRefs(datasetSelectionStore);
 
 const deckGlContainer = ref(null);
+const { width: containerWidth, height: containerHeight } =
+    useElementSize(deckGlContainer);
 const colormapExtension = new AdditiveColormapExtension();
 
 const contrastLimitSlider = ref<{ min: number; max: number }>({
@@ -75,7 +78,6 @@ onMounted(() => {
     deckgl = new Deck({
         initialViewState: {
             zoom: 0,
-            bearing: 0,
             target: [0, 0, 0],
         },
         // @ts-ignore
@@ -83,7 +85,11 @@ onMounted(() => {
         controller: true,
         layers: [],
         views: [new OrthographicView({ id: 'ortho', controller: true })],
-        debug: true,
+        onViewStateChange: ({ viewState }) => {
+            console.log(viewState);
+            return viewState;
+        },
+        debug: false,
         // onBeforeRender: (gl: any) => {
         //     console.count('before');
         //     console.log(gl);
@@ -92,10 +98,10 @@ onMounted(() => {
         //     console.count('after');
         //     console.log(gl);
         // },
-        onError: (error: any, _layer: any) => {
-            console.error('ERROR');
-            console.log(error);
-        },
+        // onError: (error: any, _layer: any) => {
+        //     console.error('ERROR');
+        //     console.log(error);
+        // },
         // onWebGLInitialized: () => console.log('onWebGLInitialized'),
         // onViewStateChange: () => console.log('onViewStateChange'),
         // onInteractionStateChange: () => console.log('onInteractionStateChange'),
@@ -329,10 +335,14 @@ function renderDeckGL(): void {
 
 function resetView() {
     if (currentImageStackMetadata.value == null) return;
+    const zoomX = containerWidth.value / currentImageStackMetadata.value.sizeX;
+    const zoomY = containerHeight.value / currentImageStackMetadata.value.sizeY;
+    const zoomPercent = 0.9 * Math.min(zoomX, zoomY);
+    console.log('reset');
+    // ensure the image fills the space
     deckgl.setProps({
         initialViewState: {
-            zoom: 0,
-            bearing: 0,
+            zoom: Math.log2(zoomPercent),
             target: [
                 currentImageStackMetadata.value.sizeX / 2 +
                     Math.random() * 0.001, // hack since it will only reset if viewState is different
