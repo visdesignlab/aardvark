@@ -79,6 +79,11 @@ export const useImageViewerStore = defineStore('imageViewerStore', () => {
         return Math.min(frameIndex.value, trailLength.value);
     });
 
+    const showImageLayer = ref(true);
+    const showCellBoundaryLayer = ref(true);
+    const showTrailLayer = ref(true);
+    const showLineageLayer = ref(true);
+
     return {
         colormap,
         colormapOptions,
@@ -90,5 +95,9 @@ export const useImageViewerStore = defineStore('imageViewerStore', () => {
         generateSelectionIndexRange,
         trailLength,
         effectiveTrailLength,
+        showImageLayer,
+        showCellBoundaryLayer,
+        showTrailLayer,
+        showLineageLayer,
     };
 });

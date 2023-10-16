@@ -94,6 +94,7 @@ onMounted(() => {
             }),
         ],
         onViewStateChange: ({ viewState }) => {
+            // limit the camera to keep the image visible
             if (currentImageStackMetadata.value == null) return viewState;
             viewState.target[0] = clamp(
                 viewState.target[0],
@@ -457,15 +458,22 @@ function renderDeckGL(): void {
     const trajectoryGhostLayer = createTrajectoryGhostLayer();
     const lineageLayer = createLineageLayer();
     const centerPointLayer = createCenterPointLayer();
+    const layers = [];
+    if (imageViewerStore.showImageLayer) {
+        layers.push(imageLayer.value);
+    }
+    if (imageViewerStore.showCellBoundaryLayer) {
+        layers.push(segmentationLayer);
+    }
+    if (imageViewerStore.showTrailLayer) {
+        layers.push(trajectoryGhostLayer);
+    }
+    if (imageViewerStore.showLineageLayer) {
+        layers.push(lineageLayer);
+        layers.push(centerPointLayer);
+    }
     deckgl.setProps({
-        layers: [
-            imageLayer.value,
-            segmentationLayer,
-            trajectoryGhostLayer,
-            lineageLayer,
-            centerPointLayer,
-        ],
-
+        layers,
         controller: true,
     });
 }
@@ -596,6 +604,21 @@ watch(contrastLimitSlider, renderDeckGL);
             label
             :dark="globalSettings.darkMode"
         />
+        <q-badge outline :color="globalSettings.normalizedBlack"
+            >Layers:</q-badge
+        >
+        <div class="flex column">
+            <q-toggle v-model="imageViewerStore.showImageLayer" label="Image" />
+            <q-toggle
+                v-model="imageViewerStore.showCellBoundaryLayer"
+                label="Cell Boundary"
+            />
+            <q-toggle v-model="imageViewerStore.showTrailLayer" label="Trail" />
+            <q-toggle
+                v-model="imageViewerStore.showLineageLayer"
+                label="Lineage"
+            />
+        </div>
         <q-btn @click="resetView">Reset View</q-btn>
     </div>
 </template>
