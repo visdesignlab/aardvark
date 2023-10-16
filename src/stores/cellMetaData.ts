@@ -99,6 +99,14 @@ export const useCellMetaData = defineStore('cellMetaData', () => {
         dataPointSelection.selectedLineageId = lineage.lineageId;
     }
 
+    function getLineage(track: Track): Lineage {
+        const lineageId = getLineageId(track);
+        if (!lineageMap.value?.has(lineageId)) {
+            throw new Error('unable to get Lineage');
+        }
+        return lineageMap.value?.get(lineageId)!;
+    }
+
     function getLineageId(track: Track): string {
         let founderCell = track;
         while (hasParent(founderCell)) {
@@ -532,6 +540,7 @@ export const useCellMetaData = defineStore('cellMetaData', () => {
         lineageAttributeHeaders,
         selectedLineage,
         selectLineage,
+        getLineage,
         getLineageId,
         selectedTrack,
         selectTrack,

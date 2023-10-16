@@ -269,12 +269,9 @@ function onClick(info: PickingInfo): void {
 const lineageLayout = computed<LineageLayout>(() => {
     // console.log('computed lineageLineSegments');
     const layout: LineageLayout = { points: [], lines: [] };
-    if (cellMetaData.selectedLineage == null) {
-        // console.log('null selectedLineage');
-        return layout;
+    for (const lineage of currentLineageArray.value) {
+        addSegmentsFromTrack(lineage.founder, layout);
     }
-    addSegmentsFromTrack(cellMetaData.selectedLineage.founder, layout);
-    // console.log(lines);
     return layout;
 });
 
@@ -388,6 +385,20 @@ function createCenterPointLayer(): ScatterplotLayer {
     });
 }
 
+// list of lineages present at the current frame
+const currentLineageArray = computed<Lineage[]>(() => {
+    const lineages: Lineage[] = [];
+    const lineageIds = new Set<string>();
+    for (let track of currentTrackArray.value) {
+        const lineage = cellMetaData.getLineage(track);
+        if (lineageIds.has(lineage.lineageId)) continue;
+        lineageIds.add(lineage.lineageId);
+        lineages.push(lineage);
+    }
+
+    return lineages;
+});
+
 // tracks that are only present at the current time point
 const currentTrackArray = computed<Track[]>(() => {
     if (!cellMetaData.trackArray) return [];
@@ -398,15 +409,6 @@ const currentTrackArray = computed<Track[]>(() => {
             cellMetaData.getFrame(first) <= imageViewerStore.frameNumber &&
             imageViewerStore.frameNumber <= cellMetaData.getFrame(last)
         );
-    });
-});
-
-// cells that are at the current frame
-const currentCellArray = computed<Cell[]>(() => {
-    // TODO: remove or combine with cellMAp
-    if (!cellMetaData.cellArray) return [];
-    return cellMetaData.cellArray.filter((cell: Cell) => {
-        return cellMetaData.getFrame(cell) == imageViewerStore.frameNumber;
     });
 });
 
