@@ -9,7 +9,7 @@ export interface SelectionIndex {
 }
 
 export const useImageViewerStore = defineStore('imageViewerStore', () => {
-    const colormap = ref<string>('jet');
+    const colormap = ref<string>('bone');
     const colormapOptions = [
         'jet',
         'viridis',
@@ -71,6 +71,14 @@ export const useImageViewerStore = defineStore('imageViewerStore', () => {
         return selectionIndexRange;
     }
 
+    const trailLength = ref(10);
+    const effectiveTrailLength = computed(() => {
+        // if the current index is less than than the trail length
+        // then the effective trail length should be shorter to
+        // prevent rendering artifacts
+        return Math.min(frameIndex.value, trailLength.value);
+    });
+
     return {
         colormap,
         colormapOptions,
@@ -80,5 +88,7 @@ export const useImageViewerStore = defineStore('imageViewerStore', () => {
         frameNumber,
         selections,
         generateSelectionIndexRange,
+        trailLength,
+        effectiveTrailLength,
     };
 });

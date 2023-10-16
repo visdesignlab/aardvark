@@ -311,7 +311,7 @@ function createTrajectoryLayer(): LineLayer {
     });
 }
 
-function createAnimatedTrajectoryLayer(): TripsLayer {
+function createTrajectoryGhostLayer(): TripsLayer {
     return new TripsLayer({
         id: 'trips-layer',
         data: cellMetaData.trackArray,
@@ -327,7 +327,7 @@ function createAnimatedTrajectoryLayer(): TripsLayer {
         // widthMinPixels: 5,
         rounded: true,
         fadeTrail: true,
-        trailLength: 10,
+        trailLength: imageViewerStore.effectiveTrailLength,
         currentTime: imageViewerStore.frameNumber,
     });
 }
@@ -341,14 +341,14 @@ function renderDeckGL(): void {
 
     const segmentationLayer = createSegmentationsLayer();
     // const trajectoryLayer = createTrajectoryLayer();
-    const animatedTrajectoryLayer = createAnimatedTrajectoryLayer();
+    const trajectoryGhostLayer = createTrajectoryGhostLayer();
 
     deckgl.setProps({
         layers: [
             imageLayer.value,
             segmentationLayer,
             // trajectoryLayer,
-            animatedTrajectoryLayer,
+            trajectoryGhostLayer,
         ],
 
         controller: true,
@@ -467,7 +467,17 @@ watch(contrastLimitSlider, renderDeckGL);
             v-model="imageViewerStore.frameNumber"
             :min="1"
             :max="currentImageStackMetadata?.sizeT"
-            snap
+            label
+            :dark="globalSettings.darkMode"
+        />
+
+        <q-badge outline :color="globalSettings.normalizedBlack"
+            >Trail Length:</q-badge
+        >
+        <q-slider
+            v-model="imageViewerStore.trailLength"
+            :min="0"
+            :max="currentImageStackMetadata?.sizeT"
             label
             :dark="globalSettings.darkMode"
         />
