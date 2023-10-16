@@ -316,14 +316,14 @@ function createTrajectoryGhostLayer(): TripsLayer {
         id: 'trips-layer',
         data: cellMetaData.trackArray,
         pickable: false,
-        getWidth: 5,
+        getWidth: 3,
         getPath: (d: Track) =>
             d.cells.map((cell: Cell) => cellMetaData.getPosition(cell)),
         // deduct start timestamp from each data point to avoid overflow
         getTimestamps: (d: Track) =>
             d.cells.map((cell: Cell) => cellMetaData.getFrame(cell)),
         getColor: [253, 128, 93],
-        opacity: 0.8,
+        opacity: 0.6,
         // widthMinPixels: 5,
         rounded: true,
         fadeTrail: true,
