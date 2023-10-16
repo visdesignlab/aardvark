@@ -29,7 +29,7 @@ import { Deck, OrthographicView, type PickingInfo } from '@deck.gl/core/typed';
 import {
     GeoJsonLayer,
     LineLayer,
-    // ScatterplotLayer,
+    ScatterplotLayer,
     TextLayer,
 } from '@deck.gl/layers/typed';
 import { TripsLayer } from '@deck.gl/geo-layers';
@@ -195,6 +195,7 @@ function createSegmentationsLayer(): typeof GeoJsonLayer {
     // console.log(folderUrl);
     return new GeoJsonLayer({
         data: folderUrl + `${imageViewerStore.frameNumber}.json`,
+        lineWidthUnits: 'pixels',
         id: 'segmentations',
         opacity: 0.4,
         stroked: true,
@@ -212,18 +213,18 @@ function createSegmentationsLayer(): typeof GeoJsonLayer {
                 info.properties?.ID?.toString() ===
                 dataPointSelection.selectedTrackId
             ) {
-                return [0, 255, 0];
+                return [77, 175, 74];
             }
-            return [0, 0, 255];
+            return [55, 126, 184];
         },
         getLineWidth: (info) => {
             if (
                 info.properties?.ID?.toString() ===
                 dataPointSelection.selectedTrackId
             ) {
-                return 2;
+                return 4;
             }
-            return 1;
+            return 2;
         },
         pickable: true,
         onHover: onHover,
@@ -265,56 +266,167 @@ function onClick(info: PickingInfo): void {
     dataPointSelection.selectedLineageId = lineageId;
 }
 
-const lineageLineSegments = computed<Segment[]>(() => {
+const lineageLayout = computed<LineageLayout>(() => {
     // console.log('computed lineageLineSegments');
-    const segments: Segment[] = [];
+    const layout: LineageLayout = { points: [], lines: [] };
     if (cellMetaData.selectedLineage == null) {
         // console.log('null selectedLineage');
-        return segments;
+        return layout;
     }
-    addSegmentsFromTrack(cellMetaData.selectedLineage.founder, segments);
-    return segments;
+    addSegmentsFromTrack(cellMetaData.selectedLineage.founder, layout);
+    // console.log(lines);
+    return layout;
 });
 
+interface LineageLayout {
+    lines: Segment[];
+    points: LineagePoint[];
+}
+
 interface Segment {
-    trackId: string;
     from: [number, number];
     to: [number, number];
 }
 
-function addSegmentsFromTrack(track: Track, segments: Segment[]): void {
-    for (let i = 0; i < track.cells.length - 1; i++) {
-        const start = track.cells[i];
-        const end = track.cells[i + 1];
-        segments.push({
-            trackId: track.trackId,
-            from: cellMetaData.getPosition(start),
-            to: cellMetaData.getPosition(end),
-        });
-    }
-    if (!track.children) return;
-    for (let child of track.children) {
-        addSegmentsFromTrack(child, segments);
-    }
+interface LineagePoint {
+    position: [number, number];
+    trackId: string;
+    internal: boolean;
 }
 
-function createTrajectoryLayer(): LineLayer {
+function addSegmentsFromTrack(
+    track: Track,
+    layout: LineageLayout
+): [number, number] | null {
+    let { lines, points } = layout;
+    if (currentCellMap.value.has(track.trackId)) {
+        const position = cellMetaData.getPosition(
+            currentCellMap.value.get(track.trackId)!
+        );
+        points.push({
+            position,
+            internal: false,
+            trackId: track.trackId,
+        });
+        return position;
+    }
+    const childPositions: [number, number][] = [];
+    const accumChildPositions: [number, number] = [0, 0];
+    for (let child of track.children) {
+        const childPos = addSegmentsFromTrack(child, layout);
+        if (childPos === null) continue;
+        childPositions.push(childPos);
+        accumChildPositions[0] += childPos[0];
+        accumChildPositions[1] += childPos[1];
+    }
+    if (childPositions.length === 0) return null;
+    accumChildPositions[0] /= childPositions.length;
+    accumChildPositions[1] /= childPositions.length;
+
+    for (let childPos of childPositions) {
+        lines.push({
+            from: accumChildPositions,
+            to: childPos,
+        });
+    }
+    points.push({
+        position: accumChildPositions,
+        internal: true,
+        trackId: track.trackId,
+    });
+
+    return accumChildPositions;
+
+    // for (let i = 0; i < track.cells.length - 1; i++) {
+    // const start = track.cells[0];
+    // const end = track.cells[track.cells.length - 1];
+    // if (cellMetaData.getFrame(end) >= imageViewerStore.frameNumber) {
+    //     return;
+    // }
+    // segments.push({
+    //     trackId: track.trackId,
+    //     from: cellMetaData.getPosition(start),
+    //     to: cellMetaData.getPosition(end),
+    // });
+    // // }
+    // if (!track.children) return;
+    // for (let child of track.children) {
+    //     addSegmentsFromTrack(child, segments);
+    // }
+}
+
+function createLineageLayer(): LineLayer {
     return new LineLayer({
         id: 'line-layer',
-        data: lineageLineSegments.value,
+        widthUnits: 'pixels',
+        data: lineageLayout.value.lines,
         pickable: false,
-        getWidth: 3,
+        getWidth: 5,
         getSourcePosition: (d: Segment) => d.from,
         getTargetPosition: (d: Segment) => d.to,
         // getColor: (d) => [Math.sqrt(d.inbound + d.outbound), 140, 0],
-        getColor: [25, 228, 73],
+        getColor: [228, 26, 28, 125],
     });
 }
+
+function createCenterPointLayer(): ScatterplotLayer {
+    return new ScatterplotLayer({
+        id: 'scatterplot-layer',
+        lineWidthUnits: 'pixels',
+        radiusUnits: 'pixels',
+        data: lineageLayout.value.points,
+        pickable: false,
+        opacity: 1,
+        stroked: true,
+        filled: true,
+        getPosition: (d) => d.position,
+        getRadius: (d) => (d.internal ? 6 : 4),
+        getFillColor: (d) =>
+            d.internal ? [228, 26, 28, 125] : [228, 26, 28, 0],
+        getLineColor: [228, 26, 28],
+        getStrokeWidth: 1,
+    });
+}
+
+// tracks that are only present at the current time point
+const currentTrackArray = computed<Track[]>(() => {
+    if (!cellMetaData.trackArray) return [];
+    return cellMetaData.trackArray.filter((track: Track) => {
+        const first = track.cells[0];
+        const last = track.cells[track.cells.length - 1];
+        return (
+            cellMetaData.getFrame(first) <= imageViewerStore.frameNumber &&
+            imageViewerStore.frameNumber <= cellMetaData.getFrame(last)
+        );
+    });
+});
+
+// cells that are at the current frame
+const currentCellArray = computed<Cell[]>(() => {
+    // TODO: remove or combine with cellMAp
+    if (!cellMetaData.cellArray) return [];
+    return cellMetaData.cellArray.filter((cell: Cell) => {
+        return cellMetaData.getFrame(cell) == imageViewerStore.frameNumber;
+    });
+});
+
+// cells that are at the current frame
+const currentCellMap = computed<Map<string, Cell>>(() => {
+    const cellMap = new Map<string, Cell>();
+    if (!cellMetaData.cellArray) return cellMap;
+    for (let cell of cellMetaData.cellArray) {
+        if (cellMetaData.getFrame(cell) == imageViewerStore.frameNumber) {
+            cellMap.set(cell.trackId, cell);
+        }
+    }
+    return cellMap;
+});
 
 function createTrajectoryGhostLayer(): TripsLayer {
     return new TripsLayer({
         id: 'trips-layer',
-        data: cellMetaData.trackArray,
+        widthUnits: 'pixels',
+        data: currentTrackArray.value,
         pickable: false,
         getWidth: 3,
         getPath: (d: Track) =>
@@ -322,7 +434,7 @@ function createTrajectoryGhostLayer(): TripsLayer {
         // deduct start timestamp from each data point to avoid overflow
         getTimestamps: (d: Track) =>
             d.cells.map((cell: Cell) => cellMetaData.getFrame(cell)),
-        getColor: [253, 128, 93],
+        getColor: [152, 78, 163],
         opacity: 0.6,
         // widthMinPixels: 5,
         rounded: true,
@@ -340,15 +452,16 @@ function renderDeckGL(): void {
     imageLayer.value = createBaseImageLayer();
 
     const segmentationLayer = createSegmentationsLayer();
-    // const trajectoryLayer = createTrajectoryLayer();
     const trajectoryGhostLayer = createTrajectoryGhostLayer();
-
+    const lineageLayer = createLineageLayer();
+    const centerPointLayer = createCenterPointLayer();
     deckgl.setProps({
         layers: [
             imageLayer.value,
             segmentationLayer,
-            // trajectoryLayer,
             trajectoryGhostLayer,
+            lineageLayer,
+            centerPointLayer,
         ],
 
         controller: true,
@@ -394,7 +507,7 @@ function resetView() {
     const zoomX = containerWidth.value / currentImageStackMetadata.value.sizeX;
     const zoomY = containerHeight.value / currentImageStackMetadata.value.sizeY;
     const zoomPercent = 0.9 * Math.min(zoomX, zoomY);
-    console.log('reset');
+    // console.log('reset');
     // ensure the image fills the space
     deckgl.setProps({
         initialViewState: {
