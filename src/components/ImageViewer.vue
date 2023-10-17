@@ -450,27 +450,22 @@ function createTrajectoryGhostLayer(): TripsLayer {
 const imageLayer = ref();
 function renderDeckGL(): void {
     if (deckgl == null) return;
-    if (pixelSource.value == null) return;
-    imageLayer.value?.state?.abortController?.abort();
-    imageLayer.value = createBaseImageLayer();
-
-    const segmentationLayer = createSegmentationsLayer();
-    const trajectoryGhostLayer = createTrajectoryGhostLayer();
-    const lineageLayer = createLineageLayer();
-    const centerPointLayer = createCenterPointLayer();
     const layers = [];
     if (imageViewerStore.showImageLayer) {
+        if (pixelSource.value == null) return;
+        imageLayer.value?.state?.abortController?.abort();
+        imageLayer.value = createBaseImageLayer();
         layers.push(imageLayer.value);
     }
     if (imageViewerStore.showCellBoundaryLayer) {
-        layers.push(segmentationLayer);
+        layers.push(createSegmentationsLayer());
     }
     if (imageViewerStore.showTrailLayer) {
-        layers.push(trajectoryGhostLayer);
+        layers.push(createTrajectoryGhostLayer());
     }
     if (imageViewerStore.showLineageLayer) {
-        layers.push(lineageLayer);
-        layers.push(centerPointLayer);
+        layers.push(createLineageLayer());
+        layers.push(createCenterPointLayer());
     }
     deckgl.setProps({
         layers,
