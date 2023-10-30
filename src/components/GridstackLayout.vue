@@ -89,10 +89,7 @@ async function toggleFullscreen(elementId: string) {
                             font-awesome-icon
                             icon="expand"
                         />
-                        <font-awesome-icon
-                            v-if="isFullScreen"
-                            icon="compress"
-                        />
+                        <font-awesome-icon v-else icon="compress" />
                     </button>
                 </div>
                 <div class="h-100 scroll-y position-relative">
