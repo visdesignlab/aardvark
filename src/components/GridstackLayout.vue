@@ -74,28 +74,42 @@ async function toggleFullscreen(elementId: string) {
             :id="w.id.toString()"
             :key="index"
         >
-            <div class="grid-stack-item-content card" :id="`container-${w.id}`">
-                <div class="card-header drag-target d-flex">
-                    <span
-                        class="flex-grow-1 d-flex flex-column justify-content-center"
-                        >{{ w.component }}</span
-                    >
-                    <button
-                        :class="`btn btn-sm btn-outline-${globalSettings.btnDark} float-end`"
+            <q-card
+                flat
+                bordered
+                class="grid-stack-item-content flex column no-wrap"
+                :id="`container-${w.id}`"
+            >
+                <q-toolbar>
+                    <q-icon
+                        v-if="!isFullScreen"
+                        name="drag_indicator"
+                        class="drag-target"
+                    />
+                    <q-btn flat round dense size="md" icon="menu" />
+                    <q-toolbar-title class="text-body1">{{
+                        w.displayName
+                    }}</q-toolbar-title>
+                    <q-btn
+                        flat
+                        round
+                        dense
+                        size="sm"
                         @click="toggleFullscreen(`container-${w.id}`)"
-                    >
-                        <font-awesome-icon
-                            v-if="!isFullScreen"
-                            font-awesome-icon
-                            icon="expand"
-                        />
-                        <font-awesome-icon v-else icon="compress" />
-                    </button>
-                </div>
-                <div class="h-100 scroll-y position-relative">
+                        :icon="
+                            isFullScreen ? 'close_fullscreen' : 'open_in_full'
+                        "
+                    />
+                </q-toolbar>
+
+                <q-card-section
+                    :class="`${w.noScroll ? 'no-scroll-y' : 'scroll-y'} ${
+                        w.noPadding ? 'q-pa-none' : ''
+                    } h-100 position-relative`"
+                >
                     <component :is="w.component" v-bind="w.props"></component>
-                </div>
-            </div>
+                </q-card-section>
+            </q-card>
         </div>
     </div>
 </template>
@@ -106,5 +120,9 @@ async function toggleFullscreen(elementId: string) {
 
 .scroll-y {
     overflow-y: auto;
+}
+
+.no-scroll-y {
+    overflow-y: hidden;
 }
 </style>

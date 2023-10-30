@@ -6,11 +6,14 @@ import { cloneDeep } from 'lodash-es';
 export interface LayoutItem {
     // gridstack properties plus my own
     component: string;
+    displayName: string;
     x: number;
     y: number;
     w: number;
     h: number;
     id: string;
+    noScroll?: boolean;
+    noPadding?: boolean;
     props?: any;
 }
 
@@ -38,6 +41,7 @@ export const useGridstackLayoutStore = defineStore(
         const allEqualItems: LayoutItem[] = [
             {
                 component: 'LooneageView',
+                displayName: 'Looneage',
                 x: 0,
                 y: 0,
                 w: 3,
@@ -46,6 +50,7 @@ export const useGridstackLayoutStore = defineStore(
             },
             {
                 component: 'SimpleTable',
+                displayName: 'Lineages',
                 x: 3,
                 y: 0,
                 w: 3,
@@ -57,6 +62,7 @@ export const useGridstackLayoutStore = defineStore(
             },
             {
                 component: 'SimpleTable',
+                displayName: 'Tracks',
                 x: 6,
                 y: 0,
                 w: 3,
@@ -68,6 +74,7 @@ export const useGridstackLayoutStore = defineStore(
             },
             {
                 component: 'SimpleTable',
+                displayName: 'Cells',
                 x: 9,
                 y: 0,
                 w: 3,
@@ -79,6 +86,7 @@ export const useGridstackLayoutStore = defineStore(
             },
             {
                 component: 'AggregateLineChart',
+                displayName: 'Line Chart',
                 x: 0,
                 y: 5,
                 w: 3,
@@ -87,14 +95,17 @@ export const useGridstackLayoutStore = defineStore(
             },
             {
                 component: 'ImageViewer',
+                displayName: 'Images',
                 x: 3,
                 y: 5,
                 w: 3,
                 h: 5,
                 id: 'ImageViewer',
+                noPadding: true,
             },
             {
                 component: 'BasicInfo',
+                displayName: 'Overview',
                 x: 6,
                 y: 5,
                 w: 3,
@@ -103,11 +114,13 @@ export const useGridstackLayoutStore = defineStore(
             },
             {
                 component: 'TrrackVisWrapper',
+                displayName: 'History',
                 x: 9,
                 y: 5,
                 w: 3,
                 h: 5,
                 id: 'TrrackVisWrapper',
+                noScroll: true,
             },
         ];
         const defaultId = 'system_layout_0';
