@@ -76,11 +76,12 @@ async function toggleFullscreen(elementId: string) {
         >
             <q-card
                 flat
+                :dark="globalSettings.darkMode"
                 bordered
                 class="grid-stack-item-content flex column no-wrap"
                 :id="`container-${w.id}`"
             >
-                <q-toolbar>
+                <q-toolbar dense>
                     <q-icon
                         v-if="!isFullScreen"
                         name="drag_indicator"

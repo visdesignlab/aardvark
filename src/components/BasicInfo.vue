@@ -3,7 +3,9 @@ import { ref, computed, watch, onMounted } from 'vue';
 import { useCellMetaData, type Lineage } from '@/stores/cellMetaData';
 import { useDatasetSelectionStore } from '@/stores/datasetSelectionStore';
 import { storeToRefs } from 'pinia';
+import { useGlobalSettings } from '@/stores/globalSettings';
 const cellMetaData = useCellMetaData();
+const globalSettings = useGlobalSettings();
 
 const datasetSelectionStore = useDatasetSelectionStore();
 const { currentImageStackMetadata } = storeToRefs(datasetSelectionStore);
@@ -46,11 +48,12 @@ const displayList = computed<DisplayInfo[]>(() => {
 
 <template>
     <NoDataSplash></NoDataSplash>
-    <div v-if="cellMetaData.dataInitialized" class="flex q-pa-lg">
+    <div v-if="cellMetaData.dataInitialized" class="flex">
         <q-card
             v-for="info in displayList"
             :key="info.label"
             bordered
+            :dark="globalSettings.darkMode"
             class="q-ma-sm inner-card"
         >
             <q-card-section>
