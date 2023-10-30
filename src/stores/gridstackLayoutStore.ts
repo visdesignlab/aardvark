@@ -94,12 +94,12 @@ export const useGridstackLayoutStore = defineStore(
                 id: 'ImageViewer',
             },
             {
-                component: 'TestComponent',
+                component: 'BasicInfo',
                 x: 6,
                 y: 5,
                 w: 3,
                 h: 5,
-                id: 'TestComponent',
+                id: 'BasicInfo',
             },
             {
                 component: 'TrrackVisWrapper',

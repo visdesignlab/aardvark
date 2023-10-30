@@ -1,6 +1,5 @@
 import { useDatasetSelectionTrrackedStore } from './datasetSelectionTrrackedStore';
 import { useGridstackLayoutStore } from './gridstackLayoutStore';
-import { useCounterStore } from './counter';
 import { useGlobalSettings } from './globalSettings';
 import { useAggregateLineChartStore } from './aggregateLineChartStore';
 import { useDatasetSelectionStore } from './datasetSelectionStore';
@@ -32,7 +31,6 @@ export const useProvenanceStore = defineStore('provenanceStore', () => {
     const storesToTrrack = [
         useGlobalSettings(),
         useGridstackLayoutStore(),
-        useCounterStore(),
         useAggregateLineChartStore(),
         useImageViewerStore(),
         useDatasetSelectionTrrackedStore(),

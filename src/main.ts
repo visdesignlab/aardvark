@@ -7,12 +7,12 @@ import LayoutSelector from './components/globalSettings/LayoutSelector.vue';
 import GeneralSettings from './components/globalSettings/GeneralSettings.vue';
 import StubView from './components/globalSettings/StubView.vue';
 import LooneageView from './components/LooneageView.vue';
+import BasicInfo from './components/BasicInfo.vue';
 import SimpleTable from './components/SimpleTable.vue';
 import ImageViewer from './components/ImageViewer.vue';
 import AggregateLineChart from './components/AggregateLineChart.vue';
 import TrrackVisWrapper from './components/TrrackVisWrapper.vue';
 import NoDataSplash from './components/NoDataSplash.vue';
-import TestComponent from './components/TestComponent.vue';
 
 import { Quasar, Loading } from 'quasar';
 // Import icon libraries
@@ -72,8 +72,8 @@ createApp(App)
     .component('AggregateLineChart', AggregateLineChart)
     .component('TrrackVisWrapper', TrrackVisWrapper)
     .component('LooneageView', LooneageView)
+    .component('BasicInfo', BasicInfo)
     .component('SimpleTable', SimpleTable)
     .component('NoDataSplash', NoDataSplash)
     .component('StubView', StubView)
-    .component('TestComponent', TestComponent)
     .mount('#app');
