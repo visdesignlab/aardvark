@@ -6,7 +6,7 @@ const globalSettings = useGlobalSettings();
 <template>
     <q-list>
         <q-expansion-item
-            group="somegroup"
+            group="settings"
             icon="explore"
             label="General"
             default-opened
@@ -26,7 +26,7 @@ const globalSettings = useGlobalSettings();
 
         <q-separator />
 
-        <q-expansion-item group="somegroup" icon="perm_identity" label="Images">
+        <q-expansion-item group="settings" icon="perm_identity" label="Images">
             <q-card :dark="globalSettings.darkMode">
                 <q-card-section>
                     <ImageViewerSettingsSidebar />
