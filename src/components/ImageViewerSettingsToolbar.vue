@@ -52,6 +52,7 @@ const { currentImageStackMetadata } = storeToRefs(datasetSelectionStore);
             :min="1"
             :max="currentImageStackMetadata?.sizeT"
             label
+            switch-label-side
             :dark="globalSettings.darkMode"
         />
         <span class="text-caption q-ml-sm no-break"
