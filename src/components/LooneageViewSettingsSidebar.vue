@@ -76,6 +76,7 @@ const modHeightValidate = computed({
         @click="eventBusStore.emitter.emit('exportSvgLooneage')"
         outline
         rounded
+        icon="file_download"
         >Export SVG</q-btn
     >
 </template>

@@ -51,6 +51,8 @@ export const useGridstackLayoutStore = defineStore(
                 h: 5,
                 id: 'LooneageView',
                 icon: 'account_tree',
+                sidebar: 'LooneageViewSettingsSidebar',
+                toolbar: 'LooneageViewSettingsToolbar',
             },
             {
                 component: 'SimpleTable',
