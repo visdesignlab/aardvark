@@ -12,7 +12,9 @@ import { useDataPointSelection } from '@/stores/dataPointSelection';
 
 import { useGlobalSettings } from '@/stores/globalSettings';
 import { useImageViewerStore } from '@/stores/imageViewerStore';
+import { useImageViewerStoreUntrracked } from '@/stores/imageViewerStoreUntrracked';
 import { useDatasetSelectionStore } from '@/stores/datasetSelectionStore';
+import { useEventBusStore } from '@/stores/eventBusStore';
 import { clamp, debounce } from 'lodash-es';
 import { Pool } from 'geotiff';
 
@@ -39,36 +41,39 @@ const cellMetaData = useCellMetaData();
 const dataPointSelection = useDataPointSelection();
 const globalSettings = useGlobalSettings();
 const imageViewerStore = useImageViewerStore();
+const imageViewerStoreUntrracked = useImageViewerStoreUntrracked();
 const datasetSelectionStore = useDatasetSelectionStore();
 const { currentImageStackMetadata } = storeToRefs(datasetSelectionStore);
+const { contrastLimitSlider } = storeToRefs(imageViewerStoreUntrracked);
+const eventBusStore = useEventBusStore();
 
 const deckGlContainer = ref(null);
 const { width: containerWidth, height: containerHeight } =
     useElementSize(deckGlContainer);
 const colormapExtension = new AdditiveColormapExtension();
 
-const contrastLimitSlider = ref<{ min: number; max: number }>({
-    min: 0,
-    max: 0,
-});
-watch(
-    contrastLimitSlider,
-    debounce(() => {
-        // only update store periodically so provStore is
-        // not overwhelmed with new nodes
-        imageViewerStore.contrastLimitSliderDebounced =
-            contrastLimitSlider.value;
-    }, 500)
-);
-watch(
-    () => imageViewerStore.contrastLimitSliderDebounced,
-    () => {
-        // if the store changes (via a traversal in the prov tree)
-        // update the slider
-        contrastLimitSlider.value =
-            imageViewerStore.contrastLimitSliderDebounced;
-    }
-);
+// const contrastLimitSlider = ref<{ min: number; max: number }>({
+//     min: 0,
+//     max: 0,
+// });
+// watch(
+//     contrastLimitSlider,
+//     debounce(() => {
+//         // only update store periodically so provStore is
+//         // not overwhelmed with new nodes
+//         imageViewerStore.contrastLimitSliderDebounced =
+//             contrastLimitSlider.value;
+//     }, 500)
+// );
+// watch(
+//     () => imageViewerStore.contrastLimitSliderDebounced,
+//     () => {
+//         // if the store changes (via a traversal in the prov tree)
+//         // update the slider
+//         contrastLimitSlider.value =
+//             imageViewerStore.contrastLimitSliderDebounced;
+//     }
+// );
 
 const contrastLimit = computed<[number, number][]>(() => {
     return [[contrastLimitSlider.value.min, contrastLimitSlider.value.max]];
@@ -127,6 +132,7 @@ onMounted(() => {
         // onInteractionStateChange: () => console.log('onInteractionStateChange'),
         // onLoad: () => console.log('onLoad'),
     });
+    eventBusStore.emitter.on('resetImageView', resetView);
 });
 
 const loader = ref<any | null>(null);
@@ -134,6 +140,7 @@ const pixelSource = ref<any | null>(null);
 watch(currentImageStackMetadata, async () => {
     if (currentImageStackMetadata.value == null) return;
     if (deckgl == null) return;
+    // if (contrastLimitSlider == null) return;
     renderLoadingDeckGL();
     imageViewerStore.frameIndex = 0;
     pixelSource.value = null;
@@ -545,77 +552,8 @@ watch(contrastLimitSlider, renderDeckGL);
         :class="
             cellMetaData.hoveredTrackId !== null ? 'force-default-cursor' : ''
         "
+        @reset-image-view="resetView"
     ></canvas>
-    <div
-        :class="`p-2 w-25 position-relative bg-opacity-75 bg-${globalSettings.btnLight}`"
-    >
-        <!-- <div class="d-flex align-center"> -->
-        <!-- <h6>Colormap:</h6> -->
-        <q-badge outline :color="globalSettings.normalizedBlack"
-            >Colormap:</q-badge
-        >
-        <q-select
-            v-model="imageViewerStore.colormap"
-            :options="imageViewerStore.colormapOptions"
-            :dark="globalSettings.darkMode"
-            outlined
-            dense
-            class="mb-3"
-        ></q-select>
-        <!-- </div> -->
-
-        <q-badge outline :color="globalSettings.normalizedBlack"
-            >Dynamic Range:</q-badge
-        >
-        <q-range
-            v-model="contrastLimitSlider"
-            :min="imageViewerStore.contrastLimitExtentSlider.min"
-            :max="imageViewerStore.contrastLimitExtentSlider.max"
-            :step="1"
-            label
-            :dark="globalSettings.darkMode"
-            class="mb-3"
-        />
-
-        <q-badge outline :color="globalSettings.normalizedBlack"
-            >Frame:</q-badge
-        >
-        <q-slider
-            class="force-repeat"
-            v-model="imageViewerStore.frameNumber"
-            :min="1"
-            :max="currentImageStackMetadata?.sizeT"
-            label
-            :dark="globalSettings.darkMode"
-        />
-
-        <q-badge outline :color="globalSettings.normalizedBlack"
-            >Trail Length:</q-badge
-        >
-        <q-slider
-            v-model="imageViewerStore.trailLength"
-            :min="0"
-            :max="currentImageStackMetadata?.sizeT"
-            label
-            :dark="globalSettings.darkMode"
-        />
-        <q-badge outline :color="globalSettings.normalizedBlack"
-            >Layers:</q-badge
-        >
-        <div class="flex column">
-            <q-toggle v-model="imageViewerStore.showImageLayer" label="Image" />
-            <q-toggle
-                v-model="imageViewerStore.showCellBoundaryLayer"
-                label="Cell Boundary"
-            />
-            <q-toggle v-model="imageViewerStore.showTrailLayer" label="Trail" />
-            <q-toggle
-                v-model="imageViewerStore.showLineageLayer"
-                label="Lineage"
-            />
-        </div>
-        <q-btn @click="resetView">Reset View</q-btn>
-    </div>
 </template>
 
 <style lang="scss">

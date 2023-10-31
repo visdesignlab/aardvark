@@ -29,7 +29,7 @@ export const useGlobalSettings = defineStore('globalSettings', () => {
             component: 'LayoutSelector',
         },
         {
-            name: 'General Settings',
+            name: 'Settings',
             faKey: 'fa-gear',
             id: uuidv4(),
             show: false,
