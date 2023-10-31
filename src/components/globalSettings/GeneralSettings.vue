@@ -36,7 +36,7 @@ const globalSettings = useGlobalSettings();
         </q-expansion-item>
         <q-separator />
 
-        <q-expansion-item group="settings" icon="image" label="Looneage">
+        <q-expansion-item group="settings" icon="account_tree" label="Looneage">
             <q-card :dark="globalSettings.darkMode">
                 <q-card-section>
                     <LooneageViewSettingsSidebar />
