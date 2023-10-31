@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue';
+import { ref, computed, onMounted } from 'vue';
 import { min as d3Min, max as d3Max, extent as d3Extent } from 'd3-array';
 import { scaleLinear } from 'd3-scale';
 import { clamp, last } from 'lodash-es';
@@ -15,14 +15,9 @@ import { useCellMetaData, type Track, type Cell } from '@/stores/cellMetaData';
 import { useGlobalSettings } from '@/stores/globalSettings';
 import { useLooneageViewStore } from '@/stores/looneageViewStore';
 import { useDatasetSelectionTrrackedStore } from '@/stores/datasetSelectionTrrackedStore';
-import {
-    schemeReds,
-    schemeBlues,
-    schemeGreens,
-    schemeGreys,
-    schemeOranges,
-    schemePurples,
-} from 'd3-scale-chromatic';
+import { useEventBusStore } from '@/stores/eventBusStore';
+
+import { schemeReds, schemeBlues } from 'd3-scale-chromatic';
 
 const looneageContainer = ref(null);
 
@@ -30,6 +25,7 @@ const cellMetaData = useCellMetaData();
 const globalSettings = useGlobalSettings();
 const looneageViewStore = useLooneageViewStore();
 const datasetSelectionTrrackedStore = useDatasetSelectionTrrackedStore();
+const eventBusStore = useEventBusStore();
 
 interface LooneageViewProps {
     encodeChildSplit?: boolean;
@@ -155,29 +151,6 @@ const unselectedNodes = computed(() => {
         );
 });
 
-const colorSchemeOptions = [
-    { label: 'Red', value: schemeReds },
-    { label: 'Blue', value: schemeBlues },
-    { label: 'Green', value: schemeGreens },
-    { label: 'Grey', value: schemeGreys },
-    { label: 'Orange', value: schemeOranges },
-    { label: 'Purple', value: schemePurples },
-];
-
-const maxBands = 15;
-const minModHeight = computed(() => {
-    return (looneageViewStore.maxVal - looneageViewStore.minVal) / maxBands;
-});
-
-const modHeightValidate = computed({
-    get() {
-        return looneageViewStore.modHeight;
-    },
-    set(value) {
-        looneageViewStore.modHeight = Math.max(value, minModHeight.value);
-    },
-});
-
 const looneageSvgContainer = ref<SVGElement | null>(null);
 const horizonChartLegend = ref<typeof HorizonChartLegend | null>(null);
 function exportSvg() {
@@ -193,6 +166,10 @@ function exportSvg() {
     if (horizonChartLegend.value === null) return;
     horizonChartLegend.value.exportSvg();
 }
+
+onMounted(() => {
+    eventBusStore.emitter.on('exportSvgLooneage', exportSvg);
+});
 </script>
 
 <template>
@@ -202,38 +179,6 @@ function exportSvg() {
         ref="looneageContainer"
         class="p-3"
     >
-        <q-select
-            label="Attribute"
-            v-model="looneageViewStore.attrKey"
-            :options="cellMetaData.cellNumAttributeHeaderNames"
-            :dark="globalSettings.darkMode"
-            class="mb-1"
-        />
-        <q-select
-            label="Negative Color Scale"
-            v-model="looneageViewStore.negativeColorScheme"
-            :options="colorSchemeOptions"
-            :dark="globalSettings.darkMode"
-            class="mb-1"
-        />
-        <q-select
-            label="Positive Color Scale"
-            v-model="looneageViewStore.positiveColorScheme"
-            :options="colorSchemeOptions"
-            :dark="globalSettings.darkMode"
-            class="mb-1"
-        />
-        <q-input
-            label="Bin Size"
-            v-model.number="modHeightValidate"
-            type="number"
-            :dark="globalSettings.darkMode"
-            debounce="400"
-        />
-        <q-btn class="mt-1" @click="exportSvg" outline rounded
-            >Export SVG</q-btn
-        >
-
         <!-- <button @click="verticalScale -= 0.1">decrease</button>
         <button @click="verticalScale += 0.1">increase</button> -->
         <div v-if="cellMetaData.selectedLineage !== null" class="mt-3">
