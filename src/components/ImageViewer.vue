@@ -10,12 +10,11 @@ import {
 } from '@/stores/cellMetaData';
 import { useDataPointSelection } from '@/stores/dataPointSelection';
 
-import { useGlobalSettings } from '@/stores/globalSettings';
 import { useImageViewerStore } from '@/stores/imageViewerStore';
 import { useImageViewerStoreUntrracked } from '@/stores/imageViewerStoreUntrracked';
 import { useDatasetSelectionStore } from '@/stores/datasetSelectionStore';
 import { useEventBusStore } from '@/stores/eventBusStore';
-import { clamp, debounce } from 'lodash-es';
+import { clamp } from 'lodash-es';
 import { Pool } from 'geotiff';
 
 import {
@@ -39,7 +38,6 @@ import { TripsLayer } from '@deck.gl/geo-layers';
 const cellMetaData = useCellMetaData();
 
 const dataPointSelection = useDataPointSelection();
-const globalSettings = useGlobalSettings();
 const imageViewerStore = useImageViewerStore();
 const imageViewerStoreUntrracked = useImageViewerStoreUntrracked();
 const datasetSelectionStore = useDatasetSelectionStore();
@@ -51,29 +49,6 @@ const deckGlContainer = ref(null);
 const { width: containerWidth, height: containerHeight } =
     useElementSize(deckGlContainer);
 const colormapExtension = new AdditiveColormapExtension();
-
-// const contrastLimitSlider = ref<{ min: number; max: number }>({
-//     min: 0,
-//     max: 0,
-// });
-// watch(
-//     contrastLimitSlider,
-//     debounce(() => {
-//         // only update store periodically so provStore is
-//         // not overwhelmed with new nodes
-//         imageViewerStore.contrastLimitSliderDebounced =
-//             contrastLimitSlider.value;
-//     }, 500)
-// );
-// watch(
-//     () => imageViewerStore.contrastLimitSliderDebounced,
-//     () => {
-//         // if the store changes (via a traversal in the prov tree)
-//         // update the slider
-//         contrastLimitSlider.value =
-//             imageViewerStore.contrastLimitSliderDebounced;
-//     }
-// );
 
 const contrastLimit = computed<[number, number][]>(() => {
     return [[contrastLimitSlider.value.min, contrastLimitSlider.value.max]];

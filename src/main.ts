@@ -10,6 +10,7 @@ import LooneageView from './components/LooneageView.vue';
 import BasicInfo from './components/BasicInfo.vue';
 import SimpleTable from './components/SimpleTable.vue';
 import ImageViewer from './components/ImageViewer.vue';
+import ImageViewerSettingsSidebar from './components/ImageViewerSettingsSidebar.vue';
 import AggregateLineChart from './components/AggregateLineChart.vue';
 import TrrackVisWrapper from './components/TrrackVisWrapper.vue';
 import NoDataSplash from './components/NoDataSplash.vue';
@@ -68,6 +69,7 @@ createApp(App)
     .component('DatasetSelector', DatasetSelector)
     .component('LayoutSelector', LayoutSelector)
     .component('GeneralSettings', GeneralSettings)
+    .component('ImageViewerSettingsSidebar', ImageViewerSettingsSidebar)
     .component('ImageViewer', ImageViewer)
     .component('AggregateLineChart', AggregateLineChart)
     .component('TrrackVisWrapper', TrrackVisWrapper)
