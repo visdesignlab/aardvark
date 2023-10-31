@@ -15,6 +15,8 @@ export interface LayoutItem {
     noScroll?: boolean;
     noPadding?: boolean;
     icon?: string;
+    sidebar?: string;
+    toolbar?: string;
     props?: any;
 }
 
@@ -104,6 +106,8 @@ export const useGridstackLayoutStore = defineStore(
                 id: 'ImageViewer',
                 noPadding: true,
                 icon: 'image',
+                sidebar: 'ImageViewerSettingsSidebar',
+                toolbar: 'ImageViewerSettingsToolbar',
             },
             {
                 component: 'BasicInfo',

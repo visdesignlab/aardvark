@@ -87,11 +87,20 @@ async function toggleFullscreen(elementId: string) {
                         name="drag_indicator"
                         class="drag-target"
                     />
-                    <q-btn flat round dense size="md" icon="settings" />
+                    <q-btn
+                        v-if="w.sidebar"
+                        flat
+                        round
+                        dense
+                        size="md"
+                        icon="settings"
+                    />
                     <q-icon v-if="w.icon" :name="w.icon" right />
-                    <q-toolbar-title class="text-body1 q-pl-xs">{{
+                    <q-toolbar-title shrink class="text-body1 q-pl-xs">{{
                         w.displayName
                     }}</q-toolbar-title>
+                    <component v-if="w.toolbar" :is="w.toolbar"></component>
+                    <q-space />
                     <q-btn
                         flat
                         round
