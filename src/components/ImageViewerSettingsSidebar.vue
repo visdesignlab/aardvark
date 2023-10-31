@@ -80,7 +80,10 @@ watch(
     <div class="flex column">
         <q-toggle v-model="imageViewerStore.showImageLayer" label="Image" />
         <q-card-section v-if="imageViewerStore.showImageLayer">
-            <q-badge outline :color="globalSettings.normalizedBlack"
+            <q-badge
+                outline
+                :color="globalSettings.normalizedBlack"
+                class="q-mb-sm"
                 >Colormap:</q-badge
             >
             <q-select
