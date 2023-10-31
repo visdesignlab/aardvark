@@ -83,6 +83,7 @@ watch(
     <q-btn
         @click="eventBusStore.emitter.emit('resetImageView')"
         icon="center_focus_strong"
+        outline
         >Reset View</q-btn
     >
     <q-separator class="q-mt-md q-mb-md" />
