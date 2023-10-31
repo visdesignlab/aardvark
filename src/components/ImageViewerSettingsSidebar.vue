@@ -38,7 +38,15 @@ watch(
 </script>
 
 <template>
-    <q-badge outline :color="globalSettings.normalizedBlack">Frame:</q-badge>
+    <div class="flex row no-wrap">
+        <q-badge outline :color="globalSettings.normalizedBlack"
+            >Frame:</q-badge
+        >
+        <span class="text-caption q-ml-sm"
+            >{{ imageViewerStore.frameNumber }} /
+            {{ currentImageStackMetadata?.sizeT ?? 1 }}</span
+        >
+    </div>
     <div class="flex row no-wrap q-mt-sm q-mb-sm">
         <q-btn-group outline rounded class="q-mr-sm">
             <q-btn
