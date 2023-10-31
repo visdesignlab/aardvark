@@ -78,14 +78,14 @@ async function toggleFullscreen(elementId: string) {
                 flat
                 :dark="globalSettings.darkMode"
                 bordered
-                class="grid-stack-item-content flex column no-wrap"
+                class="grid-stack-item-content flex column no-wrap show-on-hover-parent"
                 :id="`container-${w.id}`"
             >
                 <q-toolbar dense>
                     <q-icon
                         v-if="!isFullScreen"
                         name="drag_indicator"
-                        class="drag-target"
+                        class="drag-target show-on-hover"
                     />
                     <q-btn
                         v-if="w.sidebar"
@@ -113,6 +113,7 @@ async function toggleFullscreen(elementId: string) {
                         :icon="
                             isFullScreen ? 'close_fullscreen' : 'open_in_full'
                         "
+                        class="show-on-hover"
                     />
                 </q-toolbar>
 
@@ -138,5 +139,13 @@ async function toggleFullscreen(elementId: string) {
 
 .no-scroll-y {
     overflow-y: hidden;
+}
+
+.show-on-hover {
+    visibility: hidden;
+}
+
+.show-on-hover-parent:hover .show-on-hover {
+    visibility: visible;
 }
 </style>
