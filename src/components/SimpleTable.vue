@@ -60,7 +60,6 @@ const rowsPerPageOptions = ref([5, 25, 50, 100]);
         <q-table
             v-if="cellMetaData.dataInitialized"
             class="sticky-column-table"
-            :title="`${props.attributeLevel} level attributes`"
             :rows="items"
             :columns="headers as any"
             row-key="lineageId"
