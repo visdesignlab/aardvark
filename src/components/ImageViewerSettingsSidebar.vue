@@ -47,10 +47,14 @@ watch(
         label
         :dark="globalSettings.darkMode"
     />
-    <q-badge outline :color="globalSettings.normalizedBlack">Layers:</q-badge>
+    <q-btn @click="eventBusStore.emitter.emit('resetImageView')"
+        >Reset View</q-btn
+    >
+    <q-separator class="q-mt-md q-mb-md" />
+    <!-- <q-badge outline :color="globalSettings.normalizedBlack">Layers:</q-badge> -->
     <div class="flex column">
         <q-toggle v-model="imageViewerStore.showImageLayer" label="Image" />
-        <q-card-section>
+        <q-card-section v-if="imageViewerStore.showImageLayer">
             <q-badge outline :color="globalSettings.normalizedBlack"
                 >Colormap:</q-badge
             >
@@ -74,7 +78,6 @@ watch(
                 :step="1"
                 label
                 :dark="globalSettings.darkMode"
-                class="mb-3"
             />
         </q-card-section>
         <q-toggle
@@ -82,7 +85,7 @@ watch(
             label="Cell Boundary"
         />
         <q-toggle v-model="imageViewerStore.showTrailLayer" label="Trail" />
-        <q-card-section>
+        <q-card-section v-if="imageViewerStore.showTrailLayer">
             <q-badge outline :color="globalSettings.normalizedBlack"
                 >Trail Length:</q-badge
             >
@@ -96,9 +99,6 @@ watch(
         </q-card-section>
         <q-toggle v-model="imageViewerStore.showLineageLayer" label="Lineage" />
     </div>
-    <q-btn @click="eventBusStore.emitter.emit('resetImageView')"
-        >Reset View</q-btn
-    >
 </template>
 
 <style scoped lang="scss"></style>
