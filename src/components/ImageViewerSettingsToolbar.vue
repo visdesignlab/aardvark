@@ -3,18 +3,26 @@ import { useGlobalSettings } from '@/stores/globalSettings';
 import { useImageViewerStore } from '@/stores/imageViewerStore';
 import { useCellMetaData } from '@/stores/cellMetaData';
 import { storeToRefs } from 'pinia';
+import { useEventBusStore } from '@/stores/eventBusStore';
 import { useDatasetSelectionStore } from '@/stores/datasetSelectionStore';
+
 const datasetSelectionStore = useDatasetSelectionStore();
 const cellMetaData = useCellMetaData();
-
 const imageViewerStore = useImageViewerStore();
-
+const eventBusStore = useEventBusStore();
 const globalSettings = useGlobalSettings();
 const { currentImageStackMetadata } = storeToRefs(datasetSelectionStore);
 </script>
 
 <template>
     <template v-if="cellMetaData.dataInitialized">
+        <q-btn
+            round
+            flat
+            @click="eventBusStore.emitter.emit('resetImageView')"
+            icon="center_focus_strong"
+            title="reset view"
+        />
         <q-btn-group outline rounded class="q-mr-sm">
             <q-btn
                 @click="imageViewerStore.stepBackwards"

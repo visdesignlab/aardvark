@@ -80,7 +80,9 @@ watch(
             :dark="globalSettings.darkMode"
         />
     </div>
-    <q-btn @click="eventBusStore.emitter.emit('resetImageView')"
+    <q-btn
+        @click="eventBusStore.emitter.emit('resetImageView')"
+        icon="center_focus_strong"
         >Reset View</q-btn
     >
     <q-separator class="q-mt-md q-mb-md" />
