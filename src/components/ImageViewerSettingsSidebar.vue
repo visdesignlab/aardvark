@@ -39,14 +39,39 @@ watch(
 
 <template>
     <q-badge outline :color="globalSettings.normalizedBlack">Frame:</q-badge>
-    <q-slider
-        class="force-repeat"
-        v-model="imageViewerStore.frameNumber"
-        :min="1"
-        :max="currentImageStackMetadata?.sizeT"
-        label
-        :dark="globalSettings.darkMode"
-    />
+    <div class="flex row no-wrap q-mt-sm q-mb-sm">
+        <q-btn-group outline rounded class="q-mr-sm">
+            <q-btn
+                @click="imageViewerStore.stepBackwards"
+                size="sm"
+                outline
+                round
+                title="previous frame"
+                icon="arrow_left"
+            />
+            <q-btn
+                @click="
+                    () =>
+                        imageViewerStore.stepForwards(
+                            (currentImageStackMetadata?.sizeT ?? 1) - 1
+                        )
+                "
+                size="sm"
+                outline
+                round
+                title="next frame"
+                icon="arrow_right"
+            />
+        </q-btn-group>
+        <q-slider
+            class="force-repeat"
+            v-model="imageViewerStore.frameNumber"
+            :min="1"
+            :max="currentImageStackMetadata?.sizeT"
+            label
+            :dark="globalSettings.darkMode"
+        />
+    </div>
     <q-btn @click="eventBusStore.emitter.emit('resetImageView')"
         >Reset View</q-btn
     >

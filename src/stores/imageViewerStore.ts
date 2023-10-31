@@ -51,6 +51,12 @@ export const useImageViewerStore = defineStore('imageViewerStore', () => {
             frameIndex.value = val - 1;
         },
     });
+    function stepBackwards() {
+        frameIndex.value = Math.max(frameIndex.value - 1, 0);
+    }
+    function stepForwards(maxValue: number) {
+        frameIndex.value = Math.min(frameIndex.value + 1, maxValue);
+    }
     const selections = computed(() => {
         return [{ c: 0, t: frameIndex.value, z: 0 }];
     });
@@ -91,6 +97,8 @@ export const useImageViewerStore = defineStore('imageViewerStore', () => {
         contrastLimitExtentSlider,
         frameIndex,
         frameNumber,
+        stepBackwards,
+        stepForwards,
         selections,
         generateSelectionIndexRange,
         trailLength,
