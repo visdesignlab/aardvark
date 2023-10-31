@@ -77,6 +77,22 @@ export const useGlobalSettings = defineStore('globalSettings', () => {
         }
     }
 
+    function showSetting(name: string): void {
+        let setting: SettingsPage | null = null;
+        for (const s of settingsPages.value) {
+            s.show = false;
+            if (s.name === name) {
+                setting = s;
+            }
+        }
+        if (setting === null) return;
+        setting.show = true;
+        activePageIndex.value = settingsPages.value.findIndex(
+            (page) => page.id === setting!.id
+        );
+        lastActivePageIndex.value = activePageIndex.value;
+    }
+
     function toggleLastActive(): void {
         toggleShown(lastActivePage.value);
     }
@@ -107,6 +123,18 @@ export const useGlobalSettings = defineStore('globalSettings', () => {
         return navigator.userAgent.toLowerCase().includes('mac');
     });
 
+    // settings open/close state
+    const settingsAccordion = ref({
+        general: true,
+        LooneageViewSettingsSidebar: false,
+        ImageViewerSettingsSidebar: false,
+    });
+
+    function openComponentSetting(key: string): void {
+        settingsAccordion.value[key] = true;
+        showSetting('Settings');
+    }
+
     return {
         settingsPages,
         activePage,
@@ -120,5 +148,8 @@ export const useGlobalSettings = defineStore('globalSettings', () => {
         normalizedDark,
         normalizedLight,
         usingMac,
+        settingsAccordion,
+        openComponentSetting,
+        showSetting,
     };
 });

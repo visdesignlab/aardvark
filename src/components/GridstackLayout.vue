@@ -89,6 +89,9 @@ async function toggleFullscreen(elementId: string) {
                     />
                     <q-btn
                         v-if="w.sidebar"
+                        @click="
+                            () => globalSettings.openComponentSetting(w.sidebar)
+                        "
                         flat
                         round
                         dense

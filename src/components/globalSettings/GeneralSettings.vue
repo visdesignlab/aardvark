@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import { useGlobalSettings } from '@/stores/globalSettings';
-import type LooneageViewSettingsSidebarVue from '../LooneageViewSettingsSidebar.vue';
 const globalSettings = useGlobalSettings();
 </script>
 
@@ -11,6 +10,7 @@ const globalSettings = useGlobalSettings();
             icon="public"
             label="General"
             default-opened
+            v-model="globalSettings.settingsAccordion['general']"
         >
             <q-card :dark="globalSettings.darkMode">
                 <q-card-section>
@@ -27,7 +27,14 @@ const globalSettings = useGlobalSettings();
 
         <q-separator />
 
-        <q-expansion-item group="settings" icon="image" label="Images">
+        <q-expansion-item
+            group="settings"
+            icon="image"
+            label="Images"
+            v-model="
+                globalSettings.settingsAccordion['ImageViewerSettingsSidebar']
+            "
+        >
             <q-card :dark="globalSettings.darkMode">
                 <q-card-section>
                     <ImageViewerSettingsSidebar />
@@ -36,7 +43,14 @@ const globalSettings = useGlobalSettings();
         </q-expansion-item>
         <q-separator />
 
-        <q-expansion-item group="settings" icon="account_tree" label="Looneage">
+        <q-expansion-item
+            group="settings"
+            icon="account_tree"
+            label="Looneage"
+            v-model="
+                globalSettings.settingsAccordion['LooneageViewSettingsSidebar']
+            "
+        >
             <q-card :dark="globalSettings.darkMode">
                 <q-card-section>
                     <LooneageViewSettingsSidebar />
