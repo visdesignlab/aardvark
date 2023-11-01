@@ -2,6 +2,8 @@ import { ref, computed } from 'vue';
 import { defineStore } from 'pinia';
 import { isEqual, every, sortBy } from 'lodash-es';
 import { useDataPointSelection } from './dataPointSelection';
+import { extent as d3Extent } from 'd3-array';
+
 export interface Lineage {
     lineageId: string; // should be equal to the founder trackId
     founder: Track;
@@ -438,6 +440,12 @@ export const useCellMetaData = defineStore('cellMetaData', () => {
             })
                 ? 1
                 : 0;
+            const [minTime, maxTime] = d3Extent<Cell, number>(
+                track.cells,
+                getTime
+            );
+            track.attrNum['min_time'] = minTime ?? 0;
+            track.attrNum['max_time'] = maxTime ?? 0;
         }
     }
 

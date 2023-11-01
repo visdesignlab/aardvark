@@ -59,10 +59,8 @@ const tree = computed(() => {
     return hierarchy<Track>(cellMetaData.selectedLineage.founder);
 });
 function getWidth(node: Track): number {
-    let [minTime, maxTime] = d3Extent<Cell, number>(
-        node.cells,
-        cellMetaData.getTime
-    );
+    let minTime = node.attrNum['min_time'];
+    let maxTime = node.attrNum['max_time'];
     minTime = minTime ?? 0;
     maxTime = maxTime ?? 0;
     const timeWidth = maxTime - minTime;
@@ -179,8 +177,8 @@ onMounted(() => {
         ref="looneageContainer"
         class="p-3"
     >
-        <!-- <button @click="verticalScale -= 0.1">decrease</button>
-        <button @click="verticalScale += 0.1">increase</button> -->
+        <q-btn @click="verticalScale -= 0.1">decrease</q-btn>
+        <q-btn @click="verticalScale += 0.1">increase</q-btn>
         <div v-if="cellMetaData.selectedLineage !== null" class="mt-3">
             <svg
                 ref="looneageSvgContainer"
