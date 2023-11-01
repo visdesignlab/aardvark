@@ -4,6 +4,8 @@ import { useCellMetaData } from '@/stores/cellMetaData';
 import { useGlobalSettings } from '@/stores/globalSettings';
 import { useLooneageViewStore } from '@/stores/looneageViewStore';
 import { useEventBusStore } from '@/stores/eventBusStore';
+import { clamp } from 'lodash-es';
+
 import {
     schemeReds,
     schemeBlues,
@@ -38,6 +40,19 @@ const modHeightValidate = computed({
     },
     set(value) {
         looneageViewStore.modHeight = Math.max(value, minModHeight.value);
+    },
+});
+
+const baselineValidate = computed({
+    get() {
+        return looneageViewStore.baseline;
+    },
+    set(value) {
+        looneageViewStore.baseline = clamp(
+            value,
+            Math.min(looneageViewStore.minVal, 0),
+            Math.max(looneageViewStore.maxVal, 0)
+        );
     },
 });
 </script>
@@ -81,7 +96,7 @@ const modHeightValidate = computed({
     />
     <q-input
         label="Baseline"
-        v-model.number="looneageViewStore.baseline"
+        v-model.number="baselineValidate"
         type="number"
         :dark="globalSettings.darkMode"
     />
