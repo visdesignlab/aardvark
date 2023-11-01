@@ -36,7 +36,7 @@ interface LooneageViewProps {
 
 const props = withDefaults(defineProps<LooneageViewProps>(), {
     encodeChildSplit: false,
-    initialSpacing: 2,
+    initialSpacing: 4,
     initialRowHeight: 16,
 });
 
