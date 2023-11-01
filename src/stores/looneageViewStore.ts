@@ -44,6 +44,8 @@ export const useLooneageViewStore = defineStore(storeId, () => {
     const modHeight = ref<number>(100);
     const baseline = ref<number>(0);
     const showLines = ref<boolean>(true);
+    const spacing = ref<number>(4);
+    const rowHeight = ref<number>(16);
 
     function setReasonableModHeight() {
         if (!cellMetaData.dataInitialized) return;
@@ -69,6 +71,8 @@ export const useLooneageViewStore = defineStore(storeId, () => {
         modHeight,
         baseline,
         showLines,
+        spacing,
+        rowHeight,
         maxVal,
         minVal,
     };

@@ -27,29 +27,6 @@ const looneageViewStore = useLooneageViewStore();
 const datasetSelectionTrrackedStore = useDatasetSelectionTrrackedStore();
 const eventBusStore = useEventBusStore();
 
-interface LooneageViewProps {
-    encodeChildSplit?: boolean;
-    initialSpacing?: number;
-    initialRowHeight?: number;
-    horizonChartSettings?: HorizonChartSettings;
-}
-
-const props = withDefaults(defineProps<LooneageViewProps>(), {
-    encodeChildSplit: false,
-    initialSpacing: 4,
-    initialRowHeight: 16,
-});
-
-const verticalScale = ref(1);
-
-const rowHeight = computed(() => {
-    return Math.round(props.initialRowHeight * verticalScale.value);
-});
-
-const spacingScale = scaleLinear().domain([1, 8]).range([1, 4]);
-const spacing = computed(() => {
-    return Math.round(props.initialSpacing * spacingScale(verticalScale.value));
-});
 const { width: containerWidth } = useElementSize(looneageContainer);
 // const legendWidth = computed(() => Math.min(containerWidth.value, 300));
 const legendWidth = computed(() => containerWidth.value);
@@ -71,9 +48,9 @@ const layoutRoot = computed<LayoutNode<Track> | null>(() => {
     return flextree<Track>({
         nodeSize: (node: LayoutNode<Track>) => {
             const timeWidth = getWidth(node.data);
-            return [rowHeight.value, timeWidth];
+            return [looneageViewStore.rowHeight, timeWidth];
         },
-        spacing: spacing.value,
+        spacing: looneageViewStore.spacing,
     })(tree.value);
 });
 
@@ -103,7 +80,7 @@ const extent = computed<[number, number, number, number]>(() => {
 
     const maxY = d3Max(
         layoutRoot.value.descendants(),
-        (n: LayoutNode<Track>) => n.x + rowHeight.value
+        (n: LayoutNode<Track>) => n.x + looneageViewStore.rowHeight
     ) as unknown as number;
 
     return [minX, minY, maxX, maxY];
@@ -116,11 +93,12 @@ const containerHeight = computed<number>(() => {
 });
 
 function getSplitWeight(source: Track, target: Track): number {
-    if (!props.encodeChildSplit) return 0;
-    const lastVal = last(source.cells)?.attrNum[looneageViewStore.attrKey] ?? 1;
-    const firstVal = target.cells[0].attrNum[looneageViewStore.attrKey];
-    const basicWeight = firstVal / lastVal;
-    return clamp(basicWeight - 0.5, 0, 1);
+    return 0;
+    // if (!props.encodeChildSplit) return 0;
+    // const lastVal = last(source.cells)?.attrNum[looneageViewStore.attrKey] ?? 1;
+    // const firstVal = target.cells[0].attrNum[looneageViewStore.attrKey];
+    // const basicWeight = firstVal / lastVal;
+    // return clamp(basicWeight - 0.5, 0, 1);
 }
 
 function onHorizonChartClick(node: LayoutNode<Track> | null): void {
@@ -177,8 +155,6 @@ onMounted(() => {
         ref="looneageContainer"
         class="p-3"
     >
-        <q-btn @click="verticalScale -= 0.1">decrease</q-btn>
-        <q-btn @click="verticalScale += 0.1">increase</q-btn>
         <div v-if="cellMetaData.selectedLineage !== null" class="mt-3">
             <svg
                 ref="looneageSvgContainer"
@@ -200,7 +176,7 @@ onMounted(() => {
                     >
                         <HorizonChart
                             :chartWidth="scaleX(getWidth(node.data))"
-                            :chartHeight="rowHeight"
+                            :chartHeight="looneageViewStore.rowHeight"
                             :data="node.data.cells"
                             :selected="
                                 node.data.trackId ===
@@ -226,9 +202,9 @@ onMounted(() => {
                         v-for="({ source, target }, i) in layoutRoot?.links()"
                         :key="i"
                         :x1="scaleX(source.y + getWidth(source.data))"
-                        :y1="source.x + rowHeight / 2"
+                        :y1="source.x + looneageViewStore.rowHeight / 2"
                         :x2="scaleX(target.y)"
-                        :y2="target.x + rowHeight / 2"
+                        :y2="target.x + looneageViewStore.rowHeight / 2"
                         :stroke-width="
                             2 + 36 * getSplitWeight(source.data, target.data)
                         "
@@ -242,7 +218,7 @@ onMounted(() => {
                     >
                         <HorizonChart
                             :chartWidth="scaleX(getWidth(node.data))"
-                            :chartHeight="rowHeight"
+                            :chartHeight="looneageViewStore.rowHeight"
                             :data="node.data.cells"
                             :selected="
                                 node.data.trackId ===
@@ -269,7 +245,7 @@ onMounted(() => {
                 ref="horizonChartLegend"
                 :containerWidth="containerWidth"
                 :chartWidth="legendWidth"
-                :chartHeight="rowHeight"
+                :chartHeight="looneageViewStore.rowHeight"
                 :showLines="looneageViewStore.showLines"
                 :includeNegatives="
                     looneageViewStore.minVal - looneageViewStore.baseline < 0
