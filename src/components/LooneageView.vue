@@ -249,7 +249,7 @@ onMounted(() => {
                                 cellMetaData.selectedTrack?.trackId
                             "
                             :settings="{
-                                baseline: 0,
+                                baseline: looneageViewStore.baseline,
                                 modHeight: looneageViewStore.modHeight,
                                 mirrorNegative: false,
                                 includeBinLine: true,
