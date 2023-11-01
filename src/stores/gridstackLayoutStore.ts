@@ -65,6 +65,7 @@ export const useGridstackLayoutStore = defineStore(
                     attributeLevel: 'lineage',
                 },
                 icon: 'table_chart',
+                noPadding: true,
             },
             {
                 component: 'SimpleTable',
@@ -78,6 +79,7 @@ export const useGridstackLayoutStore = defineStore(
                     attributeLevel: 'track',
                 },
                 icon: 'table_chart',
+                noPadding: true,
             },
             {
                 component: 'SimpleTable',
@@ -91,6 +93,7 @@ export const useGridstackLayoutStore = defineStore(
                     attributeLevel: 'cell',
                 },
                 icon: 'table_chart',
+                noPadding: true,
             },
             {
                 component: 'AggregateLineChart',
