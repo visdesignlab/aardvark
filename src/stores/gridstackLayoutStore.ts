@@ -12,7 +12,6 @@ export interface LayoutItem {
     w: number;
     h: number;
     id: string;
-    noScroll?: boolean;
     noPadding?: boolean;
     icon?: string;
     sidebar?: string;
@@ -136,7 +135,6 @@ export const useGridstackLayoutStore = defineStore(
                 w: 3,
                 h: 5,
                 id: 'TrrackVisWrapper',
-                noScroll: true,
                 icon: 'history',
             },
         ];

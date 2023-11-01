@@ -115,9 +115,9 @@ async function toggleFullscreen(elementId: string) {
                 </q-toolbar>
 
                 <q-card-section
-                    :class="`${w.noScroll ? 'no-scroll-y' : 'scroll-y'} ${
+                    :class="`${
                         w.noPadding ? 'q-pa-none' : ''
-                    } h-100 position-relative`"
+                    } scroll-y h-100 position-relative`"
                 >
                     <component :is="w.component" v-bind="w.props"></component>
                 </q-card-section>
@@ -132,10 +132,6 @@ async function toggleFullscreen(elementId: string) {
 
 .scroll-y {
     overflow-y: auto;
-}
-
-.no-scroll-y {
-    overflow-y: hidden;
 }
 
 .show-on-hover {

@@ -56,7 +56,16 @@ watch(darkMode, () => {
 </script>
 
 <template>
-    <div ref="trrackVisContainer" class="d-flex flex-center"></div>
+    <div
+        ref="trrackVisContainer"
+        id="trrackVisContainer"
+        class="d-flex flex-center"
+    ></div>
 </template>
 
-<style scoped lang="scss"></style>
+<style lang="scss">
+#trrackVisContainer > div {
+    // overwrite the trrack styles to get scrollbar where I want it to be
+    overflow: hidden !important;
+}
+</style>
