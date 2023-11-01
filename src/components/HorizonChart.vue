@@ -206,7 +206,7 @@ export default defineComponent({
         x="0"
         y="0"
         stroke="black"
-        stroke-width="1.5"
+        :stroke-width="mergedSettings.includeBinLine ? 1.5 : 0"
         :width="chartWidth"
         :height="chartHeight"
         :class="selected ? 'selected' : ''"
