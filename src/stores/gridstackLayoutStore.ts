@@ -40,6 +40,214 @@ export interface Layout {
 export const useGridstackLayoutStore = defineStore(
     'gridstackLayoutStore',
     () => {
+        const smallImageItems: LayoutItem[] = [
+            {
+                component: 'LooneageView',
+                displayName: 'Looneage',
+                x: 4,
+                y: 0,
+                w: 4,
+                h: 21,
+                id: 'LooneageView',
+                icon: 'account_tree',
+                sidebar: 'LooneageViewSettingsSidebar',
+                toolbar: 'LooneageViewSettingsToolbar',
+            },
+            {
+                component: 'SimpleTable',
+                displayName: 'Lineages',
+                x: 8,
+                y: 0,
+                w: 2,
+                h: 7,
+                id: 'SimpleTable-lineage',
+                props: {
+                    attributeLevel: 'lineage',
+                },
+                icon: 'table_chart',
+                noPadding: true,
+            },
+            {
+                component: 'SimpleTable',
+                displayName: 'Tracks',
+                x: 8,
+                y: 7,
+                w: 2,
+                h: 7,
+                id: 'SimpleTable-track',
+                props: {
+                    attributeLevel: 'track',
+                },
+                icon: 'table_chart',
+                noPadding: true,
+            },
+            {
+                component: 'SimpleTable',
+                displayName: 'Cells',
+                x: 8,
+                y: 14,
+                w: 2,
+                h: 7,
+                id: 'SimpleTable-cell',
+                props: {
+                    attributeLevel: 'cell',
+                },
+                icon: 'table_chart',
+                noPadding: true,
+            },
+            {
+                component: 'AggregateLineChart',
+                displayName: 'Line Chart',
+                x: 0,
+                y: 5,
+                w: 4,
+                h: 7,
+                id: 'AggregateLineChart',
+                icon: 'timeline',
+                sidebar: 'AggregateLineChartSettingsSidebar',
+                toolbar: 'AggregateLineChartSettingsToolbar',
+                noPadding: true,
+            },
+            {
+                component: 'ImageViewer',
+                displayName: 'Images',
+                x: 0,
+                y: 12,
+                w: 4,
+                h: 9,
+                id: 'ImageViewer',
+                noPadding: true,
+                icon: 'image',
+                sidebar: 'ImageViewerSettingsSidebar',
+                toolbar: 'ImageViewerSettingsToolbar',
+            },
+            {
+                component: 'BasicInfo',
+                displayName: 'Overview',
+                x: 0,
+                y: 0,
+                w: 4,
+                h: 5,
+                id: 'BasicInfo',
+                icon: 'info',
+            },
+            {
+                component: 'TrrackVisWrapper',
+                displayName: 'History',
+                x: 10,
+                y: 0,
+                w: 2,
+                h: 21,
+                id: 'TrrackVisWrapper',
+                icon: 'history',
+                noPadding: true,
+            },
+        ];
+
+        const largeImageItems: LayoutItem[] = [
+            {
+                component: 'LooneageView',
+                displayName: 'Looneage',
+                x: 4,
+                y: 5,
+                w: 6,
+                h: 5,
+                id: 'LooneageView',
+                icon: 'account_tree',
+                sidebar: 'LooneageViewSettingsSidebar',
+                toolbar: 'LooneageViewSettingsToolbar',
+            },
+            {
+                component: 'SimpleTable',
+                displayName: 'Lineages',
+                x: 4,
+                y: 10,
+                w: 2,
+                h: 11,
+                id: 'SimpleTable-lineage',
+                props: {
+                    attributeLevel: 'lineage',
+                },
+                icon: 'table_chart',
+                noPadding: true,
+            },
+            {
+                component: 'SimpleTable',
+                displayName: 'Tracks',
+                x: 6,
+                y: 10,
+                w: 2,
+                h: 11,
+                id: 'SimpleTable-track',
+                props: {
+                    attributeLevel: 'track',
+                },
+                icon: 'table_chart',
+                noPadding: true,
+            },
+            {
+                component: 'SimpleTable',
+                displayName: 'Cells',
+                x: 8,
+                y: 10,
+                w: 2,
+                h: 11,
+                id: 'SimpleTable-cell',
+                props: {
+                    attributeLevel: 'cell',
+                },
+                icon: 'table_chart',
+                noPadding: true,
+            },
+            {
+                component: 'AggregateLineChart',
+                displayName: 'Line Chart',
+                x: 4,
+                y: 0,
+                w: 6,
+                h: 5,
+                id: 'AggregateLineChart',
+                icon: 'timeline',
+                sidebar: 'AggregateLineChartSettingsSidebar',
+                toolbar: 'AggregateLineChartSettingsToolbar',
+                noPadding: true,
+            },
+            {
+                component: 'ImageViewer',
+                displayName: 'Images',
+                x: 0,
+                y: 5,
+                w: 4,
+                h: 16,
+                id: 'ImageViewer',
+                noPadding: true,
+                icon: 'image',
+                sidebar: 'ImageViewerSettingsSidebar',
+                toolbar: 'ImageViewerSettingsToolbar',
+            },
+            {
+                component: 'BasicInfo',
+                displayName: 'Overview',
+                x: 0,
+                y: 0,
+                w: 4,
+                h: 5,
+                id: 'BasicInfo',
+                icon: 'info',
+            },
+            {
+                component: 'TrrackVisWrapper',
+                displayName: 'History',
+                x: 10,
+                y: 0,
+                w: 2,
+                h: 21,
+                id: 'TrrackVisWrapper',
+                icon: 'history',
+                noPadding: true,
+            },
+        ];
+
         const allEqualItems: LayoutItem[] = [
             {
                 component: 'LooneageView',
@@ -143,12 +351,31 @@ export const useGridstackLayoutStore = defineStore(
                 noPadding: true,
             },
         ];
+
         const defaultId = 'system_layout_0';
-        const defaultLayout: Layout = {
-            name: 'Equal Tables',
+
+        const smallImageLayout: Layout = {
+            name: 'Small Image',
             editable: false,
             editing: false,
             id: defaultId,
+            initialItems: cloneDeep(smallImageItems),
+            currentItems: cloneDeep(smallImageItems),
+        };
+        const largeImageLayout: Layout = {
+            name: 'Large Image',
+            editable: false,
+            editing: false,
+            id: 'system_layout_1',
+            initialItems: cloneDeep(largeImageItems),
+            currentItems: cloneDeep(largeImageItems),
+        };
+
+        const allEqualLayout: Layout = {
+            name: 'Tiny Widgets',
+            editable: false,
+            editing: false,
+            id: 'system_layout_2',
             initialItems: cloneDeep(allEqualItems),
             currentItems: cloneDeep(allEqualItems),
         };
@@ -158,7 +385,11 @@ export const useGridstackLayoutStore = defineStore(
             defaultId
         );
 
-        const systemLayoutOptions = ref<Layout[]>([defaultLayout]);
+        const systemLayoutOptions = ref<Layout[]>([
+            smallImageLayout,
+            largeImageLayout,
+            allEqualLayout,
+        ]);
         const userLayoutOptions = useStorage<Layout[]>('userLayoutOptions', []);
         const allLayouts = computed<Map<string, Layout>>(() => {
             const layouts = new Map();
