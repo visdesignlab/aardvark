@@ -48,7 +48,10 @@ const displayList = computed<DisplayInfo[]>(() => {
 
 <template>
     <NoDataSplash></NoDataSplash>
-    <div v-if="cellMetaData.dataInitialized" class="flex">
+    <div
+        v-if="cellMetaData.dataInitialized"
+        class="flex items-center justify-center align-center h-100"
+    >
         <q-card
             v-for="info in displayList"
             :key="info.label"
