@@ -63,12 +63,7 @@ function storeSetup() {
 
     const targetKey = ref<string>('entire location');
 
-    const targetOptions = [
-        'entire condition',
-        'entire location',
-        'cell lineages',
-        'cell tracks',
-    ];
+    const targetOptions = ['entire location', 'cell lineages', 'cell tracks'];
 
     const smoothWindow = ref(0);
     const smoothWindowComputed = computed({
@@ -177,10 +172,6 @@ function storeSetup() {
 
     const aggLineDataList = computed<AggLineData[]>(() => {
         switch (targetKey.value) {
-            case 'entire condition': {
-                // TODO:
-                return [];
-            }
             case 'entire location': {
                 const singleLine: AggLineData = [];
                 for (const frame of cellMetaData?.frameList ?? []) {
@@ -274,6 +265,13 @@ function storeSetup() {
             return { ...point, value: newVal };
         });
     }
+    const showVarianceBand = computed(() => {
+        return (
+            (aggregatorKey.value == 'average' ||
+                aggregatorKey.value == 'median') &&
+            targetKey.value == 'entire location'
+        );
+    });
 
     return {
         aggregatorKey,
@@ -288,6 +286,7 @@ function storeSetup() {
         onSmoothWindowChange,
         aggLineDataList,
         aggLineDataListExtent,
+        showVarianceBand,
     };
 }
 const storeId = 'aggregateLineChartStore';

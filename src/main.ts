@@ -15,6 +15,8 @@ import ImageViewer from './components/ImageViewer.vue';
 import ImageViewerSettingsSidebar from './components/ImageViewerSettingsSidebar.vue';
 import ImageViewerSettingsToolbar from './components/ImageViewerSettingsToolbar.vue';
 import AggregateLineChart from './components/AggregateLineChart.vue';
+import AggregateLineChartSettingsSidebar from './components/AggregateLineChartSettingsSidebar.vue';
+import AggregateLineChartSettingsToolbar from './components/AggregateLineChartSettingsToolbar.vue';
 import TrrackVisWrapper from './components/TrrackVisWrapper.vue';
 import NoDataSplash from './components/NoDataSplash.vue';
 
@@ -76,6 +78,14 @@ createApp(App)
     .component('ImageViewerSettingsToolbar', ImageViewerSettingsToolbar)
     .component('ImageViewer', ImageViewer)
     .component('AggregateLineChart', AggregateLineChart)
+    .component(
+        'AggregateLineChartSettingsSidebar',
+        AggregateLineChartSettingsSidebar
+    )
+    .component(
+        'AggregateLineChartSettingsToolbar',
+        AggregateLineChartSettingsToolbar
+    )
     .component('TrrackVisWrapper', TrrackVisWrapper)
     .component('LooneageView', LooneageView)
     .component('LooneageViewSettingsSidebar', LooneageViewSettingsSidebar)

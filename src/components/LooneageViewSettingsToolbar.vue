@@ -18,7 +18,7 @@ const eventBusStore = useEventBusStore();
             v-model="looneageViewStore.attrKey"
             :options="cellMetaData.cellNumAttributeHeaderNames"
             :dark="globalSettings.darkMode"
-            class="q-ml-xs"
+            class="min-w-75 q-ml-xs"
         />
         <q-btn
             @click="eventBusStore.emitter.emit('exportSvgLooneage')"
@@ -29,4 +29,8 @@ const eventBusStore = useEventBusStore();
     </template>
 </template>
 
-<style scoped lang="scss"></style>
+<style scoped lang="scss">
+.min-w-75 {
+    min-width: 75px;
+}
+</style>

@@ -71,14 +71,6 @@ const varianceAreaGen = computed(() => {
         .y1((aggPoint) => scaleY.value(aggPoint?.variance?.[1] ?? 0));
 });
 
-const showVarianceBand = computed(() => {
-    return (
-        (aggregateLineChartStore.aggregatorKey == 'average' ||
-            aggregateLineChartStore.aggregatorKey == 'median') &&
-        aggregateLineChartStore.targetKey == 'entire location'
-    );
-});
-
 const yAxisContainer = ref<SVGGElement | null>(null);
 const xAxisContainer = ref<SVGGElement | null>(null);
 const xAxisGen = computed(() => {
@@ -101,75 +93,12 @@ watch(yAxisGen, () => {
     if (!yAxisContainer.value) return;
     select(yAxisContainer.value).call(yAxisGen.value);
 });
-
-const currentKey = computed({
-    get() {
-        return aggregateLineChartStore.aggregatorKey;
-    },
-    set(val: string) {
-        aggregateLineChartStore.$patch(() => {
-            // patch so prov store gets one update
-            // this might trigger multiple otherwise due to dependencies
-            aggregateLineChartStore.aggregatorKey = val;
-        });
-    },
-});
 </script>
 
 <template>
     <NoDataSplash></NoDataSplash>
-    <div
-        v-if="cellMetaData.dataInitialized"
-        class="d-flex flex-column h-100 p-3"
-    >
-        <div class="d-flex align-center">
-            <span class="me-2">Show</span>
-            <q-select
-                v-if="aggregateLineChartStore.targetKey !== 'cell tracks'"
-                v-model="currentKey"
-                :options="aggregateLineChartStore.aggregatorOptions"
-                :dark="globalSettings.darkMode"
-                dense
-                class="me-2"
-            ></q-select>
-            <q-select
-                v-model="aggregateLineChartStore.attributeKey"
-                :options="cellMetaData.cellNumAttributeHeaderNames"
-                :dark="globalSettings.darkMode"
-                dense
-                class="me-2"
-            ></q-select>
-            <span class="me-2">for</span>
-            <q-select
-                v-model="aggregateLineChartStore.targetKey"
-                :options="aggregateLineChartStore.targetOptions"
-                :dark="globalSettings.darkMode"
-                dense
-                class="me-2"
-            ></q-select>
-            <span v-if="showVarianceBand" class="me-2">with</span>
-            <q-select
-                v-if="showVarianceBand"
-                v-model="aggregateLineChartStore.varianceKey"
-                :options="aggregateLineChartStore.varianceOptions"
-                :dark="globalSettings.darkMode"
-                dense
-                class="me-2"
-            ></q-select>
-        </div>
-        <div class="d-flex align-center">
-            <span class="me-3">Smooth: </span>
-            <q-slider
-                v-model="aggregateLineChartStore.smoothWindowComputed"
-                @change="aggregateLineChartStore.onSmoothWindowChange"
-                :min="0"
-                :max="20"
-                label
-                :dark="globalSettings.darkMode"
-                class="mw-250"
-            />
-        </div>
-        <div ref="aggLineChartContainer" class="mt-3 h-100">
+    <div v-if="cellMetaData.dataInitialized" class="d-flex flex-column h-100">
+        <div ref="aggLineChartContainer" class="h-100">
             <svg :width="containerWidth" :height="containerHeight">
                 <g
                     ref="yAxisContainer"
@@ -186,7 +115,7 @@ const currentKey = computed({
                     })`"
                 ></g>
                 <g
-                    v-if="showVarianceBand"
+                    v-if="aggregateLineChartStore.showVarianceBand"
                     :transform="`translate(${margin.left},${margin.top})`"
                 >
                     <path

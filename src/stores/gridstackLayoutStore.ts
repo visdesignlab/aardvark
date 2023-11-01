@@ -102,6 +102,8 @@ export const useGridstackLayoutStore = defineStore(
                 h: 5,
                 id: 'AggregateLineChart',
                 icon: 'timeline',
+                sidebar: 'AggregateLineChartSettingsSidebar',
+                toolbar: 'AggregateLineChartSettingsToolbar',
             },
             {
                 component: 'ImageViewer',

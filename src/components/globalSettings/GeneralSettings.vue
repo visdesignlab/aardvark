@@ -57,6 +57,24 @@ const globalSettings = useGlobalSettings();
                 </q-card-section>
             </q-card>
         </q-expansion-item>
+        <q-separator />
+
+        <q-expansion-item
+            group="settings"
+            icon="timeline"
+            label="Line Chart"
+            v-model="
+                globalSettings.settingsAccordion[
+                    'AggregateLineChartSettingsSidebar'
+                ]
+            "
+        >
+            <q-card :dark="globalSettings.darkMode">
+                <q-card-section>
+                    <AggregateLineChartSettingsSidebar />
+                </q-card-section>
+            </q-card>
+        </q-expansion-item>
     </q-list>
 </template>
 
