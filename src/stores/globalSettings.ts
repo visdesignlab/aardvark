@@ -132,6 +132,9 @@ export const useGlobalSettings = defineStore('globalSettings', () => {
     });
 
     function openComponentSetting(key: string): void {
+        for (let k in settingsAccordion.value) {
+            settingsAccordion.value[k] = false;
+        }
         settingsAccordion.value[key] = true;
         showSetting('Settings');
     }

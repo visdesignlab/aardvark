@@ -9,7 +9,6 @@ const globalSettings = useGlobalSettings();
             group="settings"
             icon="public"
             label="General"
-            default-opened
             v-model="globalSettings.settingsAccordion['general']"
         >
             <q-card :dark="globalSettings.darkMode">
