@@ -20,6 +20,18 @@ const eventBusStore = useEventBusStore();
             :dark="globalSettings.darkMode"
             class="min-w-75 q-ml-xs"
         />
+        <q-badge class="q-ml-sm" outline :color="globalSettings.normalizedBlack"
+            >Height:</q-badge
+        >
+        <q-slider
+            v-model="looneageViewStore.rowHeight"
+            :min="4"
+            :max="100"
+            label
+            :dark="globalSettings.darkMode"
+            class="q-ml-md max-w-150"
+            switch-label-side=""
+        />
         <q-btn
             @click="eventBusStore.emitter.emit('exportSvgLooneage')"
             round
@@ -30,6 +42,9 @@ const eventBusStore = useEventBusStore();
 </template>
 
 <style scoped lang="scss">
+.max-w-150 {
+    max-width: 150px;
+}
 .min-w-75 {
     min-width: 75px;
 }
