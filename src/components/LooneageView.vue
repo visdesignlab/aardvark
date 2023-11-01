@@ -253,8 +253,10 @@ onMounted(() => {
                                 modHeight: looneageViewStore.modHeight,
                                 mirrorNegative: false,
                                 includeBinLine: true,
-                                positiveColorScheme: schemeReds,
-                                negativeColorScheme: schemeBlues,
+                                positiveColorScheme:
+                                    looneageViewStore.positiveColorScheme.value,
+                                negativeColorScheme:
+                                    looneageViewStore.negativeColorScheme.value,
                             }"
                             :timeAccessor="cellMetaData.getTime"
                             :valueAccessor="(cell: Cell) => cellMetaData.getNumAttr(cell, looneageViewStore.attrKey)"
