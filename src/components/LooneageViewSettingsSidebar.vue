@@ -43,6 +43,14 @@ const modHeightValidate = computed({
 </script>
 
 <template>
+    <q-btn
+        class="mt-1"
+        @click="eventBusStore.emitter.emit('exportSvgLooneage')"
+        outline
+        rounded
+        icon="file_download"
+        >Export SVG</q-btn
+    >
     <q-select
         label="Attribute"
         v-model="looneageViewStore.attrKey"
@@ -71,14 +79,12 @@ const modHeightValidate = computed({
         :dark="globalSettings.darkMode"
         debounce="400"
     />
-    <q-btn
-        class="mt-1"
-        @click="eventBusStore.emitter.emit('exportSvgLooneage')"
-        outline
-        rounded
-        icon="file_download"
-        >Export SVG</q-btn
-    >
+    <q-input
+        label="Baseline"
+        v-model.number="looneageViewStore.baseline"
+        type="number"
+        :dark="globalSettings.darkMode"
+    />
 </template>
 
 <style scoped lang="scss"></style>

@@ -42,6 +42,7 @@ export const useLooneageViewStore = defineStore(storeId, () => {
     });
 
     const modHeight = ref<number>(100);
+    const baseline = ref<number>(0);
 
     function setReasonableModHeight() {
         if (!cellMetaData.dataInitialized) return;
@@ -65,6 +66,7 @@ export const useLooneageViewStore = defineStore(storeId, () => {
         positiveColorScheme,
         negativeColorScheme,
         modHeight,
+        baseline,
         maxVal,
         minVal,
     };

@@ -207,7 +207,7 @@ onMounted(() => {
                                 cellMetaData.selectedTrack?.trackId
                             "
                             :settings="{
-                                baseline: 0,
+                                baseline: looneageViewStore.baseline,
                                 modHeight: looneageViewStore.modHeight,
                                 mirrorNegative: false,
                                 includeBinLine: true,
@@ -268,7 +268,10 @@ onMounted(() => {
                 :containerWidth="containerWidth"
                 :chartWidth="legendWidth"
                 :chartHeight="rowHeight"
-                :includeNegatives="looneageViewStore.minVal < 0"
+                :includeNegatives="
+                    looneageViewStore.minVal - looneageViewStore.baseline < 0
+                "
+                :baseline="looneageViewStore.baseline"
             ></HorizonChartLegend>
         </div>
         <q-banner

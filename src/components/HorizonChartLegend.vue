@@ -13,6 +13,7 @@ interface HorizonChartLegendProps {
     chartWidth: number;
     chartHeight: number;
     includeNegatives: boolean;
+    baseline: number;
 }
 const containerHeight = 40;
 const minVal = -6;
@@ -36,7 +37,7 @@ const scaleX = computed(() => {
         .range([0, props.chartWidth]);
 });
 function getLegendLabel(val: number): string {
-    const trueValue = val * looneageViewStore.modHeight;
+    const trueValue = val * looneageViewStore.modHeight + props.baseline;
     const label = format('.2s')(trueValue);
     if (val === -6) return label + ' <';
     if (val === 6) return label + '+';
