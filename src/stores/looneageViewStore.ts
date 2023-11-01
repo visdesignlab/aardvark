@@ -51,6 +51,7 @@ export const useLooneageViewStore = defineStore(storeId, () => {
         if (!cellMetaData.dataInitialized) return;
         skipTrackingMap.map.set(storeId, true); // TODO: this logic I think is broken now.
         // console.count('setReasonableModHeight.skip');
+        baseline.value = 0;
         const extent = maxVal.value - minVal.value;
         if (extent === 0) {
             modHeight.value = 1;
