@@ -205,6 +205,8 @@ export default defineComponent({
         fill="#ececec"
         x="0"
         y="0"
+        stroke="black"
+        stroke-width="1.5"
         :width="chartWidth"
         :height="chartHeight"
         :class="selected ? 'selected' : ''"
@@ -215,7 +217,7 @@ export default defineComponent({
     <g @mousemove="debug" :clip-path="`url(#${clipPathId})`">
         <path
             stroke="black"
-            stroke-width="0.25"
+            :stroke-width="mergedSettings.includeBinLine ? 0.5 : 0"
             v-for="(info, i) in offsetInfo"
             :key="i"
             :transform="info.transform"

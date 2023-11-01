@@ -210,7 +210,7 @@ onMounted(() => {
                                 baseline: looneageViewStore.baseline,
                                 modHeight: looneageViewStore.modHeight,
                                 mirrorNegative: false,
-                                includeBinLine: true,
+                                includeBinLine: looneageViewStore.showLines,
                                 positiveColorScheme:
                                     looneageViewStore.positiveColorScheme.value,
                                 negativeColorScheme:
@@ -252,7 +252,7 @@ onMounted(() => {
                                 baseline: looneageViewStore.baseline,
                                 modHeight: looneageViewStore.modHeight,
                                 mirrorNegative: false,
-                                includeBinLine: true,
+                                includeBinLine: looneageViewStore.showLines,
                                 positiveColorScheme:
                                     looneageViewStore.positiveColorScheme.value,
                                 negativeColorScheme:
@@ -270,6 +270,7 @@ onMounted(() => {
                 :containerWidth="containerWidth"
                 :chartWidth="legendWidth"
                 :chartHeight="rowHeight"
+                :showLines="looneageViewStore.showLines"
                 :includeNegatives="
                     looneageViewStore.minVal - looneageViewStore.baseline < 0
                 "

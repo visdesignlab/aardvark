@@ -14,6 +14,7 @@ interface HorizonChartLegendProps {
     chartHeight: number;
     includeNegatives: boolean;
     baseline: number;
+    showLines: boolean;
 }
 const containerHeight = 40;
 const minVal = -6;
@@ -76,7 +77,7 @@ defineExpose({ exportSvg });
                 baseline: 0,
                 modHeight: 1,
                 mirrorNegative: false,
-                includeBinLine: true,
+                includeBinLine: props.showLines,
                 positiveColorScheme:
                     looneageViewStore.positiveColorScheme.value,
                 negativeColorScheme:
