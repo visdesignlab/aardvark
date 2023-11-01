@@ -65,6 +65,7 @@ export const useGridstackLayoutStore = defineStore(
                 props: {
                     attributeLevel: 'lineage',
                 },
+                icon: 'table_chart',
             },
             {
                 component: 'SimpleTable',
@@ -77,6 +78,7 @@ export const useGridstackLayoutStore = defineStore(
                 props: {
                     attributeLevel: 'track',
                 },
+                icon: 'table_chart',
             },
             {
                 component: 'SimpleTable',
@@ -89,6 +91,7 @@ export const useGridstackLayoutStore = defineStore(
                 props: {
                     attributeLevel: 'cell',
                 },
+                icon: 'table_chart',
             },
             {
                 component: 'AggregateLineChart',
@@ -98,6 +101,7 @@ export const useGridstackLayoutStore = defineStore(
                 w: 3,
                 h: 5,
                 id: 'AggregateLineChart',
+                icon: 'timeline',
             },
             {
                 component: 'ImageViewer',
@@ -120,6 +124,7 @@ export const useGridstackLayoutStore = defineStore(
                 w: 3,
                 h: 5,
                 id: 'BasicInfo',
+                icon: 'info',
             },
             {
                 component: 'TrrackVisWrapper',
@@ -130,6 +135,7 @@ export const useGridstackLayoutStore = defineStore(
                 h: 5,
                 id: 'TrrackVisWrapper',
                 noScroll: true,
+                icon: 'history',
             },
         ];
         const defaultId = 'system_layout_0';
