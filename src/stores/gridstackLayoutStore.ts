@@ -139,6 +139,7 @@ export const useGridstackLayoutStore = defineStore(
                 h: 5,
                 id: 'TrrackVisWrapper',
                 icon: 'history',
+                noPadding: true,
             },
         ];
         const defaultId = 'system_layout_0';
