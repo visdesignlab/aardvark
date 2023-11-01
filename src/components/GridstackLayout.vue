@@ -108,11 +108,8 @@ async function toggleFullscreen(elementId: string) {
                         flat
                         round
                         dense
-                        size="sm"
                         @click="toggleFullscreen(`container-${w.id}`)"
-                        :icon="
-                            isFullScreen ? 'close_fullscreen' : 'open_in_full'
-                        "
+                        :icon="isFullScreen ? 'fullscreen_exit' : 'fullscreen'"
                         class="show-on-hover"
                     />
                 </q-toolbar>
