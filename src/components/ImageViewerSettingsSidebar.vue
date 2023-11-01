@@ -48,7 +48,7 @@ watch(
         >
     </div>
     <div class="flex row no-wrap q-mt-sm q-mb-sm">
-        <q-btn-group outline rounded class="q-mr-sm">
+        <q-btn-group outline rounded class="q-mr-md">
             <q-btn
                 @click="imageViewerStore.stepBackwards"
                 size="sm"

@@ -23,7 +23,7 @@ const { currentImageStackMetadata } = storeToRefs(datasetSelectionStore);
             icon="center_focus_strong"
             title="reset view"
         />
-        <q-btn-group outline rounded class="q-mr-sm">
+        <q-btn-group outline rounded class="q-mr-md">
             <q-btn
                 @click="imageViewerStore.stepBackwards"
                 size="sm"
