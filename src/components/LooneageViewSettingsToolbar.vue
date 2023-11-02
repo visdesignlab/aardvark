@@ -30,7 +30,7 @@ const eventBusStore = useEventBusStore();
             label
             :dark="globalSettings.darkMode"
             class="q-ml-md max-w-150"
-            switch-label-side=""
+            switch-label-side
         />
         <q-btn
             @click="eventBusStore.emitter.emit('exportSvgLooneage')"
