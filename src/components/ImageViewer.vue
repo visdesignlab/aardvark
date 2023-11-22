@@ -33,6 +33,7 @@ import {
     ScatterplotLayer,
     TextLayer,
 } from '@deck.gl/layers/typed';
+// @ts-ignore
 import { TripsLayer } from '@deck.gl/geo-layers';
 
 const cellMetaData = useCellMetaData();
@@ -176,6 +177,7 @@ function createSegmentationsLayer(): typeof GeoJsonLayer {
             'UNKNOWN'
     );
     // console.log(folderUrl);
+    // @ts-ignore
     return new GeoJsonLayer({
         data: folderUrl + `${imageViewerStore.frameNumber}.json`,
         lineWidthUnits: 'pixels',

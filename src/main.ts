@@ -56,6 +56,7 @@ import { fas } from '@fortawesome/free-solid-svg-icons';
 /* add icons to the library */
 library.add(fas);
 
+// @ts-ignore
 createApp(App)
     .use(createPinia())
     .use(vuetify)
