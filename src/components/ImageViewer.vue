@@ -18,7 +18,6 @@ import { clamp } from 'lodash-es';
 import { Pool } from 'geotiff';
 
 import {
-    loadMultiTiff,
     loadOmeTiff,
     getChannelStats,
     ImageLayer,
@@ -42,7 +41,7 @@ const dataPointSelection = useDataPointSelection();
 const imageViewerStore = useImageViewerStore();
 const imageViewerStoreUntrracked = useImageViewerStoreUntrracked();
 const datasetSelectionStore = useDatasetSelectionStore();
-const { currentImageStackMetadata } = storeToRefs(datasetSelectionStore);
+const { currentLocationMetadata } = storeToRefs(datasetSelectionStore);
 const { contrastLimitSlider } = storeToRefs(imageViewerStoreUntrracked);
 const eventBusStore = useEventBusStore();
 
@@ -76,17 +75,12 @@ onMounted(() => {
         ],
         onViewStateChange: ({ viewState }) => {
             // limit the camera to keep the image visible
-            if (currentImageStackMetadata.value == null) return viewState;
-            viewState.target[0] = clamp(
-                viewState.target[0],
-                0,
-                currentImageStackMetadata.value.sizeX
-            );
-            viewState.target[1] = clamp(
-                viewState.target[1],
-                0,
-                currentImageStackMetadata.value.sizeY
-            );
+            if (loader.value == null) return viewState;
+            const imageWidth = imageViewerStoreUntrracked.sizeX;
+            const imageHeight = imageViewerStoreUntrracked.sizeY;
+
+            viewState.target[0] = clamp(viewState.target[0], 0, imageWidth);
+            viewState.target[1] = clamp(viewState.target[1], 0, imageHeight);
             // viewState.zoom = clamp(viewState.zoom, -8, 8);
             return viewState;
         },
@@ -113,32 +107,21 @@ onMounted(() => {
 
 const loader = ref<any | null>(null);
 const pixelSource = ref<any | null>(null);
-watch(currentImageStackMetadata, async () => {
-    if (currentImageStackMetadata.value == null) return;
+watch(currentLocationMetadata, async () => {
+    if (currentLocationMetadata.value?.imageDataFilename == null) return;
     if (deckgl == null) return;
     // if (contrastLimitSlider == null) return;
     renderLoadingDeckGL();
     imageViewerStore.frameIndex = 0;
     pixelSource.value = null;
 
-    // const loader = await loadOmeTiff(
-    //     'https://localhost:9001/michael_pma_vs_hmgs2/pma_to_pma/20221122_fs051_p9_mediaswitch_homebrew_A1_4_Phase.companion.ome',
-    //     { pool: new Pool() }
-    // );
-    const imageSources = [];
-    for (let image of currentImageStackMetadata.value?.imageFrames ?? []) {
-        imageSources.push([
-            imageViewerStore.generateSelectionIndexRange(
-                image.start,
-                image.end
-            ),
-            datasetSelectionStore.getServerUrl(image.filename),
-        ]);
-    }
-
-    loader.value = await loadMultiTiff(imageSources as any, {
-        pool: new Pool(),
-    });
+    const fullImageUrl = datasetSelectionStore.getServerUrl(
+        currentLocationMetadata.value.imageDataFilename
+    );
+    loader.value = await loadOmeTiff(fullImageUrl, { pool: new Pool() });
+    imageViewerStoreUntrracked.sizeX = loader.value.metadata.Pixels.SizeX;
+    imageViewerStoreUntrracked.sizeY = loader.value.metadata.Pixels.SizeY;
+    imageViewerStoreUntrracked.sizeT = loader.value.metadata.Pixels.SizeT;
 
     const raster: PixelData = await loader.value.data[0].getRaster({
         selection: { c: 0, t: 0, z: 0 },
@@ -492,9 +475,11 @@ function renderLoadingDeckGL(): void {
 }
 
 function resetView() {
-    if (currentImageStackMetadata.value == null) return;
-    const zoomX = containerWidth.value / currentImageStackMetadata.value.sizeX;
-    const zoomY = containerHeight.value / currentImageStackMetadata.value.sizeY;
+    if (loader.value == null) return;
+    const imageWidth = imageViewerStoreUntrracked.sizeX;
+    const imageHeight = imageViewerStoreUntrracked.sizeY;
+    const zoomX = containerWidth.value / imageWidth;
+    const zoomY = containerHeight.value / imageHeight;
     const zoomPercent = 0.9 * Math.min(zoomX, zoomY);
     // console.log('reset');
     // ensure the image fills the space
@@ -502,11 +487,9 @@ function resetView() {
         initialViewState: {
             zoom: Math.log2(zoomPercent),
             target: [
-                currentImageStackMetadata.value.sizeX / 2 +
-                    Math.random() * 0.001, // hack since it will only reset if viewState is different
+                imageWidth / 2 + Math.random() * 0.001, // hack since it will only reset if viewState is different
                 // see https://github.com/visgl/deck.gl/issues/8198
-                currentImageStackMetadata.value.sizeY / 2 +
-                    Math.random() * 0.001,
+                imageHeight / 2 + Math.random() * 0.001,
                 0,
             ],
             minZoom: -8,

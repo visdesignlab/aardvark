@@ -9,6 +9,10 @@ export const useImageViewerStoreUntrracked = defineStore(
             max: 0,
         });
 
-        return { contrastLimitSlider };
+        const sizeX = ref<number>(1);
+        const sizeY = ref<number>(1);
+        const sizeT = ref<number>(1);
+
+        return { contrastLimitSlider, sizeX, sizeY, sizeT };
     }
 );

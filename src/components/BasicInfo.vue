@@ -1,14 +1,14 @@
 <script setup lang="ts">
-import { ref, computed, watch, onMounted } from 'vue';
+import { computed } from 'vue';
 import { useCellMetaData, type Lineage } from '@/stores/cellMetaData';
-import { useDatasetSelectionStore } from '@/stores/datasetSelectionStore';
+import { useImageViewerStoreUntrracked } from '@/stores/imageViewerStoreUntrracked';
 import { storeToRefs } from 'pinia';
 import { useGlobalSettings } from '@/stores/globalSettings';
 const cellMetaData = useCellMetaData();
 const globalSettings = useGlobalSettings();
 
-const datasetSelectionStore = useDatasetSelectionStore();
-const { currentImageStackMetadata } = storeToRefs(datasetSelectionStore);
+const imageViewerStoreUntrracked = useImageViewerStoreUntrracked();
+const { sizeT } = storeToRefs(imageViewerStoreUntrracked);
 
 interface DisplayInfo {
     label: string;
@@ -37,9 +37,7 @@ const displayList = computed<DisplayInfo[]>(() => {
         },
         {
             label: 'Images',
-            value:
-                currentImageStackMetadata.value?.sizeT.toLocaleString() ??
-                'UNKNOWN',
+            value: sizeT.value.toLocaleString() ?? 'UNKNOWN',
         },
     ];
     return info;

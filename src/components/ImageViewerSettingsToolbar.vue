@@ -4,14 +4,14 @@ import { useImageViewerStore } from '@/stores/imageViewerStore';
 import { useCellMetaData } from '@/stores/cellMetaData';
 import { storeToRefs } from 'pinia';
 import { useEventBusStore } from '@/stores/eventBusStore';
-import { useDatasetSelectionStore } from '@/stores/datasetSelectionStore';
+import { useImageViewerStoreUntrracked } from '@/stores/imageViewerStoreUntrracked';
 
-const datasetSelectionStore = useDatasetSelectionStore();
+const imageViewerStoreUntrracked = useImageViewerStoreUntrracked();
 const cellMetaData = useCellMetaData();
 const imageViewerStore = useImageViewerStore();
 const eventBusStore = useEventBusStore();
 const globalSettings = useGlobalSettings();
-const { currentImageStackMetadata } = storeToRefs(datasetSelectionStore);
+const { sizeT } = storeToRefs(imageViewerStoreUntrracked);
 </script>
 
 <template>
@@ -33,12 +33,7 @@ const { currentImageStackMetadata } = storeToRefs(datasetSelectionStore);
                 icon="arrow_left"
             />
             <q-btn
-                @click="
-                    () =>
-                        imageViewerStore.stepForwards(
-                            (currentImageStackMetadata?.sizeT ?? 1) - 1
-                        )
-                "
+                @click="() => imageViewerStore.stepForwards(sizeT - 1)"
                 size="sm"
                 outline
                 round
@@ -50,14 +45,13 @@ const { currentImageStackMetadata } = storeToRefs(datasetSelectionStore);
             class="mw-150"
             v-model="imageViewerStore.frameNumber"
             :min="1"
-            :max="currentImageStackMetadata?.sizeT"
+            :max="sizeT"
             label
             switch-label-side
             :dark="globalSettings.darkMode"
         />
         <span class="text-caption q-ml-sm no-break"
-            >{{ imageViewerStore.frameNumber }} /
-            {{ currentImageStackMetadata?.sizeT ?? 1 }}</span
+            >{{ imageViewerStore.frameNumber }} / {{ sizeT }}</span
         >
     </template>
 </template>

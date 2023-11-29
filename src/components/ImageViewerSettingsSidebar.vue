@@ -2,7 +2,6 @@
 import { useGlobalSettings } from '@/stores/globalSettings';
 import { useImageViewerStore } from '@/stores/imageViewerStore';
 import { useImageViewerStoreUntrracked } from '@/stores/imageViewerStoreUntrracked';
-import { useDatasetSelectionStore } from '@/stores/datasetSelectionStore';
 import { useEventBusStore } from '@/stores/eventBusStore';
 
 import { storeToRefs } from 'pinia';
@@ -13,8 +12,7 @@ const imageViewerStore = useImageViewerStore();
 const imageViewerStoreUntrracked = useImageViewerStoreUntrracked();
 const globalSettings = useGlobalSettings();
 const eventBusStore = useEventBusStore();
-const datasetSelectionStore = useDatasetSelectionStore();
-const { currentImageStackMetadata } = storeToRefs(datasetSelectionStore);
+const { sizeT } = storeToRefs(imageViewerStoreUntrracked);
 const { contrastLimitSlider } = storeToRefs(imageViewerStoreUntrracked);
 
 watch(
@@ -43,8 +41,7 @@ watch(
             >Frame:</q-badge
         >
         <span class="text-caption q-ml-sm"
-            >{{ imageViewerStore.frameNumber }} /
-            {{ currentImageStackMetadata?.sizeT ?? 1 }}</span
+            >{{ imageViewerStore.frameNumber }} / {{ sizeT }}</span
         >
     </div>
     <div class="flex row no-wrap q-mt-sm q-mb-sm">
@@ -58,12 +55,7 @@ watch(
                 icon="arrow_left"
             />
             <q-btn
-                @click="
-                    () =>
-                        imageViewerStore.stepForwards(
-                            (currentImageStackMetadata?.sizeT ?? 1) - 1
-                        )
-                "
+                @click="() => imageViewerStore.stepForwards(sizeT - 1)"
                 size="sm"
                 outline
                 round
@@ -75,7 +67,7 @@ watch(
             class="force-repeat"
             v-model="imageViewerStore.frameNumber"
             :min="1"
-            :max="currentImageStackMetadata?.sizeT"
+            :max="sizeT"
             label
             :dark="globalSettings.darkMode"
         />
@@ -131,7 +123,7 @@ watch(
             <q-slider
                 v-model="imageViewerStore.trailLength"
                 :min="0"
-                :max="currentImageStackMetadata?.sizeT"
+                :max="sizeT"
                 label
                 :dark="globalSettings.darkMode"
             />

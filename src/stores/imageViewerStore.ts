@@ -1,6 +1,5 @@
 import { ref, computed } from 'vue';
 import { defineStore } from 'pinia';
-import { debounce } from 'lodash-es';
 
 export interface SelectionIndex {
     c: number;
@@ -61,22 +60,6 @@ export const useImageViewerStore = defineStore('imageViewerStore', () => {
         return [{ c: 0, t: frameIndex.value, z: 0 }];
     });
 
-    function generateSelectionIndexRange(
-        minT: number,
-        maxT: number
-    ): SelectionIndex[] {
-        const selectionIndexRange: SelectionIndex[] = [];
-        for (let i = minT; i <= maxT; i++) {
-            selectionIndexRange.push({
-                c: 0,
-                t: i,
-                z: 0,
-            });
-        }
-        //console.log({ selectionIndexRange });
-        return selectionIndexRange;
-    }
-
     const trailLength = ref(10);
     const effectiveTrailLength = computed(() => {
         // if the current index is less than than the trail length
@@ -100,7 +83,6 @@ export const useImageViewerStore = defineStore('imageViewerStore', () => {
         stepBackwards,
         stepForwards,
         selections,
-        generateSelectionIndexRange,
         trailLength,
         effectiveTrailLength,
         showImageLayer,

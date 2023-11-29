@@ -35,19 +35,6 @@ export interface LocationMetadata {
     // location?: string;
 }
 
-export interface ImageStackMetadata {
-    sizeX: number;
-    sizeY: number;
-    sizeT: number;
-    imageFrames: ImageFrameMetadata[];
-}
-
-export interface ImageFrameMetadata {
-    start: number;
-    end: number;
-    filename: string;
-}
-
 export const useDatasetSelectionStore = defineStore(
     'datasetSelectionStore',
     () => {
@@ -186,25 +173,6 @@ export const useDatasetSelectionStore = defineStore(
             // { deep: true }
         );
 
-        const currentImageStackMetadata =
-            computedAsync<ImageStackMetadata | null>(async () => {
-                if (
-                    datasetSelectionTrrackedStore.currentExperimentFilename ==
-                        null ||
-                    currentLocationMetadata.value == null ||
-                    typeof currentLocationMetadata.value.imageDataFilename ==
-                        'undefined'
-                )
-                    return null;
-                const fullURL = getServerUrl(
-                    currentLocationMetadata.value.imageDataFilename
-                );
-
-                const response = await fetch(fullURL, {});
-                const data = await response.json();
-                return data;
-            });
-
         function getServerUrl(path: string): string {
             return (
                 'https://' +
@@ -221,7 +189,6 @@ export const useDatasetSelectionStore = defineStore(
             experimentFilenameList,
             currentExperimentMetadata,
             currentLocationMetadata,
-            currentImageStackMetadata,
             fetchingTabularData,
             selectImagingLocation,
             getServerUrl,
