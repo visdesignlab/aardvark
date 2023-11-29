@@ -420,7 +420,6 @@ function renderDeckGL(): void {
     const layers = [];
     if (imageViewerStore.showImageLayer) {
         if (pixelSource.value == null) return;
-        imageLayer.value?.state?.abortController?.abort();
         imageLayer.value = createBaseImageLayer();
         layers.push(imageLayer.value);
     }
@@ -499,6 +498,7 @@ function resetView() {
 }
 
 const { hoveredTrackId } = storeToRefs(cellMetaData);
+watch(currentTrackArray, renderDeckGL);
 watch(hoveredTrackId, renderDeckGL);
 watch(dataPointSelection.$state, renderDeckGL);
 watch(imageViewerStore.$state, renderDeckGL);
