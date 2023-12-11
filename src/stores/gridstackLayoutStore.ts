@@ -350,6 +350,18 @@ export const useGridstackLayoutStore = defineStore(
                 icon: 'history',
                 noPadding: true,
             },
+
+            {
+                component: 'LooneageViewGL',
+                displayName: 'Looneage (WIP)',
+                x: 0,
+                y: 10,
+                w: 3,
+                h: 5,
+                id: 'LooneageViewGL',
+                icon: 'account_tree',
+                noPadding: true,
+            },
         ];
 
         const defaultId = 'system_layout_0';
