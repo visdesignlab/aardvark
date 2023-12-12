@@ -9,7 +9,7 @@ import {
     type Cell,
 } from '@/stores/cellMetaData';
 import { useDataPointSelection } from '@/stores/dataPointSelection';
-
+import CellSnippetsLayer from './layers/CellSnippetsLayer';
 import { useImageViewerStore } from '@/stores/imageViewerStore';
 import { useImageViewerStoreUntrracked } from '@/stores/imageViewerStoreUntrracked';
 import { useDatasetSelectionStore } from '@/stores/datasetSelectionStore';
@@ -272,12 +272,25 @@ function renderDeckGL(): void {
     if (deckgl == null) return;
     const layers = [];
     layers.push(createTestScatterLayer());
-    const testSnippetLayer = createTestImageSnippetLayer();
-    if (testSnippetLayer) {
-        layers.push(testSnippetLayer);
-    } else {
-        console.log('skip test layer');
-    }
+    // const testSnippetLayer = createTestImageSnippetLayer();
+    // if (testSnippetLayer) {
+    //     layers.push(testSnippetLayer);
+    // } else {
+    //     console.log('skip test layer');
+    // }
+    layers.push(
+        new CellSnippetsLayer({
+            loader: pixelSource.value,
+            id: 'looneage-view-gl-test-snippet-layer',
+            contrastLimits: contrastLimit.value,
+            selections: imageViewerStore.selections,
+            channelsVisible: [true],
+            extensions: [colormapExtension],
+            // @ts-ignore
+            colormap: imageViewerStore.colormap,
+        })
+    );
+
     deckgl.setProps({
         layers,
         controller: true,
