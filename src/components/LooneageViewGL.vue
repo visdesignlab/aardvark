@@ -283,7 +283,34 @@ function renderDeckGL(): void {
             loader: pixelSource.value,
             id: 'looneage-view-gl-test-snippet-layer',
             contrastLimits: contrastLimit.value,
-            selections: imageViewerStore.selections,
+            selections: [
+                {
+                    c: 0,
+                    t: 0,
+                    z: 0,
+                    snippets: [
+                        {
+                            source: [100, 766, 152, 712],
+                            destination: [0, 54, 52, 0],
+                        },
+                        {
+                            source: [100, 766, 152, 712],
+                            destination: [100, 54, 152, 0],
+                        },
+                    ],
+                },
+                {
+                    c: 0,
+                    t: 10,
+                    z: 0,
+                    snippets: [
+                        {
+                            source: [100, 766, 152, 712],
+                            destination: [-100, 54, -48, 0],
+                        },
+                    ],
+                },
+            ],
             channelsVisible: [true],
             extensions: [colormapExtension],
             // @ts-ignore

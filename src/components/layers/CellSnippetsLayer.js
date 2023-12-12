@@ -59,42 +59,71 @@ class CellSnippetsLayer extends CompositeLayer {
     }
 
     updateState({ props, oldProps, changeFlags }) {
-        console.log({ changeFlags }); // TODO:
+        // console.log({ changeFlags }); // TODO:
         const loaderChanged = props.loader !== oldProps.loader;
-        // const selectionsChanged = props.selections !== oldProps.selections;
-        if (loaderChanged) {
-            const { loader } = this.props;
-            const abortController = new AbortController();
-            this.setState({ abortController });
-            const { signal } = abortController;
+        const selectionsChanged = props.selections !== oldProps.selections;
+        if (!loaderChanged && !selectionsChanged) return;
+        const { loader } = this.props;
+        if (!loader) return;
+        console.log('updateState');
+        const abortController = new AbortController();
+        this.setState({ abortController });
+        const { signal } = abortController;
 
-            const dataPromises = [];
+        const dataPromises = [];
 
-            const getRaster = loader.getRaster({
-                selection: { c: 0, t: 0, z: 0 },
-                signal,
-            });
-            // TODO: get all data required for the different snippets
-            dataPromises.push(getRaster);
-            Promise.all(dataPromises)
-                .then((rasters) => {
-                    const raster = {
-                        data: rasters.map((d) => d.data),
-                        width: rasters[0]?.width,
-                        height: rasters[0]?.height,
-                    };
-                    this.setState({ ...raster });
+        for (let i = 0; i < props.selections.length; i++) {
+            dataPromises.push(
+                loader.getRaster({
+                    selection: props.selections[i],
+                    signal,
                 })
-                .catch((err) => {
-                    if (err !== SIGNAL_ABORTED) {
-                        throw err; // re-throws error if not our signal
-                    }
-                });
+            );
         }
+        // const getRaster = loader.getRaster({
+        //     selection: props.selections[0],
+        //     signal,
+        // });
+        // TODO: get all data required for the different snippets
+        // dataPromises.push(getRaster);
+        Promise.all(dataPromises)
+            .then((rasters) => {
+                const data = [];
+                for (let i = 0; i < rasters.length; i++) {
+                    const raster = rasters[i];
+                    const snippets = props.selections[i].snippets;
+                    for (let snippet of snippets) {
+                        const snippetData = this.getSnippetOfByteArray(
+                            raster.data,
+                            raster.width,
+                            raster.height,
+                            snippet.source
+                        );
+
+                        data.push({
+                            data: snippetData,
+                            source: snippet.source,
+                            destination: snippet.destination,
+                        });
+                    }
+                }
+
+                this.setState({
+                    data,
+                    // width: rasters[0]?.width,
+                    // height: rasters[0]?.height,
+                });
+            })
+            .catch((err) => {
+                if (err !== SIGNAL_ABORTED) {
+                    throw err; // re-throws error if not our signal
+                }
+            });
     }
 
     renderLayers() {
-        return [this.createTestImageSnippetLayer()];
+        console.log('renderLayers');
+        return this.createTestImageSnippetLayer();
     }
 
     createTestImageSnippetLayer() {
@@ -112,35 +141,47 @@ class CellSnippetsLayer extends CompositeLayer {
         // console.log(contrastLimit.value);
         // console.log('colormap:', imageViewerStore.colormap);
         // console.log(dtype);
-        const testData = this.getSnippetOfByteArray(
-            data[0], // TODO:
-            767,
-            767,
-            [100, 766, 152, 712]
-        );
+        // const testData = this.getSnippetOfByteArray(
+        //     data[0], // TODO:
+        //     767,
+        //     767,
+        //     [100, 766, 152, 712]
+        // );
         // console.log({ testData });
-        return new XRLayer({
-            // loader: pixelSource.value,
-            id: 'blargen-base-image-layer-but-the-snippet-version',
-            contrastLimits: this.props.contrastLimits,
-            // selections: imageViewerStore.selections,
-            channelsVisible: [true],
-            extensions: this.props.extensions,
-            colormap: this.props.colormap,
-            // onClick: () => console.log('click in base image layer'),
-            // onViewportLoad: () => console.log('image viewport load'),
-            dtype,
-            bounds: [0, 54, 52, 0],
-            // bounds: [0, 767, 767, 0],
-            channelData: {
-                data: [testData],
-                width: 52,
-                height: 54,
-            },
-            // pickable: false,
-            // autoHighlight: true,
-            // highlightColor: [80, 80, 80, 50],
-        });
+        const xrLayers = [];
+        for (let i = 0; i < data.length; i++) {
+            const snippet = data[i];
+            // const snippetLocations = this.props.selections[i].snippets;
+            // for (let j = 0; j < snippetLocations.length; j++) {
+            // const snippet = this.props.selections[i].snippets[j];
+            xrLayers.push(
+                new XRLayer({
+                    // loader: pixelSource.value,
+                    id: `${id}-snippet-${i}`,
+                    contrastLimits: this.props.contrastLimits,
+                    // selections: imageViewerStore.selections,
+                    channelsVisible: [true],
+                    extensions: this.props.extensions,
+                    colormap: this.props.colormap,
+                    // onClick: () => console.log('click in base image layer'),
+                    // onViewportLoad: () => console.log('image viewport load'),
+                    dtype,
+                    bounds: snippet.destination,
+                    // bounds: [0, 767, 767, 0],
+                    channelData: {
+                        data: [snippet.data],
+                        width: snippet.source[2] - snippet.source[0],
+                        height: snippet.source[1] - snippet.source[3],
+                    },
+                    // pickable: false,
+                    // autoHighlight: true,
+                    // highlightColor: [80, 80, 80, 50],
+                })
+            );
+            // }
+        }
+
+        return xrLayers;
     }
 
     getSnippetOfByteArray(
