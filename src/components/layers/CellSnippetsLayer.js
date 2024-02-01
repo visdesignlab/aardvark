@@ -190,10 +190,10 @@ class CellSnippetsLayer extends CompositeLayer {
         height,
         bbox // left, bottom, right, top
     ) {
-        // create output byte array with the same type as byteArray
         const [left, bottom, right, top] = bbox;
         const outputWidth = right - left;
         const outputHeight = bottom - top;
+        // create output byte array with the same type as byteArray
         const outputByteArray = this.createSameTypeArray(
             byteArray,
             outputWidth * outputHeight

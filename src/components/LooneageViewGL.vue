@@ -45,6 +45,7 @@ const imageViewerStoreUntrracked = useImageViewerStoreUntrracked();
 const datasetSelectionStore = useDatasetSelectionStore();
 const { currentLocationMetadata } = storeToRefs(datasetSelectionStore);
 const { contrastLimitSlider } = storeToRefs(imageViewerStoreUntrracked);
+const { selectedLineage } = storeToRefs(cellMetaData);
 const eventBusStore = useEventBusStore();
 
 const deckGlContainer = ref(null);
@@ -169,50 +170,93 @@ function createTestScatterLayer(): ScatterplotLayer {
     });
 }
 
+const segmentationData = ref();
+
+watch(selectedLineage, () => {
+    if (cellMetaData.selectedLineage == null) return;
+    const segmentationFolderUrl = datasetSelectionStore.getServerUrl(
+        datasetSelectionStore.currentLocationMetadata?.segmentationsFolder ??
+            'UNKNOWN'
+    );
+    const segmentationUrl = `${segmentationFolderUrl}${imageViewerStore.frameNumber}.json`;
+    // get json data
+    fetch(segmentationUrl)
+        .then((response) => response.json())
+        .then((data) => {
+            segmentationData.value = data;
+            console.log({ data });
+            renderDeckGL();
+        });
+});
+
 function renderDeckGL(): void {
-    console.log('render test deckgl');
+    // console.log('render test deckgl');
     if (deckgl == null) return;
+    if (cellMetaData.selectedLineage == null) return;
     const layers = [];
     layers.push(createTestScatterLayer());
-    // const testSnippetLayer = createTestImageSnippetLayer();
-    // if (testSnippetLayer) {
-    //     layers.push(testSnippetLayer);
-    // } else {
-    //     console.log('skip test layer');
-    // }
+
+    const firstFrameIndex =
+        cellMetaData.getFrame(cellMetaData.selectedLineage.founder.cells[0]) -
+        1;
+
+    const id = cellMetaData.selectedLineage.lineageId;
+    const bbox = segmentationData.value.features.find(
+        (feature) => feature.properties.ID === id
+    )?.bbox;
+
+    // const everyCellSnippet = segmentationData.value.features.map((feature) => {
+    //     return { source: feature.bbox, destination: feature.bbox };
+    // });
+
+    const selections = [
+        {
+            c: 0,
+            t: firstFrameIndex,
+            z: 0,
+            snippets: [
+                {
+                    source: bbox,
+                    destination: bbox,
+                },
+            ],
+        },
+    ];
+
     layers.push(
         new CellSnippetsLayer({
             loader: pixelSource.value,
             id: 'looneage-view-gl-test-snippet-layer',
             contrastLimits: contrastLimit.value,
-            selections: [
-                {
-                    c: 0,
-                    t: 0,
-                    z: 0,
-                    snippets: [
-                        {
-                            source: [100, 766, 152, 712],
-                            destination: [0, 54, 52, 0],
-                        },
-                        {
-                            source: [100, 766, 152, 712],
-                            destination: [100, 54, 152, 0],
-                        },
-                    ],
-                },
-                {
-                    c: 0,
-                    t: 10,
-                    z: 0,
-                    snippets: [
-                        {
-                            source: [100, 766, 152, 712],
-                            destination: [-100, 54, -48, 0],
-                        },
-                    ],
-                },
-            ],
+            selections,
+            // selections: [
+            //     {
+            //         c: 0,
+            //         t: 0,
+            //         z: 0,
+            //         snippets: [
+            //             {
+            //                 source: [100, 766, 152, 712],
+            //                 destination: [0, 54, 52, 0],
+            //             },
+            //             {
+            //                 source: [100, 766, 152, 712],
+            //                 destination: [100, 54, 152, 0],
+            //             },
+            //         ],
+            //     },
+            //     {
+            //         c: 0,
+            //         t: 10,
+            //         z: 0,
+            //         snippets: [
+            //             {
+            //                 source: [100, 766, 152, 712],
+            //                 destination: [-100, 54, -48, 0],
+            //             },
+            //         ],
+            //     },
+            // ],
             channelsVisible: [true],
             extensions: [colormapExtension],
             // @ts-ignore
