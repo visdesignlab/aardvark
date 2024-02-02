@@ -12,6 +12,8 @@ import {
 
 import { ColorPaletteExtension } from '@vivjs/extensions';
 
+import { isEqual } from 'lodash-es';
+
 const defaultProps = {
     pickable: { type: 'boolean', value: true, compare: true },
     coordinateSystem: COORDINATE_SYSTEM.CARTESIAN,
@@ -59,13 +61,17 @@ class CellSnippetsLayer extends CompositeLayer {
     }
 
     updateState({ props, oldProps, changeFlags }) {
-        // console.log({ changeFlags }); // TODO:
+        console.log('UPDATE STATE MAYBE');
         const loaderChanged = props.loader !== oldProps.loader;
-        const selectionsChanged = props.selections !== oldProps.selections;
+        // const selectionsChanged = props.selections !== oldProps.selections;
+        const selectionsChanged = !isEqual(
+            props.selections,
+            oldProps.selections
+        );
         if (!loaderChanged && !selectionsChanged) return;
         const { loader } = this.props;
         if (!loader) return;
-        console.log('updateState');
+        console.log('YES!!!! updateState');
         const abortController = new AbortController();
         this.setState({ abortController });
         const { signal } = abortController;

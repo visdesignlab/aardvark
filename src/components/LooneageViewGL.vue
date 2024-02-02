@@ -17,6 +17,7 @@ import { useDatasetSelectionStore } from '@/stores/datasetSelectionStore';
 import { useEventBusStore } from '@/stores/eventBusStore';
 import { clamp } from 'lodash-es';
 import { Pool } from 'geotiff';
+import type { Feature } from 'geojson';
 
 import {
     loadOmeTiff,
@@ -172,7 +173,7 @@ function createTestScatterLayer(): ScatterplotLayer {
     });
 }
 
-const segmentationData = ref();
+const segmentationData = ref<(Feature | undefined)[]>();
 
 watch(selectedLineage, async () => {
     if (cellMetaData.selectedLineage == null) return;
@@ -190,11 +191,28 @@ watch(selectedLineage, async () => {
     //         renderDeckGL();
     //     });
 
-    segmentationData.value = await segmentationStore.getCellSegmentation(
-        cellMetaData.selectedLineage.founder.cells[0]
-    );
-    renderDeckGL();
+    const dataRequests = [];
+    for (const cell of cellMetaData.selectedLineage.founder.cells) {
+        dataRequests.push(segmentationStore.getCellSegmentation(cell));
+    }
+    Promise.all(dataRequests).then((data) => {
+        segmentationData.value = data;
+        renderDeckGL();
+    });
+    // segmentationData.value = await segmentationStore.getCellSegmentation(
+    //     cellMetaData.selectedLineage.founder.cells[0]
+    // );
+    // renderDeckGL();
 });
+
+function addMargin(bbox: number[], margin: number): number[] {
+    return [
+        bbox[0] - margin,
+        bbox[1] + margin,
+        bbox[2] + margin,
+        bbox[3] - margin,
+    ];
+}
 
 function renderDeckGL(): void {
     // console.log('render test deckgl');
@@ -202,23 +220,23 @@ function renderDeckGL(): void {
     if (cellMetaData.selectedLineage == null) return;
     if (segmentationData.value == null) return;
     const layers = [];
-    layers.push(createTestScatterLayer());
+    // layers.push(createTestScatterLayer());
 
-    const firstFrameIndex =
-        cellMetaData.getFrame(cellMetaData.selectedLineage.founder.cells[0]) -
-        1;
+    // const firstFrameIndex =
+    //     cellMetaData.getFrame(cellMetaData.selectedLineage.founder.cells[0]) -
+    //     1;
 
-    const id = cellMetaData.selectedLineage.lineageId;
-    const bbox = segmentationData.value.bbox;
+    // const id = cellMetaData.selectedLineage.lineageId;
+    // const bbox = segmentationData.value.bbox;
 
     // add a margin of 10 pixels around the bbox
     // console.log(bbox);
-    const bboxWithMargin = [
-        bbox[0] - 10,
-        bbox[1] + 10,
-        bbox[2] + 10,
-        bbox[3] - 10,
-    ];
+    // const bboxWithMargin = [
+    //     bbox[0] - 10,
+    //     bbox[1] + 10,
+    //     bbox[2] + 10,
+    //     bbox[3] - 10,
+    // ];
     // for (let i = 0; i < 4; i++) {
     //     bboxWithMargin[i] = clamp(
     //         bboxWithMargin[i],
@@ -227,27 +245,48 @@ function renderDeckGL(): void {
     //     );
     // }
     // console.log({ bboxWithMargin });
-    const width = bboxWithMargin[2] - bboxWithMargin[0];
-    const height = bboxWithMargin[3] - bboxWithMargin[1];
-    const destination = [0, 0, width, height];
+    // const width = bboxWithMargin[2] - bboxWithMargin[0];
+    // const height = bboxWithMargin[3] - bboxWithMargin[1];
+    // const destination = [0, 0, width, height];
     // [roi.left, roi.bottom, roi.right, roi.top]
     // const everyCellSnippet = segmentationData.value.features.map((feature) => {
     //     return { source: feature.bbox, destination: feature.bbox };
     // });
 
-    const selections = [
-        {
+    const selections = [];
+    let xOffset = 0;
+    const padding = 6;
+    for (let feature of segmentationData.value) {
+        if (!feature) continue;
+        if (!feature?.properties?.frame) continue;
+        if (!feature?.bbox) continue;
+        const t = feature.properties.frame - 1; // convert frame number to index
+        const source = addMargin(feature.bbox, 10);
+        const width = source[2] - source[0];
+        const height = source[3] - source[1];
+        const destination = [xOffset, 0, xOffset + width, height];
+        xOffset += width + padding;
+        selections.push({
             c: 0,
-            t: firstFrameIndex,
             z: 0,
-            snippets: [
-                {
-                    source: bboxWithMargin,
-                    destination,
-                },
-            ],
-        },
-    ];
+            t,
+            snippets: [{ source, destination }],
+        });
+    }
+
+    // const selections = [
+    //     {
+    //         c: 0,
+    //         t: firstFrameIndex,
+    //         z: 0,
+    //         snippets: [
+    //             {
+    //                 source: bboxWithMargin,
+    //                 destination,
+    //             },
+    //         ],
+    //     },
+    // ];
 
     layers.push(
         new CellSnippetsLayer({
