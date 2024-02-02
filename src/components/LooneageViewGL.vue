@@ -335,7 +335,6 @@ function renderDeckGL(): void {
             // ],
             channelsVisible: [true],
             extensions: [colormapExtension],
-            // @ts-ignore
             colormap: imageViewerStore.colormap,
         })
     );

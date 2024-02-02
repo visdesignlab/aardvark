@@ -40,6 +40,8 @@ const defaultProps = {
         value: [new ColorPaletteExtension()],
         compare: true,
     },
+    colormap: { type: 'string', value: '', compare: true },
+    // not used directly, but need to know for update logic
 };
 
 /**
@@ -62,13 +64,15 @@ class CellSnippetsLayer extends CompositeLayer {
 
     updateState({ props, oldProps, changeFlags }) {
         console.log('UPDATE STATE MAYBE');
+        // console.log(changeFlags);
         const loaderChanged = props.loader !== oldProps.loader;
         // const selectionsChanged = props.selections !== oldProps.selections;
         const selectionsChanged = !isEqual(
             props.selections,
             oldProps.selections
         );
-        if (!loaderChanged && !selectionsChanged) return;
+        const colormapChanged = props.colormap !== oldProps.colormap;
+        if (!loaderChanged && !selectionsChanged && !colormapChanged) return;
         const { loader } = this.props;
         if (!loader) return;
         console.log('YES!!!! updateState');
