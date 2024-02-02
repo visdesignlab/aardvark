@@ -182,6 +182,15 @@ export const useDatasetSelectionStore = defineStore(
             );
         }
 
+        const segmentationFolderUrl = computed<string>(() => {
+            if (currentLocationMetadata.value?.segmentationsFolder == null) {
+                return '';
+            }
+            return getServerUrl(
+                currentLocationMetadata.value.segmentationsFolder
+            );
+        });
+
         return {
             serverUrlValid,
             errorMessage,
@@ -192,6 +201,7 @@ export const useDatasetSelectionStore = defineStore(
             fetchingTabularData,
             selectImagingLocation,
             getServerUrl,
+            segmentationFolderUrl,
         };
     }
 );
