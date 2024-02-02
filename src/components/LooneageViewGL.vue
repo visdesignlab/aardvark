@@ -9,7 +9,8 @@ import {
     type Cell,
 } from '@/stores/cellMetaData';
 import { useDataPointSelection } from '@/stores/dataPointSelection';
-import CellSnippetsLayer from './layers/CellSnippetsLayer';
+import { useSegmentationStore } from '@/stores/segmentationStore';
+import CellSnippetsLayer from './layers/CellSnippetsLayer.js';
 import { useImageViewerStore } from '@/stores/imageViewerStore';
 import { useImageViewerStoreUntrracked } from '@/stores/imageViewerStoreUntrracked';
 import { useDatasetSelectionStore } from '@/stores/datasetSelectionStore';
@@ -47,6 +48,7 @@ const { currentLocationMetadata } = storeToRefs(datasetSelectionStore);
 const { contrastLimitSlider } = storeToRefs(imageViewerStoreUntrracked);
 const { selectedLineage } = storeToRefs(cellMetaData);
 const eventBusStore = useEventBusStore();
+const segmentationStore = useSegmentationStore();
 
 const deckGlContainer = ref(null);
 //////////////////////////
@@ -172,27 +174,33 @@ function createTestScatterLayer(): ScatterplotLayer {
 
 const segmentationData = ref();
 
-watch(selectedLineage, () => {
+watch(selectedLineage, async () => {
     if (cellMetaData.selectedLineage == null) return;
-    const segmentationFolderUrl = datasetSelectionStore.getServerUrl(
-        datasetSelectionStore.currentLocationMetadata?.segmentationsFolder ??
-            'UNKNOWN'
+    // const segmentationFolderUrl = datasetSelectionStore.getServerUrl(
+    //     datasetSelectionStore.currentLocationMetadata?.segmentationsFolder ??
+    //         'UNKNOWN'
+    // );
+    // const segmentationUrl = `${segmentationFolderUrl}${imageViewerStore.frameNumber}.json`;
+    // // get json data
+    // fetch(segmentationUrl)
+    //     .then((response) => response.json())
+    //     .then((data) => {
+    //         segmentationData.value = data;
+    //         console.log({ data });
+    //         renderDeckGL();
+    //     });
+
+    segmentationData.value = await segmentationStore.getCellSegmentation(
+        cellMetaData.selectedLineage.founder.cells[0]
     );
-    const segmentationUrl = `${segmentationFolderUrl}${imageViewerStore.frameNumber}.json`;
-    // get json data
-    fetch(segmentationUrl)
-        .then((response) => response.json())
-        .then((data) => {
-            segmentationData.value = data;
-            console.log({ data });
-            renderDeckGL();
-        });
+    renderDeckGL();
 });
 
 function renderDeckGL(): void {
     // console.log('render test deckgl');
     if (deckgl == null) return;
     if (cellMetaData.selectedLineage == null) return;
+    if (segmentationData.value == null) return;
     const layers = [];
     layers.push(createTestScatterLayer());
 
@@ -201,9 +209,7 @@ function renderDeckGL(): void {
         1;
 
     const id = cellMetaData.selectedLineage.lineageId;
-    const bbox = segmentationData.value.features.find(
-        (feature) => feature.properties.ID === id
-    )?.bbox;
+    const bbox = segmentationData.value.bbox;
     const width = bbox[2] - bbox[0];
     const height = bbox[3] - bbox[1];
     const destination = [0, 0, width, height];

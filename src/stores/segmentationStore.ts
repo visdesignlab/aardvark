@@ -3,6 +3,7 @@ import { defineStore } from 'pinia';
 import { useCellMetaData, type Cell, type Track } from '@/stores/cellMetaData';
 import { useDatasetSelectionStore } from '@/stores/datasetSelectionStore';
 import type { Feature } from 'geojson';
+import { LRUCache } from 'lru-cache';
 
 /**
  * Custom store for managing segmentations.
@@ -11,37 +12,52 @@ import type { Feature } from 'geojson';
 export const useSegmentationStore = defineStore('segmentationStore', () => {
     const datasetSelectionStore = useDatasetSelectionStore();
     const cellMetaData = useCellMetaData();
+    const cache = ref(
+        new LRUCache<string, Feature>({
+            max: 25_000,
+            // each item is small (1-2 KB)
+            fetchMethod: async (key, staleValue, { signal }) => {
+                return (await fetch(
+                    `${datasetSelectionStore.segmentationFolderUrl}/cells/${key}.json`,
+                    { signal }
+                ).then((res) => res.json())) as Feature;
+            },
+        })
+    );
+    // /**
+    //  * Get segmentations for a specific frame.
+    //  * @param frame - The frame number, not the index, so the this is 1-based.
+    //  * @returns An array of GeoJson features representing the segmentations.
+    //  */
+    // async function getFrameSegmentations(frame: number): Promise<Feature[]> {
+    //     // Implementation goes here
+    // }
 
-    /**
-     * Get segmentations for a specific frame.
-     * @param frame - The frame number, not the index, so the this is 1-based.
-     * @returns An array of GeoJson features representing the segmentations.
-     */
-    async function getFrameSegmentations(frame: number): Promise<Feature[]> {
-        // Implementation goes here
-    }
-
-    /**
-     * Get segmentations for a specific track.
-     * @param track - The track object.
-     * @returns An array of GeoJson features representing the segmentations.
-     */
-    async function getTrackSegmentations(track: Track): Promise<Feature[]> {
-        // Implementation goes here
-    }
+    // /**
+    //  * Get segmentations for a specific track.
+    //  * @param track - The track object.
+    //  * @returns An array of GeoJson features representing the segmentations.
+    //  */
+    // async function getTrackSegmentations(track: Track): Promise<Feature[]> {
+    //     // Implementation goes here
+    // }
 
     /**
      * Get segmentations for a specific cell.
      * @param cell - The cell object.
      * @returns A GeoJson feature representing the segmentation.
      */
-    async function getCellSegmentations(cell: Cell): Promise<Feature> {
-        // Implementation goes here
+    async function getCellSegmentation(
+        cell: Cell
+    ): Promise<Feature | undefined> {
+        const frame = cellMetaData.getFrame(cell);
+        const id = cell.trackId;
+        return await cache.value.fetch(`${frame}-${id}`);
     }
 
     return {
-        getFrameSegmentations,
-        getTrackSegmentations,
-        getCellSegmentations,
+        // getFrameSegmentations,
+        // getTrackSegmentations,
+        getCellSegmentation,
     };
 });
