@@ -17,7 +17,7 @@ export const useSegmentationStore = defineStore('segmentationStore', () => {
      * @param frame - The frame number, not the index, so the this is 1-based.
      * @returns An array of GeoJson features representing the segmentations.
      */
-    function getFrameSegmentations(frame: number): Feature[] {
+    async function getFrameSegmentations(frame: number): Promise<Feature[]> {
         // Implementation goes here
     }
 
@@ -26,7 +26,7 @@ export const useSegmentationStore = defineStore('segmentationStore', () => {
      * @param track - The track object.
      * @returns An array of GeoJson features representing the segmentations.
      */
-    function getTrackSegmentations(track: Track): Feature[] {
+    async function getTrackSegmentations(track: Track): Promise<Feature[]> {
         // Implementation goes here
     }
 
@@ -35,7 +35,7 @@ export const useSegmentationStore = defineStore('segmentationStore', () => {
      * @param cell - The cell object.
      * @returns A GeoJson feature representing the segmentation.
      */
-    function getCellSegmentations(cell: Cell): Feature {
+    async function getCellSegmentations(cell: Cell): Promise<Feature> {
         // Implementation goes here
     }
 
