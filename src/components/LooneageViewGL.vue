@@ -192,9 +192,20 @@ watch(selectedLineage, async () => {
     //     });
 
     const dataRequests = [];
-    for (const cell of cellMetaData.selectedLineage.founder.cells) {
-        dataRequests.push(segmentationStore.getCellSegmentation(cell));
+    const samples = [0, 0.5, 1];
+    for (let sample of samples) {
+        const index = Math.round(
+            sample * (cellMetaData.selectedLineage.founder.cells.length - 1)
+        );
+        dataRequests.push(
+            segmentationStore.getCellSegmentation(
+                cellMetaData.selectedLineage.founder.cells[index]
+            )
+        );
     }
+    // for (const cell of cellMetaData.selectedLineage.founder.cells) {
+    //     dataRequests.push(segmentationStore.getCellSegmentation(cell));
+    // }
     Promise.all(dataRequests).then((data) => {
         segmentationData.value = data;
         renderDeckGL();
