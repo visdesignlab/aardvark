@@ -205,7 +205,11 @@ class CellSnippetsLayer extends CompositeLayer {
             for (let x = left; x < right; x++) {
                 const index = y * width + x;
                 // @ts-ignore: ignore because we know the type of the array should match
-                outputByteArray[i++] = byteArray[index];
+                if (0 <= y && y < height && 0 <= x && x < width) {
+                    outputByteArray[i++] = byteArray[index];
+                } else {
+                    outputByteArray[i++] = 0;
+                }
             }
         }
 

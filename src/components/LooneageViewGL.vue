@@ -210,8 +210,25 @@ function renderDeckGL(): void {
 
     const id = cellMetaData.selectedLineage.lineageId;
     const bbox = segmentationData.value.bbox;
-    const width = bbox[2] - bbox[0];
-    const height = bbox[3] - bbox[1];
+
+    // add a margin of 10 pixels around the bbox
+    // console.log(bbox);
+    const bboxWithMargin = [
+        bbox[0] - 10,
+        bbox[1] + 10,
+        bbox[2] + 10,
+        bbox[3] - 10,
+    ];
+    // for (let i = 0; i < 4; i++) {
+    //     bboxWithMargin[i] = clamp(
+    //         bboxWithMargin[i],
+    //         0,
+    //         imageViewerStoreUntrracked.sizeX
+    //     );
+    // }
+    // console.log({ bboxWithMargin });
+    const width = bboxWithMargin[2] - bboxWithMargin[0];
+    const height = bboxWithMargin[3] - bboxWithMargin[1];
     const destination = [0, 0, width, height];
     // [roi.left, roi.bottom, roi.right, roi.top]
     // const everyCellSnippet = segmentationData.value.features.map((feature) => {
@@ -225,7 +242,7 @@ function renderDeckGL(): void {
             z: 0,
             snippets: [
                 {
-                    source: bbox,
+                    source: bboxWithMargin,
                     destination,
                 },
             ],
