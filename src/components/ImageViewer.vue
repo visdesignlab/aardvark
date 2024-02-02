@@ -162,7 +162,7 @@ function createSegmentationsLayer(): typeof GeoJsonLayer {
     // console.log(folderUrl);
     // @ts-ignore
     return new GeoJsonLayer({
-        data: folderUrl + `${imageViewerStore.frameNumber}.json`,
+        data: folderUrl + `frames/${imageViewerStore.frameNumber}.json`,
         lineWidthUnits: 'pixels',
         id: 'segmentations',
         opacity: 0.4,
@@ -170,7 +170,7 @@ function createSegmentationsLayer(): typeof GeoJsonLayer {
         filled: true,
         getFillColor: (info) => {
             if (
-                info.properties?.ID?.toString() === cellMetaData.hoveredTrackId
+                info.properties?.id?.toString() === cellMetaData.hoveredTrackId
             ) {
                 return [255, 255, 255, 128];
             }
@@ -178,7 +178,7 @@ function createSegmentationsLayer(): typeof GeoJsonLayer {
         },
         getLineColor: (info) => {
             if (
-                info.properties?.ID?.toString() ===
+                info.properties?.id?.toString() ===
                 dataPointSelection.selectedTrackId
             ) {
                 return [77, 175, 74];
@@ -187,7 +187,7 @@ function createSegmentationsLayer(): typeof GeoJsonLayer {
         },
         getLineWidth: (info) => {
             if (
-                info.properties?.ID?.toString() ===
+                info.properties?.id?.toString() ===
                 dataPointSelection.selectedTrackId
             ) {
                 return 4;
@@ -208,7 +208,7 @@ function createSegmentationsLayer(): typeof GeoJsonLayer {
 interface GeoJsonFeature {
     type: 'Feature';
     bbox: [number, number, number, number]; // left, bottom, right, top
-    properties: { ID: number }; // could be anything, but mine should have ID
+    properties: { id: number }; // could be anything, but mine should have id
 }
 
 function onHover(info: PickingInfo): void {
@@ -218,7 +218,7 @@ function onHover(info: PickingInfo): void {
     }
     const geoJsonFeature = info.object as GeoJsonFeature;
     // console.log(geoJsonFeature);
-    cellMetaData.hoveredTrackId = geoJsonFeature.properties.ID?.toString();
+    cellMetaData.hoveredTrackId = geoJsonFeature.properties.id?.toString();
 }
 
 function onClick(info: PickingInfo): void {
@@ -228,7 +228,7 @@ function onClick(info: PickingInfo): void {
     }
     const geoJsonFeature = info.object as GeoJsonFeature;
     dataPointSelection.selectedTrackId =
-        geoJsonFeature.properties.ID?.toString();
+        geoJsonFeature.properties.id?.toString();
 
     const lineageId = cellMetaData.getLineageId(cellMetaData.selectedTrack!);
     dataPointSelection.selectedLineageId = lineageId;
