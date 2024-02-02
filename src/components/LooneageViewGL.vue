@@ -204,7 +204,10 @@ function renderDeckGL(): void {
     const bbox = segmentationData.value.features.find(
         (feature) => feature.properties.ID === id
     )?.bbox;
-
+    const width = bbox[2] - bbox[0];
+    const height = bbox[3] - bbox[1];
+    const destination = [0, 0, width, height];
+    // [roi.left, roi.bottom, roi.right, roi.top]
     // const everyCellSnippet = segmentationData.value.features.map((feature) => {
     //     return { source: feature.bbox, destination: feature.bbox };
     // });
@@ -217,7 +220,7 @@ function renderDeckGL(): void {
             snippets: [
                 {
                     source: bbox,
-                    destination: bbox,
+                    destination,
                 },
             ],
         },
