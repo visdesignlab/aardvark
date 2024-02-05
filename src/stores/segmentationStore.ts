@@ -24,14 +24,20 @@ export const useSegmentationStore = defineStore('segmentationStore', () => {
             },
         })
     );
-    // /**
-    //  * Get segmentations for a specific frame.
-    //  * @param frame - The frame number, not the index, so the this is 1-based.
-    //  * @returns An array of GeoJson features representing the segmentations.
-    //  */
-    // async function getFrameSegmentations(frame: number): Promise<Feature[]> {
-    //     // Implementation goes here
-    // }
+    /**
+     * Get segmentations for a specific frame.
+     * @param frame - The frame number, not the index, so the this is 1-based.
+     * @returns An array of GeoJson features representing the segmentations.
+     */
+    async function getFrameSegmentations(frame: number): Promise<Feature[]> {
+        // Implementation goes here
+        const cells = cellMetaData.frameMap.get(frame);
+        if (!cells) return [];
+        const promises = cells.map((cell) => getCellSegmentation(cell));
+        return (await Promise.all(promises)).filter(
+            (x) => x != null
+        ) as Feature[];
+    }
 
     // /**
     //  * Get segmentations for a specific track.
@@ -56,7 +62,7 @@ export const useSegmentationStore = defineStore('segmentationStore', () => {
     }
 
     return {
-        // getFrameSegmentations,
+        getFrameSegmentations,
         // getTrackSegmentations,
         getCellSegmentation,
     };

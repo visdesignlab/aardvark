@@ -13,6 +13,7 @@ import { useDataPointSelection } from '@/stores/dataPointSelection';
 import { useImageViewerStore } from '@/stores/imageViewerStore';
 import { useImageViewerStoreUntrracked } from '@/stores/imageViewerStoreUntrracked';
 import { useDatasetSelectionStore } from '@/stores/datasetSelectionStore';
+import { useSegmentationStore } from '@/stores/segmentationStore';
 import { useEventBusStore } from '@/stores/eventBusStore';
 import { clamp } from 'lodash-es';
 import { Pool } from 'geotiff';
@@ -36,7 +37,7 @@ import {
 import { TripsLayer } from '@deck.gl/geo-layers';
 
 const cellMetaData = useCellMetaData();
-
+const segmentationStore = useSegmentationStore();
 const dataPointSelection = useDataPointSelection();
 const imageViewerStore = useImageViewerStore();
 const imageViewerStoreUntrracked = useImageViewerStoreUntrracked();
@@ -162,7 +163,9 @@ function createSegmentationsLayer(): typeof GeoJsonLayer {
     // console.log(folderUrl);
     // @ts-ignore
     return new GeoJsonLayer({
-        data: folderUrl + `frames/${imageViewerStore.frameNumber}.json`,
+        data: segmentationStore.getFrameSegmentations(
+            imageViewerStore.frameNumber
+        ),
         lineWidthUnits: 'pixels',
         id: 'segmentations',
         opacity: 0.4,
