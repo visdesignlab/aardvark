@@ -54,7 +54,7 @@ const imageViewerStoreUntrracked = useImageViewerStoreUntrracked();
 const datasetSelectionStore = useDatasetSelectionStore();
 const { currentLocationMetadata } = storeToRefs(datasetSelectionStore);
 const { contrastLimitSlider } = storeToRefs(imageViewerStoreUntrracked);
-const { selectedLineage } = storeToRefs(cellMetaData);
+const { selectedTrack } = storeToRefs(cellMetaData);
 const eventBusStore = useEventBusStore();
 const segmentationStore = useSegmentationStore();
 
@@ -176,18 +176,18 @@ function createTestScatterLayer(): ScatterplotLayer {
 
 const segmentationData = ref<Feature[]>();
 
-watch(selectedLineage, async () => {
-    if (cellMetaData.selectedLineage == null) return;
+watch(selectedTrack, async () => {
+    if (cellMetaData.selectedTrack == null) return;
 
     const dataRequests = [];
     const samples = [0, 0.25, 0.5, 0.75, 1];
     for (let sample of samples) {
         const index = Math.round(
-            sample * (cellMetaData.selectedLineage.founder.cells.length - 1)
+            sample * (cellMetaData.selectedTrack.cells.length - 1)
         );
         dataRequests.push(
             segmentationStore.getCellSegmentation(
-                cellMetaData.selectedLineage.founder.cells[index]
+                cellMetaData.selectedTrack.cells[index]
             )
         );
     }
@@ -236,7 +236,7 @@ function createTrackLayer(): CellSnippetsLayer | null {
 
 function renderDeckGL(): void {
     if (deckgl == null) return;
-    if (cellMetaData.selectedLineage == null) return;
+    if (cellMetaData.selectedTrack == null) return;
     if (segmentationData.value == null) return;
     const layers = [];
 
