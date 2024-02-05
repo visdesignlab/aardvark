@@ -18,6 +18,13 @@ import { useEventBusStore } from '@/stores/eventBusStore';
 import { clamp } from 'lodash-es';
 import { Pool } from 'geotiff';
 import type { Feature } from 'geojson';
+import {
+    expandHeight,
+    getMaxHeight,
+    type BBox,
+    getWidth,
+    getHeight,
+} from '@/util/imageSnippets';
 
 import {
     loadOmeTiff,
@@ -173,7 +180,7 @@ function createTestScatterLayer(): ScatterplotLayer {
     });
 }
 
-const segmentationData = ref<(Feature | undefined)[]>();
+const segmentationData = ref<Feature[]>();
 
 watch(selectedLineage, async () => {
     if (cellMetaData.selectedLineage == null) return;
@@ -207,7 +214,7 @@ watch(selectedLineage, async () => {
     //     dataRequests.push(segmentationStore.getCellSegmentation(cell));
     // }
     Promise.all(dataRequests).then((data) => {
-        segmentationData.value = data;
+        segmentationData.value = data.filter((d) => d != null) as Feature[];
         renderDeckGL();
     });
     // segmentationData.value = await segmentationStore.getCellSegmentation(
@@ -216,66 +223,22 @@ watch(selectedLineage, async () => {
     // renderDeckGL();
 });
 
-function addMargin(bbox: number[], margin: number): number[] {
-    return [
-        bbox[0] - margin,
-        bbox[1] + margin,
-        bbox[2] + margin,
-        bbox[3] - margin,
-    ];
-}
-
-function renderDeckGL(): void {
-    // console.log('render test deckgl');
-    if (deckgl == null) return;
-    if (cellMetaData.selectedLineage == null) return;
-    if (segmentationData.value == null) return;
-    const layers = [];
-    // layers.push(createTestScatterLayer());
-
-    // const firstFrameIndex =
-    //     cellMetaData.getFrame(cellMetaData.selectedLineage.founder.cells[0]) -
-    //     1;
-
-    // const id = cellMetaData.selectedLineage.lineageId;
-    // const bbox = segmentationData.value.bbox;
-
-    // add a margin of 10 pixels around the bbox
-    // console.log(bbox);
-    // const bboxWithMargin = [
-    //     bbox[0] - 10,
-    //     bbox[1] + 10,
-    //     bbox[2] + 10,
-    //     bbox[3] - 10,
-    // ];
-    // for (let i = 0; i < 4; i++) {
-    //     bboxWithMargin[i] = clamp(
-    //         bboxWithMargin[i],
-    //         0,
-    //         imageViewerStoreUntrracked.sizeX
-    //     );
-    // }
-    // console.log({ bboxWithMargin });
-    // const width = bboxWithMargin[2] - bboxWithMargin[0];
-    // const height = bboxWithMargin[3] - bboxWithMargin[1];
-    // const destination = [0, 0, width, height];
-    // [roi.left, roi.bottom, roi.right, roi.top]
-    // const everyCellSnippet = segmentationData.value.features.map((feature) => {
-    //     return { source: feature.bbox, destination: feature.bbox };
-    // });
-
+function createTrackLayer(): CellSnippetsLayer | null {
+    if (!segmentationData.value) return null;
     const selections = [];
     let xOffset = 0;
     const padding = 6;
+    const maxHeight = getMaxHeight(segmentationData.value);
+    console.log({ maxHeight });
     for (let feature of segmentationData.value) {
         if (!feature) continue;
         if (!feature?.properties?.frame) continue;
         if (!feature?.bbox) continue;
         const t = feature.properties.frame - 1; // convert frame number to index
-        const source = addMargin(feature.bbox, 10);
-        const width = source[2] - source[0];
-        const height = source[3] - source[1];
-        const destination = [xOffset, 0, xOffset + width, height];
+        const source = expandHeight(feature.bbox as BBox, maxHeight);
+        const width = getWidth(source);
+        const height = getHeight(source);
+        const destination = [xOffset, 0, xOffset + width, -height];
         xOffset += width + padding;
         selections.push({
             c: 0,
@@ -285,59 +248,25 @@ function renderDeckGL(): void {
         });
     }
 
-    // const selections = [
-    //     {
-    //         c: 0,
-    //         t: firstFrameIndex,
-    //         z: 0,
-    //         snippets: [
-    //             {
-    //                 source: bboxWithMargin,
-    //                 destination,
-    //             },
-    //         ],
-    //     },
-    // ];
+    return new CellSnippetsLayer({
+        loader: pixelSource.value,
+        id: 'looneage-view-gl-test-snippet-layer',
+        contrastLimits: contrastLimit.value,
+        selections,
+        channelsVisible: [true],
+        extensions: [colormapExtension],
+        colormap: imageViewerStore.colormap,
+    });
+}
 
-    layers.push(
-        new CellSnippetsLayer({
-            loader: pixelSource.value,
-            id: 'looneage-view-gl-test-snippet-layer',
-            contrastLimits: contrastLimit.value,
-            selections,
-            // selections: [
-            //     {
-            //         c: 0,
-            //         t: 0,
-            //         z: 0,
-            //         snippets: [
-            //             {
-            //                 source: [100, 766, 152, 712],
-            //                 destination: [0, 54, 52, 0],
-            //             },
-            //             {
-            //                 source: [100, 766, 152, 712],
-            //                 destination: [100, 54, 152, 0],
-            //             },
-            //         ],
-            //     },
-            //     {
-            //         c: 0,
-            //         t: 10,
-            //         z: 0,
-            //         snippets: [
-            //             {
-            //                 source: [100, 766, 152, 712],
-            //                 destination: [-100, 54, -48, 0],
-            //             },
-            //         ],
-            //     },
-            // ],
-            channelsVisible: [true],
-            extensions: [colormapExtension],
-            colormap: imageViewerStore.colormap,
-        })
-    );
+function renderDeckGL(): void {
+    // console.log('render test deckgl');
+    if (deckgl == null) return;
+    if (cellMetaData.selectedLineage == null) return;
+    if (segmentationData.value == null) return;
+    const layers = [];
+
+    layers.push(createTrackLayer());
 
     deckgl.setProps({
         layers,
@@ -348,7 +277,6 @@ function renderDeckGL(): void {
 watch(dataPointSelection.$state, renderDeckGL);
 watch(imageViewerStore.$state, renderDeckGL);
 watch(contrastLimitSlider, renderDeckGL);
-// renderDeckGL();
 </script>
 
 <template>
