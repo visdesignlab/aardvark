@@ -73,9 +73,7 @@ const testRaster = ref<PixelData | null>(null);
 watch(currentLocationMetadata, async () => {
     if (currentLocationMetadata.value?.imageDataFilename == null) return;
     if (deckgl == null) return;
-    // if (contrastLimitSlider == null) return;
-    // renderLoadingDeckGL();
-    // imageViewerStore.frameIndex = 0;
+
     pixelSource.value = null;
 
     const fullImageUrl = datasetSelectionStore.getServerUrl(
@@ -91,17 +89,13 @@ watch(currentLocationMetadata, async () => {
     });
     if (testRaster.value == null) return;
     const copy = testRaster.value.data.slice();
-    // need a copy since getChannelStats mutates the array mutates the array
     const channelStats = getChannelStats(copy);
     contrastLimitSlider.value.min = channelStats.contrastLimits[0];
     contrastLimitSlider.value.max = channelStats.contrastLimits[1];
     imageViewerStore.contrastLimitExtentSlider.min = channelStats.domain[0];
     imageViewerStore.contrastLimitExtentSlider.max = channelStats.domain[1];
-    // const contrastLimits: [number, number][] = [
-    //     channelStats.contrastLimits as [number, number],
-    // ];
+
     pixelSource.value = loader.value.data[0] as PixelSource<any>;
-    // resetView();
     renderDeckGL();
 });
 
@@ -184,19 +178,6 @@ const segmentationData = ref<Feature[]>();
 
 watch(selectedLineage, async () => {
     if (cellMetaData.selectedLineage == null) return;
-    // const segmentationFolderUrl = datasetSelectionStore.getServerUrl(
-    //     datasetSelectionStore.currentLocationMetadata?.segmentationsFolder ??
-    //         'UNKNOWN'
-    // );
-    // const segmentationUrl = `${segmentationFolderUrl}${imageViewerStore.frameNumber}.json`;
-    // // get json data
-    // fetch(segmentationUrl)
-    //     .then((response) => response.json())
-    //     .then((data) => {
-    //         segmentationData.value = data;
-    //         console.log({ data });
-    //         renderDeckGL();
-    //     });
 
     const dataRequests = [];
     const samples = [0, 0.25, 0.5, 0.75, 1];
@@ -210,17 +191,11 @@ watch(selectedLineage, async () => {
             )
         );
     }
-    // for (const cell of cellMetaData.selectedLineage.founder.cells) {
-    //     dataRequests.push(segmentationStore.getCellSegmentation(cell));
-    // }
+
     Promise.all(dataRequests).then((data) => {
         segmentationData.value = data.filter((d) => d != null) as Feature[];
         renderDeckGL();
     });
-    // segmentationData.value = await segmentationStore.getCellSegmentation(
-    //     cellMetaData.selectedLineage.founder.cells[0]
-    // );
-    // renderDeckGL();
 });
 
 function createTrackLayer(): CellSnippetsLayer | null {
@@ -260,7 +235,6 @@ function createTrackLayer(): CellSnippetsLayer | null {
 }
 
 function renderDeckGL(): void {
-    // console.log('render test deckgl');
     if (deckgl == null) return;
     if (cellMetaData.selectedLineage == null) return;
     if (segmentationData.value == null) return;
