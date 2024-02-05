@@ -199,7 +199,7 @@ watch(selectedLineage, async () => {
     //     });
 
     const dataRequests = [];
-    const samples = [0, 0.5, 1];
+    const samples = [0, 0.25, 0.5, 0.75, 1];
     for (let sample of samples) {
         const index = Math.round(
             sample * (cellMetaData.selectedLineage.founder.cells.length - 1)
