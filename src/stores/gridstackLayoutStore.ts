@@ -19,6 +19,18 @@ export interface LayoutItem {
     props?: any;
 }
 
+export interface Item {
+    // propoerties other than the layout ones
+    component: string;
+    displayName: string;
+    id: string;
+    noPadding?: boolean;
+    icon?: string;
+    sidebar?: string;
+    toolbar?: string;
+    props?: any;
+}
+
 export interface GridstackItem {
     // properties expected by a gridstack item
     x: number;
@@ -248,14 +260,27 @@ export const useGridstackLayoutStore = defineStore(
             },
         ];
 
-        const allEqualItems: LayoutItem[] = [
+        function setEqualItems(items: Item[]): LayoutItem[] {
+            const layoutItems: LayoutItem[] = [];
+            const h = 5;
+            const w = 3;
+            let x = 0;
+            let y = 0;
+            for (const item of items) {
+                const layoutItem: LayoutItem = { ...item, x, y, w, h };
+                x = (x + 3) % 12;
+                if (x === 0) {
+                    y += 5;
+                }
+                layoutItems.push(layoutItem);
+            }
+
+            return layoutItems;
+        }
+        const allEqualItems: LayoutItem[] = setEqualItems([
             {
                 component: 'LooneageView',
                 displayName: 'Looneage',
-                x: 0,
-                y: 0,
-                w: 3,
-                h: 5,
                 id: 'LooneageView',
                 icon: 'account_tree',
                 sidebar: 'LooneageViewSettingsSidebar',
@@ -264,10 +289,6 @@ export const useGridstackLayoutStore = defineStore(
             {
                 component: 'SimpleTable',
                 displayName: 'Lineages',
-                x: 3,
-                y: 0,
-                w: 3,
-                h: 5,
                 id: 'SimpleTable-lineage',
                 props: {
                     attributeLevel: 'lineage',
@@ -278,10 +299,6 @@ export const useGridstackLayoutStore = defineStore(
             {
                 component: 'SimpleTable',
                 displayName: 'Tracks',
-                x: 6,
-                y: 0,
-                w: 3,
-                h: 5,
                 id: 'SimpleTable-track',
                 props: {
                     attributeLevel: 'track',
@@ -292,10 +309,6 @@ export const useGridstackLayoutStore = defineStore(
             {
                 component: 'SimpleTable',
                 displayName: 'Cells',
-                x: 9,
-                y: 0,
-                w: 3,
-                h: 5,
                 id: 'SimpleTable-cell',
                 props: {
                     attributeLevel: 'cell',
@@ -306,10 +319,6 @@ export const useGridstackLayoutStore = defineStore(
             {
                 component: 'AggregateLineChart',
                 displayName: 'Line Chart',
-                x: 0,
-                y: 5,
-                w: 3,
-                h: 5,
                 id: 'AggregateLineChart',
                 icon: 'timeline',
                 sidebar: 'AggregateLineChartSettingsSidebar',
@@ -319,10 +328,6 @@ export const useGridstackLayoutStore = defineStore(
             {
                 component: 'ImageViewer',
                 displayName: 'Images',
-                x: 3,
-                y: 5,
-                w: 3,
-                h: 5,
                 id: 'ImageViewer',
                 noPadding: true,
                 icon: 'image',
@@ -332,37 +337,31 @@ export const useGridstackLayoutStore = defineStore(
             {
                 component: 'BasicInfo',
                 displayName: 'Overview',
-                x: 6,
-                y: 5,
-                w: 3,
-                h: 5,
                 id: 'BasicInfo',
                 icon: 'info',
             },
             {
                 component: 'TrrackVisWrapper',
                 displayName: 'History',
-                x: 9,
-                y: 5,
-                w: 3,
-                h: 5,
                 id: 'TrrackVisWrapper',
                 icon: 'history',
                 noPadding: true,
             },
-
             {
                 component: 'LooneageViewGL',
                 displayName: 'Looneage (WIP)',
-                x: 0,
-                y: 10,
-                w: 3,
-                h: 5,
                 id: 'LooneageViewGL',
                 icon: 'account_tree',
                 noPadding: true,
             },
-        ];
+            {
+                component: 'CellTrackView',
+                displayName: 'CellTrack',
+                id: 'CellTrackView',
+                icon: 'rectangle',
+                noPadding: true,
+            },
+        ]);
 
         const defaultId = 'system_layout_0';
 
