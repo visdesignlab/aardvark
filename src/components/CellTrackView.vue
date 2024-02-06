@@ -174,6 +174,41 @@ function createTestScatterLayer(): ScatterplotLayer {
     });
 }
 
+function createDebugScatterPlotLayer(): ScatterplotLayer | null {
+    if (!selections.value || selections.value.length == 0) return null;
+    // test data with points positioned in a grid
+    const bboxCorners = [];
+    for (const selection of selections.value) {
+        for (const snippet of selection.snippets) {
+            bboxCorners.push({
+                position: [snippet.destination[0], snippet.destination[1]],
+                color: [
+                    Math.random() * 255,
+                    Math.random() * 255,
+                    Math.random() * 255,
+                ],
+            });
+        }
+    }
+    return new ScatterplotLayer({
+        id: 'debug-scatterplot-layer',
+        data: bboxCorners,
+        pickable: true,
+        opacity: 0.8,
+        stroked: true,
+        filled: true,
+        radiusScale: 1,
+        radiusMinPixels: 1,
+        radiusMaxPixels: 100,
+        lineWidthMinPixels: 0,
+        getLineWidth: 0,
+        getPosition: (d: any) => d.position,
+        getRadius: 5,
+        getFillColor: (d) => d.color,
+        // getLineColor: (d) => [0, 0, 0],
+    });
+}
+
 const segmentationData = ref<Feature[]>();
 
 watch(selectedTrack, async () => {
@@ -198,13 +233,31 @@ watch(selectedTrack, async () => {
     });
 });
 
-function createTrackLayer(): CellSnippetsLayer | null {
-    if (!segmentationData.value) return null;
-    const selections = [];
+const selections = computed<
+    {
+        c: number;
+        z: number;
+        t: number;
+        snippets: {
+            source: BBox;
+            destination: number[];
+        }[];
+    }[]
+>(() => {
+    if (!segmentationData.value) return [];
+    const selections: {
+        c: number;
+        z: number;
+        t: number;
+        snippets: {
+            source: BBox;
+            destination: BBox;
+        }[];
+    }[] = [];
     let xOffset = 0;
     const padding = 6;
     const maxHeight = getMaxHeight(segmentationData.value);
-    console.log({ maxHeight });
+    // console.log({ maxHeight });
     for (let feature of segmentationData.value) {
         if (!feature) continue;
         if (!feature?.properties?.frame) continue;
@@ -213,7 +266,7 @@ function createTrackLayer(): CellSnippetsLayer | null {
         const source = expandHeight(feature.bbox as BBox, maxHeight);
         const width = getWidth(source);
         const height = getHeight(source);
-        const destination = [xOffset, 0, xOffset + width, -height];
+        const destination: BBox = [xOffset, 0, xOffset + width, -height];
         xOffset += width + padding;
         selections.push({
             c: 0,
@@ -223,11 +276,19 @@ function createTrackLayer(): CellSnippetsLayer | null {
         });
     }
 
+    return selections;
+});
+
+function createTrackLayer(): CellSnippetsLayer | null {
+    if (!segmentationData.value) return null;
+    if (!selections.value || selections.value.length == 0) return null;
+
+    console.log('create cell track layer');
     return new CellSnippetsLayer({
         loader: pixelSource.value,
         id: 'track-view-gl-test-snippet-layer',
         contrastLimits: contrastLimit.value,
-        selections,
+        selections: selections.value,
         channelsVisible: [true],
         extensions: [colormapExtension],
         colormap: imageViewerStore.colormap,
@@ -240,13 +301,15 @@ function renderDeckGL(): void {
     if (segmentationData.value == null) return;
     const layers = [];
 
+    // layers.push(createTestScatterLayer());
+    layers.push(createDebugScatterPlotLayer());
     layers.push(createTrackLayer());
 
     deckgl.setProps({
         layers,
         controller: true,
     });
-    console.log('done: render test deckgl');
+    // console.log('done: render test deckgl');
 }
 watch(dataPointSelection.$state, renderDeckGL);
 watch(imageViewerStore.$state, renderDeckGL);
