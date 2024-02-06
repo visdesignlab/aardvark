@@ -16,11 +16,10 @@ export const useSegmentationStore = defineStore('segmentationStore', () => {
         new LRUCache<string, Feature>({
             max: 25_000,
             // each item is small (1-2 KB)
-            fetchMethod: async (key, staleValue, { signal }) => {
-                return (await fetch(
-                    `${datasetSelectionStore.segmentationFolderUrl}/cells/${key}.json`,
-                    { signal }
-                ).then((res) => res.json())) as Feature;
+            fetchMethod: async (jsonUrl, staleValue, { signal }) => {
+                return (await fetch(jsonUrl, { signal }).then((res) =>
+                    res.json()
+                )) as Feature;
             },
         })
     );
@@ -58,7 +57,9 @@ export const useSegmentationStore = defineStore('segmentationStore', () => {
     ): Promise<Feature | undefined> {
         const frame = cellMetaData.getFrame(cell);
         const id = cell.trackId;
-        return await cache.value.fetch(`${frame}-${id}`);
+        return await cache.value.fetch(
+            `${datasetSelectionStore.segmentationFolderUrl}/cells/${frame}-${id}.json`
+        );
     }
 
     return {
