@@ -63,7 +63,7 @@ class CellSnippetsLayer extends CompositeLayer {
     }
 
     updateState({ props, oldProps, changeFlags }) {
-        console.log('UPDATE STATE MAYBE');
+        // console.log('UPDATE STATE MAYBE');
         // console.log(changeFlags);
         const loaderChanged = props.loader !== oldProps.loader;
         // const selectionsChanged = props.selections !== oldProps.selections;
@@ -75,7 +75,7 @@ class CellSnippetsLayer extends CompositeLayer {
         if (!loaderChanged && !selectionsChanged && !colormapChanged) return;
         const { loader } = this.props;
         if (!loader) return;
-        console.log('YES!!!! updateState');
+        // console.log('YES!!!! updateState');
         const abortController = new AbortController();
         this.setState({ abortController });
         const { signal } = abortController;
@@ -132,7 +132,7 @@ class CellSnippetsLayer extends CompositeLayer {
     }
 
     renderLayers() {
-        console.log('renderLayers');
+        // console.log('renderLayers');
         return this.createTestImageSnippetLayer();
     }
 
