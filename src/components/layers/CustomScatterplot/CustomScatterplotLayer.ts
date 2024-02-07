@@ -287,10 +287,17 @@ export default class CustomScatterplotLayer<
     protected _getModel() {
         console.log('get model custom scatterplot layer');
         // a square that minimally cover the unit circle
-        const positions = [-1, -1, 0, 1, -1, 0, -1, 1, 0, 1, 1, 0];
+        // prettier-ignore
+        const positions = [
+            -1, -1, 0,
+             1, -1, 0,
+            -1,  1, 0,
+             1,  1, 0
+        ];
+
         const geometryPositions = new Float32Array(positions);
         const geometry = new Geometry({
-            topology: 'triangle-strip',
+            drawMode: this.context.gl.TRIANGLE_STRIP,
             attributes: {
                 positions: { size: 3, value: geometryPositions },
             },
