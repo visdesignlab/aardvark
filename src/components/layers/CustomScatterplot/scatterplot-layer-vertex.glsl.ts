@@ -28,7 +28,7 @@ in vec3 instancePositions;
 in vec3 instancePositions64Low;
 in float instanceRadius;
 in float instanceLineWidths;
-in vec4 instanceFillColors;
+// in vec4 instanceFillColors;
 in vec4 instanceLineColors;
 in vec3 instancePickingColors;
 
@@ -40,9 +40,8 @@ uniform float lineWidthScale;
 uniform float lineWidthMinPixels;
 uniform float lineWidthMaxPixels;
 uniform float stroked;
-uniform bool filled;
+// uniform bool filled;
 uniform bool antialiasing;
-uniform bool billboard;
 uniform int radiusUnits;
 uniform int lineWidthUnits;
 
@@ -54,7 +53,7 @@ out float outerRadiusPixels;
 
 
 void main(void) {
-  geometry.worldPosition = instancePositions;
+  // geometry.worldPosition = instancePositions;
 
   // Multiply out radius and clamp to limits
   outerRadiusPixels = clamp(
@@ -76,28 +75,27 @@ void main(void) {
 
   // position on the containing square in [-1, 1] space
   unitPosition = edgePadding * positions.xy;
-  geometry.uv = unitPosition;
-  geometry.pickingColor = instancePickingColors;
+  // geometry.uv = unitPosition;
+  // geometry.pickingColor = instancePickingColors;
 
   innerUnitRadius = 1.0 - stroked * lineWidthPixels / outerRadiusPixels;
   
-  if (billboard) {
-    gl_Position = project_position_to_clipspace(instancePositions, instancePositions64Low, vec3(0.0), geometry.position);
-    DECKGL_FILTER_GL_POSITION(gl_Position, geometry);
-    vec3 offset = edgePadding * positions * outerRadiusPixels;
-    DECKGL_FILTER_SIZE(offset, geometry);
-    gl_Position.xy += project_pixel_size_to_clipspace(offset.xy);
-  } else {
-    vec3 offset = edgePadding * positions * project_pixel_size(outerRadiusPixels);
-    DECKGL_FILTER_SIZE(offset, geometry);
-    gl_Position = project_position_to_clipspace(instancePositions, instancePositions64Low, offset, geometry.position);
-    DECKGL_FILTER_GL_POSITION(gl_Position, geometry);
-  }
 
-  // Apply opacity to instance color, or return instance picking color
-  vFillColor = vec4(instanceFillColors.rgb, instanceFillColors.a * opacity);
-  DECKGL_FILTER_COLOR(vFillColor, geometry);
-  vLineColor = vec4(instanceLineColors.rgb, instanceLineColors.a * opacity);
-  DECKGL_FILTER_COLOR(vLineColor, geometry);
+    // vFillColor = vec4(0,1.0,0,1.0);
+
+    // Apply opacity to instance color, or return instance picking color
+    // vFillColor = vec4(instanceFillColors.rgb, instanceFillColors.a * opacity);
+    vFillColor = vec4(0.6, 0.2, 0.3, 0.8);
+    vec3 offset = edgePadding * positions * project_pixel_size(outerRadiusPixels);
+    // DECKGL_FILTER_SIZE(offset, geometry);
+    // TODO: hack and learn
+    gl_Position = project_position_to_clipspace(instancePositions + vec3(100.0, 100.0, 0), instancePositions64Low, offset, geometry.position);
+    // DECKGL_FILTER_GL_POSITION(gl_Position, geometry);
+
+
+
+  // DECKGL_FILTER_COLOR(vFillColor, geometry);
+  // vLineColor = vec4(instanceLineColors.rgb, instanceLineColors.a * opacity);
+  // DECKGL_FILTER_COLOR(vLineColor, geometry);
 }
 `;
