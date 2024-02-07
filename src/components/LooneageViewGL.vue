@@ -155,14 +155,15 @@ const testGeometry = computed(() => {
     const geometry = [];
     const key = cellMetaData.headerKeys.mass;
     let x, y;
-    geometry.push([0, 0]);
+    geometry.push(0, 0);
     for (const cell of cellMetaData.selectedTrack.cells) {
         y = -200 * cell.attrNum[key];
         x = 0.2 * cellMetaData.getTime(cell);
-        geometry.push([x, y]);
+        geometry.push(x, y);
+        geometry.push(x, 0);
     }
 
-    geometry.push([x, 0]);
+    geometry.push(x, 0);
     return geometry;
 });
 
@@ -244,8 +245,8 @@ function createTestScatterLayer(): RoundedRectangleLayer {
 function createTestCustomLayer(): CustomScatterplotLayer {
     // test data with points positioned in a grid
     const testData = [];
-    for (let x = -100; x < 100; x += 25) {
-        for (let y = -100; y < 100; y += 25) {
+    for (let x = -100; x <= 100; x += 100) {
+        for (let y = -100; y <= 100; y += 100) {
             testData.push({
                 position: [x, y],
                 color: [
@@ -259,6 +260,8 @@ function createTestCustomLayer(): CustomScatterplotLayer {
     return new CustomScatterplotLayer({
         id: 'custom-scatterplot-layer',
         data: testData,
+        // prettier-ignore
+        instanceData: testGeometry.value,
         pickable: true,
         opacity: 0.8,
         stroked: true,
@@ -344,7 +347,7 @@ function renderDeckGL(): void {
 
     // layers.push(createTrackLayer());
     // layers.push(createTestScatterLayer());
-    layers.push(createHorizonChartLayer());
+    // layers.push(createHorizonChartLayer());
     layers.push(createTestCustomLayer());
     deckgl.setProps({
         layers,

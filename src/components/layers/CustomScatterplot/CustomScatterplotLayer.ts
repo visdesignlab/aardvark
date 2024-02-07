@@ -46,6 +46,7 @@ export type ScatterplotLayerProps<DataT = unknown> =
 /** Props added by the ScatterplotLayer */
 type _ScatterplotLayerProps<DataT> = {
     data: LayerDataSource<DataT>;
+    instanceData: number[];
     /**
      * The units of the radius, one of `'meters'`, `'common'`, and `'pixels'`.
      * @default 'meters'
@@ -287,19 +288,20 @@ export default class CustomScatterplotLayer<
     protected _getModel() {
         console.log('get model custom scatterplot layer');
         // a square that minimally cover the unit circle
-        // prettier-ignore
-        const positions = [
-            -1, -1, 0,
-             1, -1, 0,
-            -1,  1, 0,
-             1,  1, 0
-        ];
+        // prettier-ignored
+        const positions = this.props.instanceData;
+        // const positions = [
+        //     -1, -1, 0,
+        //      1, -1, 0,
+        //     -1,  1, 0,
+        //      1,  1, 0
+        // ];
 
         const geometryPositions = new Float32Array(positions);
         const geometry = new Geometry({
             drawMode: this.context.gl.TRIANGLE_STRIP,
             attributes: {
-                positions: { size: 3, value: geometryPositions },
+                positions: { size: 2, value: geometryPositions },
             },
         });
         const model = new Model(this.context.gl, {
