@@ -511,6 +511,10 @@ export const useCellMetaData = defineStore('cellMetaData', () => {
         return 1 + maxChildHeight;
     }
 
+    function getMass(cell: Cell): number {
+        return cell.attrNum[headerKeys.value.mass];
+    }
+
     function getTime(cell: Cell): number {
         return cell.attrNum[headerKeys.value.time];
     }
@@ -553,6 +557,7 @@ export const useCellMetaData = defineStore('cellMetaData', () => {
         selectedTrack,
         selectTrack,
         init,
+        getMass,
         getTime,
         getFrame,
         getPosition,

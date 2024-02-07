@@ -11,6 +11,8 @@ import {
 import { useDataPointSelection } from '@/stores/dataPointSelection';
 import { useSegmentationStore } from '@/stores/segmentationStore';
 import CellSnippetsLayer from './layers/CellSnippetsLayer.js';
+import HorizonChartLayer from './layers/HorizonChartLayer.js';
+import RoundedRectangleLayer from './layers/RoundedRectangleLayer.js';
 import { useImageViewerStore } from '@/stores/imageViewerStore';
 import { useImageViewerStoreUntrracked } from '@/stores/imageViewerStoreUntrracked';
 import { useDatasetSelectionStore } from '@/stores/datasetSelectionStore';
@@ -40,8 +42,11 @@ import {
     GeoJsonLayer,
     LineLayer,
     ScatterplotLayer,
+    SolidPolygonLayer,
     TextLayer,
 } from '@deck.gl/layers/typed';
+
+import CustomScatterplotLayer from './layers/CustomScatterplot/CustomScatterplotLayer';
 // @ts-ignore
 import { TripsLayer } from '@deck.gl/geo-layers';
 import { render } from 'vue';
@@ -119,28 +124,90 @@ onMounted(() => {
         }),
         controller: true,
         layers: [],
-        // debug: true,
-        // onBeforeRender: (gl: any) => {
-        //     console.count('before');
-        //     console.log(gl);
-        // },
-        // onAfterRender: (gl: any) => {
-        //     console.count('after');
-        //     console.log(gl);
-        // },
-        // onError: (error: any, _layer: any) => {
-        //     console.error('ERROR');
-        //     console.log(error);
-        // },
-        // onWebGLInitialized: () => console.log('onWebGLInitialized'),
-        // onViewStateChange: () => console.log('onViewStateChange'),
-        // onInteractionStateChange: () => console.log('onInteractionStateChange'),
-        // onLoad: () => console.log('onLoad'),
+        debug: true,
+        onBeforeRender: (gl: any) => {
+            console.count('before');
+            console.log(gl);
+        },
+        onAfterRender: (gl: any) => {
+            console.count('after');
+            console.log(gl);
+        },
+        onError: (error: any, _layer: any) => {
+            console.error('ERROR');
+            console.log(error);
+        },
+        onWebGLInitialized: () => console.log('onWebGLInitialized'),
+        onViewStateChange: () => console.log('onViewStateChange'),
+        onInteractionStateChange: () => console.log('onInteractionStateChange'),
+        onLoad: () => console.log('onLoad'),
     });
     // renderDeckGL();
 });
 
-function createTestScatterLayer(): ScatterplotLayer {
+const testGeometry = computed(() => {
+    if (!cellMetaData.selectedTrack) return [];
+    // const areaGen = area<Cell>()
+    //     .x((d: Cell) => cellMetaData.getTime(d))
+    //     .y1((d: Cell) => 10 * cellMetaData.getMass(d))
+    //     .y0(0);
+
+    const geometry = [];
+    const key = cellMetaData.headerKeys.mass;
+    let x, y;
+    geometry.push([0, 0]);
+    for (const cell of cellMetaData.selectedTrack.cells) {
+        y = -200 * cell.attrNum[key];
+        x = 0.2 * cellMetaData.getTime(cell);
+        geometry.push([x, y]);
+    }
+
+    geometry.push([x, 0]);
+    return geometry;
+});
+
+function createHorizonChartLayer(): HorizonChartLayer {
+    return new HorizonChartLayer({
+        id: 'test-horizon-layer',
+        data: [2],
+        // pickable: true,
+        // stroked: true,
+        // filled: true,
+        // lineWidthMinPixels: 1,
+        getPolygon: (d: number) => {
+            if (d === 0) {
+                return [
+                    [0, 0],
+                    [0, 100],
+                    [100, 100],
+                    [100, 0],
+                ];
+            } else if (d === 1) {
+                return [
+                    [50, 50],
+                    [50, 150],
+                    [150, 150],
+                    [150, 50],
+                ];
+            } else {
+                return testGeometry.value;
+            }
+        },
+        // getColor: [66, 140, 0],
+        getFillColor: (d: boolean) => {
+            if (d) {
+                return [255, 0, 0, 120];
+            } else {
+                return [0, 255, 0, 120];
+            }
+        },
+        getLineColor: [80, 80, 80],
+        // getLineWidth: 1,
+        extruded: false,
+    });
+}
+
+function createTestScatterLayer(): RoundedRectangleLayer {
     // test data with points positioned in a grid
     const testData = [];
     for (let x = -100; x < 100; x += 25) {
@@ -155,7 +222,7 @@ function createTestScatterLayer(): ScatterplotLayer {
             });
         }
     }
-    return new ScatterplotLayer({
+    return new RoundedRectangleLayer({
         id: 'scatterplot-layer',
         data: testData,
         pickable: true,
@@ -167,6 +234,41 @@ function createTestScatterLayer(): ScatterplotLayer {
         radiusMaxPixels: 100,
         lineWidthMinPixels: 0,
         getLineWidth: 0,
+        cornerRadius: 0.7,
+        getPosition: (d: any) => d.position,
+        getRadius: 5,
+        getFillColor: (d) => d.color,
+        // getLineColor: (d) => [0, 0, 0],
+    });
+}
+function createTestCustomLayer(): CustomScatterplotLayer {
+    // test data with points positioned in a grid
+    const testData = [];
+    for (let x = -100; x < 100; x += 25) {
+        for (let y = -100; y < 100; y += 25) {
+            testData.push({
+                position: [x, y],
+                color: [
+                    Math.random() * 255,
+                    Math.random() * 255,
+                    Math.random() * 255,
+                ],
+            });
+        }
+    }
+    return new CustomScatterplotLayer({
+        id: 'custom-scatterplot-layer',
+        data: testData,
+        pickable: true,
+        opacity: 0.8,
+        stroked: true,
+        filled: true,
+        radiusScale: 1,
+        radiusMinPixels: 1,
+        radiusMaxPixels: 100,
+        lineWidthMinPixels: 0,
+        getLineWidth: 0,
+        cornerRadius: 0.7,
         getPosition: (d: any) => d.position,
         getRadius: 5,
         getFillColor: (d) => d.color,
@@ -204,7 +306,7 @@ function createTrackLayer(): CellSnippetsLayer | null {
     let xOffset = 0;
     const padding = 6;
     const maxHeight = getMaxHeight(segmentationData.value);
-    console.log({ maxHeight });
+    // console.log({ maxHeight });
     for (let feature of segmentationData.value) {
         if (!feature) continue;
         if (!feature?.properties?.frame) continue;
@@ -240,13 +342,15 @@ function renderDeckGL(): void {
     if (segmentationData.value == null) return;
     const layers = [];
 
-    layers.push(createTrackLayer());
-
+    // layers.push(createTrackLayer());
+    // layers.push(createTestScatterLayer());
+    layers.push(createHorizonChartLayer());
+    layers.push(createTestCustomLayer());
     deckgl.setProps({
         layers,
         controller: true,
     });
-    console.log('done: render test deckgl');
+    // console.log('done: render test deckgl');
 }
 watch(dataPointSelection.$state, renderDeckGL);
 watch(imageViewerStore.$state, renderDeckGL);
