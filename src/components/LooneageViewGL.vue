@@ -155,13 +155,20 @@ const testGeometry = computed(() => {
     const geometry = [];
     const key = cellMetaData.headerKeys.mass;
     let x, y;
+    // min/max just for debugging
+    let minY = Infinity;
+    let maxY = -Infinity;
+
     geometry.push(0, 0);
     for (const cell of cellMetaData.selectedTrack.cells) {
         y = -200 * cell.attrNum[key];
+        minY = Math.min(minY, y);
+        maxY = Math.max(maxY, y);
         x = 0.2 * cellMetaData.getTime(cell);
         geometry.push(x, y);
         geometry.push(x, 0);
     }
+    console.log('MIN MAX', minY, maxY);
 
     geometry.push(x, 0);
     return geometry;

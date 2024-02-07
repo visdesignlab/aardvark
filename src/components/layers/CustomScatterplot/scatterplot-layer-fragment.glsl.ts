@@ -31,14 +31,31 @@ uniform bool antialiasing;
 in vec4 vFillColor;
 in vec4 vLineColor;
 in vec2 unitPosition;
+in vec2 range;
 in float innerUnitRadius;
 in float outerRadiusPixels;
 
 out vec4 fragColor;
 
+vec4 lerp(vec4 a, vec4 b, float t) {
+  return a * (1.0 - t) + b * t;
+}
+
+float findT(float low, float high, float val) {
+  return (val - low) / (high - low);
+}
+
 void main(void) {
+  if (unitPosition.y < range[0] || unitPosition.y > range[1]) {
+    discard;
+  }
   // set all colors to magenta
-  fragColor = vFillColor;
+  // fragColor = vFillColor;
+
+  float t = clamp(findT(-40.0, 0.0, unitPosition.y), 0.0, 1.0);
+  // fragColor = vec4(t,t,0,1.0);
+  fragColor = lerp(vec4(0.1, 0.2, 0.9, 0.6), vec4(0.8, 0.2, 0.2, 0.6), t);
+
   // geometry.uv = unitPosition;
 
   // float distToCenter = length(unitPosition) * outerRadiusPixels;

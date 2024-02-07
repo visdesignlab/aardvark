@@ -50,6 +50,12 @@ out vec4 vLineColor;
 out vec2 unitPosition;
 out float innerUnitRadius;
 out float outerRadiusPixels;
+out vec2 range;
+
+
+// float mod(float x, float y) {
+//   return x - y * floor(x / y);
+// }
 
 
 void main(void) {
@@ -87,14 +93,20 @@ void main(void) {
 
     // Apply opacity to instance color, or return instance picking color
     // vFillColor = vec4(instanceFillColors.rgb, instanceFillColors.a * opacity);
-    vFillColor = vec4(0.6, 0.2, 0.3, 0.8);
+    vFillColor = vec4(0.6, 0.2, 0.3, 0.6);
     // vec3 offset = edgePadding * positions * project_pixel_size(outerRadiusPixels);
     // DECKGL_FILTER_SIZE(offset, geometry);
     // TODO: hack and learn
-    gl_Position = project_position_to_clipspace(instancePositions, instancePositions64Low, positions);
+    vec3 hackedPositions = positions;
+    // hackedPositions.y = mod(hackedPositions.y, 5.0);
+    gl_Position = project_position_to_clipspace(instancePositions, instancePositions64Low, hackedPositions);
     // DECKGL_FILTER_GL_POSITION(gl_Position, geometry);
 
-
+    if (instancePositions.x  > 0.0) {
+      range = vec2(-40.0, -20.0);
+    } else {
+      range = vec2(-20.0, 0.0);
+    }
 
   // DECKGL_FILTER_COLOR(vFillColor, geometry);
   // vLineColor = vec4(instanceLineColors.rgb, instanceLineColors.a * opacity);
