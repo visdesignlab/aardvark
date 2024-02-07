@@ -56,29 +56,31 @@ void main(void) {
   // geometry.worldPosition = instancePositions;
 
   // Multiply out radius and clamp to limits
-  outerRadiusPixels = clamp(
-    project_size_to_pixel(radiusScale * instanceRadius, radiusUnits),
-    radiusMinPixels, radiusMaxPixels
-  );
+  // outerRadiusPixels = clamp(
+  //   project_size_to_pixel(radiusScale * instanceRadius, radiusUnits),
+  //   radiusMinPixels, radiusMaxPixels
+  // );
   
   // Multiply out line width and clamp to limits
-  float lineWidthPixels = clamp(
-    project_size_to_pixel(lineWidthScale * instanceLineWidths, lineWidthUnits),
-    lineWidthMinPixels, lineWidthMaxPixels
-  );
+  // float lineWidthPixels = clamp(
+  //   project_size_to_pixel(lineWidthScale * instanceLineWidths, lineWidthUnits),
+  //   lineWidthMinPixels, lineWidthMaxPixels
+  // );
 
   // outer radius needs to offset by half stroke width
-  outerRadiusPixels += stroked * lineWidthPixels / 2.0;
+  // outerRadiusPixels += stroked * lineWidthPixels / 2.0;
 
   // Expand geometry to accomodate edge smoothing
-  float edgePadding = antialiasing ? (outerRadiusPixels + SMOOTH_EDGE_RADIUS) / outerRadiusPixels : 1.0;
+  // float edgePadding = antialiasing ? (outerRadiusPixels + SMOOTH_EDGE_RADIUS) / outerRadiusPixels : 1.0;
 
   // position on the containing square in [-1, 1] space
-  unitPosition = edgePadding * positions.xy;
+  unitPosition = positions.xy;
+  innerUnitRadius = 5.0;
+  outerRadiusPixels = 2.0;
   // geometry.uv = unitPosition;
   // geometry.pickingColor = instancePickingColors;
 
-  innerUnitRadius = 1.0 - stroked * lineWidthPixels / outerRadiusPixels;
+  // innerUnitRadius = 1.0 - stroked * lineWidthPixels / outerRadiusPixels;
   
 
     // vFillColor = vec4(0,1.0,0,1.0);
@@ -86,10 +88,10 @@ void main(void) {
     // Apply opacity to instance color, or return instance picking color
     // vFillColor = vec4(instanceFillColors.rgb, instanceFillColors.a * opacity);
     vFillColor = vec4(0.6, 0.2, 0.3, 0.8);
-    vec3 offset = edgePadding * positions * project_pixel_size(outerRadiusPixels);
+    // vec3 offset = edgePadding * positions * project_pixel_size(outerRadiusPixels);
     // DECKGL_FILTER_SIZE(offset, geometry);
     // TODO: hack and learn
-    gl_Position = project_position_to_clipspace(instancePositions + vec3(100.0, 100.0, 0), instancePositions64Low, offset, geometry.position);
+    gl_Position = project_position_to_clipspace(instancePositions, instancePositions64Low, positions);
     // DECKGL_FILTER_GL_POSITION(gl_Position, geometry);
 
 
