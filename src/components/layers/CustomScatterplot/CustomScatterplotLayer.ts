@@ -111,6 +111,11 @@ type _ScatterplotLayerProps<DataT> = {
     antialiasing?: boolean;
 
     /**
+     * TODO: document
+     */
+    getModOffset?: Accessor<DataT, number>;
+
+    /**
      * Center position accessor.
      */
     getPosition?: Accessor<DataT, Position>;
@@ -199,6 +204,13 @@ export default class CustomScatterplotLayer<
     initializeState() {
         console.log('initialize custom scatterplot layer state');
         this.getAttributeManager()!.addInstanced({
+            instanceModOffsets: {
+                size: 1,
+                type: GL.INT,
+                accessor: 'getModOffset',
+                defaultValue: 0,
+                // transition: true,
+            },
             instancePositions: {
                 size: 3,
                 type: GL.DOUBLE,

@@ -25,6 +25,7 @@ export default `\
 in vec3 positions;
 
 in vec3 instancePositions;
+in int instanceModOffsets;
 in vec3 instancePositions64Low;
 in float instanceRadius;
 in float instanceLineWidths;
@@ -57,8 +58,41 @@ out vec2 range;
 //   return x - y * floor(x / y);
 // }
 
+float lerp(float a, float b, float t) {
+  return a + (b - a) * t;
+}
+
+float norm(float value, float minValue, float maxValue) {
+  return (value - minValue) / (maxValue - minValue);
+}
+
+vec3 scale_positions(vec3 position, vec4 destination, vec2 dataXExtent, float binSize) {
+  vec3 scaledPosition = position;
+  scaledPosition.x = lerp(
+    destination[1], destination[1] + destination[2],
+    norm(position.x, dataXExtent[0], dataXExtent[1])
+  );
+
+  scaledPosition.y = lerp(
+    destination[0], destination[0] - destination[3],
+    norm(position.y, 0.0, binSize)
+   );
+
+  // scaledPosition.x += 100.0;
+  // scaledPosition.y *= 2.5;
+  return scaledPosition;
+}
 
 void main(void) {
+  // FUTURE UNIFORMS
+  // chart destination [bottom, left, width, height]
+  vec4 destination = vec4(0.0, 0.0, 100.0, 20.0);
+  vec2 dataXExtent = vec2(1.0, 322.0); // extent for this track
+  float baseline = 0.0;
+  float binSize = 0.035;
+
+
+
   // geometry.worldPosition = instancePositions;
 
   // Multiply out radius and clamp to limits
@@ -89,24 +123,41 @@ void main(void) {
   // innerUnitRadius = 1.0 - stroked * lineWidthPixels / outerRadiusPixels;
   
 
-    // vFillColor = vec4(0,1.0,0,1.0);
+  // vFillColor = vec4(0,1.0,0,1.0);
 
-    // Apply opacity to instance color, or return instance picking color
-    // vFillColor = vec4(instanceFillColors.rgb, instanceFillColors.a * opacity);
-    vFillColor = vec4(0.6, 0.2, 0.3, 0.6);
-    // vec3 offset = edgePadding * positions * project_pixel_size(outerRadiusPixels);
-    // DECKGL_FILTER_SIZE(offset, geometry);
-    // TODO: hack and learn
-    vec3 hackedPositions = positions;
-    // hackedPositions.y = mod(hackedPositions.y, 5.0);
-    gl_Position = project_position_to_clipspace(instancePositions, instancePositions64Low, hackedPositions);
-    // DECKGL_FILTER_GL_POSITION(gl_Position, geometry);
+  // Apply opacity to instance color, or return instance picking color
+  // vFillColor = vec4(instanceFillColors.rgb, instanceFillColors.a * opacity);
+  vFillColor = vec4(0.6, 0.2, 0.3, 0.6);
+  // vec3 offset = edgePadding * positions * project_pixel_size(outerRadiusPixels);
+  // DECKGL_FILTER_SIZE(offset, geometry);
+  // TODO: hack and learn
+  vec3 hackedPositions = scale_positions(positions, destination, dataXExtent, binSize);
+  // hackedPositions.y *= 0.5;
+  // hackedPositions.y = mod(hackedPositions.y, 5.0);
+  gl_Position = project_position_to_clipspace(
+    instancePositions, instancePositions64Low,
+    hackedPositions
+    // positions
+    // scale_positions(positions, destination, dataXExtent, binSize)
+    );
 
-    if (instancePositions.x  > 0.0) {
-      range = vec2(-40.0, -20.0);
-    } else {
-      range = vec2(-20.0, 0.0);
-    }
+// vec3 scale_position(vec3 position, vec4 destination, vec2 dataXExtent, float binSize) {
+
+
+  // gl_Position = project_position_to_clipspace(instancePositions, instancePositions64Low, hackedPositions);
+  // DECKGL_FILTER_GL_POSITION(gl_Position, geometry);
+
+  
+  range = vec2(
+    baseline + binSize * float(instanceModOffsets),
+    baseline + binSize * (float(instanceModOffsets) + 1.0)
+  );
+  // range = vec2(0.0, 20.0);
+  // if (instancePositions.x  > 0.0) {
+  //   range = vec2(-40.0, -20.0);
+  // } else {
+  //   range = vec2(-20.0, 0.0);
+  // }
 
   // DECKGL_FILTER_COLOR(vFillColor, geometry);
   // vLineColor = vec4(instanceLineColors.rgb, instanceLineColors.a * opacity);
