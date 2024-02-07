@@ -231,7 +231,7 @@ function createTestScatterLayer(): RoundedRectangleLayer {
     for (let x = 0; x <= 1100; x += 110) {
         // for (let y = -100; y <= 100; y += 100) {
         testData.push({
-            position: [x, y],
+            position: [0, y],
             color: [
                 Math.random() * 255,
                 Math.random() * 255,
@@ -267,7 +267,7 @@ function createTestCustomLayer(): CustomScatterplotLayer {
     for (let x = 0; x <= 1100; x += 110) {
         // for (let y = -100; y <= 100; y += 100) {
         testData.push({
-            position: [x, y],
+            position: [0, y],
             modOffset: i++,
             color: [
                 Math.random() * 255,

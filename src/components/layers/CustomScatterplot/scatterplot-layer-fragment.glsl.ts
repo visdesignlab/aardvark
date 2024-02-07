@@ -48,18 +48,15 @@ float findT(float low, float high, float val) {
 void main(void) {
   fragColor = vec4(0.0, 0.0, 1.0, 1.0);
   if (unitPosition.y < range[0] || unitPosition.y > range[1]) {
-    // discard;
-    fragColor = vec4(1.0, 0.0, 0.0, 1.0);
-  } else 
-  {
-    fragColor = vec4(0.0, 1.0, 0.0, 1.0);
+    discard;
+    // fragColor = vec4(1.0, 0.0, 0.0, 1.0);
   }
   // set all colors to magenta
   // fragColor = vFillColor;
 
-  // float t = clamp(findT(-40.0, 0.0, unitPosition.y), 0.0, 1.0);
+  float t = clamp(findT(-40.0, 0.0, unitPosition.y), 0.0, 1.0);
   // fragColor = vec4(t,t,0,1.0);
-  // fragColor = lerp(vec4(0.1, 0.2, 0.9, 0.6), vec4(0.8, 0.2, 0.2, 0.6), t);
+  fragColor = lerp(vec4(0.1, 0.2, 0.9, 0.1), vec4(0.8, 0.2, 0.2, 0.1), t);
 
   // geometry.uv = unitPosition;
 

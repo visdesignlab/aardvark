@@ -75,8 +75,8 @@ vec3 scale_positions(vec3 position, vec4 destination, vec2 dataXExtent, float bi
 
   scaledPosition.y = lerp(
     destination[0], destination[0] - destination[3],
-    norm(position.y, 0.0, binSize)
-   );
+    norm(position.y - float(instanceModOffsets) * binSize, 0.0, binSize)
+  );
 
   // scaledPosition.x += 100.0;
   // scaledPosition.y *= 2.5;
