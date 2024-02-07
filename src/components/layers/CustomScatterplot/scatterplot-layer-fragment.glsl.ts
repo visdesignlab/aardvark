@@ -37,37 +37,39 @@ in float outerRadiusPixels;
 out vec4 fragColor;
 
 void main(void) {
-  geometry.uv = unitPosition;
+  // set all colors to magenta
+  fragColor = vFillColor;
+  // geometry.uv = unitPosition;
 
-  float distToCenter = length(unitPosition) * outerRadiusPixels;
-  float inCircle = antialiasing ? 
-    smoothedge(distToCenter, outerRadiusPixels) : 
-    step(distToCenter, outerRadiusPixels);
+  // float distToCenter = length(unitPosition) * outerRadiusPixels;
+  // float inCircle = antialiasing ? 
+  //   smoothedge(distToCenter, outerRadiusPixels) : 
+  //   step(distToCenter, outerRadiusPixels);
 
-  if (inCircle == 0.0) {
-    discard;
-  }
+  // if (inCircle == 0.0) {
+  //   discard;
+  // }
 
-  if (stroked > 0.5) {
-    float isLine = antialiasing ? 
-      smoothedge(innerUnitRadius * outerRadiusPixels, distToCenter) :
-      step(innerUnitRadius * outerRadiusPixels, distToCenter);
+  // if (stroked > 0.5) {
+  //   float isLine = antialiasing ? 
+  //     smoothedge(innerUnitRadius * outerRadiusPixels, distToCenter) :
+  //     step(innerUnitRadius * outerRadiusPixels, distToCenter);
 
-    if (filled) {
-      fragColor = mix(vFillColor, vLineColor, isLine);
-    } else {
-      if (isLine == 0.0) {
-        discard;
-      }
-      fragColor = vec4(vLineColor.rgb, vLineColor.a * isLine);
-    }
-  } else if (!filled) {
-    discard;
-  } else {
-    fragColor = vFillColor;
-  }
+  //   if (filled) {
+  //     fragColor = mix(vFillColor, vLineColor, isLine);
+  //   } else {
+  //     if (isLine == 0.0) {
+  //       discard;
+  //     }
+  //     fragColor = vec4(vLineColor.rgb, vLineColor.a * isLine);
+  //   }
+  // } else if (!filled) {
+  //   discard;
+  // } else {
+  //   fragColor = vFillColor;
+  // }
 
-  fragColor.a *= inCircle;
-  DECKGL_FILTER_COLOR(fragColor, geometry);
+  // fragColor.a *= inCircle;
+  // DECKGL_FILTER_COLOR(fragColor, geometry);
 }
 `;
