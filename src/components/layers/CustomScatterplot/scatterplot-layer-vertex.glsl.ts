@@ -27,30 +27,31 @@ in vec3 positions;
 in vec3 instancePositions;
 in int instanceModOffsets;
 in vec3 instancePositions64Low;
-in float instanceRadius;
-in float instanceLineWidths;
-in vec4 instanceFillColors;
-in vec4 instanceLineColors;
-in vec3 instancePickingColors;
 
-uniform float opacity;
-uniform float radiusScale;
-uniform float radiusMinPixels;
-uniform float radiusMaxPixels;
-uniform float lineWidthScale;
-uniform float lineWidthMinPixels;
-uniform float lineWidthMaxPixels;
-uniform float stroked;
+// in float instanceRadius;
+// in float instanceLineWidths;
+in vec4 instanceFillColors;
+// in vec4 instanceLineColors;
+// in vec3 instancePickingColors;
+
+// uniform float opacity;
+// uniform float radiusScale;
+// uniform float radiusMinPixels;
+// uniform float radiusMaxPixels;
+// uniform float lineWidthScale;
+// uniform float lineWidthMinPixels;
+// uniform float lineWidthMaxPixels;
+// uniform float stroked;
 // uniform bool filled;
-uniform bool antialiasing;
-uniform int radiusUnits;
-uniform int lineWidthUnits;
+// uniform bool antialiasing;
+// uniform int radiusUnits;
+// uniform int lineWidthUnits;
 
 out vec4 vFillColor;
-out vec4 vLineColor;
+// out vec4 vLineColor;
 out vec2 unitPosition;
-out float innerUnitRadius;
-out float outerRadiusPixels;
+// out float innerUnitRadius;
+// out float outerRadiusPixels;
 out vec2 range;
 
 
@@ -69,7 +70,7 @@ float norm(float value, float minValue, float maxValue) {
 vec3 scale_positions(vec3 position, vec4 destination, vec2 dataXExtent, float binSize) {
   // maybe could be a uniform
   float placeholderThreshold = 115.0;
-  float placeholderSize = 250.0;
+  float placeholderSize = 0.0;
 
 
   vec3 scaledPosition = position;
@@ -125,8 +126,8 @@ void main(void) {
 
   // position on the containing square in [-1, 1] space
   unitPosition = positions.xy;
-  innerUnitRadius = 5.0;
-  outerRadiusPixels = 2.0;
+  // innerUnitRadius = 5.0;
+  // outerRadiusPixels = 2.0;
   // geometry.uv = unitPosition;
   // geometry.pickingColor = instancePickingColors;
 
