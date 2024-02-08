@@ -17,6 +17,7 @@ import { useImageViewerStore } from '@/stores/imageViewerStore';
 import { useImageViewerStoreUntrracked } from '@/stores/imageViewerStoreUntrracked';
 import { useDatasetSelectionStore } from '@/stores/datasetSelectionStore';
 import { useEventBusStore } from '@/stores/eventBusStore';
+import { useLooneageViewStore } from '@/stores/looneageViewStore';
 import { clamp } from 'lodash-es';
 import { Pool } from 'geotiff';
 import type { Feature } from 'geojson';
@@ -63,6 +64,7 @@ const { contrastLimitSlider } = storeToRefs(imageViewerStoreUntrracked);
 const { selectedTrack } = storeToRefs(cellMetaData);
 const eventBusStore = useEventBusStore();
 const segmentationStore = useSegmentationStore();
+const looneageViewStore = useLooneageViewStore();
 
 const deckGlContainer = ref(null);
 //////////////////////////
@@ -281,7 +283,7 @@ function createTestCustomLayer(): CustomScatterplotLayer {
         id: 'custom-scatterplot-layer',
         data: testData,
         instanceData: testGeometry.value,
-        destination: [0, 0, 100, 20],
+        destination: [0, 0, 100, looneageViewStore.rowHeight],
         dataXExtent: [1, 322],
         baseline: 0,
         binSize: 0.035,
@@ -369,6 +371,7 @@ function renderDeckGL(): void {
 }
 watch(dataPointSelection.$state, renderDeckGL);
 watch(imageViewerStore.$state, renderDeckGL);
+watch(looneageViewStore.$state, renderDeckGL);
 watch(contrastLimitSlider, renderDeckGL);
 </script>
 
