@@ -47,11 +47,10 @@ in vec4 instanceFillColors;
 // uniform int radiusUnits;
 // uniform int lineWidthUnits;
 
- uniform vec4 destination; 
- uniform vec2 dataXExtent;
- uniform float baseline;
- uniform float binSize;
-
+uniform vec4 destination; 
+uniform vec2 dataXExtent;
+uniform float baseline;
+uniform float binSize;
 
 out vec4 vFillColor;
 // out vec4 vLineColor;
@@ -108,6 +107,16 @@ void main(void) {
 
 
 
+  vec4 colors[8] = vec4[8](
+    vec4(0.5, 0.5, 0.5, 1.0),   // Gray
+    vec4(1.0, 0.0, 0.0, 1.0),   // Red
+    vec4(0.0, 1.0, 0.0, 1.0),   // Green
+    vec4(0.0, 0.0, 1.0, 1.0),   // Blue
+    vec4(1.0, 1.0, 0.0, 1.0),   // Yellow
+    vec4(1.0, 0.0, 1.0, 1.0),   // Magenta
+    vec4(0.0, 1.0, 1.0, 1.0),   // Cyan
+    vec4(0.0, 0.0, 0.0, 1.0)    // Black
+  );
 
 
   // geometry.worldPosition = instancePositions;
@@ -144,7 +153,6 @@ void main(void) {
 
   // Apply opacity to instance color, or return instance picking color
   // vFillColor = vec4(instanceFillColors.rgb, instanceFillColors.a * opacity);
-  vFillColor = vec4(0.6, 0.2, 0.3, 0.6);
   // vec3 offset = edgePadding * positions * project_pixel_size(outerRadiusPixels);
   // DECKGL_FILTER_SIZE(offset, geometry);
   // TODO: hack and learn
@@ -170,7 +178,8 @@ void main(void) {
     baseline + binSize * (float(instanceModOffsets) + 1.0)
   );
 
-  vFillColor = instanceFillColors;
+  // vFillColor = instanceFillColors;
+  vFillColor = colors[instanceModOffsets];
   // range = vec2(0.0, 20.0);
   // if (instancePositions.x  > 0.0) {
   //   range = vec2(-40.0, -20.0);
