@@ -51,6 +51,7 @@ uniform vec4 destination;
 uniform vec2 dataXExtent;
 uniform float baseline;
 uniform float binSize;
+uniform vec4 positiveColors[8];
 
 out vec4 vFillColor;
 // out vec4 vLineColor;
@@ -107,16 +108,16 @@ void main(void) {
 
 
 
-  vec4 colors[8] = vec4[8](
-    vec4(0.5, 0.5, 0.5, 1.0),   // Gray
-    vec4(1.0, 0.0, 0.0, 1.0),   // Red
-    vec4(0.0, 1.0, 0.0, 1.0),   // Green
-    vec4(0.0, 0.0, 1.0, 1.0),   // Blue
-    vec4(1.0, 1.0, 0.0, 1.0),   // Yellow
-    vec4(1.0, 0.0, 1.0, 1.0),   // Magenta
-    vec4(0.0, 1.0, 1.0, 1.0),   // Cyan
-    vec4(0.0, 0.0, 0.0, 1.0)    // Black
-  );
+  // vec4 positiveColors[8] = vec4[8](
+  //   vec4(0.5, 0.5, 0.5, 1.0),   // Gray
+  //   vec4(1.0, 0.0, 0.0, 1.0),   // Red
+  //   vec4(0.0, 1.0, 0.0, 1.0),   // Green
+  //   vec4(0.0, 0.0, 1.0, 1.0),   // Blue
+  //   vec4(1.0, 1.0, 0.0, 1.0),   // Yellow
+  //   vec4(1.0, 0.0, 1.0, 1.0),   // Magenta
+  //   vec4(0.0, 1.0, 1.0, 1.0),   // Cyan
+  //   vec4(0.0, 0.0, 0.0, 1.0)    // Black
+  // );
 
 
   // geometry.worldPosition = instancePositions;
@@ -179,7 +180,10 @@ void main(void) {
   );
 
   // vFillColor = instanceFillColors;
-  vFillColor = colors[instanceModOffsets];
+  vFillColor = positiveColors[instanceModOffsets];
+  // vFillColor = positiveColorTest;
+  // vFillColor = positiveColors[1];
+  // vFillColor = vec4(0.5, 0.5, 0.5, 0.1);
   // range = vec2(0.0, 20.0);
   // if (instancePositions.x  > 0.0) {
   //   range = vec2(-40.0, -20.0);

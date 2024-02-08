@@ -279,6 +279,20 @@ function createTestCustomLayer(): CustomScatterplotLayer {
         });
         // }
     }
+
+    const positiveColors = [];
+    for (let colorHex of looneageViewStore.positiveColorScheme.value[8]) {
+        // convert coloHex to rgba array all values [0-1]
+        const color = [];
+        for (let i = 0; i < 3; i++) {
+            color.push(
+                parseInt(colorHex.slice(1 + i * 2, 1 + i * 2 + 2), 16) / 255
+            );
+        }
+        color.push(1.0);
+        positiveColors.push(...color);
+    }
+
     return new CustomScatterplotLayer({
         id: 'custom-scatterplot-layer',
         data: [0, 1, 2, 3, 4, 5, 6, 7],
@@ -290,6 +304,19 @@ function createTestCustomLayer(): CustomScatterplotLayer {
         getModOffset: (d: any) => d,
         // getPosition: (d: any) => d.position,
         // getFillColor: (d) => d.color,
+        // positiveColorTest: [0.0, 1.0, 0.0, 1.0], // Green
+        // prettier-ignore
+        positiveColors,
+        // positiveColors: [
+        //     0.5, 0.5, 0.5, 1.0, // Gray
+        //     1.0, 0.0, 0.0, 1.0, // Red
+        //     0.0, 1.0, 0.0, 1.0, // Green
+        //     0.0, 0.0, 1.0, 1.0, // Blue
+        //     1.0, 1.0, 0.0, 1.0, // Yellow
+        //     1.0, 0.0, 1.0, 1.0, // Magenta
+        //     0.0, 1.0, 1.0, 1.0, // Cyan
+        //     0.0, 0.0, 0.0, 1.0, // Black
+        // ],
     });
 }
 

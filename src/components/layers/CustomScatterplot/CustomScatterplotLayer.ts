@@ -60,6 +60,7 @@ type _ScatterplotLayerProps<DataT> = {
     dataXExtent: [number, number];
     baseline: number;
     binSize: number;
+    positiveColors: [number, number, number, number];
 
     /**
      * Fill color accessor.
@@ -132,7 +133,8 @@ export default class CustomScatterplotLayer<
 
     draw({ uniforms }) {
         console.log('draw custom scatterplot layer');
-        const { destination, dataXExtent, baseline, binSize } = this.props;
+        const { destination, dataXExtent, baseline, binSize, positiveColors } =
+            this.props;
         const model = this.state.model!;
 
         model.setUniforms(uniforms);
@@ -141,6 +143,7 @@ export default class CustomScatterplotLayer<
             dataXExtent,
             baseline,
             binSize,
+            positiveColors,
         });
         model.draw(this.context.renderPass);
     }
