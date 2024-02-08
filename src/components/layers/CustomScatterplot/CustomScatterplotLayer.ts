@@ -255,6 +255,7 @@ export default class CustomScatterplotLayer<
         super.updateState(params);
 
         if (params.changeFlags.extensionsChanged) {
+            // TODO: check if instance geometry has changed
             this.state.model?.destroy();
             this.state.model = this._getModel();
             this.getAttributeManager()!.invalidateAll();
