@@ -360,7 +360,7 @@ function renderDeckGL(): void {
     const layers = [];
 
     // layers.push(createTrackLayer());
-    layers.push(createTestScatterLayer());
+    // layers.push(createTestScatterLayer());
     // layers.push(createHorizonChartLayer());
     layers.push(createTestCustomLayer());
     deckgl.setProps({
