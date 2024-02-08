@@ -281,15 +281,15 @@ function createTestCustomLayer(): CustomScatterplotLayer {
     }
     return new CustomScatterplotLayer({
         id: 'custom-scatterplot-layer',
-        data: testData,
+        data: [0, 1, 2, 3, 4, 5, 6, 7],
         instanceData: testGeometry.value,
         destination: [0, 0, 100, looneageViewStore.rowHeight],
         dataXExtent: [1, 322],
         baseline: 0,
-        binSize: 0.035,
-        getModOffset: (d: any) => d.modOffset,
-        getPosition: (d: any) => d.position,
-        getFillColor: (d) => d.color,
+        binSize: looneageViewStore.modHeight,
+        getModOffset: (d: any) => d,
+        // getPosition: (d: any) => d.position,
+        // getFillColor: (d) => d.color,
     });
 }
 
