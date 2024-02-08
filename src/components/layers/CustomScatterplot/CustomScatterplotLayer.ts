@@ -123,9 +123,10 @@ export default class CustomScatterplotLayer<
         console.log('update state custom scatterplot layer');
         super.updateState(params);
 
-        if (params.changeFlags.extensionsChanged) {
+        if (true || params.changeFlags.extensionsChanged) {
+            console.log('===-=-=-=-=---=- UPDATE STATE -==-=-=-=-=---=-');
             // TODO: check if instance geometry has changed
-            this.state.model?.destroy();
+            // this.state.model?.destroy();
             this.state.model = this._getModel();
             this.getAttributeManager()!.invalidateAll();
         }

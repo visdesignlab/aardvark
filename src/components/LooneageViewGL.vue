@@ -165,7 +165,8 @@ const testGeometry = computed(() => {
     let minX = Infinity;
     let maxX = -Infinity;
 
-    geometry.push(0, 0);
+    const firstX = cellMetaData.getFrame(cellMetaData.selectedTrack.cells[0]);
+    geometry.push(firstX, 0);
     for (const cell of cellMetaData.selectedTrack.cells) {
         y = cell.attrNum[key];
         minY = Math.min(minY, y);
@@ -261,7 +262,8 @@ function createTestScatterLayer(): RoundedRectangleLayer {
         // getLineColor: (d) => [0, 0, 0],
     });
 }
-function createTestCustomLayer(): CustomScatterplotLayer {
+function createTestCustomLayer(): CustomScatterplotLayer | null {
+    if (!cellMetaData.selectedTrack) return null;
     // test data with points positioned in a grid
     const testData = [];
     const y = 0;
@@ -293,12 +295,18 @@ function createTestCustomLayer(): CustomScatterplotLayer {
         positiveColors.push(...color);
     }
 
+    const minTime = cellMetaData.getFrame(cellMetaData.selectedTrack.cells[0]);
+    const lastIndex = cellMetaData.selectedTrack.cells.length - 1;
+    const maxTime = cellMetaData.getFrame(
+        cellMetaData.selectedTrack.cells[lastIndex]
+    );
+
     return new CustomScatterplotLayer({
         id: 'custom-scatterplot-layer',
         data: [0, 1, 2, 3, 4, 5, 6, 7],
         instanceData: testGeometry.value,
         destination: [0, 0, 100, looneageViewStore.rowHeight],
-        dataXExtent: [1, 322],
+        dataXExtent: [minTime, maxTime],
         baseline: 0,
         binSize: looneageViewStore.modHeight,
         getModOffset: (d: any) => d,
