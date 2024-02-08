@@ -30,7 +30,7 @@ in vec3 instancePositions64Low;
 
 // in float instanceRadius;
 // in float instanceLineWidths;
-in vec4 instanceFillColors;
+// in vec4 instanceFillColors;
 // in vec4 instanceLineColors;
 // in vec3 instancePickingColors;
 
