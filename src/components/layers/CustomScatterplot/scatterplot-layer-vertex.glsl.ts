@@ -73,11 +73,11 @@ float norm(float value, float minValue, float maxValue) {
   return (value - minValue) / (maxValue - minValue);
 }
 
-vec3 scale_positions(vec3 position, vec4 destination, vec2 dataXExtent, float binSize) {
-  // maybe could be a uniform
+vec3 scale_positions(vec3 position) {
+  // testing
   float placeholderThreshold = 115.0;
   float placeholderSize = 0.0;
-
+  // testing
 
   vec3 scaledPosition = position;
   if (scaledPosition.x > placeholderThreshold) {
@@ -148,12 +148,12 @@ void main(void) {
   // vec3 offset = edgePadding * positions * project_pixel_size(outerRadiusPixels);
   // DECKGL_FILTER_SIZE(offset, geometry);
   // TODO: hack and learn
-  vec3 hackedPositions = scale_positions(positions, destination, dataXExtent, binSize);
+  // vec3 hackedPositions = scale_positions(positions);
   // hackedPositions.y *= 0.5;
   // hackedPositions.y = mod(hackedPositions.y, 5.0);
   gl_Position = project_position_to_clipspace(
     instancePositions, instancePositions64Low,
-    hackedPositions
+    scale_positions(positions)
     // positions
     // scale_positions(positions, destination, dataXExtent, binSize)
     );
