@@ -62,132 +62,15 @@ type _ScatterplotLayerProps<DataT> = {
     binSize: number;
 
     /**
-     * The units of the radius, one of `'meters'`, `'common'`, and `'pixels'`.
-     * @default 'meters'
-     */
-    radiusUnits?: Unit;
-    /**
-     * Radius multiplier.
-     * @default 1
-     */
-    radiusScale?: number;
-    /**
-     * The minimum radius in pixels. This prop can be used to prevent the circle from getting too small when zoomed out.
-     * @default 0
-     */
-    radiusMinPixels?: number;
-    /**
-     * The maximum radius in pixels. This prop can be used to prevent the circle from getting too big when zoomed in.
-     * @default Number.MAX_SAFE_INTEGER
-     */
-    radiusMaxPixels?: number;
-
-    /**
-     * The units of the stroke width, one of `'meters'`, `'common'`, and `'pixels'`.
-     * @default 'meters'
-     */
-    lineWidthUnits?: Unit;
-    /**
-     * Stroke width multiplier.
-     * @default 1
-     */
-    lineWidthScale?: number;
-    /**
-     * The minimum stroke width in pixels. This prop can be used to prevent the line from getting too thin when zoomed out.
-     * @default 0
-     */
-    lineWidthMinPixels?: number;
-    /**
-     * The maximum stroke width in pixels. This prop can be used to prevent the circle from getting too thick when zoomed in.
-     * @default Number.MAX_SAFE_INTEGER
-     */
-    lineWidthMaxPixels?: number;
-
-    /**
-     * Draw the outline of points.
-     * @default false
-     */
-    stroked?: boolean;
-    /**
-     * Draw the filled area of points.
-     * @default true
-     */
-    filled?: boolean;
-    /**
-     * If `true`, rendered circles always face the camera. If `false` circles face up (i.e. are parallel with the ground plane).
-     * @default false
-     */
-    billboard?: boolean;
-    /**
-     * If `true`, circles are rendered with smoothed edges. If `false`, circles are rendered with rough edges. Antialiasing can cause artifacts on edges of overlapping circles.
-     * @default true
-     */
-    antialiasing?: boolean;
-
-    /**
-     * Radius accessor.
-     * @default 1
-     */
-    getRadius?: Accessor<DataT, number>;
-    /**
      * Fill color accessor.
      * @default [0, 0, 0, 255]
      */
     getFillColor?: Accessor<DataT, Color>;
-    /**
-     * Stroke color accessor.
-     * @default [0, 0, 0, 255]
-     */
-    getLineColor?: Accessor<DataT, Color>;
-    /**
-     * Stroke width accessor.
-     * @default 1
-     */
-    getLineWidth?: Accessor<DataT, number>;
-    /**
-     * @deprecated Use `getLineWidth` instead
-     */
-    strokeWidth?: number;
-    /**
-     * @deprecated Use `stroked` instead
-     */
-    outline?: boolean;
-    /**
-     * @deprecated Use `getFillColor` and `getLineColor` instead
-     */
-    getColor?: Accessor<DataT, Color>;
 };
 
 const defaultProps: DefaultProps<ScatterplotLayerProps> = {
-    radiusUnits: 'meters',
-    radiusScale: { type: 'number', min: 0, value: 1 },
-    radiusMinPixels: { type: 'number', min: 0, value: 0 }, //  min point radius in pixels
-    radiusMaxPixels: { type: 'number', min: 0, value: Number.MAX_SAFE_INTEGER }, // max point radius in pixels
-
-    lineWidthUnits: 'meters',
-    lineWidthScale: { type: 'number', min: 0, value: 1 },
-    lineWidthMinPixels: { type: 'number', min: 0, value: 0 },
-    lineWidthMaxPixels: {
-        type: 'number',
-        min: 0,
-        value: Number.MAX_SAFE_INTEGER,
-    },
-
-    stroked: false,
-    filled: true,
-    billboard: false,
-    antialiasing: true,
-
     getPosition: { type: 'accessor', value: (x: any) => x.position },
-    getRadius: { type: 'accessor', value: 1 },
     getFillColor: { type: 'accessor', value: DEFAULT_COLOR },
-    getLineColor: { type: 'accessor', value: DEFAULT_COLOR },
-    getLineWidth: { type: 'accessor', value: 1 },
-
-    // deprecated
-    strokeWidth: { deprecatedFor: 'getLineWidth' },
-    outline: { deprecatedFor: 'stroked' },
-    getColor: { deprecatedFor: ['getFillColor', 'getLineColor'] },
 };
 
 /** Render circles at given coordinates. */
@@ -223,12 +106,6 @@ export default class CustomScatterplotLayer<
                 transition: true,
                 accessor: 'getPosition',
             },
-            instanceRadius: {
-                size: 1,
-                transition: true,
-                accessor: 'getRadius',
-                defaultValue: 1,
-            },
             instanceFillColors: {
                 size: this.props.colorFormat.length,
                 transition: true,
@@ -236,20 +113,6 @@ export default class CustomScatterplotLayer<
                 type: GL.UNSIGNED_BYTE,
                 accessor: 'getFillColor',
                 defaultValue: [0, 0, 0, 255],
-            },
-            instanceLineColors: {
-                size: this.props.colorFormat.length,
-                transition: true,
-                normalized: true,
-                type: GL.UNSIGNED_BYTE,
-                accessor: 'getLineColor',
-                defaultValue: [0, 0, 0, 255],
-            },
-            instanceLineWidths: {
-                size: 1,
-                transition: true,
-                accessor: 'getLineWidth',
-                defaultValue: 1,
             },
         });
         console.log('end initialize custom scatterplot layer state');
@@ -269,24 +132,7 @@ export default class CustomScatterplotLayer<
 
     draw({ uniforms }) {
         console.log('draw custom scatterplot layer');
-        const {
-            destination,
-            dataXExtent,
-            baseline,
-            binSize,
-            radiusUnits,
-            radiusScale,
-            radiusMinPixels,
-            radiusMaxPixels,
-            stroked,
-            filled,
-            billboard,
-            antialiasing,
-            lineWidthUnits,
-            lineWidthScale,
-            lineWidthMinPixels,
-            lineWidthMaxPixels,
-        } = this.props;
+        const { destination, dataXExtent, baseline, binSize } = this.props;
         const model = this.state.model!;
 
         model.setUniforms(uniforms);
@@ -295,33 +141,13 @@ export default class CustomScatterplotLayer<
             dataXExtent,
             baseline,
             binSize,
-            stroked: stroked ? 1 : 0,
-            filled,
-            billboard,
-            antialiasing,
-            radiusUnits: UNIT[radiusUnits],
-            radiusScale,
-            radiusMinPixels,
-            radiusMaxPixels,
-            lineWidthUnits: UNIT[lineWidthUnits],
-            lineWidthScale,
-            lineWidthMinPixels,
-            lineWidthMaxPixels,
         });
         model.draw(this.context.renderPass);
     }
 
     protected _getModel() {
         console.log('get model custom scatterplot layer');
-        // a square that minimally cover the unit circle
-        // prettier-ignored
         const positions = this.props.instanceData;
-        // const positions = [
-        //     -1, -1, 0,
-        //      1, -1, 0,
-        //     -1,  1, 0,
-        //      1,  1, 0
-        // ];
 
         const geometryPositions = new Float32Array(positions);
         const geometry = new Geometry({

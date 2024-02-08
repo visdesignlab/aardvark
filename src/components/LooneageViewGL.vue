@@ -285,21 +285,9 @@ function createTestCustomLayer(): CustomScatterplotLayer {
         dataXExtent: [1, 322],
         baseline: 0,
         binSize: 0.035,
-        pickable: true,
-        opacity: 0.8,
-        stroked: true,
-        filled: true,
-        radiusScale: 1,
-        radiusMinPixels: 1,
-        radiusMaxPixels: 100,
-        lineWidthMinPixels: 0,
-        getLineWidth: 0,
-        cornerRadius: 0.7,
         getModOffset: (d: any) => d.modOffset,
         getPosition: (d: any) => d.position,
-        getRadius: 5,
         getFillColor: (d) => d.color,
-        // getLineColor: (d) => [0, 0, 0],
     });
 }
 
