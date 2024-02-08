@@ -155,7 +155,7 @@ onMounted(() => {
         ref="looneageContainer"
         class="p-3"
     >
-        <div v-if="cellMetaData.selectedLineage !== null" class="mt-3">
+        <div v-if="cellMetaData.selectedLineage !== null && false" class="mt-3">
             <svg
                 ref="looneageSvgContainer"
                 :width="containerWidth"
