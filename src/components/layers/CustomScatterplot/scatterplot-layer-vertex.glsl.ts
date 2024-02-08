@@ -29,7 +29,7 @@ in int instanceModOffsets;
 in vec3 instancePositions64Low;
 in float instanceRadius;
 in float instanceLineWidths;
-// in vec4 instanceFillColors;
+in vec4 instanceFillColors;
 in vec4 instanceLineColors;
 in vec3 instancePickingColors;
 
@@ -67,10 +67,18 @@ float norm(float value, float minValue, float maxValue) {
 }
 
 vec3 scale_positions(vec3 position, vec4 destination, vec2 dataXExtent, float binSize) {
+  // maybe could be a uniform
+  float placeholderThreshold = 115.0;
+  float placeholderSize = 250.0;
+
+
   vec3 scaledPosition = position;
+  if (scaledPosition.x > placeholderThreshold) {
+    scaledPosition.x += placeholderSize;
+  }
   scaledPosition.x = lerp(
     destination[1], destination[1] + destination[2],
-    norm(position.x, dataXExtent[0], dataXExtent[1])
+    norm(scaledPosition.x, dataXExtent[0], dataXExtent[1])
   );
 
   scaledPosition.y = lerp(
@@ -90,6 +98,8 @@ void main(void) {
   vec2 dataXExtent = vec2(1.0, 322.0); // extent for this track
   float baseline = 0.0;
   float binSize = 0.035;
+
+
 
 
 
@@ -152,6 +162,8 @@ void main(void) {
     baseline + binSize * float(instanceModOffsets),
     baseline + binSize * (float(instanceModOffsets) + 1.0)
   );
+
+  vFillColor = instanceFillColors;
   // range = vec2(0.0, 20.0);
   // if (instancePositions.x  > 0.0) {
   //   range = vec2(-40.0, -20.0);
