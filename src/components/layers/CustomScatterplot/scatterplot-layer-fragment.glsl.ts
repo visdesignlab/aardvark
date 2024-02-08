@@ -24,16 +24,16 @@ export default `\
 
 precision highp float;
 
-uniform bool filled;
-uniform float stroked;
-uniform bool antialiasing;
+// uniform bool filled;
+// uniform float stroked;
+// uniform bool antialiasing;
 
 in vec4 vFillColor;
-in vec4 vLineColor;
+// in vec4 vLineColor;
 in vec2 unitPosition;
 in vec2 range;
-in float innerUnitRadius;
-in float outerRadiusPixels;
+// in float innerUnitRadius;
+// in float outerRadiusPixels;
 
 out vec4 fragColor;
 

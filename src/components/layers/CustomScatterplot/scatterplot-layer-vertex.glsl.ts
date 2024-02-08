@@ -47,6 +47,12 @@ in vec4 instanceFillColors;
 // uniform int radiusUnits;
 // uniform int lineWidthUnits;
 
+ uniform vec4 destination; 
+ uniform vec2 dataXExtent;
+ uniform float baseline;
+ uniform float binSize;
+
+
 out vec4 vFillColor;
 // out vec4 vLineColor;
 out vec2 unitPosition;
@@ -95,10 +101,10 @@ vec3 scale_positions(vec3 position, vec4 destination, vec2 dataXExtent, float bi
 void main(void) {
   // FUTURE UNIFORMS
   // chart destination [bottom, left, width, height]
-  vec4 destination = vec4(0.0, 0.0, 100.0, 20.0);
-  vec2 dataXExtent = vec2(1.0, 322.0); // extent for this track
-  float baseline = 0.0;
-  float binSize = 0.035;
+  // vec4 destination = vec4(0.0, 0.0, 100.0, 20.0);
+  // vec2 dataXExtent = vec2(1.0, 322.0); // extent for this track
+  // float baseline = 0.0;
+  // float binSize = 0.035;
 
 
 

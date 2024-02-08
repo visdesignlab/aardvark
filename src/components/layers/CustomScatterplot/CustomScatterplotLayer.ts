@@ -48,6 +48,20 @@ type _ScatterplotLayerProps<DataT> = {
     data: LayerDataSource<DataT>;
     instanceData: number[];
     /**
+     * TODO: document
+     */
+    getModOffset?: Accessor<DataT, number>;
+
+    /**
+     * Center position accessor.
+     */
+    getPosition?: Accessor<DataT, Position>;
+    destination: [number, number, number, number];
+    dataXExtent: [number, number];
+    baseline: number;
+    binSize: number;
+
+    /**
      * The units of the radius, one of `'meters'`, `'common'`, and `'pixels'`.
      * @default 'meters'
      */
@@ -110,15 +124,6 @@ type _ScatterplotLayerProps<DataT> = {
      */
     antialiasing?: boolean;
 
-    /**
-     * TODO: document
-     */
-    getModOffset?: Accessor<DataT, number>;
-
-    /**
-     * Center position accessor.
-     */
-    getPosition?: Accessor<DataT, Position>;
     /**
      * Radius accessor.
      * @default 1
@@ -265,6 +270,10 @@ export default class CustomScatterplotLayer<
     draw({ uniforms }) {
         console.log('draw custom scatterplot layer');
         const {
+            destination,
+            dataXExtent,
+            baseline,
+            binSize,
             radiusUnits,
             radiusScale,
             radiusMinPixels,
@@ -282,6 +291,10 @@ export default class CustomScatterplotLayer<
 
         model.setUniforms(uniforms);
         model.setUniforms({
+            destination,
+            dataXExtent,
+            baseline,
+            binSize,
             stroked: stroked ? 1 : 0,
             filled,
             billboard,
