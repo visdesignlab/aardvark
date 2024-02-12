@@ -158,7 +158,7 @@ const testGeometry = computed(() => {
     //     .y0(0);
 
     const geometry = [];
-    const key = cellMetaData.headerKeys.mass;
+    const key = looneageViewStore.attrKey;
     let x, y;
     // min/max just for debugging
     let minY = Infinity;
