@@ -101,21 +101,21 @@ export default class CustomScatterplotLayer<
                 defaultValue: 0,
                 // transition: true,
             },
-            instancePositions: {
-                size: 3,
-                type: GL.DOUBLE,
-                fp64: this.use64bitPositions(),
-                transition: true,
-                accessor: 'getPosition',
-            },
-            instanceFillColors: {
-                size: this.props.colorFormat.length,
-                transition: true,
-                normalized: true,
-                type: GL.UNSIGNED_BYTE,
-                accessor: 'getFillColor',
-                defaultValue: [0, 0, 0, 255],
-            },
+            // instancePositions: {
+            //     size: 3,
+            //     type: GL.DOUBLE,
+            //     fp64: this.use64bitPositions(),
+            //     transition: true,
+            //     accessor: 'getPosition',
+            // },
+            // instanceFillColors: {
+            //     size: this.props.colorFormat.length,
+            //     transition: true,
+            //     normalized: true,
+            //     type: GL.UNSIGNED_BYTE,
+            //     accessor: 'getFillColor',
+            //     defaultValue: [0, 0, 0, 255],
+            // },
         });
         console.log('end initialize custom scatterplot layer state');
     }

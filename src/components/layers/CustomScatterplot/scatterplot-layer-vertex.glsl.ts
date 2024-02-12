@@ -24,9 +24,9 @@ export default `\
 
 in vec3 positions;
 
-in vec3 instancePositions;
+// in vec3 instancePositions;
 in int instanceModOffsets;
-in vec3 instancePositions64Low;
+// in vec3 instancePositions64Low;
 
 // in float instanceRadius;
 // in float instanceLineWidths;
@@ -107,6 +107,7 @@ vec3 scale_positions(vec3 position) {
 }
 
 void main(void) {
+  vec3 origin = vec3(0.0, 0.0, 0.0);
   // FUTURE UNIFORMS
   // chart destination [bottom, left, width, height]
   // vec4 destination = vec4(0.0, 0.0, 100.0, 20.0);
@@ -148,7 +149,7 @@ void main(void) {
   // Expand geometry to accomodate edge smoothing
   // float edgePadding = antialiasing ? (outerRadiusPixels + SMOOTH_EDGE_RADIUS) / outerRadiusPixels : 1.0;
 
-  // position on the containing square in [-1, 1] space
+
   unitPosition = positions.xy;
   // innerUnitRadius = 5.0;
   // outerRadiusPixels = 2.0;
@@ -168,8 +169,9 @@ void main(void) {
   // vec3 hackedPositions = scale_positions(positions);
   // hackedPositions.y *= 0.5;
   // hackedPositions.y = mod(hackedPositions.y, 5.0);
+
   gl_Position = project_position_to_clipspace(
-    instancePositions, instancePositions64Low,
+    origin, origin,
     scale_positions(positions)
     // positions
     // scale_positions(positions, destination, dataXExtent, binSize)
