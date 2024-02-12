@@ -41,7 +41,7 @@ uniform float placeholderSize;
 
 
 out vec4 vFillColor;
-out vec2 unitPosition;
+out vec2 dataPositions;
 out vec2 range;
 
 
@@ -76,7 +76,7 @@ vec3 scale_positions(vec3 position) {
 void main(void) {
   vec3 origin = vec3(0.0, 0.0, 0.0);
   
-  unitPosition = positions.xy;
+  dataPositions = positions.xy;
 
   gl_Position = project_position_to_clipspace(
     origin, origin,

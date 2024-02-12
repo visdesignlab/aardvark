@@ -28,14 +28,14 @@ export default `\
 precision highp float;
 
 in vec4 vFillColor;
-in vec2 unitPosition;
+in vec2 dataPositions;
 in vec2 range;
 
 out vec4 fragColor;
 
 
 void main(void) {
-  if (unitPosition.y < range[0] || unitPosition.y > range[1]) {
+  if (dataPositions.y < range[0] || dataPositions.y > range[1]) {
     discard;
   }
   fragColor = vFillColor;
