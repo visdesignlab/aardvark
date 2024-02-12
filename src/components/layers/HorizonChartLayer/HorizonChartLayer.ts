@@ -1,3 +1,6 @@
+// Modified (significantly) from the ScatterPlotLayer included in deck.gl.
+// the following is the orginal license for the ScatterPlotLayer:
+//
 // Copyright (c) 2015 - 2017 Uber Technologies, Inc.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -31,7 +34,6 @@ import type {
     LayerDataSource,
     UpdateParameters,
     Accessor,
-    Unit,
     Position,
     Color,
     DefaultProps,
@@ -99,23 +101,7 @@ export default class CustomHorizonChartLayer<
                 type: GL.INT,
                 accessor: 'getModOffset',
                 defaultValue: 0,
-                // transition: true,
             },
-            // instancePositions: {
-            //     size: 3,
-            //     type: GL.DOUBLE,
-            //     fp64: this.use64bitPositions(),
-            //     transition: true,
-            //     accessor: 'getPosition',
-            // },
-            // instanceFillColors: {
-            //     size: this.props.colorFormat.length,
-            //     transition: true,
-            //     normalized: true,
-            //     type: GL.UNSIGNED_BYTE,
-            //     accessor: 'getFillColor',
-            //     defaultValue: [0, 0, 0, 255],
-            // },
         });
         console.log('end initialize custom HorizonChart layer state');
     }
@@ -173,7 +159,6 @@ export default class CustomHorizonChartLayer<
         const model = new Model(this.context.gl, {
             ...this.getShaders(),
             id: this.props.id,
-            // bufferLayout: this.getAttributeManager()!.getBufferLayouts(),
             geometry,
             isInstanced: true,
         });
