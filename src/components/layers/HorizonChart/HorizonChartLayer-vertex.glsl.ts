@@ -20,7 +20,7 @@
 
 export default `\
 #version 300 es
-#define SHADER_NAME scatterplot-layer-vertex-shader
+#define SHADER_NAME HorizonChartLayer-vertex-shader
 
 in vec3 positions;
 

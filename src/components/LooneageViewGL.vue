@@ -11,7 +11,7 @@ import {
 import { useDataPointSelection } from '@/stores/dataPointSelection';
 import { useSegmentationStore } from '@/stores/segmentationStore';
 import CellSnippetsLayer from './layers/CellSnippetsLayer.js';
-import HorizonChartLayer from './layers/HorizonChartLayer.js';
+// import HorizonChartLayer from './layers/HorizonChartLayer.js';
 import RoundedRectangleLayer from './layers/RoundedRectangleLayer.js';
 import { useImageViewerStore } from '@/stores/imageViewerStore';
 import { useImageViewerStoreUntrracked } from '@/stores/imageViewerStoreUntrracked';
@@ -47,7 +47,8 @@ import {
     TextLayer,
 } from '@deck.gl/layers/typed';
 
-import CustomScatterplotLayer from './layers/CustomScatterplot/CustomScatterplotLayer';
+// import CustomScatterplotLayer from './layers/CustomScatterplot/CustomScatterplotLayer';3
+import HorizonChartLayer from './layers/HorizonChart/HorizonChartLayer';
 // @ts-ignore
 import { TripsLayer } from '@deck.gl/geo-layers';
 import { render } from 'vue';
@@ -187,85 +188,85 @@ const testGeometry = computed(() => {
     return geometry;
 });
 
-function createHorizonChartLayer(): HorizonChartLayer {
-    return new HorizonChartLayer({
-        id: 'test-horizon-layer',
-        data: [2],
-        // pickable: true,
-        // stroked: true,
-        // filled: true,
-        // lineWidthMinPixels: 1,
-        getPolygon: (d: number) => {
-            if (d === 0) {
-                return [
-                    [0, 0],
-                    [0, 100],
-                    [100, 100],
-                    [100, 0],
-                ];
-            } else if (d === 1) {
-                return [
-                    [50, 50],
-                    [50, 150],
-                    [150, 150],
-                    [150, 50],
-                ];
-            } else {
-                return testGeometry.value;
-            }
-        },
-        // getColor: [66, 140, 0],
-        getFillColor: (d: boolean) => {
-            if (d) {
-                return [255, 0, 0, 120];
-            } else {
-                return [0, 255, 0, 120];
-            }
-        },
-        getLineColor: [80, 80, 80],
-        // getLineWidth: 1,
-        extruded: false,
-    });
-}
+// function createHorizonChartLayer(): HorizonChartLayer {
+//     return new HorizonChartLayer({
+//         id: 'test-horizon-layer',
+//         data: [2],
+//         // pickable: true,
+//         // stroked: true,
+//         // filled: true,
+//         // lineWidthMinPixels: 1,
+//         getPolygon: (d: number) => {
+//             if (d === 0) {
+//                 return [
+//                     [0, 0],
+//                     [0, 100],
+//                     [100, 100],
+//                     [100, 0],
+//                 ];
+//             } else if (d === 1) {
+//                 return [
+//                     [50, 50],
+//                     [50, 150],
+//                     [150, 150],
+//                     [150, 50],
+//                 ];
+//             } else {
+//                 return testGeometry.value;
+//             }
+//         },
+//         // getColor: [66, 140, 0],
+//         getFillColor: (d: boolean) => {
+//             if (d) {
+//                 return [255, 0, 0, 120];
+//             } else {
+//                 return [0, 255, 0, 120];
+//             }
+//         },
+//         getLineColor: [80, 80, 80],
+//         // getLineWidth: 1,
+//         extruded: false,
+//     });
+// }
 
-function createTestScatterLayer(): RoundedRectangleLayer {
-    // test data with points positioned in a grid
-    const testData = [];
-    const y = 0;
-    // for (let x = 0; x <= 100; x += 110) {
-    // for (let y = -100; y <= 100; y += 100) {
-    testData.push({
-        position: [0, 0],
-        color: [255, 0, 0],
-    });
-    testData.push({
-        position: [100, 0],
-        color: [0, 0, 255],
-    });
-    // }
-    // }
-    return new RoundedRectangleLayer({
-        id: 'scatterplot-layer',
-        data: testData,
-        pickable: true,
-        opacity: 0.8,
-        stroked: true,
-        filled: true,
-        radiusScale: 1,
-        radiusMinPixels: 1,
-        radiusMaxPixels: 100,
-        lineWidthMinPixels: 0,
-        getLineWidth: 0,
-        cornerRadius: 0.7,
-        getPosition: (d: any) => d.position,
-        getRadius: 5,
-        getFillColor: (d) => d.color,
-        // getLineColor: (d) => [0, 0, 0],
-    });
-}
+// function createTestScatterLayer(): RoundedRectangleLayer {
+//     // test data with points positioned in a grid
+//     const testData = [];
+//     const y = 0;
+//     // for (let x = 0; x <= 100; x += 110) {
+//     // for (let y = -100; y <= 100; y += 100) {
+//     testData.push({
+//         position: [0, 0],
+//         color: [255, 0, 0],
+//     });
+//     testData.push({
+//         position: [100, 0],
+//         color: [0, 0, 255],
+//     });
+//     // }
+//     // }
+//     return new RoundedRectangleLayer({
+//         id: 'scatterplot-layer',
+//         data: testData,
+//         pickable: true,
+//         opacity: 0.8,
+//         stroked: true,
+//         filled: true,
+//         radiusScale: 1,
+//         radiusMinPixels: 1,
+//         radiusMaxPixels: 100,
+//         lineWidthMinPixels: 0,
+//         getLineWidth: 0,
+//         cornerRadius: 0.7,
+//         getPosition: (d: any) => d.position,
+//         getRadius: 5,
+//         getFillColor: (d) => d.color,
+//         // getLineColor: (d) => [0, 0, 0],
+//     });
+// }
 const imageOffset = ref(0);
 
-function createTestCustomLayer(): CustomScatterplotLayer | null {
+function createTestHorizonChartLayer(): HorizonChartLayer | null {
     if (!cellMetaData.selectedTrack) return null;
     if (!segmentationData.value) return null;
     // test data with points positioned in a grid
@@ -322,7 +323,7 @@ function createTestCustomLayer(): CustomScatterplotLayer | null {
     imageOffset.value =
         ((frameNumber.value - minTime) / (maxTime - minTime)) * 100;
     console.log('imageOffset', imageOffset.value);
-    return new CustomScatterplotLayer({
+    return new HorizonChartLayer({
         id: 'custom-scatterplot-layer',
         data: [0, 1, 2, 3, 4, 5, 6, 7],
         instanceData: testGeometry.value,
@@ -440,7 +441,7 @@ function renderDeckGL(): void {
     const layers = [];
 
     // layers.push(createHorizonChartLayer());
-    layers.push(createTestCustomLayer());
+    layers.push(createTestHorizonChartLayer());
     layers.push(createTrackLayer());
     // layers.push(createTestScatterLayer());
     deckgl.setProps({

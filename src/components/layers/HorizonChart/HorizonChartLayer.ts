@@ -23,8 +23,8 @@ import { Geometry } from '@luma.gl/engine';
 import { Model } from '@luma.gl/engine';
 import GL from '@luma.gl/constants';
 
-import vs from './scatterplot-layer-vertex.glsl';
-import fs from './scatterplot-layer-fragment.glsl';
+import vs from './HorizonChartLayer-vertex.glsl';
+import fs from './HorizonChartLayer-fragment.glsl';
 
 import type {
     LayerProps,
@@ -39,12 +39,12 @@ import type {
 
 const DEFAULT_COLOR: [number, number, number, number] = [0, 0, 0, 255];
 
-/** All props supported by the ScatterplotLayer */
-export type ScatterplotLayerProps<DataT = unknown> =
-    _ScatterplotLayerProps<DataT> & LayerProps;
+/** All props supported by the HorizonChartLayer */
+export type HorizonChartLayerProps<DataT = unknown> =
+    _HorizonChartLayerProps<DataT> & LayerProps;
 
-/** Props added by the ScatterplotLayer */
-type _ScatterplotLayerProps<DataT> = {
+/** Props added by the HorizonChartLayer */
+type _HorizonChartLayerProps<DataT> = {
     data: LayerDataSource<DataT>;
     instanceData: number[];
     /**
@@ -69,19 +69,19 @@ type _ScatterplotLayerProps<DataT> = {
     getFillColor?: Accessor<DataT, Color>;
 };
 
-const defaultProps: DefaultProps<ScatterplotLayerProps> = {
+const defaultProps: DefaultProps<HorizonChartLayerProps> = {
     getPosition: { type: 'accessor', value: (x: any) => x.position },
     getFillColor: { type: 'accessor', value: DEFAULT_COLOR },
     binSize: 100,
 };
 
 /** Render circles at given coordinates. */
-export default class CustomScatterplotLayer<
+export default class CustomHorizonChartLayer<
     DataT = any,
     ExtraPropsT extends {} = {}
-> extends Layer<ExtraPropsT & Required<_ScatterplotLayerProps<DataT>>> {
+> extends Layer<ExtraPropsT & Required<_HorizonChartLayerProps<DataT>>> {
     static defaultProps = defaultProps;
-    static layerName: string = 'ScatterplotLayer';
+    static layerName: string = 'HorizonChartLayer';
 
     state!: {
         model?: Model;
@@ -92,7 +92,7 @@ export default class CustomScatterplotLayer<
     }
 
     initializeState() {
-        console.log('initialize custom scatterplot layer state');
+        console.log('initialize custom HorizonChart layer state');
         this.getAttributeManager()!.addInstanced({
             instanceModOffsets: {
                 size: 1,
@@ -117,11 +117,11 @@ export default class CustomScatterplotLayer<
             //     defaultValue: [0, 0, 0, 255],
             // },
         });
-        console.log('end initialize custom scatterplot layer state');
+        console.log('end initialize custom HorizonChart layer state');
     }
 
     updateState(params: UpdateParameters<this>) {
-        console.log('update state custom scatterplot layer');
+        console.log('update state custom HorizonChart layer');
         super.updateState(params);
 
         if (true || params.changeFlags.extensionsChanged) {
@@ -134,7 +134,7 @@ export default class CustomScatterplotLayer<
     }
 
     draw({ uniforms }) {
-        console.log('draw custom scatterplot layer');
+        console.log('draw custom HorizonChart layer');
         const {
             destination,
             dataXExtent,
@@ -160,7 +160,7 @@ export default class CustomScatterplotLayer<
     }
 
     protected _getModel() {
-        console.log('get model custom scatterplot layer');
+        console.log('get model custom HorizonChart layer');
         const positions = this.props.instanceData;
 
         const geometryPositions = new Float32Array(positions);
@@ -177,7 +177,7 @@ export default class CustomScatterplotLayer<
             geometry,
             isInstanced: true,
         });
-        console.log('end get model custom scatterplot layer');
+        console.log('end get model custom HorizonChart layer');
         return model;
     }
 }
