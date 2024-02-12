@@ -12,7 +12,7 @@ import { useDataPointSelection } from '@/stores/dataPointSelection';
 import { useSegmentationStore } from '@/stores/segmentationStore';
 import CellSnippetsLayer from './layers/CellSnippetsLayer.js';
 // import HorizonChartLayer from './layers/HorizonChartLayer.js';
-import RoundedRectangleLayer from './layers/RoundedRectangleLayer.js';
+// import RoundedRectangleLayer from './layers/RoundedRectangleLayer.js';
 import { useImageViewerStore } from '@/stores/imageViewerStore';
 import { useImageViewerStoreUntrracked } from '@/stores/imageViewerStoreUntrracked';
 import { useDatasetSelectionStore } from '@/stores/datasetSelectionStore';
@@ -48,7 +48,7 @@ import {
 } from '@deck.gl/layers/typed';
 
 // import CustomScatterplotLayer from './layers/CustomScatterplot/CustomScatterplotLayer';3
-import HorizonChartLayer from './layers/HorizonChart/HorizonChartLayer';
+import HorizonChartLayer from './layers/HorizonChartLayer/HorizonChartLayer';
 // @ts-ignore
 import { TripsLayer } from '@deck.gl/geo-layers';
 import { render } from 'vue';
