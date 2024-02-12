@@ -61,6 +61,7 @@ const imageViewerStoreUntrracked = useImageViewerStoreUntrracked();
 const datasetSelectionStore = useDatasetSelectionStore();
 const { currentLocationMetadata } = storeToRefs(datasetSelectionStore);
 const { contrastLimitSlider } = storeToRefs(imageViewerStoreUntrracked);
+const { frameNumber } = storeToRefs(imageViewerStore);
 const { selectedTrack } = storeToRefs(cellMetaData);
 const eventBusStore = useEventBusStore();
 const segmentationStore = useSegmentationStore();
@@ -127,23 +128,23 @@ onMounted(() => {
         }),
         controller: true,
         layers: [],
-        debug: true,
-        onBeforeRender: (gl: any) => {
-            console.count('before');
-            console.log(gl);
-        },
-        onAfterRender: (gl: any) => {
-            console.count('after');
-            console.log(gl);
-        },
-        onError: (error: any, _layer: any) => {
-            console.error('ERROR');
-            console.log(error);
-        },
-        onWebGLInitialized: () => console.log('onWebGLInitialized'),
-        onViewStateChange: () => console.log('onViewStateChange'),
-        onInteractionStateChange: () => console.log('onInteractionStateChange'),
-        onLoad: () => console.log('onLoad'),
+        // debug: true,
+        // onBeforeRender: (gl: any) => {
+        //     console.count('before');
+        //     console.log(gl);
+        // },
+        // onAfterRender: (gl: any) => {
+        //     console.count('after');
+        //     console.log(gl);
+        // },
+        // onError: (error: any, _layer: any) => {
+        //     console.error('ERROR');
+        //     console.log(error);
+        // },
+        // onWebGLInitialized: () => console.log('onWebGLInitialized'),
+        // onViewStateChange: () => console.log('onViewStateChange'),
+        // onInteractionStateChange: () => console.log('onInteractionStateChange'),
+        // onLoad: () => console.log('onLoad'),
     });
     // renderDeckGL();
 });
@@ -231,18 +232,18 @@ function createTestScatterLayer(): RoundedRectangleLayer {
     // test data with points positioned in a grid
     const testData = [];
     const y = 0;
-    for (let x = 0; x <= 1100; x += 110) {
-        // for (let y = -100; y <= 100; y += 100) {
-        testData.push({
-            position: [0, y],
-            color: [
-                Math.random() * 255,
-                Math.random() * 255,
-                Math.random() * 255,
-            ],
-        });
-        // }
-    }
+    // for (let x = 0; x <= 100; x += 110) {
+    // for (let y = -100; y <= 100; y += 100) {
+    testData.push({
+        position: [0, 0],
+        color: [255, 0, 0],
+    });
+    testData.push({
+        position: [100, 0],
+        color: [0, 0, 255],
+    });
+    // }
+    // }
     return new RoundedRectangleLayer({
         id: 'scatterplot-layer',
         data: testData,
@@ -262,8 +263,11 @@ function createTestScatterLayer(): RoundedRectangleLayer {
         // getLineColor: (d) => [0, 0, 0],
     });
 }
+const imageOffset = ref(0);
+
 function createTestCustomLayer(): CustomScatterplotLayer | null {
     if (!cellMetaData.selectedTrack) return null;
+    if (!segmentationData.value) return null;
     // test data with points positioned in a grid
     const testData = [];
     const y = 0;
@@ -301,6 +305,23 @@ function createTestCustomLayer(): CustomScatterplotLayer | null {
         cellMetaData.selectedTrack.cells[lastIndex]
     );
 
+    const placeholderThreshold = frameNumber.value;
+    const placeholderSize = getWidth(segmentationData.value[0].bbox as BBox);
+    console.log({ placeholderThreshold, placeholderSize });
+    // const height = getHeight(segmentationData.value[0].bbox as BBox);
+
+    //
+    // for (let feature of segmentationData.value) {
+    //         if (!feature) continue;
+    //         if (!feature?.properties?.frame) continue;
+    //         if (!feature?.bbox) continue;
+    //         const t = feature.properties.frame - 1; // convert frame number to index
+    //         const source = expandHeight(feature.bbox as BBox, maxHeight);
+    //         const width = getWidth(source);
+    //
+    imageOffset.value =
+        ((frameNumber.value - minTime) / (maxTime - minTime)) * 100;
+    console.log('imageOffset', imageOffset.value);
     return new CustomScatterplotLayer({
         id: 'custom-scatterplot-layer',
         data: [0, 1, 2, 3, 4, 5, 6, 7],
@@ -309,6 +330,8 @@ function createTestCustomLayer(): CustomScatterplotLayer | null {
         dataXExtent: [minTime, maxTime],
         baseline: 0,
         binSize: looneageViewStore.modHeight,
+        placeholderThreshold,
+        placeholderSize,
         getModOffset: (d: any) => d,
         // getPosition: (d: any) => d.position,
         // getFillColor: (d) => d.color,
@@ -331,31 +354,45 @@ function createTestCustomLayer(): CustomScatterplotLayer | null {
 const segmentationData = ref<Feature[]>();
 
 watch(selectedTrack, async () => {
+    updateSnippet();
+});
+
+watch(frameNumber, () => {
+    updateSnippet();
+});
+
+function updateSnippet() {
     if (cellMetaData.selectedTrack == null) return;
 
     const dataRequests = [];
-    const samples = [0, 0.25, 0.5, 0.75, 1];
-    for (let sample of samples) {
-        const index = Math.round(
-            sample * (cellMetaData.selectedTrack.cells.length - 1)
-        );
-        dataRequests.push(
-            segmentationStore.getCellSegmentation(
-                cellMetaData.selectedTrack.cells[index]
-            )
-        );
-    }
+
+    // TODO: this is not right
+    const frame = imageViewerStore.frameNumber;
+    const cell = cellMetaData.selectedTrack.cells.find(
+        (c) => cellMetaData.getFrame(c) === frame
+    );
+    if (!cell) return;
+
+    // const samples = [0, 0.25, 0.5, 0.75, 1];
+    // for (let sample of samples) {
+    //     const index = Math.round(
+    //         sample * (cellMetaData.selectedTrack.cells.length - 1)
+    //     );
+    dataRequests.push(segmentationStore.getCellSegmentation(cell));
+    // }
 
     Promise.all(dataRequests).then((data) => {
         segmentationData.value = data.filter((d) => d != null) as Feature[];
         renderDeckGL();
     });
-});
+}
 
 function createTrackLayer(): CellSnippetsLayer | null {
     if (!segmentationData.value) return null;
     const selections = [];
-    let xOffset = 0;
+    let xOffset = imageOffset.value;
+    const yOffset = 0;
+    console.log('xOffset', xOffset);
     const padding = 6;
     const maxHeight = getMaxHeight(segmentationData.value);
     // console.log({ maxHeight });
@@ -367,7 +404,12 @@ function createTrackLayer(): CellSnippetsLayer | null {
         const source = expandHeight(feature.bbox as BBox, maxHeight);
         const width = getWidth(source);
         const height = getHeight(source);
-        const destination = [xOffset, 0, xOffset + width, -height];
+        const destination = [
+            xOffset,
+            yOffset,
+            xOffset + width,
+            yOffset - height,
+        ];
         xOffset += width + padding;
         selections.push({
             c: 0,
@@ -385,6 +427,9 @@ function createTrackLayer(): CellSnippetsLayer | null {
         channelsVisible: [true],
         extensions: [colormapExtension],
         colormap: imageViewerStore.colormap,
+        onClick: () => {
+            console.log('clicked');
+        },
     });
 }
 
@@ -394,10 +439,10 @@ function renderDeckGL(): void {
     if (segmentationData.value == null) return;
     const layers = [];
 
-    // layers.push(createTrackLayer());
-    // layers.push(createTestScatterLayer());
     // layers.push(createHorizonChartLayer());
     layers.push(createTestCustomLayer());
+    layers.push(createTrackLayer());
+    // layers.push(createTestScatterLayer());
     deckgl.setProps({
         layers,
         controller: true,

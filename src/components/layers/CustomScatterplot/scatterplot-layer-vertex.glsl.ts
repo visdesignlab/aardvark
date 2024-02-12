@@ -53,6 +53,10 @@ uniform float baseline;
 uniform float binSize;
 uniform vec4 positiveColors[8];
 
+uniform float placeholderThreshold;
+uniform float placeholderSize;
+
+
 out vec4 vFillColor;
 // out vec4 vLineColor;
 out vec2 unitPosition;
@@ -75,18 +79,22 @@ float norm(float value, float minValue, float maxValue) {
 
 vec3 scale_positions(vec3 position) {
   // testing
-  float placeholderThreshold = 115.0;
-  float placeholderSize = 0.0;
+  // float placeholderThreshold = 115.0;
+  // float placeholderSize = 0.0;
   // testing
 
   vec3 scaledPosition = position;
-  if (scaledPosition.x > placeholderThreshold) {
-    scaledPosition.x += placeholderSize;
-  }
+  bool afterPlaceholder = scaledPosition.x > placeholderThreshold;
+  // if (scaledPosition.x > placeholderThreshold) {
+  //   scaledPosition.x += placeholderSize;
+  // }
   scaledPosition.x = lerp(
     destination[1], destination[1] + destination[2],
     norm(scaledPosition.x, dataXExtent[0], dataXExtent[1])
   );
+  if (afterPlaceholder) {
+    scaledPosition.x += placeholderSize;
+  }
 
   scaledPosition.y = lerp(
     destination[0], destination[0] - destination[3],

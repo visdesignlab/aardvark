@@ -72,6 +72,7 @@ type _ScatterplotLayerProps<DataT> = {
 const defaultProps: DefaultProps<ScatterplotLayerProps> = {
     getPosition: { type: 'accessor', value: (x: any) => x.position },
     getFillColor: { type: 'accessor', value: DEFAULT_COLOR },
+    binSize: 100,
 };
 
 /** Render circles at given coordinates. */
@@ -134,8 +135,15 @@ export default class CustomScatterplotLayer<
 
     draw({ uniforms }) {
         console.log('draw custom scatterplot layer');
-        const { destination, dataXExtent, baseline, binSize, positiveColors } =
-            this.props;
+        const {
+            destination,
+            dataXExtent,
+            baseline,
+            binSize,
+            positiveColors,
+            placeholderThreshold,
+            placeholderSize,
+        } = this.props;
         const model = this.state.model!;
 
         model.setUniforms(uniforms);
@@ -145,6 +153,8 @@ export default class CustomScatterplotLayer<
             baseline,
             binSize,
             positiveColors,
+            placeholderThreshold,
+            placeholderSize,
         });
         model.draw(this.context.renderPass);
     }
