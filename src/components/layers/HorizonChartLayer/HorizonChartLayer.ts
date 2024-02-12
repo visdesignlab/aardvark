@@ -107,10 +107,15 @@ export default class CustomHorizonChartLayer<
     }
 
     updateState(params: UpdateParameters<this>) {
-        console.log('update state custom HorizonChart layer');
+        // console.log('update state custom HorizonChart layer');
         super.updateState(params);
+        // console.log(params);
 
-        if (true || params.changeFlags.extensionsChanged) {
+        if (
+            params.changeFlags.extensionsChanged ||
+            (params.changeFlags.updateTriggersChanged &&
+                params.changeFlags.updateTriggersChanged.instanceData)
+        ) {
             console.log('===-=-=-=-=---=- UPDATE STATE -==-=-=-=-=---=-');
             // TODO: check if instance geometry has changed
             // this.state.model?.destroy();
@@ -120,7 +125,7 @@ export default class CustomHorizonChartLayer<
     }
 
     draw({ uniforms }) {
-        console.log('draw custom HorizonChart layer');
+        // console.log('draw custom HorizonChart layer');
         const {
             destination,
             dataXExtent,
@@ -146,7 +151,7 @@ export default class CustomHorizonChartLayer<
     }
 
     protected _getModel() {
-        console.log('get model custom HorizonChart layer');
+        // console.log('get model custom HorizonChart layer');
         const positions = this.props.instanceData;
 
         const geometryPositions = new Float32Array(positions);
@@ -162,7 +167,7 @@ export default class CustomHorizonChartLayer<
             geometry,
             isInstanced: true,
         });
-        console.log('end get model custom HorizonChart layer');
+        // console.log('end get model custom HorizonChart layer');
         return model;
     }
 }

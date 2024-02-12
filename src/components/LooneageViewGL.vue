@@ -181,11 +181,29 @@ const testGeometry = computed(() => {
         geometry.push(x, y);
         geometry.push(x, 0);
     }
-    console.log('YYY MIN MAX', minY, maxY);
-    console.log('XXX MIN MAX', minX, maxX);
+    // console.log('YYY MIN MAX', minY, maxY);
+    // console.log('XXX MIN MAX', minX, maxX);
 
     geometry.push(x, 0);
     return geometry;
+});
+
+const testModOffests = computed(() => {
+    // TODO: maybe need to calculate?
+
+    return [0, 1, 2, 3, 4, 5, 6, 7];
+});
+
+const destination = computed(() => [0, 0, 100, looneageViewStore.rowHeight]);
+
+const dataXExtent = computed(() => {
+    if (!cellMetaData.selectedTrack) return [0, 0];
+    const minTime = cellMetaData.getFrame(cellMetaData.selectedTrack.cells[0]);
+    const lastIndex = cellMetaData.selectedTrack.cells.length - 1;
+    const maxTime = cellMetaData.getFrame(
+        cellMetaData.selectedTrack.cells[lastIndex]
+    );
+    return [minTime, maxTime];
 });
 
 // function createHorizonChartLayer(): HorizonChartLayer {
@@ -308,7 +326,7 @@ function createTestHorizonChartLayer(): HorizonChartLayer | null {
 
     const placeholderThreshold = frameNumber.value;
     const placeholderSize = getWidth(segmentationData.value[0].bbox as BBox);
-    console.log({ placeholderThreshold, placeholderSize });
+    // console.log({ placeholderThreshold, placeholderSize });
     // const height = getHeight(segmentationData.value[0].bbox as BBox);
 
     //
@@ -322,13 +340,13 @@ function createTestHorizonChartLayer(): HorizonChartLayer | null {
     //
     imageOffset.value =
         ((frameNumber.value - minTime) / (maxTime - minTime)) * 100;
-    console.log('imageOffset', imageOffset.value);
+    // console.log('imageOffset', imageOffset.value);
     return new HorizonChartLayer({
         id: 'custom-scatterplot-layer',
-        data: [0, 1, 2, 3, 4, 5, 6, 7],
+        data: testModOffests.value,
         instanceData: testGeometry.value,
-        destination: [0, 0, 100, looneageViewStore.rowHeight],
-        dataXExtent: [minTime, maxTime],
+        destination: destination.value,
+        dataXExtent: dataXExtent.value,
         baseline: 0,
         binSize: looneageViewStore.modHeight,
         placeholderThreshold,
@@ -349,6 +367,9 @@ function createTestHorizonChartLayer(): HorizonChartLayer | null {
         //     0.0, 1.0, 1.0, 1.0, // Cyan
         //     0.0, 0.0, 0.0, 1.0, // Black
         // ],
+        updateTriggers: {
+            instanceData: testGeometry.value,
+        },
     });
 }
 
@@ -393,7 +414,7 @@ function createTrackLayer(): CellSnippetsLayer | null {
     const selections = [];
     let xOffset = imageOffset.value;
     const yOffset = 0;
-    console.log('xOffset', xOffset);
+    // console.log('xOffset', xOffset);
     const padding = 6;
     const maxHeight = getMaxHeight(segmentationData.value);
     // console.log({ maxHeight });
