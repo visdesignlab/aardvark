@@ -347,7 +347,7 @@ function createTestHorizonChartLayer(): HorizonChartLayer | null {
         instanceData: testGeometry.value,
         destination: destination.value,
         dataXExtent: dataXExtent.value,
-        baseline: 0,
+        baseline: looneageViewStore.baseline,
         binSize: looneageViewStore.modHeight,
         placeholderThreshold,
         placeholderSize,

@@ -55,6 +55,8 @@ float norm(float value, float minValue, float maxValue) {
 
 vec3 scale_positions(vec3 position) {
   vec3 scaledPosition = position;
+
+
   bool afterPlaceholder = scaledPosition.x > placeholderThreshold;
 
   scaledPosition.x = lerp(
@@ -65,10 +67,14 @@ vec3 scale_positions(vec3 position) {
     scaledPosition.x += placeholderSize;
   }
 
+  scaledPosition.y += baseline;
+  float height = destination[0] - destination[3];
   scaledPosition.y = lerp(
-    destination[0], destination[0] - destination[3],
+    destination[0], height,
     norm(position.y - float(instanceModOffsets) * binSize, 0.0, binSize)
   );
+  float scaledBaselineOffset = lerp(destination[0], height, norm(baseline, 0.0, binSize));
+  scaledPosition.y -= scaledBaselineOffset;
 
   return scaledPosition;
 }
