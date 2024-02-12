@@ -262,15 +262,15 @@ export const useGridstackLayoutStore = defineStore(
 
         function setEqualItems(items: Item[]): LayoutItem[] {
             const layoutItems: LayoutItem[] = [];
-            const h = 5;
-            const w = 3;
+            const h = 10;
+            const w = 6;
             let x = 0;
             let y = 0;
             for (const item of items) {
                 const layoutItem: LayoutItem = { ...item, x, y, w, h };
-                x = (x + 3) % 12;
+                x = (x + 6) % 12;
                 if (x === 0) {
-                    y += 5;
+                    y += 10;
                 }
                 layoutItems.push(layoutItem);
             }
@@ -278,6 +278,29 @@ export const useGridstackLayoutStore = defineStore(
             return layoutItems;
         }
         const allEqualItems: LayoutItem[] = setEqualItems([
+            {
+                component: 'LooneageViewGL',
+                displayName: 'Looneage (WIP)',
+                id: 'LooneageViewGL',
+                icon: 'account_tree',
+                noPadding: true,
+            },
+            {
+                component: 'CellTrackView',
+                displayName: 'CellTrack',
+                id: 'CellTrackView',
+                icon: 'rectangle',
+                noPadding: true,
+            },
+            {
+                component: 'ImageViewer',
+                displayName: 'Images',
+                id: 'ImageViewer',
+                noPadding: true,
+                icon: 'image',
+                sidebar: 'ImageViewerSettingsSidebar',
+                toolbar: 'ImageViewerSettingsToolbar',
+            },
             {
                 component: 'LooneageView',
                 displayName: 'Looneage',
@@ -326,15 +349,6 @@ export const useGridstackLayoutStore = defineStore(
                 noPadding: true,
             },
             {
-                component: 'ImageViewer',
-                displayName: 'Images',
-                id: 'ImageViewer',
-                noPadding: true,
-                icon: 'image',
-                sidebar: 'ImageViewerSettingsSidebar',
-                toolbar: 'ImageViewerSettingsToolbar',
-            },
-            {
                 component: 'BasicInfo',
                 displayName: 'Overview',
                 id: 'BasicInfo',
@@ -345,20 +359,6 @@ export const useGridstackLayoutStore = defineStore(
                 displayName: 'History',
                 id: 'TrrackVisWrapper',
                 icon: 'history',
-                noPadding: true,
-            },
-            {
-                component: 'LooneageViewGL',
-                displayName: 'Looneage (WIP)',
-                id: 'LooneageViewGL',
-                icon: 'account_tree',
-                noPadding: true,
-            },
-            {
-                component: 'CellTrackView',
-                displayName: 'CellTrack',
-                id: 'CellTrackView',
-                icon: 'rectangle',
                 noPadding: true,
             },
         ]);
