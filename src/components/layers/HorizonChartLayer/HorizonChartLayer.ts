@@ -79,7 +79,7 @@ const defaultProps: DefaultProps<HorizonChartLayerProps> = {
 };
 
 /** Render circles at given coordinates. */
-export default class CustomHorizonChartLayer<
+export default class HorizonChartLayer<
     DataT = any,
     ExtraPropsT extends {} = {}
 > extends Layer<ExtraPropsT & Required<_HorizonChartLayerProps<DataT>>> {
