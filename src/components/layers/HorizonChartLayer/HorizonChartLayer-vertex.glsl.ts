@@ -30,7 +30,7 @@ in vec3 positions;
 // the mod offset for the individual instance
 in int instanceModOffsets;
 
-uniform vec4 destination; 
+uniform vec4 destination; // [bottom, left, width, height]
 uniform vec2 dataXExtent;
 uniform float baseline;
 uniform float binSize;
@@ -71,7 +71,6 @@ vec3 scale_positions(vec3 position) {
   }
   float bottom = destination[0];
   float top = bottom - destination[3];
-  float scaledBaselineOffset = lerp(bottom, top, norm(baseline, 0.0, binSize));
   
   if (instanceModOffsets == -8) {
     if (scaledPosition.y == baselineValue) {
@@ -87,22 +86,14 @@ vec3 scale_positions(vec3 position) {
     return scaledPosition;
   }
 
-
-  // if (scaledPosition.y == 0.0) {
-  //   if (instanceModOffsets < 0) {
-  //     scaledPosition.y = scaledBaselineOffset;
-  //   } else {
-  //     scaledPosition.y = -scaledBaselineOffset;
-  //   }
-  //   return scaledPosition;
-  // }
+  float scaledBaselineOffset = lerp(bottom, top, norm(baseline, 0.0, binSize));
 
   scaledPosition.y += baseline;
   scaledPosition.y = lerp(
-    destination[0], top,
+    bottom, top,
     norm(position.y - float(instanceModOffsets) * binSize, 0.0, binSize)
   );
-  scaledPosition.y -= scaledBaselineOffset;
+  scaledPosition.y -= scaledBaselineOffset - bottom;
 
   return scaledPosition;
 }
