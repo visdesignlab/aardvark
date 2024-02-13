@@ -34,14 +34,15 @@ uniform vec4 destination;
 uniform vec2 dataXExtent;
 uniform float baseline;
 uniform float binSize;
-uniform vec4 positiveColors[8];
+uniform vec4 positiveColors[6];
+uniform vec4 negativeColors[6];
 
 uniform float placeholderThreshold;
 uniform float placeholderSize;
 
 
 out vec4 vFillColor;
-out vec2 dataPositions;
+out float yClipPosition;
 out vec2 range;
 
 
@@ -54,6 +55,8 @@ float norm(float value, float minValue, float maxValue) {
 }
 
 vec3 scale_positions(vec3 position) {
+  float baselineValue = -404.123456789;
+
   vec3 scaledPosition = position;
 
 
@@ -66,14 +69,38 @@ vec3 scale_positions(vec3 position) {
   if (afterPlaceholder) {
     scaledPosition.x += placeholderSize;
   }
+  float top = destination[0] - destination[3];
+  float scaledBaselineOffset = lerp(destination[0], top, norm(baseline, 0.0, binSize));
+  
+  if (instanceModOffsets == -8) {
+    if (scaledPosition.y == baselineValue) {
+      scaledPosition.y = top;
+    } else {
+      scaledPosition.y = destination[0];
+    }
+    return scaledPosition;
+  }
+
+  if (scaledPosition.y == baselineValue) {
+    scaledPosition.y = destination[0];
+    return scaledPosition;
+  }
+
+
+  // if (scaledPosition.y == 0.0) {
+  //   if (instanceModOffsets < 0) {
+  //     scaledPosition.y = scaledBaselineOffset;
+  //   } else {
+  //     scaledPosition.y = -scaledBaselineOffset;
+  //   }
+  //   return scaledPosition;
+  // }
 
   scaledPosition.y += baseline;
-  float height = destination[0] - destination[3];
   scaledPosition.y = lerp(
-    destination[0], height,
+    destination[0], top,
     norm(position.y - float(instanceModOffsets) * binSize, 0.0, binSize)
   );
-  float scaledBaselineOffset = lerp(destination[0], height, norm(baseline, 0.0, binSize));
   scaledPosition.y -= scaledBaselineOffset;
 
   return scaledPosition;
@@ -81,19 +108,33 @@ vec3 scale_positions(vec3 position) {
 
 void main(void) {
   vec3 origin = vec3(0.0, 0.0, 0.0);
-  
-  dataPositions = positions.xy;
 
   gl_Position = project_position_to_clipspace(
     origin, origin,
     scale_positions(positions)
     );
   
-  range = vec2(
-    baseline + binSize * float(instanceModOffsets),
-    baseline + binSize * (float(instanceModOffsets) + 1.0)
+  vec4 clipBottom = project_position_to_clipspace(
+    origin, origin,
+    vec3(0.0, destination[0], 0.0)
+  );
+  
+  vec4 clipTop = project_position_to_clipspace(
+    origin, origin,
+    vec3(0.0, destination[0] - destination[3], 0.0)
   );
 
-  vFillColor = positiveColors[instanceModOffsets];
+  range = vec2(clipBottom.y, clipTop.y);
+  yClipPosition = gl_Position.y;
+
+
+  if (instanceModOffsets >= 0) {
+    vFillColor = positiveColors[instanceModOffsets];
+  } else if (instanceModOffsets == -1) {
+    vFillColor = vec4(0.9254902, 0.9254902, 0.9254902, 1.0); // grey
+  } else {
+    // vFillColor = vec4(1.0, 0.0, 0.0, 1.0); // red
+    vFillColor = negativeColors[-1 * instanceModOffsets - 2];
+  }
 }
 `;

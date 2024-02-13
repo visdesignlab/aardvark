@@ -28,17 +28,16 @@ export default `\
 precision highp float;
 
 in vec4 vFillColor;
-in vec2 dataPositions;
+in float yClipPosition;
 in vec2 range;
 
 out vec4 fragColor;
 
 
 void main(void) {
-  if (dataPositions.y < range[0] || dataPositions.y > range[1]) {
+  if (yClipPosition < range[0] || yClipPosition > range[1]) {
     discard;
   }
-  fragColor = vFillColor;
-  
+  fragColor = vFillColor;  
 }
 `;

@@ -63,6 +63,7 @@ type _HorizonChartLayerProps<DataT> = {
     baseline: number;
     binSize: number;
     positiveColors: [number, number, number, number];
+    negativeColors: [number, number, number, number];
 
     /**
      * Fill color accessor.
@@ -132,6 +133,7 @@ export default class CustomHorizonChartLayer<
             baseline,
             binSize,
             positiveColors,
+            negativeColors,
             placeholderThreshold,
             placeholderSize,
         } = this.props;
@@ -144,6 +146,7 @@ export default class CustomHorizonChartLayer<
             baseline,
             binSize,
             positiveColors,
+            negativeColors,
             placeholderThreshold,
             placeholderSize,
         });

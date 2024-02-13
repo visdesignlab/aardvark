@@ -167,8 +167,15 @@ const testGeometry = computed(() => {
     let minX = Infinity;
     let maxX = -Infinity;
 
+    const testBottom = -404.123456789;
+    // this is a hack to make the shaders work correctly.
+    // this value is used in the shaders to determine the non value side
+    // of the geometry. If a data has this exact value there will be a
+    // small visual bug. This value is arbitrary, but is less likely to
+    // be found in data than 0.
+
     const firstX = cellMetaData.getFrame(cellMetaData.selectedTrack.cells[0]);
-    geometry.push(firstX, 0);
+    geometry.push(firstX, testBottom);
     for (const cell of cellMetaData.selectedTrack.cells) {
         y = cell.attrNum[key];
         minY = Math.min(minY, y);
@@ -179,22 +186,22 @@ const testGeometry = computed(() => {
         maxX = Math.max(maxX, x);
 
         geometry.push(x, y);
-        geometry.push(x, 0);
+        geometry.push(x, testBottom);
     }
     // console.log('YYY MIN MAX', minY, maxY);
     // console.log('XXX MIN MAX', minX, maxX);
 
-    geometry.push(x, 0);
+    geometry.push(x, testBottom);
     return geometry;
 });
 
 const testModOffests = computed(() => {
     // TODO: maybe need to calculate?
 
-    return [0, 1, 2, 3, 4, 5, 6, 7];
+    return [-8, -7, -6, -5, -4, -3, -2, -1, 0, 1, 2, 3, 4, 5];
 });
 
-const destination = computed(() => [0, 0, 100, looneageViewStore.rowHeight]);
+const destination = computed(() => [0, 0, 300, looneageViewStore.rowHeight]);
 
 const dataXExtent = computed(() => {
     if (!cellMetaData.selectedTrack) return [0, 0];
@@ -305,18 +312,29 @@ function createTestHorizonChartLayer(): HorizonChartLayer | null {
         // }
     }
 
-    const positiveColors = [];
-    for (let colorHex of looneageViewStore.positiveColorScheme.value[8]) {
-        // convert coloHex to rgba array all values [0-1]
-        const color = [];
-        for (let i = 0; i < 3; i++) {
-            color.push(
-                parseInt(colorHex.slice(1 + i * 2, 1 + i * 2 + 2), 16) / 255
-            );
+    // const positiveColors = [];
+
+    const hexListToRgba = (hexList: readonly string[]): number[] => {
+        const rgbaList: number[] = [];
+        for (let colorHex of hexList) {
+            // convert coloHex to rgba array all values [0-1]
+            const color = [];
+            for (let i = 0; i < 3; i++) {
+                color.push(
+                    parseInt(colorHex.slice(1 + i * 2, 1 + i * 2 + 2), 16) / 255
+                );
+            }
+            color.push(1.0);
+            rgbaList.push(...color);
         }
-        color.push(1.0);
-        positiveColors.push(...color);
-    }
+        return rgbaList;
+    };
+    const positiveColors = hexListToRgba(
+        looneageViewStore.positiveColorScheme.value[6]
+    );
+    const negativeColors = hexListToRgba(
+        looneageViewStore.negativeColorScheme.value[6]
+    );
 
     const minTime = cellMetaData.getFrame(cellMetaData.selectedTrack.cells[0]);
     const lastIndex = cellMetaData.selectedTrack.cells.length - 1;
@@ -357,6 +375,7 @@ function createTestHorizonChartLayer(): HorizonChartLayer | null {
         // positiveColorTest: [0.0, 1.0, 0.0, 1.0], // Green
         // prettier-ignore
         positiveColors,
+        negativeColors,
         // positiveColors: [
         //     0.5, 0.5, 0.5, 1.0, // Gray
         //     1.0, 0.0, 0.0, 1.0, // Red
