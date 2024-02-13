@@ -69,8 +69,9 @@ vec3 scale_positions(vec3 position) {
   if (afterPlaceholder) {
     scaledPosition.x += placeholderSize;
   }
-  float top = destination[0] - destination[3];
-  float scaledBaselineOffset = lerp(destination[0], top, norm(baseline, 0.0, binSize));
+  float bottom = destination[0];
+  float top = bottom - destination[3];
+  float scaledBaselineOffset = lerp(bottom, top, norm(baseline, 0.0, binSize));
   
   if (instanceModOffsets == -8) {
     if (scaledPosition.y == baselineValue) {
