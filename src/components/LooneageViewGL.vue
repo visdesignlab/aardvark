@@ -21,6 +21,8 @@ import { useLooneageViewStore } from '@/stores/looneageViewStore';
 import { clamp } from 'lodash-es';
 import { Pool } from 'geotiff';
 import type { Feature } from 'geojson';
+import { flextree, type LayoutNode } from 'd3-flextree';
+import { hierarchy } from 'd3-hierarchy';
 import {
     expandHeight,
     getMaxHeight,
@@ -72,6 +74,33 @@ const deckGlContainer = ref(null);
 //////////////////////////
 // start temp test code //
 //////////////////////////
+
+const tree = computed(() => {
+    if (cellMetaData.selectedLineage == null) return null;
+    return hierarchy<Track>(cellMetaData.selectedLineage.founder);
+});
+function getTimeExtent(node: Track): [number, number] {
+    let minTime = node.attrNum['min_time'] ?? 0;
+    let maxTime = node.attrNum['max_time'] ?? 0;
+    return [minTime, maxTime];
+}
+
+function getTimeDuration(node: Track): number {
+    let [minTime, maxTime] = getTimeExtent(node);
+    return maxTime - minTime;
+}
+
+const layoutRoot = computed<LayoutNode<Track> | null>(() => {
+    if (cellMetaData.selectedLineage == null) return null;
+    return flextree<Track>({
+        nodeSize: (node: LayoutNode<Track>) => {
+            const timeWidth = getTimeDuration(node.data);
+            return [looneageViewStore.rowHeight, timeWidth];
+        },
+        spacing: looneageViewStore.spacing,
+    })(tree.value);
+});
+
 const colormapExtension = new AdditiveColormapExtension();
 
 const contrastLimit = computed<[number, number][]>(() => {
@@ -175,14 +204,14 @@ const testGeometry = computed<number[]>(() => {
     // small visual bug. This value is arbitrary, but is less likely to
     // be found in data than 0.
 
-    const firstX = cellMetaData.getFrame(cellMetaData.selectedTrack.cells[0]);
+    const firstX = cellMetaData.getTime(cellMetaData.selectedTrack.cells[0]);
     geometry.push(firstX, testBottom);
     for (const cell of cellMetaData.selectedTrack.cells) {
         y = cell.attrNum[key];
         minY = Math.min(minY, y);
         maxY = Math.max(maxY, y);
 
-        x = cellMetaData.getFrame(cell); // TODO: maybe time is better
+        x = cellMetaData.getTime(cell); // TODO: maybe time is better
         minX = Math.min(minX, x);
         maxX = Math.max(maxX, x);
 
@@ -195,6 +224,35 @@ const testGeometry = computed<number[]>(() => {
     geometry.push(x, testBottom);
     return geometry;
 });
+
+function constructGeometry(track: Track): number[] {
+    const geometry: number[] = [];
+    const key = looneageViewStore.attrKey;
+
+    const testBottom = -404.123456789;
+    // this is a hack to make the shaders work correctly.
+    // this value is used in the shaders to determine the non value side
+    // of the geometry. If a data has this exact value there will be a
+    // small visual bug. This value is arbitrary, but is less likely to
+    // be found in data than 0.
+
+    // TODO: return something reasonable if track.cells.length === 1
+
+    const firstX = cellMetaData.getTime(track.cells[0]);
+    geometry.push(firstX, testBottom);
+    let x = 0;
+    for (const cell of track.cells) {
+        const y = cell.attrNum[key];
+
+        x = cellMetaData.getTime(cell);
+
+        geometry.push(x, y);
+        geometry.push(x, testBottom);
+    }
+
+    geometry.push(x, testBottom);
+    return geometry;
+}
 
 const testModOffests = computed(() => {
     // TODO: maybe need to calculate?
@@ -221,44 +279,63 @@ const dataXExtent = computed<[number, number]>(() => {
 
 const imageOffset = ref(0);
 
-function createTestHorizonChartLayer(): HorizonChartLayer | null {
+function createLooneageLayers(): (ScatterplotLayer | HorizonChartLayer)[] {
+    if (!cellMetaData.selectedTrack) return [];
+    if (!segmentationData.value) return [];
+    if (!layoutRoot.value?.descendants()) return [];
+    const layers = [];
+    const testData = [];
+    for (let node of layoutRoot.value.descendants()) {
+        testData.push({
+            position: [node.y, node.x],
+            color: [255, 0, 255],
+        });
+        layers.push(createHorizonChartLayer(node));
+    }
+    layers.push(
+        new ScatterplotLayer({
+            id: 'looneage-test-scatterplot-layer',
+            data: testData,
+            pickable: true,
+            opacity: 0.8,
+            stroked: true,
+            filled: true,
+            radiusScale: 1,
+            radiusMinPixels: 1,
+            radiusMaxPixels: 100,
+            lineWidthMinPixels: 0,
+            getLineWidth: 0,
+            getPosition: (d: any) => d.position,
+            getRadius: 1,
+            getFillColor: (d) => d.color,
+        })
+    );
+
+    return layers;
+}
+
+function hexListToRgba(hexList: readonly string[]): number[] {
+    const rgbaList: number[] = [];
+    for (let colorHex of hexList) {
+        // convert coloHex to rgba array all values [0-1]
+        const color = [];
+        for (let i = 0; i < 3; i++) {
+            color.push(
+                parseInt(colorHex.slice(1 + i * 2, 1 + i * 2 + 2), 16) / 255
+            );
+        }
+        color.push(1.0);
+        rgbaList.push(...color);
+    }
+    return rgbaList;
+}
+
+function createHorizonChartLayer(
+    node: LayoutNode<Track>
+): HorizonChartLayer | null {
     if (!cellMetaData.selectedTrack) return null;
     if (!segmentationData.value) return null;
-    // test data with points positioned in a grid
-    const testData = [];
-    const y = 0;
-    let i = 0;
-    for (let x = 0; x <= 1100; x += 110) {
-        // for (let y = -100; y <= 100; y += 100) {
-        testData.push({
-            position: [0, y],
-            modOffset: i++,
-            color: [
-                Math.random() * 255,
-                Math.random() * 255,
-                Math.random() * 255,
-            ],
-        });
-        // }
-    }
 
-    // const positiveColors = [];
-
-    const hexListToRgba = (hexList: readonly string[]): number[] => {
-        const rgbaList: number[] = [];
-        for (let colorHex of hexList) {
-            // convert coloHex to rgba array all values [0-1]
-            const color = [];
-            for (let i = 0; i < 3; i++) {
-                color.push(
-                    parseInt(colorHex.slice(1 + i * 2, 1 + i * 2 + 2), 16) / 255
-                );
-            }
-            color.push(1.0);
-            rgbaList.push(...color);
-        }
-        return rgbaList;
-    };
     const positiveColors = hexListToRgba(
         looneageViewStore.positiveColorScheme.value[6]
     );
@@ -274,27 +351,23 @@ function createTestHorizonChartLayer(): HorizonChartLayer | null {
 
     const placeholderThreshold = frameNumber.value;
     const placeholderSize = getWidth(segmentationData.value[0].bbox as BBox);
-    // console.log({ placeholderThreshold, placeholderSize });
-    // const height = getHeight(segmentationData.value[0].bbox as BBox);
 
-    //
-    // for (let feature of segmentationData.value) {
-    //         if (!feature) continue;
-    //         if (!feature?.properties?.frame) continue;
-    //         if (!feature?.bbox) continue;
-    //         const t = feature.properties.frame - 1; // convert frame number to index
-    //         const source = expandHeight(feature.bbox as BBox, maxHeight);
-    //         const width = getWidth(source);
-    //
     imageOffset.value =
         ((frameNumber.value - minTime) / (maxTime - minTime)) * 300;
-    // console.log('imageOffset', imageOffset.value);
+    const track = node.data;
     return new HorizonChartLayer({
-        id: 'custom-scatterplot-layer',
+        id: `custom-horizon-chart-layer-${track.trackId}`,
         data: testModOffests.value,
-        instanceData: testGeometry.value,
-        destination: destination.value,
-        dataXExtent: dataXExtent.value,
+
+        instanceData: constructGeometry(track),
+        destination: [
+            node.x,
+            node.y,
+            getTimeDuration(track),
+            looneageViewStore.rowHeight,
+        ],
+        dataXExtent: getTimeExtent(track),
+
         baseline: looneageViewStore.baseline,
         binSize: looneageViewStore.modHeight,
         placeholderThreshold: 0,
@@ -411,8 +484,9 @@ function renderDeckGL(): void {
     const layers = [];
 
     // layers.push(createHorizonChartLayer());
-    layers.push(createTestHorizonChartLayer());
-    layers.push(createTrackLayer());
+    // layers.push(createHorizonChartLayer());
+    layers.push(createLooneageLayers());
+    // layers.push(createTrackLayer());
     // layers.push(createTestScatterLayer());
     deckgl.setProps({
         layers,
