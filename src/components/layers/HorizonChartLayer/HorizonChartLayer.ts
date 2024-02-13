@@ -62,8 +62,8 @@ type _HorizonChartLayerProps<DataT> = {
     dataXExtent: [number, number];
     baseline: number;
     binSize: number;
-    positiveColors: [number, number, number, number];
-    negativeColors: [number, number, number, number];
+    positiveColors: number[];
+    negativeColors: number[];
 
     /**
      * Fill color accessor.
@@ -85,6 +85,10 @@ export default class HorizonChartLayer<
 > extends Layer<ExtraPropsT & Required<_HorizonChartLayerProps<DataT>>> {
     static defaultProps = defaultProps;
     static layerName: string = 'HorizonChartLayer';
+
+    constructor(props: HorizonChartLayerProps) {
+        super(props);
+    }
 
     state!: {
         model?: Model;

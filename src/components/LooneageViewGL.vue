@@ -150,16 +150,17 @@ onMounted(() => {
     // renderDeckGL();
 });
 
-const testGeometry = computed(() => {
+const testGeometry = computed<number[]>(() => {
     if (!cellMetaData.selectedTrack) return [];
     // const areaGen = area<Cell>()
     //     .x((d: Cell) => cellMetaData.getTime(d))
     //     .y1((d: Cell) => 10 * cellMetaData.getMass(d))
     //     .y0(0);
 
-    const geometry = [];
+    const geometry: number[] = [];
     const key = looneageViewStore.attrKey;
-    let x, y;
+    let x = 0;
+    let y = 0;
     // min/max just for debugging
     let minY = Infinity;
     let maxY = -Infinity;
@@ -201,9 +202,14 @@ const testModOffests = computed(() => {
     return [-8, -7, -6, -5, -4, -3, -2, -1, 0, 1, 2, 3, 4, 5];
 });
 
-const destination = computed(() => [0, 0, 300, looneageViewStore.rowHeight]);
+const destination = computed<[number, number, number, number]>(() => [
+    0,
+    0,
+    300,
+    looneageViewStore.rowHeight,
+]);
 
-const dataXExtent = computed(() => {
+const dataXExtent = computed<[number, number]>(() => {
     if (!cellMetaData.selectedTrack) return [0, 0];
     const minTime = cellMetaData.getFrame(cellMetaData.selectedTrack.cells[0]);
     const lastIndex = cellMetaData.selectedTrack.cells.length - 1;
@@ -281,7 +287,7 @@ function createTestHorizonChartLayer(): HorizonChartLayer | null {
     //         const width = getWidth(source);
     //
     imageOffset.value =
-        ((frameNumber.value - minTime) / (maxTime - minTime)) * 100;
+        ((frameNumber.value - minTime) / (maxTime - minTime)) * 300;
     // console.log('imageOffset', imageOffset.value);
     return new HorizonChartLayer({
         id: 'custom-scatterplot-layer',
