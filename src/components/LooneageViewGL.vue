@@ -279,11 +279,15 @@ const dataXExtent = computed<[number, number]>(() => {
 
 const imageOffset = ref(0);
 
-function createLooneageLayers(): (ScatterplotLayer | HorizonChartLayer)[] {
+function createLooneageLayers(): (
+    | ScatterplotLayer
+    | HorizonChartLayer
+    | null
+)[] {
     if (!cellMetaData.selectedTrack) return [];
     if (!segmentationData.value) return [];
     if (!layoutRoot.value?.descendants()) return [];
-    const layers = [];
+    const layers: (ScatterplotLayer | HorizonChartLayer | null)[] = [];
     const testData = [];
     for (let node of layoutRoot.value.descendants()) {
         testData.push({
@@ -332,10 +336,11 @@ function hexListToRgba(hexList: readonly string[]): number[] {
 
 function createHorizonChartLayer(
     node: LayoutNode<Track>
-): HorizonChartLayer | null {
+): (ScatterplotLayer | HorizonChartLayer | null)[] {
     if (!cellMetaData.selectedTrack) return null;
     if (!segmentationData.value) return null;
 
+    // TODO: make these once
     const positiveColors = hexListToRgba(
         looneageViewStore.positiveColorScheme.value[6]
     );
@@ -355,7 +360,7 @@ function createHorizonChartLayer(
     imageOffset.value =
         ((frameNumber.value - minTime) / (maxTime - minTime)) * 300;
     const track = node.data;
-    return new HorizonChartLayer({
+    const horizonChartLayer = new HorizonChartLayer({
         id: `custom-horizon-chart-layer-${track.trackId}`,
         data: testModOffests.value,
 
@@ -373,26 +378,47 @@ function createHorizonChartLayer(
         placeholderThreshold: 0,
         placeholderSize: 0,
         getModOffset: (d: any) => d,
-        // getPosition: (d: any) => d.position,
-        // getFillColor: (d) => d.color,
-        // positiveColorTest: [0.0, 1.0, 0.0, 1.0], // Green
-        // prettier-ignore
         positiveColors,
         negativeColors,
-        // positiveColors: [
-        //     0.5, 0.5, 0.5, 1.0, // Gray
-        //     1.0, 0.0, 0.0, 1.0, // Red
-        //     0.0, 1.0, 0.0, 1.0, // Green
-        //     0.0, 0.0, 1.0, 1.0, // Blue
-        //     1.0, 1.0, 0.0, 1.0, // Yellow
-        //     1.0, 0.0, 1.0, 1.0, // Magenta
-        //     0.0, 1.0, 1.0, 1.0, // Cyan
-        //     0.0, 0.0, 0.0, 1.0, // Black
-        // ],
         updateTriggers: {
             instanceData: testGeometry.value,
         },
     });
+
+    const deltaData = [];
+    for (let i = 0; i < track.cells.length - 1; i++) {
+        const prevIndex = Math.max(i - 1, 0);
+        const prev = track.cells[prevIndex];
+        const cell = track.cells[i];
+        const nextIndex = Math.min(i + 1, track.cells.length - 1);
+        const next = track.cells[nextIndex];
+
+        const position = [cellMetaData.getTime(cell), 3];
+        const key = looneageViewStore.attrKey;
+        const val =
+            Math.abs(next.attrNum[key] - prev.attrNum[key]) /
+            ((next.attrNum[key] + prev.attrNum[key]) / 2);
+        const color = [val * 1000, val * 1000, val * 200];
+        deltaData.push({ position, color });
+    }
+    const scatterplotLayer = new ScatterplotLayer({
+        id: `delta-scatterplot-layer-${track.trackId}`,
+        data: deltaData,
+        pickable: true,
+        opacity: 0.8,
+        stroked: true,
+        filled: true,
+        radiusScale: 1,
+        radiusMinPixels: 1,
+        radiusMaxPixels: 100,
+        lineWidthMinPixels: 0,
+        getLineWidth: 0,
+        getPosition: (d: any) => d.position,
+        getRadius: 0.5,
+        getFillColor: (d) => d.color,
+        getLineColor: (d) => [0, 0, 0],
+    });
+    return [horizonChartLayer, scatterplotLayer];
 }
 
 const segmentationData = ref<Feature[]>();
