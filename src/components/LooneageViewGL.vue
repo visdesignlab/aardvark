@@ -11,14 +11,12 @@ import {
 import { useDataPointSelection } from '@/stores/dataPointSelection';
 import { useSegmentationStore } from '@/stores/segmentationStore';
 import CellSnippetsLayer from './layers/CellSnippetsLayer.js';
-// import HorizonChartLayer from './layers/HorizonChartLayer.js';
-// import RoundedRectangleLayer from './layers/RoundedRectangleLayer.js';
 import { useImageViewerStore } from '@/stores/imageViewerStore';
 import { useImageViewerStoreUntrracked } from '@/stores/imageViewerStoreUntrracked';
 import { useDatasetSelectionStore } from '@/stores/datasetSelectionStore';
 import { useEventBusStore } from '@/stores/eventBusStore';
 import { useLooneageViewStore } from '@/stores/looneageViewStore';
-import { clamp } from 'lodash-es';
+
 import { Pool } from 'geotiff';
 import type { Feature } from 'geojson';
 import { flextree, type LayoutNode } from 'd3-flextree';
@@ -296,24 +294,24 @@ function createLooneageLayers(): (
         });
         layers.push(createHorizonChartLayer(node));
     }
-    layers.push(
-        new ScatterplotLayer({
-            id: 'looneage-test-scatterplot-layer',
-            data: testData,
-            pickable: true,
-            opacity: 0.8,
-            stroked: true,
-            filled: true,
-            radiusScale: 1,
-            radiusMinPixels: 1,
-            radiusMaxPixels: 100,
-            lineWidthMinPixels: 0,
-            getLineWidth: 0,
-            getPosition: (d: any) => d.position,
-            getRadius: 1,
-            getFillColor: (d) => d.color,
-        })
-    );
+    // layers.push(
+    //     new ScatterplotLayer({
+    //         id: 'looneage-test-scatterplot-layer',
+    //         data: testData,
+    //         pickable: true,
+    //         opacity: 0.8,
+    //         stroked: true,
+    //         filled: true,
+    //         radiusScale: 1,
+    //         radiusMinPixels: 1,
+    //         radiusMaxPixels: 100,
+    //         lineWidthMinPixels: 0,
+    //         getLineWidth: 0,
+    //         getPosition: (d: any) => d.position,
+    //         getRadius: 1,
+    //         getFillColor: (d) => d.color,
+    //     })
+    // );
 
     return layers;
 }
@@ -334,11 +332,73 @@ function hexListToRgba(hexList: readonly string[]): number[] {
     return rgbaList;
 }
 
+function valueExtent(track: Track, key: string): number {
+    let min = Infinity;
+    let max = -Infinity;
+    for (let cell of track.cells) {
+        min = Math.min(min, cell.attrNum[key]);
+        max = Math.max(max, cell.attrNum[key]);
+    }
+    return max - min;
+}
+
+function getKeyFrameIndices(track: Track, count: number): number[] {
+    count = Math.min(count, track.cells.length);
+    const frameScores = Array(track.cells.length).fill(0);
+
+    // initialize scores based on the change in the attribute value
+    const key = looneageViewStore.attrKey;
+    // the first and last frames should always be
+    // selected as key frames, so they get a score of zero.
+    frameScores[0] = Infinity;
+    frameScores[track.cells.length - 1] = Infinity;
+    const valExtent = valueExtent(track, looneageViewStore.attrKey);
+    for (let i = 1; i < track.cells.length - 1; i++) {
+        const prev = track.cells[i - 1];
+        const next = track.cells[i + 1];
+        const val = Math.abs(next.attrNum[key] - prev.attrNum[key]) / valExtent;
+        // ((next.attrNum[key] + prev.attrNum[key]) / 2);
+        frameScores[i] = val;
+    }
+
+    const indices: number[] = [];
+    const center = 1;
+    const dropOff = 3;
+    for (let k = 0; k < count; k++) {
+        // select the frame with the smallest score that isn't already in indices
+        let maxScore = -Infinity;
+        let maxIndex = -1;
+        for (let i = 0; i < frameScores.length; i++) {
+            if (frameScores[i] > maxScore && !indices.includes(i)) {
+                maxScore = frameScores[i];
+                maxIndex = i;
+            }
+        }
+        if (maxIndex === -1) break;
+        indices.push(maxIndex);
+
+        // increase the scores of nearby frames to encourage coverage
+        for (let i = 0; i < frameScores.length; i++) {
+            const dist = Math.abs(maxIndex - i);
+            // if (dist < 4) frameScores[i] = -Infinity;
+            const coverageCost =
+                (-center * (dist - dropOff)) /
+                    (center + Math.abs(dist - dropOff)) +
+                center;
+            frameScores[i] -= coverageCost;
+
+            // frameScores[i] += 1.0 / dist;
+        }
+    }
+
+    return indices;
+}
+
 function createHorizonChartLayer(
     node: LayoutNode<Track>
 ): (ScatterplotLayer | HorizonChartLayer | null)[] {
-    if (!cellMetaData.selectedTrack) return null;
-    if (!segmentationData.value) return null;
+    if (!cellMetaData.selectedTrack) return [null];
+    if (!segmentationData.value) return [null];
 
     // TODO: make these once
     const positiveColors = hexListToRgba(
@@ -386,18 +446,21 @@ function createHorizonChartLayer(
     });
 
     const deltaData = [];
-    for (let i = 0; i < track.cells.length - 1; i++) {
+    const valExtent = valueExtent(track, looneageViewStore.attrKey);
+    for (let i = 0; i < track.cells.length; i++) {
         const prevIndex = Math.max(i - 1, 0);
         const prev = track.cells[prevIndex];
         const cell = track.cells[i];
         const nextIndex = Math.min(i + 1, track.cells.length - 1);
         const next = track.cells[nextIndex];
 
-        const position = [cellMetaData.getTime(cell), 3];
+        const position = [
+            node.y + cellMetaData.getTime(cell) - track.attrNum['min_time'],
+            node.x + 6,
+        ];
         const key = looneageViewStore.attrKey;
-        const val =
-            Math.abs(next.attrNum[key] - prev.attrNum[key]) /
-            ((next.attrNum[key] + prev.attrNum[key]) / 2);
+        const val = Math.abs(next.attrNum[key] - prev.attrNum[key]) / valExtent;
+        // ((next.attrNum[key] + prev.attrNum[key]) / 2);
         const color = [val * 1000, val * 1000, val * 200];
         deltaData.push({ position, color });
     }
@@ -418,7 +481,35 @@ function createHorizonChartLayer(
         getFillColor: (d) => d.color,
         getLineColor: (d) => [0, 0, 0],
     });
-    return [horizonChartLayer, scatterplotLayer];
+
+    const keyIndices = getKeyFrameIndices(track, 17);
+    const textLayer = new TextLayer({
+        id: `key-frames-text-layer-${track.trackId}`,
+        data: keyIndices.map((value, index) => {
+            const cell = track.cells[value];
+            return {
+                position: [
+                    node.y +
+                        cellMetaData.getTime(cell) -
+                        track.attrNum['min_time'],
+                    node.x + 3,
+                ],
+                text: index + 1,
+            };
+        }),
+        getPosition: (d: any) => d.position,
+        getText: (d: any) => d.text.toString(),
+        getColor: [0, 0, 0],
+        getSize: (d: any) => {
+            if (d.text < 4) return 16;
+            if (d.text < 8) return 12;
+            // if (d.text < 12) return 8;
+
+            return 8;
+        },
+    });
+
+    return [horizonChartLayer, scatterplotLayer, textLayer];
 }
 
 const segmentationData = ref<Feature[]>();
