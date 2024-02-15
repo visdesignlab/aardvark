@@ -267,6 +267,9 @@ const selections = computed<
         const width = getWidth(source);
         const height = getHeight(source);
         const destination: BBox = [xOffset, 0, xOffset + width, -height];
+        console.log('TRRRACK');
+        console.log({ source, destination });
+        console.log('TRRRACK');
         xOffset += width + padding;
         selections.push({
             c: 0,

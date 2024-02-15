@@ -27,6 +27,7 @@ import {
     type BBox,
     getWidth,
     getHeight,
+    getBBoxAroundPoint,
 } from '@/util/imageSnippets';
 
 import {
@@ -53,6 +54,7 @@ import HorizonChartLayer from './layers/HorizonChartLayer/HorizonChartLayer';
 import { TripsLayer } from '@deck.gl/geo-layers';
 import { render } from 'vue';
 import { index } from 'd3-array';
+import type { Layout } from '@/stores/gridstackLayoutStore';
 
 const cellMetaData = useCellMetaData();
 
@@ -293,6 +295,7 @@ function createLooneageLayers(): (
             color: [255, 0, 255],
         });
         layers.push(createHorizonChartLayer(node));
+        layers.push(createKeyFrameSnippets(node));
     }
     // layers.push(
     //     new ScatterplotLayer({
@@ -392,6 +395,55 @@ function getKeyFrameIndices(track: Track, count: number): number[] {
     }
 
     return indices;
+}
+
+function createKeyFrameSnippets(node: LayoutNode<Track>): CellSnippetsLayer {
+    if (!segmentationData.value) return null;
+    const keyframes = getKeyFrameIndices(node.data, 4);
+    const sourceSize = 40;
+    const destSize = 8;
+    const selections = [];
+
+    for (let keyframe of keyframes) {
+        const cell = node.data.cells[keyframe];
+        const [x, y] = cellMetaData.getPosition(cell);
+        const t = cellMetaData.getTime(cell);
+        const frameIndex = cellMetaData.getFrame(cell) - 1;
+        const source = getBBoxAroundPoint(x, y, sourceSize, sourceSize);
+        const destX = node.y + t - node.data.attrNum['min_time'] - destSize / 2;
+        const destY = node.x + -looneageViewStore.rowHeight - 3;
+        const destination = [destX, destY, destX + destSize, destY - destSize];
+        console.log('LOONEAGE');
+        console.log({ source, destination });
+        console.log('LOONEAGE');
+
+        // const destination = [
+        //     xOffset,
+        //     yOffset,
+        //     xOffset + width,
+        //     yOffset - height,
+        // ];
+
+        selections.push({
+            c: 0,
+            z: 0,
+            t: frameIndex,
+            snippets: [{ source, destination }],
+        });
+    }
+
+    return new CellSnippetsLayer({
+        loader: pixelSource.value,
+        id: `key-frames-snippets-layer-${node.data.trackId}`,
+        contrastLimits: contrastLimit.value,
+        selections,
+        channelsVisible: [true],
+        extensions: [colormapExtension],
+        colormap: imageViewerStore.colormap,
+        onClick: () => {
+            console.log('clicked');
+        },
+    });
 }
 
 function createHorizonChartLayer(

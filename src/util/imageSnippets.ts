@@ -1,6 +1,11 @@
 import type { Feature } from 'geojson';
 
-export type BBox = [number, number, number, number];
+export type BBox = [
+    number, // left
+    number, // top
+    number, // right
+    number // bottom
+];
 
 export function getMaxHeight(segmentations: Feature[]): number {
     let maxHeight = 0;
@@ -46,4 +51,15 @@ export function expandHeight(bbox: BBox, height: number): BBox {
         console.error('expandHeight: height is smaller than current height');
     }
     return addMargin(bbox, Math.ceil(margin / 2), Math.floor(margin / 2), 0, 0);
+}
+
+export function getBBoxAroundPoint(
+    x: number,
+    y: number,
+    width: number,
+    height: number
+): BBox {
+    x = Math.round(x);
+    y = Math.round(y);
+    return [x - width / 2, y + height / 2, x + width / 2, y - height / 2];
 }
