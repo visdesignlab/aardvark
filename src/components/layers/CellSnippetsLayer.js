@@ -62,6 +62,51 @@ class CellSnippetsLayer extends CompositeLayer {
         this.state.abortController.abort();
     }
 
+    matchSelectionsToData(selections, data) {
+        const newData = [];
+        const unmatchedSelections = [];
+        if (!data) {
+            // no data yet, everything is unmatched
+            return { newData, unmatchedSelections: selections };
+        }
+        for (const selection of selections) {
+            const { c, t, z, snippets } = selection;
+            const unmatchedSnippets = [];
+            for (const snippet of snippets) {
+                const match = data.find((d) => {
+                    if (
+                        d.index.c === c &&
+                        d.index.t === t &&
+                        d.index.z === z &&
+                        d.source[0] === snippet.source[0] &&
+                        d.source[1] === snippet.source[1] &&
+                        d.source[2] === snippet.source[2] &&
+                        d.source[3] === snippet.source[3]
+                    ) {
+                        // newData.push(d);
+                        return true;
+                    }
+                    return false;
+                });
+                if (match) {
+                    match.destination = snippet.destination;
+                    newData.push(match);
+                } else {
+                    unmatchedSnippets.push(snippet);
+                }
+            }
+            if (unmatchedSnippets.length) {
+                unmatchedSelections.push({
+                    c,
+                    t,
+                    z,
+                    snippets: unmatchedSnippets,
+                });
+            }
+        }
+        return { newData, unmatchedSelections };
+    }
+
     updateState({ props, oldProps, changeFlags }) {
         // console.log('UPDATE STATE MAYBE');
         // console.log(changeFlags);
@@ -75,33 +120,42 @@ class CellSnippetsLayer extends CompositeLayer {
         if (!loaderChanged && !selectionsChanged && !colormapChanged) return;
         const { loader } = this.props;
         if (!loader) return;
-        // console.log('YES!!!! updateState');
+
+        // stop existing async calls since they are now outdated
+        this.state.abortController?.abort();
+
+        const { data } = this.state;
+        const { newData, unmatchedSelections } = this.matchSelectionsToData(
+            props.selections,
+            data
+        );
+
+        if (unmatchedSelections.length === 0) {
+            this.setState({ data: newData });
+            return;
+        }
+
         const abortController = new AbortController();
         this.setState({ abortController });
         const { signal } = abortController;
 
         const dataPromises = [];
 
-        for (let i = 0; i < props.selections.length; i++) {
+        for (let i = 0; i < unmatchedSelections.length; i++) {
             dataPromises.push(
                 loader.getRaster({
-                    selection: props.selections[i],
+                    selection: unmatchedSelections[i],
                     signal,
                 })
             );
         }
-        // const getRaster = loader.getRaster({
-        //     selection: props.selections[0],
-        //     signal,
-        // });
-        // TODO: get all data required for the different snippets
-        // dataPromises.push(getRaster);
+
         Promise.all(dataPromises)
             .then((rasters) => {
-                const data = [];
+                // const data = [];
                 for (let i = 0; i < rasters.length; i++) {
                     const raster = rasters[i];
-                    const snippets = props.selections[i].snippets;
+                    const { c, t, z, snippets } = unmatchedSelections[i];
                     for (let snippet of snippets) {
                         const snippetData = this.getSnippetOfByteArray(
                             raster.data,
@@ -110,18 +164,21 @@ class CellSnippetsLayer extends CompositeLayer {
                             snippet.source
                         );
 
-                        data.push({
+                        newData.push({
                             data: snippetData,
                             source: snippet.source,
                             destination: snippet.destination,
+                            index: {
+                                c,
+                                t,
+                                z,
+                            },
                         });
                     }
                 }
 
                 this.setState({
-                    data,
-                    // width: rasters[0]?.width,
-                    // height: rasters[0]?.height,
+                    data: newData,
                 });
             })
             .catch((err) => {
@@ -141,29 +198,15 @@ class CellSnippetsLayer extends CompositeLayer {
         const { width, height, data } = this.state;
         if (!data) return null;
         const { dtype } = loader;
-        // console.log('create snippet layer');
-        // const dtype = pixelSource.value?.dtype;
+
         if (!dtype) {
             return null;
         }
-        // console.log(testRaster.value?.data);
-        // console.log(imageViewerStore.selections);
-        // console.log(contrastLimit.value);
-        // console.log('colormap:', imageViewerStore.colormap);
-        // console.log(dtype);
-        // const testData = this.getSnippetOfByteArray(
-        //     data[0], // TODO:
-        //     767,
-        //     767,
-        //     [100, 766, 152, 712]
-        // );
-        // console.log({ testData });
+
         const xrLayers = [];
         for (let i = 0; i < data.length; i++) {
             const snippet = data[i];
-            // const snippetLocations = this.props.selections[i].snippets;
-            // for (let j = 0; j < snippetLocations.length; j++) {
-            // const snippet = this.props.selections[i].snippets[j];
+
             xrLayers.push(
                 new XRLayer({
                     // loader: pixelSource.value,
