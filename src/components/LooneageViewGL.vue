@@ -53,7 +53,7 @@ import HorizonChartLayer from './layers/HorizonChartLayer/HorizonChartLayer';
 // @ts-ignore
 import { TripsLayer } from '@deck.gl/geo-layers';
 import { render } from 'vue';
-import { index } from 'd3-array';
+import { index, max } from 'd3-array';
 import type { Layout } from '@/stores/gridstackLayoutStore';
 
 const cellMetaData = useCellMetaData();
@@ -340,7 +340,7 @@ function hexListToRgba(hexList: readonly string[]): number[] {
 
 function createKeyFrameSnippets(node: LayoutNode<Track>): CellSnippetsLayer {
     if (!segmentationData.value) return null;
-    const keyframes = getKeyFrameIndices(node.data, 4);
+    const keyframes = getKeyFrameIndices(node, 4);
     const sourceSize = 32;
     const zoom = deckgl.viewState?.looneageController?.zoom ?? 0;
     const fixedDestSize = 32;
@@ -379,53 +379,14 @@ function createKeyFrameSnippets(node: LayoutNode<Track>): CellSnippetsLayer {
     });
 }
 
-function getKeyFrameIndices(track: Track, count: number): number[] {
+function getKeyFrameIndices(node: LayoutNode<Track>, count: number): number[] {
+    const track = node.data;
     count = Math.min(count, track.cells.length);
-    const frameScores = Array(track.cells.length).fill(0);
-
-    // initialize scores based on the change in the attribute value
-    const key = looneageViewStore.attrKey;
-    // the first and last frames should always be
-    // selected as key frames, so they get a score of zero.
-    frameScores[0] = Infinity;
-    frameScores[track.cells.length - 1] = Infinity;
-    const valExtent = valueExtent(track, looneageViewStore.attrKey);
-    for (let i = 1; i < track.cells.length - 1; i++) {
-        const prev = track.cells[i - 1];
-        const next = track.cells[i + 1];
-        const val = Math.abs(next.attrNum[key] - prev.attrNum[key]) / valExtent;
-        // ((next.attrNum[key] + prev.attrNum[key]) / 2);
-        frameScores[i] = val;
-    }
-
+    const frameScores: number[] = [];
     const indices: number[] = [];
-    const center = 1;
-    const dropOff = 3;
-    for (let k = 0; k < count; k++) {
-        // select the frame with the smallest score that isn't already in indices
-        let maxScore = -Infinity;
-        let maxIndex = -1;
-        for (let i = 0; i < frameScores.length; i++) {
-            if (frameScores[i] > maxScore && !indices.includes(i)) {
-                maxScore = frameScores[i];
-                maxIndex = i;
-            }
-        }
-        if (maxIndex === -1) break;
-        indices.push(maxIndex);
 
-        // increase the scores of nearby frames to encourage coverage
-        for (let i = 0; i < frameScores.length; i++) {
-            const dist = Math.abs(maxIndex - i);
-            // if (dist < 4) frameScores[i] = -Infinity;
-            const coverageCost =
-                (-center * (dist - dropOff)) /
-                    (center + Math.abs(dist - dropOff)) +
-                center;
-            frameScores[i] -= coverageCost;
-
-            // frameScores[i] += 1.0 / dist;
-        }
+    for (let i = 0; i < count; i++) {
+        getNextSnippet(node, 32, 32, [], frameScores, indices, 3);
     }
 
     return indices;
@@ -441,11 +402,84 @@ function valueExtent(track: Track, key: string): number {
     return max - min;
 }
 
-// function getNextSnippet(
-//     track: Track,
-//     occupied: BBox[],
-//     frameScores: number[]
-// ): { destination: BBox } {}
+function getNextSnippet(
+    node: LayoutNode<Track>,
+    width: number,
+    height: number,
+    occupied: BBox[],
+    frameScores: number[],
+    selectedIndices: number[],
+    maxAttempts: number = 3
+): { destination: BBox; index: number } | null {
+    const track = node.data;
+    if (frameScores.length === 0) {
+        // populate with zeros without changing reference
+        frameScores.length = track.cells.length;
+        frameScores.fill(0);
+
+        // initialize scores based on the change in the attribute value
+        // the first and last frames should always be
+        // selected as key frames, so they get a score of zero.
+        frameScores[0] = Infinity;
+        frameScores[track.cells.length - 1] = Infinity;
+        const key = looneageViewStore.attrKey;
+        const valExtent = valueExtent(track, looneageViewStore.attrKey);
+        for (let i = 1; i < track.cells.length - 1; i++) {
+            const prev = track.cells[i - 1];
+            const next = track.cells[i + 1];
+            const val =
+                Math.abs(next.attrNum[key] - prev.attrNum[key]) / valExtent;
+            frameScores[i] = val;
+        }
+    }
+
+    const center = 1;
+    const dropOff = 3;
+    let maxIndex = -1;
+    for (let k = 0; k < maxAttempts; k++) {
+        // select the frame with the smallest score that isn't already in indices
+        let maxScore = -Infinity;
+        for (let i = 0; i < frameScores.length; i++) {
+            if (frameScores[i] > maxScore && !selectedIndices.includes(i)) {
+                maxScore = frameScores[i];
+                maxIndex = i;
+            }
+        }
+        if (maxIndex !== -1) break;
+    }
+    if (maxIndex === -1) return null;
+    selectedIndices.push(maxIndex);
+
+    // increase the scores of nearby frames to encourage coverage
+    for (let i = 0; i < frameScores.length; i++) {
+        const dist = Math.abs(maxIndex - i);
+        const coverageCost =
+            (-center * (dist - dropOff)) / (center + Math.abs(dist - dropOff)) +
+            center;
+        frameScores[i] -= coverageCost;
+    }
+
+    const cell = node.data.cells[maxIndex];
+    const t = cellMetaData.getTime(cell);
+
+    const zoom = deckgl.viewState?.looneageController?.zoom ?? 0;
+    const destWidth = width * 2 ** -zoom;
+    const destHeight = height * 2 ** -zoom;
+
+    const destX = node.y + t - node.data.attrNum['min_time'] - destWidth / 2;
+    const destY = node.x + -looneageViewStore.rowHeight - 3;
+    const destination: BBox = [
+        destX,
+        destY,
+        destX + destWidth,
+        destY - destHeight,
+    ];
+
+    return {
+        destination,
+        index: maxIndex,
+    };
+}
 
 function createHorizonChartLayer(
     node: LayoutNode<Track>
@@ -535,7 +569,7 @@ function createHorizonChartLayer(
         getLineColor: (d) => [0, 0, 0],
     });
 
-    const keyIndices = getKeyFrameIndices(track, 17);
+    const keyIndices = getKeyFrameIndices(node, 17);
     const textLayer = new TextLayer({
         id: `key-frames-text-layer-${track.trackId}`,
         data: keyIndices.map((value, index) => {
