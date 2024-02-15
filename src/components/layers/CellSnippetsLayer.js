@@ -59,7 +59,7 @@ const defaultProps = {
 
 class CellSnippetsLayer extends CompositeLayer {
     finalizeState() {
-        this.state.abortController.abort();
+        this.state.abortController?.abort();
     }
 
     matchSelectionsToData(selections, data) {
