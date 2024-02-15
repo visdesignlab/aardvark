@@ -153,7 +153,7 @@ onMounted(() => {
         // @ts-ignore
         canvas: deckGlContainer.value?.id,
         views: new OrthographicView({
-            id: 'looneage-controller',
+            id: 'looneageController',
             controller: true,
         }),
         controller: true,
@@ -172,7 +172,10 @@ onMounted(() => {
         //     console.log(error);
         // },
         // onWebGLInitialized: () => console.log('onWebGLInitialized'),
-        // onViewStateChange: () => console.log('onViewStateChange'),
+        onViewStateChange: () => {
+            // TODO: maybe refine this
+            renderDeckGL();
+        },
         // onInteractionStateChange: () => console.log('onInteractionStateChange'),
         // onLoad: () => console.log('onLoad'),
     });
@@ -400,8 +403,10 @@ function getKeyFrameIndices(track: Track, count: number): number[] {
 function createKeyFrameSnippets(node: LayoutNode<Track>): CellSnippetsLayer {
     if (!segmentationData.value) return null;
     const keyframes = getKeyFrameIndices(node.data, 4);
-    const sourceSize = 40;
-    const destSize = 8;
+    const sourceSize = 32;
+    const zoom = deckgl.viewState?.looneageController?.zoom ?? 0;
+    const fixedDestSize = 32;
+    const destSize = fixedDestSize * 2 ** -zoom;
     const selections = [];
 
     for (let keyframe of keyframes) {
