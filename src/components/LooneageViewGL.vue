@@ -289,7 +289,7 @@ function createLooneageLayers(): (
     | null
 )[] {
     if (!cellMetaData.selectedTrack) return [];
-    if (!segmentationData.value) return [];
+    // if (!segmentationData.value) return [];
     if (!layoutRoot.value?.descendants()) return [];
     const layers: (ScatterplotLayer | HorizonChartLayer | null)[] = [];
     const testData = [];
@@ -340,7 +340,7 @@ function hexListToRgba(hexList: readonly string[]): number[] {
 }
 
 function createKeyFrameSnippets(node: LayoutNode<Track>): CellSnippetsLayer {
-    if (!segmentationData.value) return null;
+    // if (!segmentationData.value) return null;
     const sourceSize = 32;
     const fixedDestSize = 64;
     const frameScores: number[] = [];
@@ -542,7 +542,7 @@ function createHorizonChartLayer(
     node: LayoutNode<Track>
 ): (ScatterplotLayer | HorizonChartLayer | null)[] {
     if (!cellMetaData.selectedTrack) return [null];
-    if (!segmentationData.value) return [null];
+    // if (!segmentationData.value) return [null];
 
     // TODO: make these once
     const positiveColors = hexListToRgba(
@@ -558,8 +558,8 @@ function createHorizonChartLayer(
         cellMetaData.selectedTrack.cells[lastIndex]
     );
 
-    const placeholderThreshold = frameNumber.value;
-    const placeholderSize = getWidth(segmentationData.value[0].bbox as BBox);
+    // const placeholderThreshold = frameNumber.value;
+    // const placeholderSize = getWidth(segmentationData.value[0].bbox as BBox);
 
     imageOffset.value =
         ((frameNumber.value - minTime) / (maxTime - minTime)) * 300;
@@ -579,8 +579,8 @@ function createHorizonChartLayer(
 
         baseline: looneageViewStore.baseline,
         binSize: looneageViewStore.modHeight,
-        placeholderThreshold: 0,
-        placeholderSize: 0,
+        // placeholderThreshold: 0,
+        // placeholderSize: 0,
         getModOffset: (d: any) => d,
         positiveColors,
         negativeColors,
@@ -656,92 +656,92 @@ function createHorizonChartLayer(
     return [horizonChartLayer, scatterplotLayer, textLayer];
 }
 
-const segmentationData = ref<Feature[]>();
+// const segmentationData = ref<Feature[]>();
 
 watch(selectedTrack, () => {
-    updateSnippet();
+    renderDeckGL();
 });
 
-watch(frameNumber, () => {
-    updateSnippet();
-});
+// watch(frameNumber, () => {
+//     renderDeckGL();
+// });
 
-function updateSnippet() {
-    if (cellMetaData.selectedTrack == null) return;
+// function updateSnippet() {
+//     if (cellMetaData.selectedTrack == null) return;
 
-    const dataRequests = [];
+//     const dataRequests = [];
 
-    // TODO: this is not right
-    const frame = imageViewerStore.frameNumber;
-    const cell = cellMetaData.selectedTrack.cells.find(
-        (c) => cellMetaData.getFrame(c) === frame
-    );
-    if (!cell) return;
+//     // TODO: this is not right
+//     const frame = imageViewerStore.frameNumber;
+//     const cell = cellMetaData.selectedTrack.cells.find(
+//         (c) => cellMetaData.getFrame(c) === frame
+//     );
+//     if (!cell) return;
 
-    // const samples = [0, 0.25, 0.5, 0.75, 1];
-    // for (let sample of samples) {
-    //     const index = Math.round(
-    //         sample * (cellMetaData.selectedTrack.cells.length - 1)
-    //     );
-    dataRequests.push(segmentationStore.getCellSegmentation(cell));
-    // }
+//     // const samples = [0, 0.25, 0.5, 0.75, 1];
+//     // for (let sample of samples) {
+//     //     const index = Math.round(
+//     //         sample * (cellMetaData.selectedTrack.cells.length - 1)
+//     //     );
+//     dataRequests.push(segmentationStore.getCellSegmentation(cell));
+//     // }
 
-    Promise.all(dataRequests).then((data) => {
-        segmentationData.value = data.filter((d) => d != null) as Feature[];
-        renderDeckGL();
-    });
-}
+//     Promise.all(dataRequests).then((data) => {
+//         segmentationData.value = data.filter((d) => d != null) as Feature[];
+//         renderDeckGL();
+//     });
+// }
 
-function createTrackLayer(): CellSnippetsLayer | null {
-    if (!segmentationData.value) return null;
-    const selections = [];
-    let xOffset = imageOffset.value;
-    const yOffset = 0;
-    // console.log('xOffset', xOffset);
-    const padding = 6;
-    const maxHeight = getMaxHeight(segmentationData.value);
-    // console.log({ maxHeight });
-    for (let feature of segmentationData.value) {
-        if (!feature) continue;
-        if (!feature?.properties?.frame) continue;
-        if (!feature?.bbox) continue;
-        const t = feature.properties.frame - 1; // convert frame number to index
-        const source = expandHeight(feature.bbox as BBox, maxHeight);
-        const width = getWidth(source);
-        const height = getHeight(source);
-        const destination = [
-            xOffset,
-            yOffset,
-            xOffset + width,
-            yOffset - height,
-        ];
-        xOffset += width + padding;
-        selections.push({
-            c: 0,
-            z: 0,
-            t,
-            snippets: [{ source, destination }],
-        });
-    }
+// function createTrackLayer(): CellSnippetsLayer | null {
+//     if (!segmentationData.value) return null;
+//     const selections = [];
+//     let xOffset = imageOffset.value;
+//     const yOffset = 0;
+//     // console.log('xOffset', xOffset);
+//     const padding = 6;
+//     const maxHeight = getMaxHeight(segmentationData.value);
+//     // console.log({ maxHeight });
+//     for (let feature of segmentationData.value) {
+//         if (!feature) continue;
+//         if (!feature?.properties?.frame) continue;
+//         if (!feature?.bbox) continue;
+//         const t = feature.properties.frame - 1; // convert frame number to index
+//         const source = expandHeight(feature.bbox as BBox, maxHeight);
+//         const width = getWidth(source);
+//         const height = getHeight(source);
+//         const destination = [
+//             xOffset,
+//             yOffset,
+//             xOffset + width,
+//             yOffset - height,
+//         ];
+//         xOffset += width + padding;
+//         selections.push({
+//             c: 0,
+//             z: 0,
+//             t,
+//             snippets: [{ source, destination }],
+//         });
+//     }
 
-    return new CellSnippetsLayer({
-        loader: pixelSource.value,
-        id: 'looneage-view-gl-test-snippet-layer',
-        contrastLimits: contrastLimit.value,
-        selections,
-        channelsVisible: [true],
-        extensions: [colormapExtension],
-        colormap: imageViewerStore.colormap,
-        onClick: () => {
-            console.log('clicked');
-        },
-    });
-}
+//     return new CellSnippetsLayer({
+//         loader: pixelSource.value,
+//         id: 'looneage-view-gl-test-snippet-layer',
+//         contrastLimits: contrastLimit.value,
+//         selections,
+//         channelsVisible: [true],
+//         extensions: [colormapExtension],
+//         colormap: imageViewerStore.colormap,
+//         onClick: () => {
+//             console.log('clicked');
+//         },
+//     });
+// }
 
 function renderDeckGL(): void {
     if (deckgl == null) return;
     if (cellMetaData.selectedTrack == null) return;
-    if (segmentationData.value == null) return;
+    // if (segmentationData.value == null) return;
     const layers = [];
 
     // layers.push(createHorizonChartLayer());

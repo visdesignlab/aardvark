@@ -138,8 +138,8 @@ export default class HorizonChartLayer<
             binSize,
             positiveColors,
             negativeColors,
-            placeholderThreshold,
-            placeholderSize,
+            // placeholderThreshold,
+            // placeholderSize,
         } = this.props;
         const model = this.state.model!;
 
@@ -151,8 +151,8 @@ export default class HorizonChartLayer<
             binSize,
             positiveColors,
             negativeColors,
-            placeholderThreshold,
-            placeholderSize,
+            // placeholderThreshold,
+            // placeholderSize,
         });
         model.draw(this.context.renderPass);
     }
