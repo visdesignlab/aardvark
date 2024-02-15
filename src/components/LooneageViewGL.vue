@@ -413,16 +413,6 @@ function createKeyFrameSnippets(node: LayoutNode<Track>): CellSnippetsLayer {
         const destX = node.y + t - node.data.attrNum['min_time'] - destSize / 2;
         const destY = node.x + -looneageViewStore.rowHeight - 3;
         const destination = [destX, destY, destX + destSize, destY - destSize];
-        console.log('LOONEAGE');
-        console.log({ source, destination });
-        console.log('LOONEAGE');
-
-        // const destination = [
-        //     xOffset,
-        //     yOffset,
-        //     xOffset + width,
-        //     yOffset - height,
-        // ];
 
         selections.push({
             c: 0,
