@@ -338,14 +338,45 @@ function hexListToRgba(hexList: readonly string[]): number[] {
     return rgbaList;
 }
 
-function valueExtent(track: Track, key: string): number {
-    let min = Infinity;
-    let max = -Infinity;
-    for (let cell of track.cells) {
-        min = Math.min(min, cell.attrNum[key]);
-        max = Math.max(max, cell.attrNum[key]);
+function createKeyFrameSnippets(node: LayoutNode<Track>): CellSnippetsLayer {
+    if (!segmentationData.value) return null;
+    const keyframes = getKeyFrameIndices(node.data, 4);
+    const sourceSize = 32;
+    const zoom = deckgl.viewState?.looneageController?.zoom ?? 0;
+    const fixedDestSize = 32;
+    const destSize = fixedDestSize * 2 ** -zoom;
+    const selections = [];
+
+    for (let keyframe of keyframes) {
+        const cell = node.data.cells[keyframe];
+        const [x, y] = cellMetaData.getPosition(cell);
+        const t = cellMetaData.getTime(cell);
+        const frameIndex = cellMetaData.getFrame(cell) - 1;
+        const source = getBBoxAroundPoint(x, y, sourceSize, sourceSize);
+        const destX = node.y + t - node.data.attrNum['min_time'] - destSize / 2;
+        const destY = node.x + -looneageViewStore.rowHeight - 3;
+        const destination = [destX, destY, destX + destSize, destY - destSize];
+
+        selections.push({
+            c: 0,
+            z: 0,
+            t: frameIndex,
+            snippets: [{ source, destination }],
+        });
     }
-    return max - min;
+
+    return new CellSnippetsLayer({
+        loader: pixelSource.value,
+        id: `key-frames-snippets-layer-${node.data.trackId}`,
+        contrastLimits: contrastLimit.value,
+        selections,
+        channelsVisible: [true],
+        extensions: [colormapExtension],
+        colormap: imageViewerStore.colormap,
+        onClick: () => {
+            console.log('clicked');
+        },
+    });
 }
 
 function getKeyFrameIndices(track: Track, count: number): number[] {
@@ -400,46 +431,21 @@ function getKeyFrameIndices(track: Track, count: number): number[] {
     return indices;
 }
 
-function createKeyFrameSnippets(node: LayoutNode<Track>): CellSnippetsLayer {
-    if (!segmentationData.value) return null;
-    const keyframes = getKeyFrameIndices(node.data, 4);
-    const sourceSize = 32;
-    const zoom = deckgl.viewState?.looneageController?.zoom ?? 0;
-    const fixedDestSize = 32;
-    const destSize = fixedDestSize * 2 ** -zoom;
-    const selections = [];
-
-    for (let keyframe of keyframes) {
-        const cell = node.data.cells[keyframe];
-        const [x, y] = cellMetaData.getPosition(cell);
-        const t = cellMetaData.getTime(cell);
-        const frameIndex = cellMetaData.getFrame(cell) - 1;
-        const source = getBBoxAroundPoint(x, y, sourceSize, sourceSize);
-        const destX = node.y + t - node.data.attrNum['min_time'] - destSize / 2;
-        const destY = node.x + -looneageViewStore.rowHeight - 3;
-        const destination = [destX, destY, destX + destSize, destY - destSize];
-
-        selections.push({
-            c: 0,
-            z: 0,
-            t: frameIndex,
-            snippets: [{ source, destination }],
-        });
+function valueExtent(track: Track, key: string): number {
+    let min = Infinity;
+    let max = -Infinity;
+    for (let cell of track.cells) {
+        min = Math.min(min, cell.attrNum[key]);
+        max = Math.max(max, cell.attrNum[key]);
     }
-
-    return new CellSnippetsLayer({
-        loader: pixelSource.value,
-        id: `key-frames-snippets-layer-${node.data.trackId}`,
-        contrastLimits: contrastLimit.value,
-        selections,
-        channelsVisible: [true],
-        extensions: [colormapExtension],
-        colormap: imageViewerStore.colormap,
-        onClick: () => {
-            console.log('clicked');
-        },
-    });
+    return max - min;
 }
+
+// function getNextSnippet(
+//     track: Track,
+//     occupied: BBox[],
+//     frameScores: number[]
+// ): { destination: BBox } {}
 
 function createHorizonChartLayer(
     node: LayoutNode<Track>
