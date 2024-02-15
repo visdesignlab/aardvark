@@ -386,7 +386,7 @@ function getKeyFrameIndices(node: LayoutNode<Track>, count: number): number[] {
     const indices: number[] = [];
 
     for (let i = 0; i < count; i++) {
-        getNextSnippet(node, 32, 32, [], frameScores, indices, 3);
+        getNextSnippet(node, 32, 32, [], frameScores, indices);
     }
 
     return indices;
@@ -408,8 +408,7 @@ function getNextSnippet(
     height: number,
     occupied: BBox[],
     frameScores: number[],
-    selectedIndices: number[],
-    maxAttempts: number = 3
+    selectedIndices: number[]
 ): { destination: BBox; index: number } | null {
     const track = node.data;
     if (frameScores.length === 0) {
@@ -436,17 +435,18 @@ function getNextSnippet(
     const center = 1;
     const dropOff = 3;
     let maxIndex = -1;
-    for (let k = 0; k < maxAttempts; k++) {
-        // select the frame with the smallest score that isn't already in indices
-        let maxScore = -Infinity;
-        for (let i = 0; i < frameScores.length; i++) {
-            if (frameScores[i] > maxScore && !selectedIndices.includes(i)) {
-                maxScore = frameScores[i];
-                maxIndex = i;
-            }
+
+    // select the frame with the smallest score that isn't already in indices
+    // and does not overlap with any of the occupied regions
+    let maxScore = -Infinity;
+    for (let i = 0; i < frameScores.length; i++) {
+        if (selectedIndices.includes(i)) continue;
+        if (frameScores[i] > maxScore) {
+            maxScore = frameScores[i];
+            maxIndex = i;
         }
-        if (maxIndex !== -1) break;
     }
+
     if (maxIndex === -1) return null;
     selectedIndices.push(maxIndex);
 
