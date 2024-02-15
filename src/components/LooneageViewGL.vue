@@ -28,6 +28,7 @@ import {
     getWidth,
     getHeight,
     getBBoxAroundPoint,
+    overlaps,
 } from '@/util/imageSnippets';
 
 import {
@@ -263,12 +264,12 @@ const testModOffests = computed(() => {
     return [-8, -7, -6, -5, -4, -3, -2, -1, 0, 1, 2, 3, 4, 5];
 });
 
-const destination = computed<[number, number, number, number]>(() => [
-    0,
-    0,
-    300,
-    looneageViewStore.rowHeight,
-]);
+// const destination = computed<[number, number, number, number]>(() => [
+//     0,
+//     0,
+//     300,
+//     looneageViewStore.rowHeight,
+// ]);
 
 const dataXExtent = computed<[number, number]>(() => {
     if (!cellMetaData.selectedTrack) return [0, 0];
@@ -340,30 +341,66 @@ function hexListToRgba(hexList: readonly string[]): number[] {
 
 function createKeyFrameSnippets(node: LayoutNode<Track>): CellSnippetsLayer {
     if (!segmentationData.value) return null;
-    const keyframes = getKeyFrameIndices(node, 4);
     const sourceSize = 32;
-    const zoom = deckgl.viewState?.looneageController?.zoom ?? 0;
-    const fixedDestSize = 32;
-    const destSize = fixedDestSize * 2 ** -zoom;
+    const fixedDestSize = 64;
+    const frameScores: number[] = [];
+    const occupied: BBox[] = [];
+    const selectedIndices: number[] = [];
     const selections = [];
+    console.log('creating key frame snippets');
 
-    for (let keyframe of keyframes) {
-        const cell = node.data.cells[keyframe];
+    // eslint-disable-next-line no-constant-condition
+    while (true) {
+        const nextSnippet = getNextSnippet(
+            node,
+            fixedDestSize,
+            fixedDestSize,
+            occupied,
+            frameScores,
+            selectedIndices
+        );
+        if (nextSnippet === null) break;
+        // console.count('got snippet');
+        const { destination, index } = nextSnippet;
+        const cell = node.data.cells[index];
         const [x, y] = cellMetaData.getPosition(cell);
-        const t = cellMetaData.getTime(cell);
-        const frameIndex = cellMetaData.getFrame(cell) - 1;
+
         const source = getBBoxAroundPoint(x, y, sourceSize, sourceSize);
-        const destX = node.y + t - node.data.attrNum['min_time'] - destSize / 2;
-        const destY = node.x + -looneageViewStore.rowHeight - 3;
-        const destination = [destX, destY, destX + destSize, destY - destSize];
 
         selections.push({
             c: 0,
             z: 0,
-            t: frameIndex,
+            t: index,
             snippets: [{ source, destination }],
         });
     }
+    console.log('SELECTIONS ');
+    console.log(selections);
+
+    // const keyframes = getKeyFrameIndices(node, 4);
+    // const sourceSize = 32;
+    // const zoom = deckgl.viewState?.looneageController?.zoom ?? 0;
+    // const fixedDestSize = 32;
+    // const destSize = fixedDestSize * 2 ** -zoom;
+    // const selections = [];
+
+    // for (let keyframe of keyframes) {
+    //     const cell = node.data.cells[keyframe];
+    //     const [x, y] = cellMetaData.getPosition(cell);
+    //     const t = cellMetaData.getTime(cell);
+    //     const frameIndex = cellMetaData.getFrame(cell) - 1;
+    //     const source = getBBoxAroundPoint(x, y, sourceSize, sourceSize);
+    //     const destX = node.y + t - node.data.attrNum['min_time'] - destSize / 2;
+    //     const destY = node.x + -looneageViewStore.rowHeight - 3;
+    //     const destination = [destX, destY, destX + destSize, destY - destSize];
+
+    //     selections.push({
+    //         c: 0,
+    //         z: 0,
+    //         t: frameIndex,
+    //         snippets: [{ source, destination }],
+    //     });
+    // }
 
     return new CellSnippetsLayer({
         loader: pixelSource.value,
@@ -438,17 +475,37 @@ function getNextSnippet(
 
     // select the frame with the smallest score that isn't already in indices
     // and does not overlap with any of the occupied regions
+    const zoom = deckgl.viewState?.looneageController?.zoom ?? 0;
+    const destWidth = width * 2 ** -zoom;
+    const destHeight = height * 2 ** -zoom;
+    const destY = node.x + -looneageViewStore.rowHeight - 3;
+    // let destination: BBox = [0, 0, 0, 0];
     let maxScore = -Infinity;
+    let maxDestination: BBox = [0, 0, 0, 0];
     for (let i = 0; i < frameScores.length; i++) {
         if (selectedIndices.includes(i)) continue;
+        const cell = track.cells[i];
+        const t = cellMetaData.getTime(cell);
+        const destX = node.y + t - track.attrNum['min_time'] - destWidth / 2;
+        const destination: BBox = [
+            destX,
+            destY,
+            destX + destWidth,
+            destY - destHeight,
+        ];
+        if (occupied.some((bbox: BBox) => overlaps(bbox, destination))) {
+            continue;
+        }
         if (frameScores[i] > maxScore) {
             maxScore = frameScores[i];
             maxIndex = i;
+            maxDestination = destination;
         }
     }
 
     if (maxIndex === -1) return null;
     selectedIndices.push(maxIndex);
+    occupied.push(maxDestination);
 
     // increase the scores of nearby frames to encourage coverage
     for (let i = 0; i < frameScores.length; i++) {
@@ -459,24 +516,24 @@ function getNextSnippet(
         frameScores[i] -= coverageCost;
     }
 
-    const cell = node.data.cells[maxIndex];
-    const t = cellMetaData.getTime(cell);
+    // const cell = node.data.cells[maxIndex];
+    // const t = cellMetaData.getTime(cell);
 
-    const zoom = deckgl.viewState?.looneageController?.zoom ?? 0;
-    const destWidth = width * 2 ** -zoom;
-    const destHeight = height * 2 ** -zoom;
+    // const zoom = deckgl.viewState?.looneageController?.zoom ?? 0;
+    // const destWidth = width * 2 ** -zoom;
+    // const destHeight = height * 2 ** -zoom;
 
-    const destX = node.y + t - node.data.attrNum['min_time'] - destWidth / 2;
-    const destY = node.x + -looneageViewStore.rowHeight - 3;
-    const destination: BBox = [
-        destX,
-        destY,
-        destX + destWidth,
-        destY - destHeight,
-    ];
+    // const destX = node.y + t - node.data.attrNum['min_time'] - destWidth / 2;
+    // const destY = node.x + -looneageViewStore.rowHeight - 3;
+    // const destination: BBox = [
+    //     destX,
+    //     destY,
+    //     destX + destWidth,
+    //     destY - destHeight,
+    // ];
 
     return {
-        destination,
+        destination: maxDestination,
         index: maxIndex,
     };
 }
@@ -601,7 +658,7 @@ function createHorizonChartLayer(
 
 const segmentationData = ref<Feature[]>();
 
-watch(selectedTrack, async () => {
+watch(selectedTrack, () => {
     updateSnippet();
 });
 

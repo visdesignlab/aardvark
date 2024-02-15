@@ -63,3 +63,20 @@ export function getBBoxAroundPoint(
     y = Math.round(y);
     return [x - width / 2, y + height / 2, x + width / 2, y - height / 2];
 }
+
+export function overlaps(a: BBox, b: BBox): boolean {
+    // to overlap the x dimension and y dimension must both overlap
+    return (
+        overlaps1D(a[0], a[2], b[0], b[2]) && // left and right
+        overlaps1D(a[3], a[1], b[3], b[1]) // bottom and top
+    );
+}
+
+function overlaps1D(
+    aMin: number,
+    aMax: number,
+    bMin: number,
+    bMax: number
+): boolean {
+    return aMax >= bMin && aMin <= bMax;
+}
