@@ -283,7 +283,7 @@ function createTrackLayer(): CellSnippetsLayer | null {
     if (!segmentationData.value) return null;
     if (!selections.value || selections.value.length == 0) return null;
 
-    console.log('create cell track layer');
+    // console.log('create cell track layer');
     return new CellSnippetsLayer({
         loader: pixelSource.value,
         id: 'track-view-gl-test-snippet-layer',
