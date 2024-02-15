@@ -9,6 +9,7 @@ import {
     AdditiveColormapExtension,
     SIGNAL_ABORTED,
 } from '@hms-dbmi/viv';
+import { LRUCache } from 'lru-cache';
 
 import { ColorPaletteExtension } from '@vivjs/extensions';
 
@@ -58,8 +59,18 @@ const defaultProps = {
  */
 
 class CellSnippetsLayer extends CompositeLayer {
+    initializeState() {
+        this.state.cache = new LRUCache({
+            max: 250,
+        });
+    }
+
     finalizeState() {
         this.state.abortController?.abort();
+    }
+
+    getSnippetKey(c, t, z, source) {
+        return [c, t, z, ...source].toString();
     }
 
     matchSelectionsToData(selections, data) {
@@ -73,6 +84,20 @@ class CellSnippetsLayer extends CompositeLayer {
             const { c, t, z, snippets } = selection;
             const unmatchedSnippets = [];
             for (const snippet of snippets) {
+                const key = this.getSnippetKey(c, t, z, snippet.source);
+                if (this.state.cache.has(key)) {
+                    const snippetData = this.state.cache.get(key);
+                    newData.push({
+                        index: { c, t, z },
+                        source: snippet.source,
+                        destination: snippet.destination,
+                        data: snippetData,
+                    });
+                    console.log('found in cache 🚚');
+                    continue;
+                }
+                // this.state.cache.set(key, raster.data);
+
                 const match = data.find((d) => {
                     if (
                         d.index.c === c &&
@@ -163,6 +188,8 @@ class CellSnippetsLayer extends CompositeLayer {
                             raster.height,
                             snippet.source
                         );
+                        const key = this.getSnippetKey(c, t, z, snippet.source);
+                        this.state.cache.set(key, snippetData);
 
                         newData.push({
                             data: snippetData,
