@@ -493,14 +493,14 @@ function getNextSnippet(
             destX + destWidth,
             destY - destHeight,
         ];
-        if (occupied.some((bbox: BBox) => overlaps(bbox, destination))) {
-            continue;
-        }
         if (frameScores[i] > maxScore) {
             maxScore = frameScores[i];
             maxIndex = i;
             maxDestination = destination;
         }
+    }
+    if (occupied.some((bbox: BBox) => overlaps(bbox, maxDestination))) {
+        return null;
     }
 
     if (maxIndex === -1) return null;
