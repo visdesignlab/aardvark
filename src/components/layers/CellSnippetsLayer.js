@@ -93,7 +93,6 @@ class CellSnippetsLayer extends CompositeLayer {
                         destination: snippet.destination,
                         data: snippetData,
                     });
-                    console.log('found in cache 🚚');
                     continue;
                 }
                 // this.state.cache.set(key, raster.data);
@@ -133,10 +132,7 @@ class CellSnippetsLayer extends CompositeLayer {
     }
 
     updateState({ props, oldProps, changeFlags }) {
-        // console.log('UPDATE STATE MAYBE');
-        // console.log(changeFlags);
         const loaderChanged = props.loader !== oldProps.loader;
-        // const selectionsChanged = props.selections !== oldProps.selections;
         const selectionsChanged = !isEqual(
             props.selections,
             oldProps.selections
