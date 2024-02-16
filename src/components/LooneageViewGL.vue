@@ -44,6 +44,7 @@ import { Deck, OrthographicView, type PickingInfo } from '@deck.gl/core/typed';
 import {
     GeoJsonLayer,
     LineLayer,
+    PolygonLayer,
     ScatterplotLayer,
     SolidPolygonLayer,
     TextLayer,
@@ -72,6 +73,8 @@ const segmentationStore = useSegmentationStore();
 const looneageViewStore = useLooneageViewStore();
 
 const deckGlContainer = ref(null);
+const { width: deckGlWidth, height: deckGlHeight } =
+    useElementSize(deckGlContainer);
 //////////////////////////
 // start temp test code //
 //////////////////////////
@@ -143,14 +146,15 @@ watch(currentLocationMetadata, async () => {
 // end temp test code   //
 //////////////////////////
 let deckgl: any | null = null;
+const initialViewState = {
+    zoom: 0,
+    target: [0, 0],
+    minZoom: -8,
+    maxZoom: 8,
+};
 onMounted(() => {
     deckgl = new Deck({
-        initialViewState: {
-            zoom: 0,
-            target: [0, 0, 0],
-            minZoom: -8,
-            maxZoom: 8,
-        },
+        initialViewState,
         // @ts-ignore
         canvas: deckGlContainer.value?.id,
         views: new OrthographicView({
@@ -360,8 +364,8 @@ function createKeyFrameSnippets(node: LayoutNode<Track>): CellSnippetsLayer {
             selectedIndices
         );
         if (nextSnippet === null) break;
-        // console.count('got snippet');
-        const { destination, index } = nextSnippet;
+        const { destination, index, inViewport } = nextSnippet;
+        if (!inViewport) continue; // don't bother fetching data to render, it is offscreen
         const cell = node.data.cells[index];
         const [x, y] = cellMetaData.getPosition(cell);
 
@@ -446,7 +450,7 @@ function getNextSnippet(
     occupied: BBox[],
     frameScores: number[],
     selectedIndices: number[]
-): { destination: BBox; index: number } | null {
+): { destination: BBox; index: number; inViewport: boolean } | null {
     const track = node.data;
     if (frameScores.length === 0) {
         // populate with zeros without changing reference
@@ -504,8 +508,12 @@ function getNextSnippet(
     }
 
     if (maxIndex === -1) return null;
-    selectedIndices.push(maxIndex);
     occupied.push(maxDestination);
+    selectedIndices.push(maxIndex);
+    // setting inViewport is a performance optimization. We still want to include
+    // the selection in occoupied/selected indices so that the keyframe selections
+    // do not change when different images go in and out of the viewport.
+    const inViewport = overlaps(viewportBBox(), maxDestination);
 
     // increase the scores of nearby frames to encourage coverage
     for (let i = 0; i < frameScores.length; i++) {
@@ -535,6 +543,7 @@ function getNextSnippet(
     return {
         destination: maxDestination,
         index: maxIndex,
+        inViewport,
     };
 }
 
@@ -738,6 +747,59 @@ watch(selectedTrack, () => {
 //     });
 // }
 
+function viewportBBox(): BBox {
+    const viewState = deckgl.viewState?.looneageController ?? initialViewState;
+    const { zoom, target } = viewState;
+    const buffer = -300; // add buffer so data is fetched a bit before it is panned into view.
+    const width = (deckGlWidth.value + buffer) * 2 ** -zoom;
+    const height = (deckGlHeight.value + buffer) * 2 ** -zoom;
+    const halfWidth = width / 2;
+    const halfHeight = height / 2;
+
+    const left = target[0] - halfWidth;
+    const top = target[1] + halfHeight;
+    const right = target[0] + halfWidth;
+    const bottom = target[1] - halfHeight;
+    // const topLeft = [target[0] - halfWidth, target[1] + halfHeight];
+    // const topRight = [target[0] + halfWidth, target[1] + halfHeight];
+    // const bottomRight = [target[0] + halfWidth, target[1] - halfHeight];
+    // const bottomLeft = [target[0] - halfWidth, target[1] - halfHeight];
+
+    return [left, top, right, bottom];
+}
+
+function createViewportRectangleLayer(): PolygonLayer {
+    // console.log('view state');
+    // console.log(deckgl.viewState);
+    const viewState = deckgl.viewState?.looneageController ?? initialViewState;
+    // console.log('element', deckGlWidth.value, deckGlHeight.value);
+    // console.log('controller', viewState.width, viewState.height);
+    // const viewport =
+    const { zoom, target } = viewState;
+    // draw rectangle that covers the view port given the zoom, target, width, and height
+
+    const width = (deckGlWidth.value - 300) * 2 ** -zoom;
+    const height = (deckGlHeight.value - 300) * 2 ** -zoom;
+    const halfWidth = width / 2;
+    const halfHeight = height / 2;
+    const topLeft = [target[0] - halfWidth, target[1] + halfHeight];
+    const topRight = [target[0] + halfWidth, target[1] + halfHeight];
+    const bottomRight = [target[0] + halfWidth, target[1] - halfHeight];
+    const bottomLeft = [target[0] - halfWidth, target[1] - halfHeight];
+
+    return new PolygonLayer({
+        id: 'viewport-rectangle-layer',
+        data: [[topLeft, topRight, bottomRight, bottomLeft, topLeft]],
+        pickable: false,
+        stroked: true,
+        filled: true,
+        wireframe: false,
+        lineWidthMinPixels: 1,
+        getPolygon: (d) => d,
+        getFillColor: [0, 140, 0, 120],
+    });
+}
+
 function renderDeckGL(): void {
     if (deckgl == null) return;
     if (cellMetaData.selectedTrack == null) return;
@@ -749,6 +811,7 @@ function renderDeckGL(): void {
     layers.push(createLooneageLayers());
     // layers.push(createTrackLayer());
     // layers.push(createTestScatterLayer());
+    layers.push(createViewportRectangleLayer());
     deckgl.setProps({
         layers,
         controller: true,
