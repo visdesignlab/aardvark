@@ -364,6 +364,7 @@ function createKeyFrameSnippets(node: LayoutNode<Track>): CellSnippetsLayer {
         const { destination, index, inViewport } = nextSnippet;
         if (!inViewport) continue; // don't bother fetching data to render, it is offscreen
         const cell = node.data.cells[index];
+        const t = cellMetaData.getFrame(cell) - 1; // convert frame number to index
         const [x, y] = cellMetaData.getPosition(cell);
 
         const source = getBBoxAroundPoint(
@@ -376,7 +377,7 @@ function createKeyFrameSnippets(node: LayoutNode<Track>): CellSnippetsLayer {
         selections.push({
             c: 0,
             z: 0,
-            t: index,
+            t,
             snippets: [{ source, destination }],
         });
     }
