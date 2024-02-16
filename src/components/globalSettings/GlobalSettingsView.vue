@@ -54,6 +54,7 @@ $panel-width: 300px;
     width: $panel-width;
     position: relative;
     left: 0px;
+    overflow: auto;
 }
 
 .slide-right-enter-active,

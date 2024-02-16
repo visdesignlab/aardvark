@@ -142,7 +142,53 @@ const baselineValidate = computed({
         <q-slider
             v-model="looneageViewStore.spacing"
             :min="0"
-            :max="20"
+            :max="200"
+            label
+            :dark="globalSettings.darkMode"
+        />
+    </q-card-section>
+
+    <q-card-section class="q-pl-none q-pr-none">
+        <div class="flex row no-wrap">
+            <q-badge outline :color="globalSettings.normalizedBlack"
+                >Snippet Source Size:</q-badge
+            >
+            <q-input
+                class="q-pl-md"
+                dense
+                v-model.number="looneageViewStore.snippetSourceSize"
+                type="number"
+                :step="2"
+                :dark="globalSettings.darkMode"
+            />
+        </div>
+        <q-slider
+            v-model="looneageViewStore.snippetSourceSize"
+            :min="8"
+            :max="320"
+            :step="2"
+            label
+            :dark="globalSettings.darkMode"
+        />
+    </q-card-section>
+
+    <q-card-section class="q-pl-none q-pr-none">
+        <div class="flex row no-wrap">
+            <q-badge outline :color="globalSettings.normalizedBlack"
+                >Snippet Display Size:</q-badge
+            >
+            <q-input
+                class="q-pl-md"
+                dense
+                v-model.number="looneageViewStore.snippetDestSize"
+                type="number"
+                :dark="globalSettings.darkMode"
+            />
+        </div>
+        <q-slider
+            v-model="looneageViewStore.snippetDestSize"
+            :min="8"
+            :max="320"
             label
             :dark="globalSettings.darkMode"
         />
