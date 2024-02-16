@@ -75,9 +75,6 @@ const looneageViewStore = useLooneageViewStore();
 const deckGlContainer = ref(null);
 const { width: deckGlWidth, height: deckGlHeight } =
     useElementSize(deckGlContainer);
-//////////////////////////
-// start temp test code //
-//////////////////////////
 
 const tree = computed(() => {
     if (cellMetaData.selectedLineage == null) return null;
@@ -345,8 +342,8 @@ function hexListToRgba(hexList: readonly string[]): number[] {
 
 function createKeyFrameSnippets(node: LayoutNode<Track>): CellSnippetsLayer {
     // if (!segmentationData.value) return null;
-    const sourceSize = 32;
-    const fixedDestSize = 64;
+    // const sourceSize = 32;
+    // const fixedDestSize = 64;
     const frameScores: number[] = [];
     const occupied: BBox[] = [];
     const selectedIndices: number[] = [];
@@ -357,8 +354,8 @@ function createKeyFrameSnippets(node: LayoutNode<Track>): CellSnippetsLayer {
     while (true) {
         const nextSnippet = getNextSnippet(
             node,
-            fixedDestSize,
-            fixedDestSize,
+            looneageViewStore.snippetDestSize,
+            looneageViewStore.snippetDestSize,
             occupied,
             frameScores,
             selectedIndices
@@ -369,7 +366,12 @@ function createKeyFrameSnippets(node: LayoutNode<Track>): CellSnippetsLayer {
         const cell = node.data.cells[index];
         const [x, y] = cellMetaData.getPosition(cell);
 
-        const source = getBBoxAroundPoint(x, y, sourceSize, sourceSize);
+        const source = getBBoxAroundPoint(
+            x,
+            y,
+            looneageViewStore.snippetSourceSize,
+            looneageViewStore.snippetSourceSize
+        );
 
         selections.push({
             c: 0,
@@ -546,6 +548,14 @@ function getNextSnippet(
         inViewport,
     };
 }
+
+const viewportBuffer = computed<number>(() => {
+    // somewhat arbitrary buffer for viewport rendering filtering
+    // for performance. Probably makes sense for this to depend
+    // on the snippet destination size that way the number of
+    // snippets "preloaded" around edges is constant.
+    return looneageViewStore.snippetDestSize * 2;
+});
 
 function createHorizonChartLayer(
     node: LayoutNode<Track>
@@ -750,9 +760,9 @@ watch(selectedTrack, () => {
 function viewportBBox(): BBox {
     const viewState = deckgl.viewState?.looneageController ?? initialViewState;
     const { zoom, target } = viewState;
-    const buffer = -300; // add buffer so data is fetched a bit before it is panned into view.
-    const width = (deckGlWidth.value + buffer) * 2 ** -zoom;
-    const height = (deckGlHeight.value + buffer) * 2 ** -zoom;
+    // const buffer = -300; // add buffer so data is fetched a bit before it is panned into view.
+    const width = (deckGlWidth.value + viewportBuffer.value) * 2 ** -zoom;
+    const height = (deckGlHeight.value + viewportBuffer.value) * 2 ** -zoom;
     const halfWidth = width / 2;
     const halfHeight = height / 2;
 
@@ -811,7 +821,7 @@ function renderDeckGL(): void {
     layers.push(createLooneageLayers());
     // layers.push(createTrackLayer());
     // layers.push(createTestScatterLayer());
-    layers.push(createViewportRectangleLayer());
+    // layers.push(createViewportRectangleLayer());
     deckgl.setProps({
         layers,
         controller: true,
