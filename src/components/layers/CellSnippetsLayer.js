@@ -213,10 +213,10 @@ class CellSnippetsLayer extends CompositeLayer {
 
     renderLayers() {
         // console.log('renderLayers');
-        return this.createTestImageSnippetLayer();
+        return this.createImageSnippetLayers();
     }
 
-    createTestImageSnippetLayer() {
+    createImageSnippetLayers() {
         const { loader, id } = this.props;
         const { width, height, data } = this.state;
         if (!data) return null;
