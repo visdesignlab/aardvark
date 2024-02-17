@@ -446,7 +446,22 @@ export const useCellMetaData = defineStore('cellMetaData', () => {
             );
             track.attrNum['min_time'] = minTime ?? 0;
             track.attrNum['max_time'] = maxTime ?? 0;
+            const generation = getGeneration(track);
+            track.attrNum['generation'] = generation;
         }
+    }
+
+    function getGeneration(track: Track): number {
+        let generation = 0;
+        while (hasParent(track)) {
+            generation++;
+            const parent = trackMap.value?.get(track.parentId);
+            if (!parent) {
+                throw new Error('unable to get generation value');
+            }
+            track = parent;
+        }
+        return generation;
     }
 
     function initLineages(): void {

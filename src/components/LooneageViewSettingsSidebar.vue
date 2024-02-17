@@ -193,6 +193,28 @@ const baselineValidate = computed({
             :dark="globalSettings.darkMode"
         />
     </q-card-section>
+
+    <q-card-section class="q-pl-none q-pr-none">
+        <div class="flex row no-wrap">
+            <q-badge outline :color="globalSettings.normalizedBlack"
+                >Max Depth</q-badge
+            >
+            <q-input
+                class="q-pl-md"
+                dense
+                v-model.number="looneageViewStore.maxDepth"
+                type="number"
+                :dark="globalSettings.darkMode"
+            />
+        </div>
+        <q-slider
+            v-model="looneageViewStore.maxDepth"
+            :min="0"
+            :max="20"
+            label
+            :dark="globalSettings.darkMode"
+        />
+    </q-card-section>
 </template>
 
 <style scoped lang="scss"></style>

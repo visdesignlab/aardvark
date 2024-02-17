@@ -78,7 +78,15 @@ const { width: deckGlWidth, height: deckGlHeight } =
 
 const tree = computed(() => {
     if (cellMetaData.selectedLineage == null) return null;
-    return hierarchy<Track>(cellMetaData.selectedLineage.founder);
+    return hierarchy<Track>(
+        cellMetaData.selectedLineage.founder,
+        (d: Track) => {
+            if (d.attrNum['generation'] < looneageViewStore.maxDepth) {
+                return d.children;
+            }
+            return null;
+        }
+    );
 });
 function getTimeExtent(node: Track): [number, number] {
     let minTime = node.attrNum['min_time'] ?? 0;
@@ -295,10 +303,7 @@ function createLooneageLayers(): (
     const layers: (ScatterplotLayer | HorizonChartLayer | null)[] = [];
     const testData = [];
     for (let node of layoutRoot.value.descendants()) {
-        testData.push({
-            position: [node.y, node.x],
-            color: [255, 0, 255],
-        });
+        // if (node.depth > looneageViewStore.maxDepth) continue;
         layers.push(createHorizonChartLayer(node));
     }
     layers.push(createKeyFrameSnippets());
