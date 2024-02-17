@@ -570,9 +570,26 @@ const viewportBuffer = computed<number>(() => {
 
 function createHorizonChartLayer(
     node: LayoutNode<Track>
-): (ScatterplotLayer | HorizonChartLayer | null)[] {
-    if (!cellMetaData.selectedTrack) return [null];
-    // if (!segmentationData.value) return [null];
+): HorizonChartLayer | null {
+    if (!cellMetaData.selectedTrack) return null;
+    const track = node.data;
+    const left = node.y;
+    const width = getTimeDuration(track);
+
+    const chartBBox: BBox = [
+        left,
+        node.x,
+        left + width,
+        node.x - looneageViewStore.rowHeight,
+    ];
+    if (!overlaps(chartBBox, viewportBBox())) return null;
+
+    const destination: [number, number, number, number] = [
+        node.x,
+        left,
+        width,
+        looneageViewStore.rowHeight,
+    ];
 
     // TODO: make these once
     const positiveColors = hexListToRgba(
@@ -593,18 +610,12 @@ function createHorizonChartLayer(
 
     imageOffset.value =
         ((frameNumber.value - minTime) / (maxTime - minTime)) * 300;
-    const track = node.data;
     const horizonChartLayer = new HorizonChartLayer({
         id: `custom-horizon-chart-layer-${track.trackId}`,
         data: testModOffests.value,
 
         instanceData: constructGeometry(track),
-        destination: [
-            node.x,
-            node.y,
-            getTimeDuration(track),
-            looneageViewStore.rowHeight,
-        ],
+        destination,
         dataXExtent: getTimeExtent(track),
 
         baseline: looneageViewStore.baseline,
@@ -619,26 +630,26 @@ function createHorizonChartLayer(
         },
     });
 
-    const deltaData = [];
-    const valExtent = valueExtent(track, looneageViewStore.attrKey);
-    for (let i = 0; i < track.cells.length; i++) {
-        const prevIndex = Math.max(i - 1, 0);
-        const prev = track.cells[prevIndex];
-        const cell = track.cells[i];
-        const nextIndex = Math.min(i + 1, track.cells.length - 1);
-        const next = track.cells[nextIndex];
+    // const deltaData = [];
+    // const valExtent = valueExtent(track, looneageViewStore.attrKey);
+    // for (let i = 0; i < track.cells.length; i++) {
+    //     const prevIndex = Math.max(i - 1, 0);
+    //     const prev = track.cells[prevIndex];
+    //     const cell = track.cells[i];
+    //     const nextIndex = Math.min(i + 1, track.cells.length - 1);
+    //     const next = track.cells[nextIndex];
 
-        const position = [
-            node.y + cellMetaData.getTime(cell) - track.attrNum['min_time'],
-            node.x + 6,
-        ];
-        const key = looneageViewStore.attrKey;
-        const val = Math.abs(next.attrNum[key] - prev.attrNum[key]) / valExtent;
-        // ((next.attrNum[key] + prev.attrNum[key]) / 2);
-        const color = [val * 1000, val * 1000, val * 200];
-        deltaData.push({ position, color });
-    }
-    // const scatterplotLayer = new ScatterplotLayer({
+    //     const position = [
+    //         node.y + cellMetaData.getTime(cell) - track.attrNum['min_time'],
+    //         node.x + 6,
+    //     ];
+    //     const key = looneageViewStore.attrKey;
+    //     const val = Math.abs(next.attrNum[key] - prev.attrNum[key]) / valExtent;
+    //     // ((next.attrNum[key] + prev.attrNum[key]) / 2);
+    //     const color = [val * 1000, val * 1000, val * 200];
+    //     deltaData.push({ position, color });
+    // }
+    // // const scatterplotLayer = new ScatterplotLayer({
     //     id: `delta-scatterplot-layer-${track.trackId}`,
     //     data: deltaData,
     //     pickable: true,
@@ -683,7 +694,7 @@ function createHorizonChartLayer(
     //     },
     // });
 
-    return [horizonChartLayer]; //, scatterplotLayer, textLayer];
+    return horizonChartLayer; //, scatterplotLayer, textLayer];
 }
 
 // const segmentationData = ref<Feature[]>();
@@ -827,8 +838,6 @@ function renderDeckGL(): void {
     // if (segmentationData.value == null) return;
     const layers = [];
 
-    // layers.push(createHorizonChartLayer());
-    // layers.push(createHorizonChartLayer());
     layers.push(createLooneageLayers());
     // layers.push(createTrackLayer());
     // layers.push(createTestScatterLayer());
