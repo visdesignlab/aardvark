@@ -300,12 +300,24 @@ function createLooneageLayers(): (
             color: [255, 0, 255],
         });
         layers.push(createHorizonChartLayer(node));
-        layers.push(createKeyFrameSnippets(node));
     }
+    layers.push(createKeyFrameSnippets());
     // layers.push(
     //     new ScatterplotLayer({
     //         id: 'looneage-test-scatterplot-layer',
-    //         data: testData,
+    //         data: [
+    //             [60, -83],
+    //             // [85, -30],
+
+    //             // [0, 0],
+    //             // [85, -30],
+
+    //             // [85, -59],
+    //             // [172, -89],
+
+    //             // [85, 59],
+    //             // [172, 29],
+    //         ],
     //         pickable: true,
     //         opacity: 0.8,
     //         stroked: true,
@@ -315,9 +327,9 @@ function createLooneageLayers(): (
     //         radiusMaxPixels: 100,
     //         lineWidthMinPixels: 0,
     //         getLineWidth: 0,
-    //         getPosition: (d: any) => d.position,
-    //         getRadius: 1,
-    //         getFillColor: (d) => d.color,
+    //         getPosition: (d: any) => d,
+    //         getRadius: 10,
+    //         getFillColor: [255, 0, 255, 200],
     //     })
     // );
 
@@ -340,78 +352,68 @@ function hexListToRgba(hexList: readonly string[]): number[] {
     return rgbaList;
 }
 
-function createKeyFrameSnippets(node: LayoutNode<Track>): CellSnippetsLayer {
-    // if (!segmentationData.value) return null;
-    // const sourceSize = 32;
-    // const fixedDestSize = 64;
-    const frameScores: number[] = [];
+function createKeyFrameSnippets(): CellSnippetsLayer | null {
+    if (!layoutRoot.value) return null;
     const occupied: BBox[] = [];
-    const selectedIndices: number[] = [];
-    const selections = [];
-    console.log('creating key frame snippets');
 
-    // eslint-disable-next-line no-constant-condition
-    while (true) {
-        const nextSnippet = getNextSnippet(
-            node,
-            looneageViewStore.snippetDestSize,
-            looneageViewStore.snippetDestSize,
-            occupied,
-            frameScores,
-            selectedIndices
-        );
-        if (nextSnippet === null) break;
-        const { destination, index, inViewport } = nextSnippet;
-        if (!inViewport) continue; // don't bother fetching data to render, it is offscreen
-        const cell = node.data.cells[index];
-        const t = cellMetaData.getFrame(cell) - 1; // convert frame number to index
-        const [x, y] = cellMetaData.getPosition(cell);
-
-        const source = getBBoxAroundPoint(
-            x,
-            y,
-            looneageViewStore.snippetSourceSize,
-            looneageViewStore.snippetSourceSize
-        );
-
-        selections.push({
-            c: 0,
-            z: 0,
-            t,
-            snippets: [{ source, destination }],
-        });
+    // add all horizon charts as occupied rectangles
+    for (let node of layoutRoot.value.descendants()) {
+        const track = node.data;
+        const destWidth = getTimeDuration(track);
+        const chartBBox: BBox = [
+            node.y,
+            node.x,
+            node.y + destWidth,
+            node.x - looneageViewStore.rowHeight,
+        ];
+        occupied.push(chartBBox);
     }
-    console.log('SELECTIONS ');
-    console.log(selections);
 
-    // const keyframes = getKeyFrameIndices(node, 4);
-    // const sourceSize = 32;
-    // const zoom = deckgl.viewState?.looneageController?.zoom ?? 0;
-    // const fixedDestSize = 32;
-    // const destSize = fixedDestSize * 2 ** -zoom;
-    // const selections = [];
+    const selections = [];
+    for (let node of layoutRoot.value.descendants()) {
+        const previousSnippets: BBox[] = [];
+        const frameScores: number[] = [];
+        const selectedIndices: number[] = [];
 
-    // for (let keyframe of keyframes) {
-    //     const cell = node.data.cells[keyframe];
-    //     const [x, y] = cellMetaData.getPosition(cell);
-    //     const t = cellMetaData.getTime(cell);
-    //     const frameIndex = cellMetaData.getFrame(cell) - 1;
-    //     const source = getBBoxAroundPoint(x, y, sourceSize, sourceSize);
-    //     const destX = node.y + t - node.data.attrNum['min_time'] - destSize / 2;
-    //     const destY = node.x + -looneageViewStore.rowHeight - 3;
-    //     const destination = [destX, destY, destX + destSize, destY - destSize];
+        // eslint-disable-next-line no-constant-condition
+        while (true) {
+            const nextSnippet = getNextSnippet(
+                node,
+                looneageViewStore.snippetDestSize,
+                looneageViewStore.snippetDestSize,
+                previousSnippets,
+                occupied,
+                frameScores,
+                selectedIndices
+            );
+            if (nextSnippet === null) break;
+            const { destination, index, shouldRender } = nextSnippet;
+            if (!shouldRender) continue; // don't bother fetching data to render, it is offscreen
+            const cell = node.data.cells[index];
+            const t = cellMetaData.getFrame(cell) - 1; // convert frame number to index
+            const [x, y] = cellMetaData.getPosition(cell);
 
-    //     selections.push({
-    //         c: 0,
-    //         z: 0,
-    //         t: frameIndex,
-    //         snippets: [{ source, destination }],
-    //     });
-    // }
+            const source = getBBoxAroundPoint(
+                x,
+                y,
+                looneageViewStore.snippetSourceSize,
+                looneageViewStore.snippetSourceSize
+            );
+
+            selections.push({
+                c: 0,
+                z: 0,
+                t,
+                snippets: [{ source, destination }],
+            });
+        }
+
+        occupied.push(...previousSnippets);
+    }
 
     return new CellSnippetsLayer({
         loader: pixelSource.value,
-        id: `key-frames-snippets-layer-${node.data.trackId}`,
+        id: `key-frames-snippets-layer`,
         contrastLimits: contrastLimit.value,
         selections,
         channelsVisible: [true],
@@ -430,7 +432,7 @@ function getKeyFrameIndices(node: LayoutNode<Track>, count: number): number[] {
     const indices: number[] = [];
 
     for (let i = 0; i < count; i++) {
-        getNextSnippet(node, 32, 32, [], frameScores, indices);
+        getNextSnippet(node, 32, 32, [], [], frameScores, indices);
     }
 
     return indices;
@@ -450,10 +452,11 @@ function getNextSnippet(
     node: LayoutNode<Track>,
     width: number,
     height: number,
+    currentTrackSnippets: BBox[],
     occupied: BBox[],
     frameScores: number[],
     selectedIndices: number[]
-): { destination: BBox; index: number; inViewport: boolean } | null {
+): { destination: BBox; index: number; shouldRender: boolean } | null {
     const track = node.data;
     if (frameScores.length === 0) {
         // populate with zeros without changing reference
@@ -506,17 +509,24 @@ function getNextSnippet(
             maxDestination = destination;
         }
     }
-    if (occupied.some((bbox: BBox) => overlaps(bbox, maxDestination))) {
+    if (
+        currentTrackSnippets.some((bbox: BBox) =>
+            overlaps(bbox, maxDestination)
+        )
+    ) {
         return null;
     }
 
     if (maxIndex === -1) return null;
-    occupied.push(maxDestination);
+    currentTrackSnippets.push(maxDestination);
     selectedIndices.push(maxIndex);
-    // setting inViewport is a performance optimization. We still want to include
-    // the selection in occoupied/selected indices so that the keyframe selections
-    // do not change when different images go in and out of the viewport.
-    const inViewport = overlaps(viewportBBox(), maxDestination);
+    // setting shouldRender is a performance optimization. We still want to include
+    // the selection in occupied/selected indices so that the keyframe selections
+    // do not change when different images go in and out of the viewport, or
+    // horizon chart positions change
+    const shouldRender =
+        overlaps(viewportBBox(), maxDestination) &&
+        !occupied.some((bbox: BBox) => overlaps(bbox, maxDestination));
 
     // increase the scores of nearby frames to encourage coverage
     for (let i = 0; i < frameScores.length; i++) {
@@ -546,7 +556,7 @@ function getNextSnippet(
     return {
         destination: maxDestination,
         index: maxIndex,
-        inViewport,
+        shouldRender,
     };
 }
 
@@ -628,52 +638,52 @@ function createHorizonChartLayer(
         const color = [val * 1000, val * 1000, val * 200];
         deltaData.push({ position, color });
     }
-    const scatterplotLayer = new ScatterplotLayer({
-        id: `delta-scatterplot-layer-${track.trackId}`,
-        data: deltaData,
-        pickable: true,
-        opacity: 0.8,
-        stroked: true,
-        filled: true,
-        radiusScale: 1,
-        radiusMinPixels: 1,
-        radiusMaxPixels: 100,
-        lineWidthMinPixels: 0,
-        getLineWidth: 0,
-        getPosition: (d: any) => d.position,
-        getRadius: 0.5,
-        getFillColor: (d) => d.color,
-        getLineColor: (d) => [0, 0, 0],
-    });
+    // const scatterplotLayer = new ScatterplotLayer({
+    //     id: `delta-scatterplot-layer-${track.trackId}`,
+    //     data: deltaData,
+    //     pickable: true,
+    //     opacity: 0.8,
+    //     stroked: true,
+    //     filled: true,
+    //     radiusScale: 1,
+    //     radiusMinPixels: 1,
+    //     radiusMaxPixels: 100,
+    //     lineWidthMinPixels: 0,
+    //     getLineWidth: 0,
+    //     getPosition: (d: any) => d.position,
+    //     getRadius: 0.5,
+    //     getFillColor: (d) => d.color,
+    //     getLineColor: (d) => [0, 0, 0],
+    // });
 
-    const keyIndices = getKeyFrameIndices(node, 17);
-    const textLayer = new TextLayer({
-        id: `key-frames-text-layer-${track.trackId}`,
-        data: keyIndices.map((value, index) => {
-            const cell = track.cells[value];
-            return {
-                position: [
-                    node.y +
-                        cellMetaData.getTime(cell) -
-                        track.attrNum['min_time'],
-                    node.x + 3,
-                ],
-                text: index + 1,
-            };
-        }),
-        getPosition: (d: any) => d.position,
-        getText: (d: any) => d.text.toString(),
-        getColor: [0, 0, 0],
-        getSize: (d: any) => {
-            if (d.text < 4) return 16;
-            if (d.text < 8) return 12;
-            // if (d.text < 12) return 8;
+    // const keyIndices = getKeyFrameIndices(node, 17);
+    // const textLayer = new TextLayer({
+    //     id: `key-frames-text-layer-${track.trackId}`,
+    //     data: keyIndices.map((value, index) => {
+    //         const cell = track.cells[value];
+    //         return {
+    //             position: [
+    //                 node.y +
+    //                     cellMetaData.getTime(cell) -
+    //                     track.attrNum['min_time'],
+    //                 node.x + 3,
+    //             ],
+    //             text: index + 1,
+    //         };
+    //     }),
+    //     getPosition: (d: any) => d.position,
+    //     getText: (d: any) => d.text.toString(),
+    //     getColor: [0, 0, 0],
+    //     getSize: (d: any) => {
+    //         if (d.text < 4) return 16;
+    //         if (d.text < 8) return 12;
+    //         // if (d.text < 12) return 8;
 
-            return 8;
-        },
-    });
+    //         return 8;
+    //     },
+    // });
 
-    return [horizonChartLayer, scatterplotLayer, textLayer];
+    return [horizonChartLayer]; //, scatterplotLayer, textLayer];
 }
 
 // const segmentationData = ref<Feature[]>();
