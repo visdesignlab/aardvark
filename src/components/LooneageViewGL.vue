@@ -379,6 +379,7 @@ function createKeyFrameSnippets(): CellSnippetsLayer | null {
         const previousSnippets: BBox[] = [];
         const frameScores: number[] = [];
         const selectedIndices: number[] = [];
+        const addToOccupied: BBox[] = [];
 
         // eslint-disable-next-line no-constant-condition
         while (true) {
@@ -397,7 +398,7 @@ function createKeyFrameSnippets(): CellSnippetsLayer | null {
             const cell = node.data.cells[index];
             const t = cellMetaData.getFrame(cell) - 1; // convert frame number to index
             const [x, y] = cellMetaData.getPosition(cell);
-
+            addToOccupied.push(destination);
             const source = getBBoxAroundPoint(
                 x,
                 y,
@@ -413,7 +414,7 @@ function createKeyFrameSnippets(): CellSnippetsLayer | null {
             });
         }
 
-        occupied.push(...previousSnippets);
+        occupied.push(...addToOccupied);
     }
 
     return new CellSnippetsLayer({
