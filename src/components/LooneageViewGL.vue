@@ -80,22 +80,35 @@ const tree = computed(() => {
         }
     );
 });
-function getTimeExtent(node: Track): [number, number] {
-    let minTime = node.attrNum['min_time'] ?? 0;
-    let maxTime = node.attrNum['max_time'] ?? 0;
+function getTimeExtent(track: Track): [number, number] {
+    let minTime = track.attrNum['min_time'] ?? 0;
+    let maxTime = track.attrNum['max_time'] ?? 0;
     return [minTime, maxTime];
 }
 
-function getTimeDuration(node: Track): number {
-    let [minTime, maxTime] = getTimeExtent(node);
+function getTimeDuration(track: Track): number {
+    let [minTime, maxTime] = getTimeExtent(track);
     return maxTime - minTime;
+}
+
+function getTimeDurationForLayout(track: Track): number {
+    let [minTime, maxTime] = getTimeExtent(track);
+    const parent = cellMetaData.getParent(track);
+    if (parent) {
+        minTime = parent.attrNum['max_time'];
+    }
+    return maxTime - minTime;
+}
+
+function getTimeOffsetBetweenParentChild(track: Track): number {
+    return getTimeDurationForLayout(track) - getTimeDuration(track);
 }
 
 const layoutRoot = computed<LayoutNode<Track> | null>(() => {
     if (cellMetaData.selectedLineage == null) return null;
     return flextree<Track>({
         nodeSize: (node: LayoutNode<Track>) => {
-            const timeWidth = getTimeDuration(node.data);
+            const timeWidth = getTimeDurationForLayout(node.data);
             return [looneageViewStore.rowHeight, timeWidth];
         },
         spacing: looneageViewStore.spacing,
@@ -357,10 +370,11 @@ function createKeyFrameSnippets(): CellSnippetsLayer | null {
     for (let node of layoutRoot.value.descendants()) {
         const track = node.data;
         const destWidth = getTimeDuration(track);
+        const left = node.y + getTimeOffsetBetweenParentChild(track);
         const chartBBox: BBox = [
-            node.y,
+            left,
             node.x,
-            node.y + destWidth,
+            left + destWidth,
             node.x - looneageViewStore.rowHeight,
         ];
         occupied.push(chartBBox);
@@ -503,7 +517,12 @@ function getNextSnippet(
         if (selectedIndices.includes(i)) continue;
         const cell = track.cells[i];
         const t = cellMetaData.getTime(cell);
-        const destX = node.y + t - track.attrNum['min_time'] - destWidth / 2;
+        const destX =
+            node.y +
+            t -
+            track.attrNum['min_time'] -
+            destWidth / 2 +
+            getTimeOffsetBetweenParentChild(track);
         const destination: BBox = [
             destX,
             destY,
@@ -580,7 +599,7 @@ function createHorizonChartLayer(
 ): HorizonChartLayer | null {
     if (!cellMetaData.selectedTrack) return null;
     const track = node.data;
-    const left = node.y;
+    const left = node.y + getTimeOffsetBetweenParentChild(track);
     const width = getTimeDuration(track);
 
     const chartBBox: BBox = [

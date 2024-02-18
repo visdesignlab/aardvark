@@ -109,6 +109,12 @@ export const useCellMetaData = defineStore('cellMetaData', () => {
         return lineageMap.value?.get(lineageId)!;
     }
 
+    function getParent(track: Track): Track | null {
+        if (!hasParent(track)) return null;
+        const parent = trackMap.value?.get(track.parentId);
+        return parent ?? null;
+    }
+
     function getLineageId(track: Track): string {
         let founderCell = track;
         while (hasParent(founderCell)) {
@@ -575,6 +581,7 @@ export const useCellMetaData = defineStore('cellMetaData', () => {
         getMass,
         getTime,
         getFrame,
+        getParent,
         getPosition,
         getNumAttr,
         createFrameMap,
