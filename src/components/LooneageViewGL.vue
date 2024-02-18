@@ -231,15 +231,13 @@ const testGeometry = computed<number[]>(() => {
         minY = Math.min(minY, y);
         maxY = Math.max(maxY, y);
 
-        x = cellMetaData.getTime(cell); // TODO: maybe time is better
+        x = cellMetaData.getTime(cell);
         minX = Math.min(minX, x);
         maxX = Math.max(maxX, x);
 
         geometry.push(x, y);
         geometry.push(x, testBottom);
     }
-    // console.log('YYY MIN MAX', minY, maxY);
-    // console.log('XXX MIN MAX', minX, maxX);
 
     geometry.push(x, testBottom);
     return geometry;
@@ -313,7 +311,6 @@ function createConnectingLinesLayer(): PathLayer | null {
         // lines.push({ source: b, target: c });
         lines.push([a, b, c]);
     }
-    // console.log({ lines });
     return new PathLayer({
         id: 'connecting-lines-layer',
         data: lines,
@@ -351,15 +348,12 @@ function createTickMarksLayer(): PathLayer | null {
             lines.push([a, b]);
         }
     }
-    // console.log({ lines });
     return new PathLayer({
         id: 'horizon-tick-marks-layer',
         data: lines,
         getPath: (d: any) => d,
-        // getTargetPosition: (d: any) => d.target,
         getColor: [180, 180, 180],
         getWidth: padding,
-        // capRounded: true,
     });
 }
 
@@ -464,7 +458,7 @@ function createKeyFrameSnippets(): CellSnippetsLayer | null {
         if (!horizonInViewport(node)) continue; // for performance
         const previousSnippets: BBox[] = [];
         const frameScores: number[] = [];
-        const selectedIndices: number[] = [];
+        const frameDistances: number[] = [];
         let newSnippetsOuterBBox: BBox | null = null;
 
         // eslint-disable-next-line no-constant-condition
@@ -476,7 +470,7 @@ function createKeyFrameSnippets(): CellSnippetsLayer | null {
                 previousSnippets,
                 occupied,
                 frameScores,
-                selectedIndices
+                frameDistances
             );
             if (nextSnippet === null) break;
             const { destination, index, shouldRender, displayBelow } =
@@ -587,7 +581,7 @@ function getNextSnippet(
     currentTrackSnippets: BBox[],
     occupied: BBox[],
     frameScores: number[],
-    selectedIndices: number[]
+    frameDistances: number[]
 ): {
     destination: BBox;
     index: number;
@@ -615,6 +609,10 @@ function getNextSnippet(
             frameScores[i] = val;
         }
     }
+    if (frameDistances.length === 0) {
+        frameDistances.length = track.cells.length;
+        frameDistances.fill(Infinity);
+    }
 
     const center = 1;
     const dropOff = 3;
@@ -639,7 +637,7 @@ function getNextSnippet(
     let maxScore = -Infinity;
     let maxDestination: BBox = [0, 0, 0, 0];
     for (let i = 0; i < frameScores.length; i++) {
-        if (selectedIndices.includes(i)) continue;
+        if (frameDistances[i] === 0) continue;
         const cell = track.cells[i];
         const t = cellMetaData.getTime(cell);
         const destX =
@@ -653,8 +651,17 @@ function getNextSnippet(
             destX + destWidth,
             destY - destHeight,
         ];
-        if (frameScores[i] > maxScore) {
-            maxScore = frameScores[i];
+        let coverageCost =
+            (-center * (frameDistances[i] - dropOff)) /
+                (center + Math.abs(frameDistances[i] - dropOff)) +
+            center;
+        if (frameDistances[i] === Infinity) {
+            coverageCost = 0;
+        }
+        // console.log(frameScores[i], coverageCost, frameDistances[i]);
+        const score = frameScores[i] - coverageCost;
+        if (score > maxScore) {
+            maxScore = score;
             maxIndex = i;
             maxDestination = destination;
         }
@@ -669,7 +676,7 @@ function getNextSnippet(
 
     if (maxIndex === -1) return null;
     currentTrackSnippets.push(maxDestination);
-    selectedIndices.push(maxIndex);
+    // selectedIndices.push(maxIndex);
     // setting shouldRender is a performance optimization. We still want to include
     // the selection in occupied/selected indices so that the keyframe selections
     // do not change when different images go in and out of the viewport, or
@@ -678,13 +685,17 @@ function getNextSnippet(
         overlaps(viewportBBox(), maxDestination) &&
         !occupied.some((bbox: BBox) => overlaps(bbox, maxDestination));
 
-    // increase the scores of nearby frames to encourage coverage
-    for (let i = 0; i < frameScores.length; i++) {
-        const dist = Math.abs(maxIndex - i);
-        const coverageCost =
-            (-center * (dist - dropOff)) / (center + Math.abs(dist - dropOff)) +
-            center;
-        frameScores[i] -= coverageCost;
+    // update the nearest distance values
+
+    for (let i = maxIndex; i < frameDistances.length; i++) {
+        const d = Math.abs(maxIndex - i);
+        if (frameDistances[i] < d) break;
+        frameDistances[i] = d;
+    }
+    for (let i = maxIndex; i >= 0; i--) {
+        const d = Math.abs(maxIndex - i);
+        if (frameDistances[i] < d) break;
+        frameDistances[i] = d;
     }
 
     // const cell = node.data.cells[maxIndex];
