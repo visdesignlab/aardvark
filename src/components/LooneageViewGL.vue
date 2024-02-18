@@ -425,7 +425,7 @@ function createKeyFrameSnippets(): CellSnippetsLayer | null {
         const previousSnippets: BBox[] = [];
         const frameScores: number[] = [];
         const selectedIndices: number[] = [];
-        const addToOccupied: BBox[] = [];
+        let newSnippetsOuterBBox: BBox | null = null;
 
         // eslint-disable-next-line no-constant-condition
         while (true) {
@@ -444,7 +444,27 @@ function createKeyFrameSnippets(): CellSnippetsLayer | null {
             const cell = node.data.cells[index];
             const t = cellMetaData.getFrame(cell) - 1; // convert frame number to index
             const [x, y] = cellMetaData.getPosition(cell);
-            addToOccupied.push(destination);
+            if (newSnippetsOuterBBox === null) {
+                newSnippetsOuterBBox = [...destination];
+            } else {
+                newSnippetsOuterBBox[0] = Math.min(
+                    newSnippetsOuterBBox[0],
+                    destination[0]
+                );
+                newSnippetsOuterBBox[1] = Math.max(
+                    newSnippetsOuterBBox[1],
+                    destination[1]
+                );
+                newSnippetsOuterBBox[2] = Math.max(
+                    newSnippetsOuterBBox[2],
+                    destination[2]
+                );
+                newSnippetsOuterBBox[3] = Math.min(
+                    newSnippetsOuterBBox[3],
+                    destination[3]
+                );
+            }
+
             const source = getBBoxAroundPoint(
                 x,
                 y,
@@ -459,8 +479,9 @@ function createKeyFrameSnippets(): CellSnippetsLayer | null {
                 snippets: [{ source, destination }],
             });
         }
-
-        occupied.push(...addToOccupied);
+        if (newSnippetsOuterBBox) {
+            occupied.push(newSnippetsOuterBBox);
+        }
     }
 
     return new CellSnippetsLayer({
