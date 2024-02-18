@@ -407,7 +407,7 @@ function createKeyFrameSnippets(): CellSnippetsLayer | null {
 
     // add all horizon charts as occupied rectangles
     for (let node of layoutRoot.value.descendants()) {
-        const track = node.data;
+        if (!horizonInViewport(node)) continue; // for performance
         const left = getLeftPosition(node);
         const right = getRightPosition(node);
         const chartBBox: BBox = [
@@ -421,6 +421,7 @@ function createKeyFrameSnippets(): CellSnippetsLayer | null {
 
     const selections = [];
     for (let node of layoutRoot.value.descendants()) {
+        if (!horizonInViewport(node)) continue; // for performance
         const previousSnippets: BBox[] = [];
         const frameScores: number[] = [];
         const selectedIndices: number[] = [];
@@ -632,6 +633,16 @@ const viewportBuffer = computed<number>(() => {
     return looneageViewStore.snippetDestSize * 2;
 });
 
+function horizonInViewport(node: LayoutNode<Track>): boolean {
+    const chartBBox: BBox = [
+        getLeftPosition(node),
+        node.x,
+        getRightPosition(node),
+        node.x - looneageViewStore.rowHeight,
+    ];
+    return overlaps(chartBBox, viewportBBox());
+}
+
 function createHorizonChartLayer(
     node: LayoutNode<Track>
 ): HorizonChartLayer | null {
@@ -640,13 +651,7 @@ function createHorizonChartLayer(
     const left = getLeftPosition(node);
     const width = getTimeDuration(track);
 
-    const chartBBox: BBox = [
-        left,
-        node.x,
-        left + width,
-        node.x - looneageViewStore.rowHeight,
-    ];
-    if (!overlaps(chartBBox, viewportBBox())) return null;
+    if (!horizonInViewport(node)) return null;
 
     const destination: [number, number, number, number] = [
         node.x,
