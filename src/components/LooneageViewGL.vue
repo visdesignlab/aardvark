@@ -42,6 +42,7 @@ import { Deck, OrthographicView, type PickingInfo } from '@deck.gl/core/typed';
 import {
     GeoJsonLayer,
     LineLayer,
+    PathLayer,
     PolygonLayer,
     ScatterplotLayer,
     SolidPolygonLayer,
@@ -49,6 +50,7 @@ import {
 } from '@deck.gl/layers/typed';
 
 import HorizonChartLayer from './layers/HorizonChartLayer/HorizonChartLayer';
+import { faDownLeftAndUpRightToCenter } from '@fortawesome/free-solid-svg-icons';
 
 const cellMetaData = useCellMetaData();
 
@@ -297,6 +299,32 @@ const dataXExtent = computed<[number, number]>(() => {
 
 const imageOffset = ref(0);
 
+function createConnectingLinesLayer(): PathLayer | null {
+    if (!layoutRoot.value?.descendants()) return null;
+    const lines = [];
+    for (const node of layoutRoot.value.descendants()) {
+        if (!node.parent) continue;
+        const childCenter = getMiddleVert(node);
+        const parentRight = getRightPosition(node.parent);
+        const a = [getLeftPosition(node), childCenter];
+        const b = [parentRight, childCenter];
+        const c = [parentRight, getMiddleVert(node.parent)];
+        // lines.push({ source: a, target: b });
+        // lines.push({ source: b, target: c });
+        lines.push([a, b, c]);
+    }
+    // console.log({ lines });
+    return new PathLayer({
+        id: 'connecting-lines-layer',
+        data: lines,
+        getPath: (d: any) => d,
+        // getTargetPosition: (d: any) => d.target,
+        getColor: [180, 180, 180],
+        getWidth: looneageViewStore.connectingLineWidth,
+        jointRounded: true,
+    });
+}
+
 function createHorizonChartLayers(): (
     | ScatterplotLayer
     | HorizonChartLayer
@@ -361,6 +389,18 @@ function hexListToRgba(hexList: readonly string[]): number[] {
     return rgbaList;
 }
 
+function getLeftPosition(node: LayoutNode<Track>): number {
+    return node.y + getTimeOffsetBetweenParentChild(node.data);
+}
+
+function getRightPosition(node: LayoutNode<Track>): number {
+    return getLeftPosition(node) + getTimeDuration(node.data);
+}
+
+function getMiddleVert(node: LayoutNode<Track>): number {
+    return node.x - looneageViewStore.rowHeight / 2;
+}
+
 function createKeyFrameSnippets(): CellSnippetsLayer | null {
     if (!layoutRoot.value) return null;
     const occupied: BBox[] = [];
@@ -368,12 +408,12 @@ function createKeyFrameSnippets(): CellSnippetsLayer | null {
     // add all horizon charts as occupied rectangles
     for (let node of layoutRoot.value.descendants()) {
         const track = node.data;
-        const destWidth = getTimeDuration(track);
-        const left = node.y + getTimeOffsetBetweenParentChild(track);
+        const left = getLeftPosition(node);
+        const right = getRightPosition(node);
         const chartBBox: BBox = [
             left,
             node.x,
-            left + destWidth,
+            right,
             node.x - looneageViewStore.rowHeight,
         ];
         occupied.push(chartBBox);
@@ -517,11 +557,10 @@ function getNextSnippet(
         const cell = track.cells[i];
         const t = cellMetaData.getTime(cell);
         const destX =
-            node.y +
+            getLeftPosition(node) +
             t -
             track.attrNum['min_time'] -
-            destWidth / 2 +
-            getTimeOffsetBetweenParentChild(track);
+            destWidth / 2;
         const destination: BBox = [
             destX,
             destY,
@@ -598,7 +637,7 @@ function createHorizonChartLayer(
 ): HorizonChartLayer | null {
     if (!cellMetaData.selectedTrack) return null;
     const track = node.data;
-    const left = node.y + getTimeOffsetBetweenParentChild(track);
+    const left = getLeftPosition(node);
     const width = getTimeDuration(track);
 
     const chartBBox: BBox = [
@@ -874,6 +913,7 @@ function renderDeckGL(): void {
     // if (segmentationData.value == null) return;
     const layers = [];
 
+    layers.push(createConnectingLinesLayer());
     layers.push(createHorizonChartLayers());
     if (looneageViewStore.showSnippets) {
         layers.push(createKeyFrameSnippets());
