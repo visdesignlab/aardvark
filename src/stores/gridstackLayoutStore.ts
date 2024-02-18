@@ -284,6 +284,8 @@ export const useGridstackLayoutStore = defineStore(
                 id: 'LooneageViewGL',
                 icon: 'account_tree',
                 noPadding: true,
+                sidebar: 'LooneageViewSettingsSidebar',
+                toolbar: 'LooneageViewSettingsToolbar',
             },
             {
                 component: 'CellTrackView',
