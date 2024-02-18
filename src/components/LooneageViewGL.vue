@@ -325,6 +325,44 @@ function createConnectingLinesLayer(): PathLayer | null {
     });
 }
 
+function createTickMarksLayer(): PathLayer | null {
+    if (!layoutRoot.value?.descendants()) return null;
+    const padding = getHorizonSnippetPadding() / 2;
+    const lines = [];
+    let lastX = null;
+    for (const node of layoutRoot.value.descendants()) {
+        if (!horizonInViewport(node)) continue;
+        for (const cell of node.data.cells) {
+            const x =
+                getLeftPosition(node) +
+                cellMetaData.getTime(cell) -
+                node.data.attrNum['min_time'];
+            if (lastX !== null) {
+                if (Math.abs(x - lastX) < 2 * padding) return null;
+                // If the points are too close together,
+                // skip rendering, it is worse visually and
+                // is a performance hit.
+            }
+            lastX = x;
+            const bottom = node.x + padding;
+            const top = node.x - padding - looneageViewStore.rowHeight;
+            const a = [x, bottom];
+            const b = [x, top];
+            lines.push([a, b]);
+        }
+    }
+    // console.log({ lines });
+    return new PathLayer({
+        id: 'horizon-tick-marks-layer',
+        data: lines,
+        getPath: (d: any) => d,
+        // getTargetPosition: (d: any) => d.target,
+        getColor: [180, 180, 180],
+        getWidth: padding,
+        // capRounded: true,
+    });
+}
+
 function createHorizonChartLayers(): (
     | ScatterplotLayer
     | HorizonChartLayer
@@ -420,6 +458,8 @@ function createKeyFrameSnippets(): CellSnippetsLayer | null {
     }
 
     const selections = [];
+    const ticks: [number, number][][] = [];
+    const tickPadding = getHorizonSnippetPadding();
     for (let node of layoutRoot.value.descendants()) {
         if (!horizonInViewport(node)) continue; // for performance
         const previousSnippets: BBox[] = [];
@@ -439,7 +479,8 @@ function createKeyFrameSnippets(): CellSnippetsLayer | null {
                 selectedIndices
             );
             if (nextSnippet === null) break;
-            const { destination, index, shouldRender } = nextSnippet;
+            const { destination, index, shouldRender, displayBelow } =
+                nextSnippet;
             if (!shouldRender) continue; // don't bother fetching data to render, it is offscreen
             const cell = node.data.cells[index];
             const t = cellMetaData.getFrame(cell) - 1; // convert frame number to index
@@ -478,13 +519,30 @@ function createKeyFrameSnippets(): CellSnippetsLayer | null {
                 t,
                 snippets: [{ source, destination }],
             });
+
+            const tickX =
+                getLeftPosition(node) +
+                cellMetaData.getTime(cell) -
+                node.data.attrNum['min_time'];
+            let tickSnippetY = node.x;
+            let tickHorizonY = node.x;
+            if (displayBelow) {
+                tickSnippetY += tickPadding;
+            } else {
+                tickSnippetY -= looneageViewStore.rowHeight + tickPadding;
+                tickHorizonY -= looneageViewStore.rowHeight;
+            }
+            ticks.push([
+                [tickX, tickSnippetY],
+                [tickX, tickHorizonY],
+            ]);
         }
         if (newSnippetsOuterBBox) {
             occupied.push(newSnippetsOuterBBox);
         }
     }
 
-    return new CellSnippetsLayer({
+    const snippetLayer = new CellSnippetsLayer({
         loader: pixelSource.value,
         id: `key-frames-snippets-layer`,
         contrastLimits: contrastLimit.value,
@@ -496,6 +554,16 @@ function createKeyFrameSnippets(): CellSnippetsLayer | null {
             console.log('clicked');
         },
     });
+
+    const snippetTickMarksLayer = new PathLayer({
+        id: 'snippet-tick-marks-layer',
+        data: ticks,
+        getPath: (d: any) => d,
+        getColor: [100, 100, 100],
+        getWidth: tickPadding / 2,
+        capRounded: false,
+    });
+    return [snippetLayer, snippetTickMarksLayer];
 }
 
 function getKeyFrameIndices(node: LayoutNode<Track>, count: number): number[] {
@@ -521,6 +589,10 @@ function valueExtent(track: Track, key: string): number {
     return max - min;
 }
 
+function getHorizonSnippetPadding(): number {
+    return scaleForConstantVisualSize(6);
+}
+
 function getNextSnippet(
     node: LayoutNode<Track>,
     width: number,
@@ -529,7 +601,12 @@ function getNextSnippet(
     occupied: BBox[],
     frameScores: number[],
     selectedIndices: number[]
-): { destination: BBox; index: number; shouldRender: boolean } | null {
+): {
+    destination: BBox;
+    index: number;
+    shouldRender: boolean;
+    displayBelow: boolean;
+} | null {
     const track = node.data;
     if (frameScores.length === 0) {
         // populate with zeros without changing reference
@@ -560,7 +637,7 @@ function getNextSnippet(
     // and does not overlap with any of the occupied regions
     // const zoom = deckgl.viewState?.looneageController?.zoom ?? 0;
     const destWidth = scaleForConstantVisualSize(width);
-    const horizonSnippetPadding = scaleForConstantVisualSize(3);
+    const horizonSnippetPadding = getHorizonSnippetPadding();
     const destHeight = scaleForConstantVisualSize(height);
     let destY = node.x;
     const displayBelow = node.x > 0;
@@ -643,6 +720,7 @@ function getNextSnippet(
         destination: maxDestination,
         index: maxIndex,
         shouldRender,
+        displayBelow,
     };
 }
 
@@ -940,6 +1018,7 @@ function renderDeckGL(): void {
     const layers = [];
 
     layers.push(createConnectingLinesLayer());
+    layers.push(createTickMarksLayer());
     layers.push(createHorizonChartLayers());
     if (looneageViewStore.showSnippets) {
         layers.push(createKeyFrameSnippets());
