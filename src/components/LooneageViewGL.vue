@@ -297,7 +297,7 @@ const dataXExtent = computed<[number, number]>(() => {
 
 const imageOffset = ref(0);
 
-function createLooneageLayers(): (
+function createHorizonChartLayers(): (
     | ScatterplotLayer
     | HorizonChartLayer
     | null
@@ -311,7 +311,6 @@ function createLooneageLayers(): (
         // if (node.depth > looneageViewStore.maxDepth) continue;
         layers.push(createHorizonChartLayer(node));
     }
-    layers.push(createKeyFrameSnippets());
     // layers.push(
     //     new ScatterplotLayer({
     //         id: 'looneage-test-scatterplot-layer',
@@ -875,7 +874,10 @@ function renderDeckGL(): void {
     // if (segmentationData.value == null) return;
     const layers = [];
 
-    layers.push(createLooneageLayers());
+    layers.push(createHorizonChartLayers());
+    if (looneageViewStore.showSnippets) {
+        layers.push(createKeyFrameSnippets());
+    }
     // layers.push(createTrackLayer());
     // layers.push(createTestScatterLayer());
     // layers.push(createViewportRectangleLayer());

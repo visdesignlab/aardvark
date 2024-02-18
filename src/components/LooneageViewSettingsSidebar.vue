@@ -101,6 +101,11 @@ const baselineValidate = computed({
         :dark="globalSettings.darkMode"
     />
     <q-toggle
+        label="Show Snippets"
+        v-model="looneageViewStore.showSnippets"
+        :dark="globalSettings.darkMode"
+    />
+    <q-toggle
         label="Show Lines"
         v-model="looneageViewStore.showLines"
         :dark="globalSettings.darkMode"
