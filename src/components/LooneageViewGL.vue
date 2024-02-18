@@ -566,19 +566,6 @@ function createKeyFrameSnippets(): CellSnippetsLayer | null {
     return [snippetLayer, snippetTickMarksLayer];
 }
 
-function getKeyFrameIndices(node: LayoutNode<Track>, count: number): number[] {
-    const track = node.data;
-    count = Math.min(count, track.cells.length);
-    const frameScores: number[] = [];
-    const indices: number[] = [];
-
-    for (let i = 0; i < count; i++) {
-        getNextSnippet(node, 32, 32, [], [], frameScores, indices);
-    }
-
-    return indices;
-}
-
 function valueExtent(track: Track, key: string): number {
     let min = Infinity;
     let max = -Infinity;
@@ -788,8 +775,7 @@ function createHorizonChartLayer(
 
         baseline: looneageViewStore.baseline,
         binSize: looneageViewStore.modHeight,
-        // placeholderThreshold: 0,
-        // placeholderSize: 0,
+
         getModOffset: (d: any) => d,
         positiveColors,
         negativeColors,
@@ -797,70 +783,6 @@ function createHorizonChartLayer(
             instanceData: testGeometry.value,
         },
     });
-
-    // const deltaData = [];
-    // const valExtent = valueExtent(track, looneageViewStore.attrKey);
-    // for (let i = 0; i < track.cells.length; i++) {
-    //     const prevIndex = Math.max(i - 1, 0);
-    //     const prev = track.cells[prevIndex];
-    //     const cell = track.cells[i];
-    //     const nextIndex = Math.min(i + 1, track.cells.length - 1);
-    //     const next = track.cells[nextIndex];
-
-    //     const position = [
-    //         node.y + cellMetaData.getTime(cell) - track.attrNum['min_time'],
-    //         node.x + 6,
-    //     ];
-    //     const key = looneageViewStore.attrKey;
-    //     const val = Math.abs(next.attrNum[key] - prev.attrNum[key]) / valExtent;
-    //     // ((next.attrNum[key] + prev.attrNum[key]) / 2);
-    //     const color = [val * 1000, val * 1000, val * 200];
-    //     deltaData.push({ position, color });
-    // }
-    // // const scatterplotLayer = new ScatterplotLayer({
-    //     id: `delta-scatterplot-layer-${track.trackId}`,
-    //     data: deltaData,
-    //     pickable: true,
-    //     opacity: 0.8,
-    //     stroked: true,
-    //     filled: true,
-    //     radiusScale: 1,
-    //     radiusMinPixels: 1,
-    //     radiusMaxPixels: 100,
-    //     lineWidthMinPixels: 0,
-    //     getLineWidth: 0,
-    //     getPosition: (d: any) => d.position,
-    //     getRadius: 0.5,
-    //     getFillColor: (d) => d.color,
-    //     getLineColor: (d) => [0, 0, 0],
-    // });
-
-    // const keyIndices = getKeyFrameIndices(node, 17);
-    // const textLayer = new TextLayer({
-    //     id: `key-frames-text-layer-${track.trackId}`,
-    //     data: keyIndices.map((value, index) => {
-    //         const cell = track.cells[value];
-    //         return {
-    //             position: [
-    //                 node.y +
-    //                     cellMetaData.getTime(cell) -
-    //                     track.attrNum['min_time'],
-    //                 node.x + 3,
-    //             ],
-    //             text: index + 1,
-    //         };
-    //     }),
-    //     getPosition: (d: any) => d.position,
-    //     getText: (d: any) => d.text.toString(),
-    //     getColor: [0, 0, 0],
-    //     getSize: (d: any) => {
-    //         if (d.text < 4) return 16;
-    //         if (d.text < 8) return 12;
-    //         // if (d.text < 12) return 8;
-
-    //         return 8;
-    //     },
-    // });
 
     return horizonChartLayer; //, scatterplotLayer, textLayer];
 }
@@ -870,82 +792,6 @@ function createHorizonChartLayer(
 watch(selectedTrack, () => {
     renderDeckGL();
 });
-
-// watch(frameNumber, () => {
-//     renderDeckGL();
-// });
-
-// function updateSnippet() {
-//     if (cellMetaData.selectedTrack == null) return;
-
-//     const dataRequests = [];
-
-//     // TODO: this is not right
-//     const frame = imageViewerStore.frameNumber;
-//     const cell = cellMetaData.selectedTrack.cells.find(
-//         (c) => cellMetaData.getFrame(c) === frame
-//     );
-//     if (!cell) return;
-
-//     // const samples = [0, 0.25, 0.5, 0.75, 1];
-//     // for (let sample of samples) {
-//     //     const index = Math.round(
-//     //         sample * (cellMetaData.selectedTrack.cells.length - 1)
-//     //     );
-//     dataRequests.push(segmentationStore.getCellSegmentation(cell));
-//     // }
-
-//     Promise.all(dataRequests).then((data) => {
-//         segmentationData.value = data.filter((d) => d != null) as Feature[];
-//         renderDeckGL();
-//     });
-// }
-
-// function createTrackLayer(): CellSnippetsLayer | null {
-//     if (!segmentationData.value) return null;
-//     const selections = [];
-//     let xOffset = imageOffset.value;
-//     const yOffset = 0;
-//     // console.log('xOffset', xOffset);
-//     const padding = 6;
-//     const maxHeight = getMaxHeight(segmentationData.value);
-//     // console.log({ maxHeight });
-//     for (let feature of segmentationData.value) {
-//         if (!feature) continue;
-//         if (!feature?.properties?.frame) continue;
-//         if (!feature?.bbox) continue;
-//         const t = feature.properties.frame - 1; // convert frame number to index
-//         const source = expandHeight(feature.bbox as BBox, maxHeight);
-//         const width = getWidth(source);
-//         const height = getHeight(source);
-//         const destination = [
-//             xOffset,
-//             yOffset,
-//             xOffset + width,
-//             yOffset - height,
-//         ];
-//         xOffset += width + padding;
-//         selections.push({
-//             c: 0,
-//             z: 0,
-//             t,
-//             snippets: [{ source, destination }],
-//         });
-//     }
-
-//     return new CellSnippetsLayer({
-//         loader: pixelSource.value,
-//         id: 'looneage-view-gl-test-snippet-layer',
-//         contrastLimits: contrastLimit.value,
-//         selections,
-//         channelsVisible: [true],
-//         extensions: [colormapExtension],
-//         colormap: imageViewerStore.colormap,
-//         onClick: () => {
-//             console.log('clicked');
-//         },
-//     });
-// }
 
 function scaleForConstantVisualSize(size: number): number {
     const viewState = deckgl.viewState?.looneageController ?? initialViewState;
