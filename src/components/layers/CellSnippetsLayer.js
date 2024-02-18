@@ -14,6 +14,7 @@ import { LRUCache } from 'lru-cache';
 import { ColorPaletteExtension } from '@vivjs/extensions';
 
 import { isEqual } from 'lodash-es';
+import { PolygonLayer } from 'deck.gl';
 
 const defaultProps = {
     pickable: { type: 'boolean', value: true, compare: true },
@@ -63,6 +64,7 @@ class CellSnippetsLayer extends CompositeLayer {
         this.state.cache = new LRUCache({
             max: 250,
         });
+        // this.state.loading = false;
     }
 
     finalizeState() {
@@ -150,26 +152,33 @@ class CellSnippetsLayer extends CompositeLayer {
             props.selections,
             data
         );
+        const loadingDestinations = [];
 
         if (unmatchedSelections.length === 0) {
-            this.setState({ data: newData });
+            this.setState({ data: newData, loadingDestinations });
             return;
         }
-
+        // let loading = true;
         const abortController = new AbortController();
+        // this.setState({ abortController, loading });
         this.setState({ abortController });
         const { signal } = abortController;
 
         const dataPromises = [];
 
-        for (let i = 0; i < unmatchedSelections.length; i++) {
+        for (const selection of unmatchedSelections) {
             dataPromises.push(
                 loader.getRaster({
-                    selection: unmatchedSelections[i],
+                    selection,
                     signal,
                 })
             );
+            for (const snippet of selection.snippets) {
+                const destination = snippet.destination;
+                loadingDestinations.push(destination);
+            }
         }
+        this.setState({ data: newData, loadingDestinations });
 
         Promise.all(dataPromises)
             .then((rasters) => {
@@ -202,9 +211,11 @@ class CellSnippetsLayer extends CompositeLayer {
 
                 this.setState({
                     data: newData,
+                    loadingDestinations: [],
                 });
             })
             .catch((err) => {
+                // this.setState({ loading: false });
                 if (err !== SIGNAL_ABORTED) {
                     throw err; // re-throws error if not our signal
                 }
@@ -212,13 +223,49 @@ class CellSnippetsLayer extends CompositeLayer {
     }
 
     renderLayers() {
+        const layers = [];
         // console.log('renderLayers');
-        return this.createImageSnippetLayers();
+        // if (this.state.loading) {
+        layers.push(this.createLoadingUnderLayer());
+        layers.push(this.createImageSnippetLayers());
+        return layers;
+    }
+
+    createLoadingUnderLayer() {
+        const { loadingDestinations } = this.state;
+        if (!loadingDestinations) return null;
+        const destinations = loadingDestinations.map((d) => {
+            const [l, t, r, b] = d;
+            const coords = [
+                [l, b],
+                [l, t],
+                [r, t],
+                [r, b],
+            ];
+            return coords;
+        });
+
+        //get current time in seconds
+        const t = Date.now();
+        // console.log(t);
+
+        const { id } = this.props;
+        return new PolygonLayer({
+            id: `${id}-snippet-loading-layer`,
+            data: destinations,
+            getPolygon: (d) => d,
+            // getFillColor: [120, t % 255, 250],
+            getFillColor: [120, 120, 160],
+            filled: true,
+            pickable: false,
+            stroked: false,
+            extruded: false,
+        });
     }
 
     createImageSnippetLayers() {
         const { loader, id } = this.props;
-        const { width, height, data } = this.state;
+        const { data } = this.state;
         if (!data) return null;
         const { dtype } = loader;
 
