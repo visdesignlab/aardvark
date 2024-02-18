@@ -34,8 +34,6 @@ import {
 import {
     loadOmeTiff,
     getChannelStats,
-    ImageLayer,
-    XRLayer,
     AdditiveColormapExtension,
 } from '@hms-dbmi/viv';
 
@@ -50,13 +48,7 @@ import {
     TextLayer,
 } from '@deck.gl/layers/typed';
 
-// import CustomScatterplotLayer from './layers/CustomScatterplot/CustomScatterplotLayer';3
 import HorizonChartLayer from './layers/HorizonChartLayer/HorizonChartLayer';
-// @ts-ignore
-import { TripsLayer } from '@deck.gl/geo-layers';
-import { render } from 'vue';
-import { index, max } from 'd3-array';
-import type { Layout } from '@/stores/gridstackLayoutStore';
 
 const cellMetaData = useCellMetaData();
 
@@ -491,10 +483,11 @@ function getNextSnippet(
 
     // select the frame with the smallest score that isn't already in indices
     // and does not overlap with any of the occupied regions
-    const zoom = deckgl.viewState?.looneageController?.zoom ?? 0;
-    const destWidth = width * 2 ** -zoom;
-    const destHeight = height * 2 ** -zoom;
-    const destY = node.x + -looneageViewStore.rowHeight - 3;
+    // const zoom = deckgl.viewState?.looneageController?.zoom ?? 0;
+    const destWidth = scaleForConstantVisualSize(width);
+    const destHeight = scaleForConstantVisualSize(height);
+    const destY =
+        node.x + -looneageViewStore.rowHeight - scaleForConstantVisualSize(3);
     // let destination: BBox = [0, 0, 0, 0];
     let maxScore = -Infinity;
     let maxDestination: BBox = [0, 0, 0, 0];
@@ -785,12 +778,23 @@ watch(selectedTrack, () => {
 //     });
 // }
 
+function scaleForConstantVisualSize(size: number): number {
+    const viewState = deckgl.viewState?.looneageController ?? initialViewState;
+    const { zoom } = viewState;
+    // scale the size based on the inverse of the zoom so the visual is consistent
+    return size * 2 ** -zoom;
+}
+
 function viewportBBox(): BBox {
     const viewState = deckgl.viewState?.looneageController ?? initialViewState;
     const { zoom, target } = viewState;
     // const buffer = -300; // add buffer so data is fetched a bit before it is panned into view.
-    const width = (deckGlWidth.value + viewportBuffer.value) * 2 ** -zoom;
-    const height = (deckGlHeight.value + viewportBuffer.value) * 2 ** -zoom;
+    const width = scaleForConstantVisualSize(
+        deckGlWidth.value + viewportBuffer.value
+    );
+    const height = scaleForConstantVisualSize(
+        deckGlHeight.value + viewportBuffer.value
+    );
     const halfWidth = width / 2;
     const halfHeight = height / 2;
 
@@ -806,37 +810,37 @@ function viewportBBox(): BBox {
     return [left, top, right, bottom];
 }
 
-function createViewportRectangleLayer(): PolygonLayer {
-    // console.log('view state');
-    // console.log(deckgl.viewState);
-    const viewState = deckgl.viewState?.looneageController ?? initialViewState;
-    // console.log('element', deckGlWidth.value, deckGlHeight.value);
-    // console.log('controller', viewState.width, viewState.height);
-    // const viewport =
-    const { zoom, target } = viewState;
-    // draw rectangle that covers the view port given the zoom, target, width, and height
+// function createViewportRectangleLayer(): PolygonLayer {
+//     // console.log('view state');
+//     // console.log(deckgl.viewState);
+//     const viewState = deckgl.viewState?.looneageController ?? initialViewState;
+//     // console.log('element', deckGlWidth.value, deckGlHeight.value);
+//     // console.log('controller', viewState.width, viewState.height);
+//     // const viewport =
+//     const { zoom, target } = viewState;
+//     // draw rectangle that covers the view port given the zoom, target, width, and height
 
-    const width = (deckGlWidth.value - 300) * 2 ** -zoom;
-    const height = (deckGlHeight.value - 300) * 2 ** -zoom;
-    const halfWidth = width / 2;
-    const halfHeight = height / 2;
-    const topLeft = [target[0] - halfWidth, target[1] + halfHeight];
-    const topRight = [target[0] + halfWidth, target[1] + halfHeight];
-    const bottomRight = [target[0] + halfWidth, target[1] - halfHeight];
-    const bottomLeft = [target[0] - halfWidth, target[1] - halfHeight];
+//     const width = (deckGlWidth.value - 300) * 2 ** -zoom;
+//     const height = (deckGlHeight.value - 300) * 2 ** -zoom;
+//     const halfWidth = width / 2;
+//     const halfHeight = height / 2;
+//     const topLeft = [target[0] - halfWidth, target[1] + halfHeight];
+//     const topRight = [target[0] + halfWidth, target[1] + halfHeight];
+//     const bottomRight = [target[0] + halfWidth, target[1] - halfHeight];
+//     const bottomLeft = [target[0] - halfWidth, target[1] - halfHeight];
 
-    return new PolygonLayer({
-        id: 'viewport-rectangle-layer',
-        data: [[topLeft, topRight, bottomRight, bottomLeft, topLeft]],
-        pickable: false,
-        stroked: true,
-        filled: true,
-        wireframe: false,
-        lineWidthMinPixels: 1,
-        getPolygon: (d) => d,
-        getFillColor: [0, 140, 0, 120],
-    });
-}
+//     return new PolygonLayer({
+//         id: 'viewport-rectangle-layer',
+//         data: [[topLeft, topRight, bottomRight, bottomLeft, topLeft]],
+//         pickable: false,
+//         stroked: true,
+//         filled: true,
+//         wireframe: false,
+//         lineWidthMinPixels: 1,
+//         getPolygon: (d) => d,
+//         getFillColor: [0, 140, 0, 120],
+//     });
+// }
 
 function renderDeckGL(): void {
     if (deckgl == null) return;
