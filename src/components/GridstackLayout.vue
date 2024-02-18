@@ -28,6 +28,7 @@ onMounted(() => {
             handle: '.drag-target',
         },
         margin: 7,
+        disableOneColumnMode: true,
     });
 
     grid.on('change', (event: any, changeItems: any) => {
