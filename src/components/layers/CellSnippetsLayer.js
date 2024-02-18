@@ -164,15 +164,9 @@ class CellSnippetsLayer extends CompositeLayer {
         this.setState({ abortController });
         const { signal } = abortController;
 
-        const dataPromises = [];
+        // const dataPromises = [];
 
         for (const selection of unmatchedSelections) {
-            dataPromises.push(
-                loader.getRaster({
-                    selection,
-                    signal,
-                })
-            );
             for (const snippet of selection.snippets) {
                 const destination = snippet.destination;
                 loadingDestinations.push(destination);
@@ -180,12 +174,12 @@ class CellSnippetsLayer extends CompositeLayer {
         }
         this.setState({ data: newData, loadingDestinations });
 
-        Promise.all(dataPromises)
-            .then((rasters) => {
-                // const data = [];
-                for (let i = 0; i < rasters.length; i++) {
-                    const raster = rasters[i];
-                    const { c, t, z, snippets } = unmatchedSelections[i];
+        for (const selection of unmatchedSelections) {
+            loader
+                .getRaster({ selection, signal })
+                .then((raster) => {
+                    const { c, t, z, snippets } = selection;
+                    const loadedData = [];
                     for (let snippet of snippets) {
                         const snippetData = this.getSnippetOfByteArray(
                             raster.data,
@@ -196,7 +190,7 @@ class CellSnippetsLayer extends CompositeLayer {
                         const key = this.getSnippetKey(c, t, z, snippet.source);
                         this.state.cache.set(key, snippetData);
 
-                        newData.push({
+                        loadedData.push({
                             data: snippetData,
                             source: snippet.source,
                             destination: snippet.destination,
@@ -207,19 +201,19 @@ class CellSnippetsLayer extends CompositeLayer {
                             },
                         });
                     }
-                }
 
-                this.setState({
-                    data: newData,
-                    loadingDestinations: [],
+                    this.setState({
+                        data: this.state.data.concat(loadedData),
+                        // loadingDestinations: [],
+                    });
+                })
+                .catch((err) => {
+                    // this.setState({ loading: false });
+                    if (err !== SIGNAL_ABORTED) {
+                        throw err; // re-throws error if not our signal
+                    }
                 });
-            })
-            .catch((err) => {
-                // this.setState({ loading: false });
-                if (err !== SIGNAL_ABORTED) {
-                    throw err; // re-throws error if not our signal
-                }
-            });
+        }
     }
 
     renderLayers() {
