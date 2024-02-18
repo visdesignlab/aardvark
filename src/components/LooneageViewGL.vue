@@ -485,9 +485,17 @@ function getNextSnippet(
     // and does not overlap with any of the occupied regions
     // const zoom = deckgl.viewState?.looneageController?.zoom ?? 0;
     const destWidth = scaleForConstantVisualSize(width);
+    const horizonSnippetPadding = scaleForConstantVisualSize(3);
     const destHeight = scaleForConstantVisualSize(height);
-    const destY =
-        node.x + -looneageViewStore.rowHeight - scaleForConstantVisualSize(3);
+    let destY = node.x;
+    const displayBelow = node.x > 0;
+    if (displayBelow) {
+        destY += destHeight;
+        destY += horizonSnippetPadding;
+    } else {
+        destY -= looneageViewStore.rowHeight;
+        destY -= horizonSnippetPadding;
+    }
     // let destination: BBox = [0, 0, 0, 0];
     let maxScore = -Infinity;
     let maxDestination: BBox = [0, 0, 0, 0];
