@@ -247,7 +247,7 @@ function constructGeometry(track: Track): number[] {
     const geometry: number[] = [];
     const key = looneageViewStore.attrKey;
 
-    const testBottom = -404.123456789;
+    const hackyBottom = -404.123456789;
     // this is a hack to make the shaders work correctly.
     // this value is used in the shaders to determine the non value side
     // of the geometry. If a data has this exact value there will be a
@@ -255,9 +255,22 @@ function constructGeometry(track: Track): number[] {
     // be found in data than 0.
 
     // TODO: return something reasonable if track.cells.length === 1
+    if (track.cells.length === 1) {
+        const cell = track.cells[0];
+        const x = cellMetaData.getTime(cell);
+        const x1 = x - cellMetaData.timestep / 2;
+        const x2 = x + cellMetaData.timestep / 2;
+        const y = cell.attrNum[key];
+        geometry.push(x1, hackyBottom);
+        geometry.push(x1, y);
+        geometry.push(x2, hackyBottom);
+        geometry.push(x2, y);
+        console.log('stuub geometry');
+        return geometry;
+    }
 
     const firstX = cellMetaData.getTime(track.cells[0]);
-    geometry.push(firstX, testBottom);
+    geometry.push(firstX, hackyBottom);
     let x = 0;
     for (const cell of track.cells) {
         const y = cell.attrNum[key];
@@ -265,10 +278,10 @@ function constructGeometry(track: Track): number[] {
         x = cellMetaData.getTime(cell);
 
         geometry.push(x, y);
-        geometry.push(x, testBottom);
+        geometry.push(x, hackyBottom);
     }
 
-    geometry.push(x, testBottom);
+    geometry.push(x, hackyBottom);
     return geometry;
 }
 
@@ -294,8 +307,6 @@ const dataXExtent = computed<[number, number]>(() => {
     );
     return [minTime, maxTime];
 });
-
-const imageOffset = ref(0);
 
 function createConnectingLinesLayer(): PathLayer | null {
     if (!layoutRoot.value?.descendants()) return null;
@@ -745,8 +756,12 @@ function createHorizonChartLayer(
 ): HorizonChartLayer | null {
     if (!cellMetaData.selectedTrack) return null;
     const track = node.data;
-    const left = getLeftPosition(node);
-    const width = getTimeDuration(track);
+    let left = getLeftPosition(node);
+    let width = getTimeDuration(track);
+    if (width === 0) {
+        width = cellMetaData.timestep;
+        left -= width / 2;
+    }
 
     if (!horizonInViewport(node)) return null;
 
@@ -771,18 +786,20 @@ function createHorizonChartLayer(
         cellMetaData.selectedTrack.cells[lastIndex]
     );
 
-    // const placeholderThreshold = frameNumber.value;
-    // const placeholderSize = getWidth(segmentationData.value[0].bbox as BBox);
-
-    imageOffset.value =
-        ((frameNumber.value - minTime) / (maxTime - minTime)) * 300;
+    let dataXExtent = getTimeExtent(track);
+    if (dataXExtent[0] === dataXExtent[1]) {
+        dataXExtent = [dataXExtent[0] - width / 2, dataXExtent[0] + width / 2];
+    }
+    if (track.cells.length === 1) {
+        console.log('check values here');
+    }
     const horizonChartLayer = new HorizonChartLayer({
         id: `custom-horizon-chart-layer-${track.trackId}`,
         data: testModOffests.value,
 
         instanceData: constructGeometry(track),
         destination,
-        dataXExtent: getTimeExtent(track),
+        dataXExtent,
 
         baseline: looneageViewStore.baseline,
         binSize: looneageViewStore.modHeight,

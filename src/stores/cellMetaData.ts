@@ -362,8 +362,12 @@ export const useCellMetaData = defineStore('cellMetaData', () => {
         );
     }
 
+    const timestep = ref<number>(1);
+
     function initCells(rawData: AnyAttributes[]): void {
         cellArray.value = [];
+        let lastTime: number | null = null;
+        let smallestTimestep: number = Infinity;
         for (let i = 0; i < rawData.length; i++) {
             const row = rawData[i];
             const attrNum: NumericalAttributes = {};
@@ -407,8 +411,18 @@ export const useCellMetaData = defineStore('cellMetaData', () => {
                 attrNum,
                 attrStr,
             };
+            const time = getTime(cell);
+            if (lastTime !== null) {
+                const timestep = time - lastTime;
+                if (timestep > 0 && timestep < smallestTimestep) {
+                    smallestTimestep = timestep;
+                }
+            }
+            lastTime = time;
             cellArray.value.push(cell);
         }
+        timestep.value = smallestTimestep;
+        console.log('smallest timestep: ', smallestTimestep);
     }
 
     function initTracks(): void {
@@ -588,5 +602,6 @@ export const useCellMetaData = defineStore('cellMetaData', () => {
         makeLineageTrackIterator,
         makeLineageCellIterator,
         getSortedKeys,
+        timestep,
     };
 });
