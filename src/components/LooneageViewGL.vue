@@ -666,17 +666,21 @@ function getKeyFrameOrder(track: Track): KeyframeInfo[] {
     const center = 1;
     const dropOff = 3;
     const keyframeOrder: KeyframeInfo[] = [];
+    const timeExtent = getTimeDuration(track);
     for (let i = 0; i < track.cells.length; i++) {
         let maxIndex = -1;
         let maxScore = -Infinity;
         for (let i = 0; i < frameScores.length; i++) {
             if (frameDistances[i] === 0) continue;
-            let coverageCost =
-                (-center * (frameDistances[i] - dropOff)) /
-                    (center + Math.abs(frameDistances[i] - dropOff)) +
-                center;
-            if (frameDistances[i] === Infinity) {
+            let coverageCost;
+            if (frameDistances[i] === Infinity || timeExtent === 0) {
                 coverageCost = 0;
+            } else {
+                const distNorm = (200 * frameDistances[i]) / timeExtent;
+                coverageCost =
+                    (-center * (distNorm - dropOff)) /
+                        (center + Math.abs(distNorm - dropOff)) +
+                    center;
             }
             const score = frameScores[i] - coverageCost;
             if (score > maxScore) {
@@ -694,6 +698,7 @@ function getKeyFrameOrder(track: Track): KeyframeInfo[] {
             console.log('MAX INDEX', maxIndex);
         }
         const t1 = cellMetaData.getTime(track.cells[maxIndex]);
+
         // TODO: make d relative to tExtent, likely will have to update coverage function
         for (let i = maxIndex; i < frameDistances.length; i++) {
             const t2 = cellMetaData.getTime(track.cells[i]);
