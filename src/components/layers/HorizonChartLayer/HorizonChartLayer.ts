@@ -99,7 +99,7 @@ export default class HorizonChartLayer<
     }
 
     initializeState() {
-        console.log('initialize custom HorizonChart layer state');
+        // console.log('initialize custom HorizonChart layer state');
         this.getAttributeManager()!.addInstanced({
             instanceModOffsets: {
                 size: 1,
@@ -108,7 +108,7 @@ export default class HorizonChartLayer<
                 defaultValue: 0,
             },
         });
-        console.log('end initialize custom HorizonChart layer state');
+        // console.log('end initialize custom HorizonChart layer state');
     }
 
     updateState(params: UpdateParameters<this>) {
@@ -121,7 +121,7 @@ export default class HorizonChartLayer<
             (params.changeFlags.updateTriggersChanged &&
                 params.changeFlags.updateTriggersChanged.instanceData)
         ) {
-            console.log('===-=-=-=-=---=- UPDATE STATE -==-=-=-=-=---=-');
+            // console.log('===-=-=-=-=---=- UPDATE STATE -==-=-=-=-=---=-');
             // TODO: check if instance geometry has changed
             // this.state.model?.destroy();
             this.state.model = this._getModel();
