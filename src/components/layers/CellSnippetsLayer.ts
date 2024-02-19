@@ -87,6 +87,11 @@ interface SnippetData {
     data: TypedArray;
 }
 
+interface InFlightRequest {
+    snippets: Snippet[];
+    stale: boolean;
+}
+
 class CellSnippetsLayer extends CompositeLayer {
     constructor(props: any) {
         super(props);
@@ -96,15 +101,19 @@ class CellSnippetsLayer extends CompositeLayer {
         this.state.cache = new LRUCache({
             max: 250,
         });
-        // this.state.loading = false;
+        this.state.inFlightRequests = new Map<string, InFlightRequest>();
     }
 
     finalizeState() {
-        this.state.abortController?.abort();
+        this.state.cache.clear();
     }
 
-    getSnippetKey(c: number, t: number, z: number, source: number[]) {
+    getSnippetKey(c: number, t: number, z: number, source: number[]): string {
         return [c, t, z, ...source].toString();
+    }
+
+    getSelectionKey(selection: Selection): string {
+        return [selection.c, selection.t, selection.z].toString();
     }
 
     matchSelectionsToData(
@@ -179,10 +188,8 @@ class CellSnippetsLayer extends CompositeLayer {
         const { loader } = this.props;
         if (!loader) return;
 
-        // stop existing async calls since they are now outdated
-        this.state.abortController?.abort();
-
         const { data } = this.state;
+        // find selections that already have data cached in lru, or the previous data
         const { newData, unmatchedSelections } = this.matchSelectionsToData(
             props.selections,
             data
@@ -190,17 +197,13 @@ class CellSnippetsLayer extends CompositeLayer {
         const loadingDestinations: BBox[] = [];
 
         if (unmatchedSelections.length === 0) {
+            // all of the data is already here, don't need to request more
             this.setState({ data: newData, loadingDestinations });
             return;
         }
-        // let loading = true;
-        const abortController = new AbortController();
-        // this.setState({ abortController, loading });
-        this.setState({ abortController });
-        const { signal } = abortController;
 
-        // const dataPromises = [];
-
+        // loading destinations will display immediately user can see
+        // where snippets will load into
         for (const selection of unmatchedSelections) {
             for (const snippet of selection.snippets) {
                 const destination = snippet.destination;
@@ -208,14 +211,50 @@ class CellSnippetsLayer extends CompositeLayer {
             }
         }
         this.setState({ data: newData, loadingDestinations });
+        const inFlightRequests = this.state.inFlightRequests as Map<
+            string,
+            InFlightRequest
+        >;
 
+        const onScreenRequests = new Set(
+            unmatchedSelections.map((s) => this.getSelectionKey(s))
+        );
+        for (const [key, value] of inFlightRequests) {
+            // set any inflight requests that are no longer
+            // on screen to stale, they will still finish loading
+            // data (might as well keep the effort, and aborting
+            // seems to cause issues with geotiff loader)
+            // BUT should not render to screen.
+            if (!onScreenRequests.has(key)) {
+                value.stale = true;
+            }
+        }
         for (const selection of unmatchedSelections) {
+            const selectionKey = this.getSelectionKey(selection);
+            if (inFlightRequests.has(selectionKey)) {
+                // data is already being fetched, update the snippets and
+                // avoid fetching again.
+                inFlightRequests.get(selectionKey)!.snippets =
+                    selection.snippets;
+                continue;
+            }
+            const inFlightRequest: InFlightRequest = {
+                snippets: selection.snippets,
+                stale: false,
+            };
+            inFlightRequests.set(selectionKey, inFlightRequest);
+            // actually load data asynchronously, note that we set the inFlightRequest
+            // here, but it may change (by design), before the .then is called
             loader
-                .getRaster({ selection, signal })
+                .getRaster({ selection })
                 .then((raster: { data: any; width: any; height: any }) => {
-                    const { c, t, z, snippets } = selection;
+                    const { c, t, z } = selection;
+                    const request = inFlightRequests.get(selectionKey);
+                    if (!request) {
+                        throw 'inFlightRequest should not be null';
+                    }
                     const loadedData = [];
-                    for (const snippet of snippets) {
+                    for (const snippet of request.snippets) {
                         const snippetData = this.getSnippetOfByteArray(
                             raster.data,
                             raster.width,
@@ -236,14 +275,14 @@ class CellSnippetsLayer extends CompositeLayer {
                             },
                         });
                     }
-
-                    this.setState({
-                        data: this.state.data.concat(loadedData),
-                        // loadingDestinations: [],
-                    });
+                    inFlightRequests.delete(selectionKey);
+                    if (!request.stale) {
+                        this.setState({
+                            data: this.state.data.concat(loadedData),
+                        });
+                    }
                 })
                 .catch((err: string) => {
-                    // this.setState({ loading: false });
                     if (err !== SIGNAL_ABORTED) {
                         throw err; // re-throws error if not our signal
                     }
@@ -253,8 +292,7 @@ class CellSnippetsLayer extends CompositeLayer {
 
     renderLayers() {
         const layers = [];
-        // console.log('renderLayers');
-        // if (this.state.loading) {
+
         layers.push(this.createLoadingUnderLayer());
         layers.push(this.createImageSnippetLayers());
         return layers;
