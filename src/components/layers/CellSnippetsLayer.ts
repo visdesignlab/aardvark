@@ -15,6 +15,7 @@ import { ColorPaletteExtension } from '@vivjs/extensions';
 
 import { isEqual } from 'lodash-es';
 import { PolygonLayer } from 'deck.gl';
+import type { TypedArray } from 'geotiff';
 
 const defaultProps = {
     pickable: { type: 'boolean', value: true, compare: true },
@@ -59,7 +60,38 @@ const defaultProps = {
  * @property {Array=} extensions [deck.gl extensions](https://deck.gl/docs/developer-guide/custom-layers/layer-extensions) to add to the layers.
  */
 
+interface Selection {
+    c: number;
+    t: number;
+    z: number;
+    snippets: Snippet[];
+}
+
+interface Snippet {
+    source: BBox;
+    destination: BBox;
+}
+
+type BBox = [number, number, number, number];
+
+interface SelectionIndex {
+    c: number;
+    t: number;
+    z: number;
+}
+
+interface SnippetData {
+    index: SelectionIndex;
+    source: BBox;
+    destination: BBox;
+    data: TypedArray;
+}
+
 class CellSnippetsLayer extends CompositeLayer {
+    constructor(props: any) {
+        super(props);
+    }
+
     initializeState() {
         this.state.cache = new LRUCache({
             max: 250,
@@ -71,13 +103,16 @@ class CellSnippetsLayer extends CompositeLayer {
         this.state.abortController?.abort();
     }
 
-    getSnippetKey(c, t, z, source) {
+    getSnippetKey(c: number, t: number, z: number, source: number[]) {
         return [c, t, z, ...source].toString();
     }
 
-    matchSelectionsToData(selections, data) {
-        const newData = [];
-        const unmatchedSelections = [];
+    matchSelectionsToData(
+        selections: Selection[],
+        data: SnippetData[]
+    ): { newData: SnippetData[]; unmatchedSelections: Selection[] } {
+        const newData: SnippetData[] = [];
+        const unmatchedSelections: Selection[] = [];
         if (!data) {
             // no data yet, everything is unmatched
             return { newData, unmatchedSelections: selections };
@@ -133,7 +168,7 @@ class CellSnippetsLayer extends CompositeLayer {
         return { newData, unmatchedSelections };
     }
 
-    updateState({ props, oldProps, changeFlags }) {
+    updateState({ props, oldProps }: { props: any; oldProps: any }) {
         const loaderChanged = props.loader !== oldProps.loader;
         const selectionsChanged = !isEqual(
             props.selections,
@@ -152,7 +187,7 @@ class CellSnippetsLayer extends CompositeLayer {
             props.selections,
             data
         );
-        const loadingDestinations = [];
+        const loadingDestinations: BBox[] = [];
 
         if (unmatchedSelections.length === 0) {
             this.setState({ data: newData, loadingDestinations });
@@ -177,10 +212,10 @@ class CellSnippetsLayer extends CompositeLayer {
         for (const selection of unmatchedSelections) {
             loader
                 .getRaster({ selection, signal })
-                .then((raster) => {
+                .then((raster: { data: any; width: any; height: any }) => {
                     const { c, t, z, snippets } = selection;
                     const loadedData = [];
-                    for (let snippet of snippets) {
+                    for (const snippet of snippets) {
                         const snippetData = this.getSnippetOfByteArray(
                             raster.data,
                             raster.width,
@@ -207,7 +242,7 @@ class CellSnippetsLayer extends CompositeLayer {
                         // loadingDestinations: [],
                     });
                 })
-                .catch((err) => {
+                .catch((err: string) => {
                     // this.setState({ loading: false });
                     if (err !== SIGNAL_ABORTED) {
                         throw err; // re-throws error if not our signal
@@ -228,7 +263,7 @@ class CellSnippetsLayer extends CompositeLayer {
     createLoadingUnderLayer() {
         const { loadingDestinations } = this.state;
         if (!loadingDestinations) return null;
-        const destinations = loadingDestinations.map((d) => {
+        const destinations = loadingDestinations.map((d: BBox) => {
             const [l, t, r, b] = d;
             const coords = [
                 [l, b],
@@ -240,14 +275,14 @@ class CellSnippetsLayer extends CompositeLayer {
         });
 
         //get current time in seconds
-        const t = Date.now();
+        // const t = Date.now();
         // console.log(t);
 
         const { id } = this.props;
         return new PolygonLayer({
             id: `${id}-snippet-loading-layer`,
             data: destinations,
-            getPolygon: (d) => d,
+            getPolygon: (d: any) => d,
             // getFillColor: [120, t % 255, 250],
             getFillColor: [120, 120, 160],
             filled: true,
@@ -278,6 +313,7 @@ class CellSnippetsLayer extends CompositeLayer {
                     contrastLimits: this.props.contrastLimits,
                     // selections: imageViewerStore.selections,
                     channelsVisible: [true],
+                    // @ts-ignore
                     extensions: this.props.extensions,
                     colormap: this.props.colormap,
                     // onClick: () => console.log('click in base image layer'),
@@ -302,10 +338,10 @@ class CellSnippetsLayer extends CompositeLayer {
     }
 
     getSnippetOfByteArray(
-        byteArray,
-        width,
-        height,
-        bbox // left, bottom, right, top
+        byteArray: any[],
+        width: number,
+        height: number,
+        bbox: BBox // left, bottom, right, top
     ) {
         const [left, bottom, right, top] = bbox;
         const outputWidth = right - left;
@@ -333,7 +369,7 @@ class CellSnippetsLayer extends CompositeLayer {
         return outputByteArray;
     }
 
-    createSameTypeArray(input, length) {
+    createSameTypeArray(input: any[], length: number) {
         // Mapping of typed array constructors
         const typedArrayConstructors = {
             Int8Array: Int8Array,
@@ -349,9 +385,16 @@ class CellSnippetsLayer extends CompositeLayer {
 
         // Determine the type of the input array
         for (const key in typedArrayConstructors) {
-            if (input instanceof typedArrayConstructors[key]) {
+            if (
+                input instanceof
+                typedArrayConstructors[
+                    key as keyof typeof typedArrayConstructors
+                ]
+            ) {
                 // Create a new instance of the same type
-                return new typedArrayConstructors[key](length);
+                return new typedArrayConstructors[
+                    key as keyof typeof typedArrayConstructors
+                ](length);
             }
         }
 
