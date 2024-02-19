@@ -576,12 +576,12 @@ function createKeyFrameSnippets(): CellSnippetsLayer | null {
         }
     }
 
-    console.log('creating cell snippet layer');
-    console.log('selections', selections.length);
-    const snippetCounts = selections.map((x) => x.snippets.length);
-    console.log('snippetCounts', snippetCounts);
-    const totalSnippets = snippetCounts.reduce((x, y) => x + y);
-    console.log('totalSnippets', totalSnippets);
+    // console.log('creating cell snippet layer');
+    // console.log('selections', selections.length);
+    // const snippetCounts = selections.map((x) => x.snippets.length);
+    // console.log('snippetCounts', snippetCounts);
+    // const totalSnippets = snippetCounts.reduce((x, y) => x + y);
+    // console.log('totalSnippets', totalSnippets);
     const snippetLayer = new CellSnippetsLayer({
         loader: pixelSource.value,
         id: `key-frames-snippets-layer`,
