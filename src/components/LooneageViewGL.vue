@@ -507,7 +507,10 @@ function createKeyFrameSnippets(): CellSnippetsLayer | null {
                 destY - destHeight,
             ];
 
-            if (occupied.some((bbox: BBox) => overlaps(bbox, destination))) {
+            if (
+                occupied.some((bbox: BBox) => overlaps(bbox, destination)) ||
+                !overlaps(destination, viewportBBox())
+            ) {
                 // this overlaps with existing occupied spaces, do not
                 // add this snippet to render, but continue adding the
                 // next keyframes until the distance is low enough.
@@ -573,6 +576,12 @@ function createKeyFrameSnippets(): CellSnippetsLayer | null {
         }
     }
 
+    console.log('creating cell snippet layer');
+    console.log('selections', selections.length);
+    const snippetCounts = selections.map((x) => x.snippets.length);
+    console.log('snippetCounts', snippetCounts);
+    const totalSnippets = snippetCounts.reduce((x, y) => x + y);
+    console.log('totalSnippets', totalSnippets);
     const snippetLayer = new CellSnippetsLayer({
         loader: pixelSource.value,
         id: `key-frames-snippets-layer`,
