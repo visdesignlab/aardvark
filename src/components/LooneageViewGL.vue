@@ -14,6 +14,7 @@ import CellSnippetsLayer from './layers/CellSnippetsLayer';
 import { useImageViewerStore } from '@/stores/imageViewerStore';
 import { useImageViewerStoreUntrracked } from '@/stores/imageViewerStoreUntrracked';
 import { useDatasetSelectionStore } from '@/stores/datasetSelectionStore';
+import { useDatasetSelectionTrrackedStore } from '@/stores/datasetSelectionTrrackedStore';
 import { useEventBusStore } from '@/stores/eventBusStore';
 import { useLooneageViewStore } from '@/stores/looneageViewStore';
 
@@ -58,6 +59,7 @@ const dataPointSelection = useDataPointSelection();
 const imageViewerStore = useImageViewerStore();
 const imageViewerStoreUntrracked = useImageViewerStoreUntrracked();
 const datasetSelectionStore = useDatasetSelectionStore();
+const datasetSelectionTrrackedStore = useDatasetSelectionTrrackedStore();
 const { currentLocationMetadata } = storeToRefs(datasetSelectionStore);
 const { contrastLimitSlider } = storeToRefs(imageViewerStoreUntrracked);
 const { frameNumber } = storeToRefs(imageViewerStore);
@@ -65,6 +67,7 @@ const { selectedTrack } = storeToRefs(cellMetaData);
 const eventBusStore = useEventBusStore();
 const segmentationStore = useSegmentationStore();
 const looneageViewStore = useLooneageViewStore();
+const { attrKey } = storeToRefs(looneageViewStore);
 
 const deckGlContainer = ref(null);
 const { width: deckGlWidth, height: deckGlHeight } =
@@ -467,29 +470,51 @@ function createKeyFrameSnippets(): CellSnippetsLayer | null {
     const tickPadding = getHorizonSnippetPadding();
     for (let node of layoutRoot.value.descendants()) {
         if (!horizonInViewport(node)) continue; // for performance
-        const previousSnippets: BBox[] = [];
-        const frameScores: number[] = [];
-        const frameDistances: number[] = [];
+        const track = node.data;
+        const keyframeOrder = getKeyFrameOrder(node.data);
         let newSnippetsOuterBBox: BBox | null = null;
 
-        // eslint-disable-next-line no-constant-condition
-        while (true) {
-            const nextSnippet = getNextSnippet(
-                node,
-                looneageViewStore.snippetDestSize,
-                looneageViewStore.snippetDestSize,
-                previousSnippets,
-                occupied,
-                frameScores,
-                frameDistances
+        for (const { index, nearestDistance } of keyframeOrder) {
+            const destWidth = scaleForConstantVisualSize(
+                looneageViewStore.snippetDestSize
             );
-            if (nextSnippet === null) break;
-            const { destination, index, shouldRender, displayBelow } =
-                nextSnippet;
-            if (!shouldRender) continue; // don't bother fetching data to render, it is offscreen
-            const cell = node.data.cells[index];
-            const t = cellMetaData.getFrame(cell) - 1; // convert frame number to index
-            const [x, y] = cellMetaData.getPosition(cell);
+            // exit loop if this point would overlap existing points
+            if (nearestDistance <= destWidth) break;
+            const horizonSnippetPadding = getHorizonSnippetPadding();
+            const destHeight = scaleForConstantVisualSize(
+                looneageViewStore.snippetDestSize
+            );
+            let destY = node.x;
+            const displayBelow = node.x > 0;
+            if (displayBelow) {
+                destY += destHeight;
+                destY += horizonSnippetPadding;
+            } else {
+                destY -= looneageViewStore.rowHeight;
+                destY -= horizonSnippetPadding;
+            }
+            const cell = track.cells[index];
+            const t = cellMetaData.getTime(cell);
+            const destX =
+                getLeftPosition(node) +
+                t -
+                track.attrNum['min_time'] -
+                destWidth / 2;
+            const destination: BBox = [
+                destX,
+                destY,
+                destX + destWidth,
+                destY - destHeight,
+            ];
+
+            if (occupied.some((bbox: BBox) => overlaps(bbox, destination))) {
+                // this overlaps with existing occupied spaces, do not
+                // add this snippet to render, but continue adding the
+                // next keyframes until the distance is low enough.
+                continue;
+            }
+
+            // update this track's snippets outer bounding box
             if (newSnippetsOuterBBox === null) {
                 newSnippetsOuterBBox = [...destination];
             } else {
@@ -511,6 +536,7 @@ function createKeyFrameSnippets(): CellSnippetsLayer | null {
                 );
             }
 
+            const [x, y] = cellMetaData.getPosition(cell);
             const source = getBBoxAroundPoint(
                 x,
                 y,
@@ -521,7 +547,7 @@ function createKeyFrameSnippets(): CellSnippetsLayer | null {
             selections.push({
                 c: 0,
                 z: 0,
-                t,
+                t: cellMetaData.getFrame(cell) - 1, // convert frame number to index
                 snippets: [{ source, destination }],
             });
 
@@ -542,7 +568,7 @@ function createKeyFrameSnippets(): CellSnippetsLayer | null {
                 [tickX, tickHorizonY],
             ]);
         }
-        if (newSnippetsOuterBBox) {
+        if (newSnippetsOuterBBox !== null) {
             occupied.push(newSnippetsOuterBBox);
         }
     }
@@ -585,152 +611,96 @@ function getHorizonSnippetPadding(): number {
     return scaleForConstantVisualSize(6);
 }
 
-function getNextSnippet(
-    node: LayoutNode<Track>,
-    width: number,
-    height: number,
-    currentTrackSnippets: BBox[],
-    occupied: BBox[],
-    frameScores: number[],
-    frameDistances: number[]
-): {
-    destination: BBox;
+interface KeyframeInfo {
     index: number;
-    shouldRender: boolean;
-    displayBelow: boolean;
-} | null {
-    const track = node.data;
-    if (frameScores.length === 0) {
-        // populate with zeros without changing reference
-        frameScores.length = track.cells.length;
-        frameScores.fill(0);
+    nearestDistance: number;
+}
 
-        // initialize scores based on the change in the attribute value
-        // the first and last frames should always be
-        // selected as key frames, so they get a score of zero.
-        frameScores[0] = Infinity;
-        frameScores[track.cells.length - 1] = Infinity;
-        const key = looneageViewStore.attrKey;
-        const valExtent = valueExtent(track, looneageViewStore.attrKey);
-        for (let i = 1; i < track.cells.length - 1; i++) {
-            const prev = track.cells[i - 1];
-            const next = track.cells[i + 1];
-            const val =
-                Math.abs(next.attrNum[key] - prev.attrNum[key]) / valExtent;
-            frameScores[i] = val;
+watch(attrKey, () => {
+    keyframeOrderLookup.value = new Map();
+});
+watch(datasetSelectionTrrackedStore.$state, () => {
+    keyframeOrderLookup.value = new Map();
+});
+const keyframeOrderLookup = ref<Map<string, KeyframeInfo[]>>();
+function getKeyFrameOrder(track: Track): KeyframeInfo[] {
+    if (keyframeOrderLookup.value == null) {
+        keyframeOrderLookup.value = new Map();
+    }
+    if (keyframeOrderLookup.value.has(track.trackId)) {
+        return keyframeOrderLookup.value.get(track.trackId) as KeyframeInfo[];
+    }
+
+    // initialize scores based on the change in the attribute value
+    // the first and last frames should always be
+    // selected as key frames, so they get a score of zero.
+    const frameScores: number[] = Array(track.cells.length).fill(0);
+    frameScores[0] = Infinity;
+    frameScores[track.cells.length - 1] = Infinity;
+    const key = looneageViewStore.attrKey;
+    const valExtent = valueExtent(track, looneageViewStore.attrKey);
+    for (let i = 1; i < track.cells.length - 1; i++) {
+        if (valExtent === 0) {
+            // avoid divide by zero, if vall extent is zero, then all
+            // values are the same, so the scores should be equal.
+            frameScores[i] = 0;
+            continue;
         }
+        const prev = track.cells[i - 1];
+        const next = track.cells[i + 1];
+        const val = Math.abs(next.attrNum[key] - prev.attrNum[key]) / valExtent;
+        frameScores[i] = val;
     }
-    if (frameDistances.length === 0) {
-        frameDistances.length = track.cells.length;
-        frameDistances.fill(Infinity);
-    }
+
+    const frameDistances: number[] = Array(track.cells.length).fill(Infinity);
 
     const center = 1;
     const dropOff = 3;
-    let maxIndex = -1;
-
-    // select the frame with the smallest score that isn't already in indices
-    // and does not overlap with any of the occupied regions
-    // const zoom = deckgl.viewState?.looneageController?.zoom ?? 0;
-    const destWidth = scaleForConstantVisualSize(width);
-    const horizonSnippetPadding = getHorizonSnippetPadding();
-    const destHeight = scaleForConstantVisualSize(height);
-    let destY = node.x;
-    const displayBelow = node.x > 0;
-    if (displayBelow) {
-        destY += destHeight;
-        destY += horizonSnippetPadding;
-    } else {
-        destY -= looneageViewStore.rowHeight;
-        destY -= horizonSnippetPadding;
-    }
-    // let destination: BBox = [0, 0, 0, 0];
-    let maxScore = -Infinity;
-    let maxDestination: BBox = [0, 0, 0, 0];
-    for (let i = 0; i < frameScores.length; i++) {
-        if (frameDistances[i] === 0) continue;
-        const cell = track.cells[i];
-        const t = cellMetaData.getTime(cell);
-        const destX =
-            getLeftPosition(node) +
-            t -
-            track.attrNum['min_time'] -
-            destWidth / 2;
-        const destination: BBox = [
-            destX,
-            destY,
-            destX + destWidth,
-            destY - destHeight,
-        ];
-        let coverageCost =
-            (-center * (frameDistances[i] - dropOff)) /
-                (center + Math.abs(frameDistances[i] - dropOff)) +
-            center;
-        if (frameDistances[i] === Infinity) {
-            coverageCost = 0;
+    const keyframeOrder: KeyframeInfo[] = [];
+    for (let i = 0; i < track.cells.length; i++) {
+        let maxIndex = -1;
+        let maxScore = -Infinity;
+        for (let i = 0; i < frameScores.length; i++) {
+            if (frameDistances[i] === 0) continue;
+            let coverageCost =
+                (-center * (frameDistances[i] - dropOff)) /
+                    (center + Math.abs(frameDistances[i] - dropOff)) +
+                center;
+            if (frameDistances[i] === Infinity) {
+                coverageCost = 0;
+            }
+            const score = frameScores[i] - coverageCost;
+            if (score > maxScore) {
+                maxScore = score;
+                maxIndex = i;
+            }
         }
-        // console.log(frameScores[i], coverageCost, frameDistances[i]);
-        const score = frameScores[i] - coverageCost;
-        if (score > maxScore) {
-            maxScore = score;
-            maxIndex = i;
-            maxDestination = destination;
+        keyframeOrder.push({
+            index: maxIndex,
+            nearestDistance: frameDistances[maxIndex],
+        });
+
+        // update the nearest distance values
+        if (maxIndex === -1) {
+            console.log('MAX INDEX', maxIndex);
+        }
+        const t1 = cellMetaData.getTime(track.cells[maxIndex]);
+        // TODO: make d relative to tExtent, likely will have to update coverage function
+        for (let i = maxIndex; i < frameDistances.length; i++) {
+            const t2 = cellMetaData.getTime(track.cells[i]);
+            const d = Math.abs(t1 - t2);
+            if (frameDistances[i] < d) break;
+            frameDistances[i] = d;
+        }
+        for (let i = maxIndex; i >= 0; i--) {
+            const t2 = cellMetaData.getTime(track.cells[i]);
+            const d = Math.abs(t1 - t2);
+            if (frameDistances[i] < d) break;
+            frameDistances[i] = d;
         }
     }
-    if (
-        currentTrackSnippets.some((bbox: BBox) =>
-            overlaps(bbox, maxDestination)
-        )
-    ) {
-        return null;
-    }
-
-    if (maxIndex === -1) return null;
-    currentTrackSnippets.push(maxDestination);
-    // selectedIndices.push(maxIndex);
-    // setting shouldRender is a performance optimization. We still want to include
-    // the selection in occupied/selected indices so that the keyframe selections
-    // do not change when different images go in and out of the viewport, or
-    // horizon chart positions change
-    const shouldRender =
-        overlaps(viewportBBox(), maxDestination) &&
-        !occupied.some((bbox: BBox) => overlaps(bbox, maxDestination));
-
-    // update the nearest distance values
-
-    for (let i = maxIndex; i < frameDistances.length; i++) {
-        const d = Math.abs(maxIndex - i);
-        if (frameDistances[i] < d) break;
-        frameDistances[i] = d;
-    }
-    for (let i = maxIndex; i >= 0; i--) {
-        const d = Math.abs(maxIndex - i);
-        if (frameDistances[i] < d) break;
-        frameDistances[i] = d;
-    }
-
-    // const cell = node.data.cells[maxIndex];
-    // const t = cellMetaData.getTime(cell);
-
-    // const zoom = deckgl.viewState?.looneageController?.zoom ?? 0;
-    // const destWidth = width * 2 ** -zoom;
-    // const destHeight = height * 2 ** -zoom;
-
-    // const destX = node.y + t - node.data.attrNum['min_time'] - destWidth / 2;
-    // const destY = node.x + -looneageViewStore.rowHeight - 3;
-    // const destination: BBox = [
-    //     destX,
-    //     destY,
-    //     destX + destWidth,
-    //     destY - destHeight,
-    // ];
-
-    return {
-        destination: maxDestination,
-        index: maxIndex,
-        shouldRender,
-        displayBelow,
-    };
+    keyframeOrderLookup.value.set(track.trackId, keyframeOrder);
+    return keyframeOrder;
 }
 
 const viewportBuffer = computed<number>(() => {
