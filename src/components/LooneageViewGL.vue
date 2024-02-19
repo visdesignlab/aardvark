@@ -10,7 +10,7 @@ import {
 } from '@/stores/cellMetaData';
 import { useDataPointSelection } from '@/stores/dataPointSelection';
 import { useSegmentationStore } from '@/stores/segmentationStore';
-import CellSnippetsLayer from './layers/CellSnippetsLayer.js';
+import CellSnippetsLayer from './layers/CellSnippetsLayer';
 import { useImageViewerStore } from '@/stores/imageViewerStore';
 import { useImageViewerStoreUntrracked } from '@/stores/imageViewerStoreUntrracked';
 import { useDatasetSelectionStore } from '@/stores/datasetSelectionStore';

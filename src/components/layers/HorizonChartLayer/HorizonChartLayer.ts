@@ -29,6 +29,7 @@ import GL from '@luma.gl/constants';
 import vs from './HorizonChartLayer-vertex.glsl';
 import fs from './HorizonChartLayer-fragment.glsl';
 
+// import { Layer } from '@deck.gl/core';
 import type {
     LayerProps,
     LayerDataSource,
@@ -111,7 +112,7 @@ export default class HorizonChartLayer<
         // console.log('end initialize custom HorizonChart layer state');
     }
 
-    updateState(params: UpdateParameters<this>) {
+    updateState(params: UpdateParameters<any>) {
         // console.log('update state custom HorizonChart layer');
         super.updateState(params);
         // console.log(params);
@@ -129,7 +130,7 @@ export default class HorizonChartLayer<
         }
     }
 
-    draw({ uniforms }) {
+    draw({ uniforms }: { uniforms: any }) {
         // console.log('draw custom HorizonChart layer');
         const {
             destination,
