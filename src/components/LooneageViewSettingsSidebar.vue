@@ -106,6 +106,11 @@ const baselineValidate = computed({
         :dark="globalSettings.darkMode"
     />
     <q-toggle
+        label="Space Snippets Evenly"
+        v-model="looneageViewStore.spaceKeyframesEvenly"
+        :dark="globalSettings.darkMode"
+    />
+    <q-toggle
         label="Show Lines"
         v-model="looneageViewStore.showLines"
         :dark="globalSettings.darkMode"

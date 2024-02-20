@@ -51,6 +51,7 @@ export const useLooneageViewStore = defineStore(storeId, () => {
     const maxDepth = ref<number>(4);
     const showSnippets = ref<boolean>(true);
     const connectingLineWidth = ref<number>(1);
+    const spaceKeyframesEvenly = ref<boolean>(false);
 
     function setReasonableModHeight() {
         if (!cellMetaData.dataInitialized) return;
@@ -86,5 +87,6 @@ export const useLooneageViewStore = defineStore(storeId, () => {
         maxDepth,
         showSnippets,
         connectingLineWidth,
+        spaceKeyframesEvenly,
     };
 });

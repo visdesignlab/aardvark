@@ -51,7 +51,6 @@ import {
 } from '@deck.gl/layers/typed';
 
 import HorizonChartLayer from './layers/HorizonChartLayer/HorizonChartLayer';
-import { faDownLeftAndUpRightToCenter } from '@fortawesome/free-solid-svg-icons';
 
 const cellMetaData = useCellMetaData();
 
@@ -67,7 +66,7 @@ const { selectedTrack } = storeToRefs(cellMetaData);
 const eventBusStore = useEventBusStore();
 const segmentationStore = useSegmentationStore();
 const looneageViewStore = useLooneageViewStore();
-const { attrKey } = storeToRefs(looneageViewStore);
+const { attrKey, spaceKeyframesEvenly } = storeToRefs(looneageViewStore);
 
 const deckGlContainer = ref(null);
 const { width: deckGlWidth, height: deckGlHeight } =
@@ -628,6 +627,11 @@ interface KeyframeInfo {
 watch(attrKey, () => {
     keyframeOrderLookup.value = new Map();
 });
+watch(spaceKeyframesEvenly, () => {
+    console.log('key even toggled');
+    keyframeOrderLookup.value = new Map();
+    renderDeckGL();
+});
 watch(datasetSelectionTrrackedStore.$state, () => {
     keyframeOrderLookup.value = new Map();
 });
@@ -646,19 +650,22 @@ function getKeyFrameOrder(track: Track): KeyframeInfo[] {
     const frameScores: number[] = Array(track.cells.length).fill(0);
     frameScores[0] = Infinity;
     frameScores[track.cells.length - 1] = Infinity;
-    const key = looneageViewStore.attrKey;
-    const valExtent = valueExtent(track, looneageViewStore.attrKey);
-    for (let i = 1; i < track.cells.length - 1; i++) {
-        if (valExtent === 0) {
-            // avoid divide by zero, if vall extent is zero, then all
-            // values are the same, so the scores should be equal.
-            frameScores[i] = 0;
-            continue;
+    if (!spaceKeyframesEvenly.value) {
+        const key = looneageViewStore.attrKey;
+        const valExtent = valueExtent(track, looneageViewStore.attrKey);
+        for (let i = 1; i < track.cells.length - 1; i++) {
+            if (valExtent === 0) {
+                // avoid divide by zero, if vall extent is zero, then all
+                // values are the same, so the scores should be equal.
+                frameScores[i] = 0;
+                continue;
+            }
+            const prev = track.cells[i - 1];
+            const next = track.cells[i + 1];
+            const val =
+                Math.abs(next.attrNum[key] - prev.attrNum[key]) / valExtent;
+            frameScores[i] = val;
         }
-        const prev = track.cells[i - 1];
-        const next = track.cells[i + 1];
-        const val = Math.abs(next.attrNum[key] - prev.attrNum[key]) / valExtent;
-        frameScores[i] = val;
     }
 
     const frameDistances: number[] = Array(track.cells.length).fill(Infinity);
