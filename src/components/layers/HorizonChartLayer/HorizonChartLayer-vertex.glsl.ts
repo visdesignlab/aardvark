@@ -54,7 +54,7 @@ float norm(float value, float minValue, float maxValue) {
   return (value - minValue) / (maxValue - minValue);
 }
 
-vec3 scale_positions(vec3 position) {
+vec3 adjust_horizon_layers(vec3 position) {
   float baselineValue = -404.123456789;
 
   vec3 scaledPosition = position;
@@ -98,21 +98,27 @@ vec3 scale_positions(vec3 position) {
   return scaledPosition;
 }
 
-void main(void) {
-  vec3 origin = vec3(0.0, 0.0, 0.0);
+vec4 zoom_and_translate(vec3 position) {
+  // I would expect this to be the same as project_common_position_to_clipspace
+  // but that was not working when I had a different zoomX and zoomY, this
+  // approach works.
+  vec3 commonPos = project_position(position);
+  return project_common_position_to_clipspace(vec4(commonPos, 1.0));
+  // return project_common_position_to_clipspace(outPos);
+  // return vec4(outPos[0], outPos[1], outPos[2], 1.0);
+}
 
-  gl_Position = project_position_to_clipspace(
-    origin, origin,
-    scale_positions(positions)
+void main(void) {
+
+  gl_Position = zoom_and_translate(
+    adjust_horizon_layers(positions)
     );
   
-  vec4 clipBottom = project_position_to_clipspace(
-    origin, origin,
+  vec4 clipBottom = zoom_and_translate(
     vec3(0.0, destination[0], 0.0)
   );
   
-  vec4 clipTop = project_position_to_clipspace(
-    origin, origin,
+  vec4 clipTop = zoom_and_translate(
     vec3(0.0, destination[0] - destination[3], 0.0)
   );
 

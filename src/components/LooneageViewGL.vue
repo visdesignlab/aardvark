@@ -17,6 +17,7 @@ import { useDatasetSelectionStore } from '@/stores/datasetSelectionStore';
 import { useDatasetSelectionTrrackedStore } from '@/stores/datasetSelectionTrrackedStore';
 import { useEventBusStore } from '@/stores/eventBusStore';
 import { useLooneageViewStore } from '@/stores/looneageViewStore';
+import { isEqual } from 'lodash-es';
 
 import { Pool } from 'geotiff';
 import type { Feature } from 'geojson';
@@ -161,7 +162,7 @@ watch(currentLocationMetadata, async () => {
 //////////////////////////
 let deckgl: any | null = null;
 const initialViewState = {
-    zoom: 0,
+    zoom: [0, 0],
     target: [0, 0],
     minZoom: -8,
     maxZoom: 8,
@@ -191,9 +192,14 @@ onMounted(() => {
         //     console.log(error);
         // },
         // onWebGLInitialized: () => console.log('onWebGLInitialized'),
-        onViewStateChange: () => {
-            // TODO: maybe refine this
+        onViewStateChange: ({ viewState, oldViewState }) => {
+            console.log('view state change');
+            viewState.zoom[1] = 0;
+            if (oldViewState && !isEqual(viewState.zoom, oldViewState.zoom)) {
+                viewState.target[1] = oldViewState.target[1];
+            }
             renderDeckGL();
+            return viewState;
         },
         // onInteractionStateChange: () => console.log('onInteractionStateChange'),
         // onLoad: () => console.log('onLoad'),
@@ -331,6 +337,7 @@ function createConnectingLinesLayer(): PathLayer | null {
         // getTargetPosition: (d: any) => d.target,
         getColor: [180, 180, 180],
         getWidth: looneageViewStore.connectingLineWidth,
+        widthUnits: 'pixels',
         jointRounded: true,
     });
 }
@@ -338,6 +345,8 @@ function createConnectingLinesLayer(): PathLayer | null {
 function createTickMarksLayer(): PathLayer | null {
     if (!layoutRoot.value?.descendants()) return null;
     const padding = getHorizonSnippetPadding() / 2;
+    const spaceThreshold = minTickMarkSpace();
+    // const padding = 20;
     const lines = [];
     let lastX = null;
     for (const node of layoutRoot.value.descendants()) {
@@ -348,7 +357,7 @@ function createTickMarksLayer(): PathLayer | null {
                 cellMetaData.getTime(cell) -
                 node.data.attrNum['min_time'];
             if (lastX !== null) {
-                if (Math.abs(x - lastX) < 2 * padding) return null;
+                if (Math.abs(x - lastX) < spaceThreshold) return null;
                 // If the points are too close together,
                 // skip rendering, it is worse visually and
                 // is a performance hit.
@@ -366,7 +375,8 @@ function createTickMarksLayer(): PathLayer | null {
         data: lines,
         getPath: (d: any) => d,
         getColor: [180, 180, 180],
-        getWidth: padding,
+        getWidth: getRawHorizonSnippetPadding / 2,
+        widthUnits: 'pixels',
     });
 }
 
@@ -383,37 +393,53 @@ function createHorizonChartLayers(): (
     for (let node of layoutRoot.value.descendants()) {
         // if (node.depth > looneageViewStore.maxDepth) continue;
         layers.push(createHorizonChartLayer(node));
+
+        // const track = node.data;
+        // let left = getLeftPosition(node);
+        // let width = getTimeDuration(track);
+        // if (width === 0) {
+        //     width = cellMetaData.timestep;
+        //     left -= width / 2;
+        // }
+        // const destination: [number, number, number, number] = [
+        //     node.x,
+        //     left,
+        //     width,
+        //     looneageViewStore.rowHeight,
+        // ];
+
+        // layers.push(
+        //     new ScatterplotLayer({
+        //         id: 'looneage-test-scatterplot-layer',
+        //         data: [
+        //             [left, node.x],
+        //             [left + width, -looneageViewStore.rowHeight],
+        //             // [85, -30],
+
+        //             // [0, 0],
+        //             // [85, -30],
+
+        //             // [85, -59],
+        //             // [172, -89],
+
+        //             // [85, 59],
+        //             // [172, 29],
+        //         ],
+        //         pickable: true,
+        //         opacity: 0.8,
+        //         stroked: true,
+        //         filled: true,
+        //         radiusScale: 1,
+        //         radiusMinPixels: 1,
+        //         radiusMaxPixels: 100,
+        //         lineWidthMinPixels: 0,
+        //         getLineWidth: 0,
+        //         getPosition: (d: any) => d,
+        //         getRadius: 10,
+        //         getFillColor: [255, 0, 255, 200],
+        //     })
+        // );
     }
-    // layers.push(
-    //     new ScatterplotLayer({
-    //         id: 'looneage-test-scatterplot-layer',
-    //         data: [
-    //             [60, -83],
-    //             // [85, -30],
-
-    //             // [0, 0],
-    //             // [85, -30],
-
-    //             // [85, -59],
-    //             // [172, -89],
-
-    //             // [85, 59],
-    //             // [172, 29],
-    //         ],
-    //         pickable: true,
-    //         opacity: 0.8,
-    //         stroked: true,
-    //         filled: true,
-    //         radiusScale: 1,
-    //         radiusMinPixels: 1,
-    //         radiusMaxPixels: 100,
-    //         lineWidthMinPixels: 0,
-    //         getLineWidth: 0,
-    //         getPosition: (d: any) => d,
-    //         getRadius: 10,
-    //         getFillColor: [255, 0, 255, 200],
-    //     })
-    // );
 
     return layers;
 }
@@ -475,13 +501,15 @@ function createKeyFrameSnippets(): (CellSnippetsLayer | PathLayer)[] | null {
 
         for (const { index, nearestDistance } of keyframeOrder) {
             const destWidth = scaleForConstantVisualSize(
-                looneageViewStore.snippetDestSize
+                looneageViewStore.snippetDestSize,
+                'x'
             );
             // exit loop if this point would overlap existing points
             if (nearestDistance <= destWidth) break;
-            const horizonSnippetPadding = getHorizonSnippetPadding();
+            const horizonSnippetPadding = tickPadding;
             const destHeight = scaleForConstantVisualSize(
-                looneageViewStore.snippetDestSize
+                looneageViewStore.snippetDestSize,
+                'y'
             );
             let destY = node.x;
             const displayBelow = node.x > 0;
@@ -599,7 +627,8 @@ function createKeyFrameSnippets(): (CellSnippetsLayer | PathLayer)[] | null {
         data: ticks,
         getPath: (d: any) => d,
         getColor: [100, 100, 100],
-        getWidth: tickPadding / 2,
+        getWidth: getRawHorizonSnippetPadding / 2,
+        widthUnits: 'pixels',
         capRounded: false,
     });
     return [snippetLayer, snippetTickMarksLayer];
@@ -615,8 +644,13 @@ function valueExtent(track: Track, key: string): number {
     return max - min;
 }
 
+const getRawHorizonSnippetPadding = 6;
 function getHorizonSnippetPadding(): number {
-    return scaleForConstantVisualSize(6);
+    return scaleForConstantVisualSize(getRawHorizonSnippetPadding, 'y');
+}
+
+function minTickMarkSpace(): number {
+    return scaleForConstantVisualSize(4.5, 'x');
 }
 
 interface KeyframeInfo {
@@ -771,19 +805,18 @@ function createHorizonChartLayer(
         looneageViewStore.negativeColorScheme.value[6]
     );
 
-    const minTime = cellMetaData.getFrame(cellMetaData.selectedTrack.cells[0]);
-    const lastIndex = cellMetaData.selectedTrack.cells.length - 1;
-    const maxTime = cellMetaData.getFrame(
-        cellMetaData.selectedTrack.cells[lastIndex]
-    );
+    // const minTime = cellMetaData.getFrame(cellMetaData.selectedTrack.cells[0]);
+    // const lastIndex = cellMetaData.selectedTrack.cells.length - 1;
+    // const maxTime = cellMetaData.getFrame(
+    //     cellMetaData.selectedTrack.cells[lastIndex]
+    // );
 
     let dataXExtent = getTimeExtent(track);
     if (dataXExtent[0] === dataXExtent[1]) {
+        // special case when there is a single cell in tracks
         dataXExtent = [dataXExtent[0] - width / 2, dataXExtent[0] + width / 2];
     }
-    if (track.cells.length === 1) {
-        console.log('check values here');
-    }
+
     const horizonChartLayer = new HorizonChartLayer({
         id: `custom-horizon-chart-layer-${track.trackId}`,
         data: testModOffests.value,
@@ -812,22 +845,28 @@ watch(selectedTrack, () => {
     renderDeckGL();
 });
 
-function scaleForConstantVisualSize(size: number): number {
+function scaleForConstantVisualSize(
+    size: number,
+    direction: 'x' | 'y'
+): number {
     const viewState = deckgl.viewState?.looneageController ?? initialViewState;
     const { zoom } = viewState;
+    const z = direction === 'x' ? zoom[0] : zoom[1];
     // scale the size based on the inverse of the zoom so the visual is consistent
-    return size * 2 ** -zoom;
+    return size * 2 ** -z;
 }
 
 function viewportBBox(): BBox {
     const viewState = deckgl.viewState?.looneageController ?? initialViewState;
-    const { zoom, target } = viewState;
+    const { target } = viewState;
     // const buffer = -300; // add buffer so data is fetched a bit before it is panned into view.
     const width = scaleForConstantVisualSize(
-        deckGlWidth.value + viewportBuffer.value
+        deckGlWidth.value + viewportBuffer.value,
+        'x'
     );
     const height = scaleForConstantVisualSize(
-        deckGlHeight.value + viewportBuffer.value
+        deckGlHeight.value + viewportBuffer.value,
+        'y'
     );
     const halfWidth = width / 2;
     const halfHeight = height / 2;
