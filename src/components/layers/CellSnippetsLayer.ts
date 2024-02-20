@@ -14,7 +14,7 @@ import { LRUCache } from 'lru-cache';
 import { ColorPaletteExtension } from '@vivjs/extensions';
 
 import { isEqual } from 'lodash-es';
-import { PolygonLayer } from 'deck.gl';
+import { PolygonLayer } from '@deck.gl/layers/typed';
 import type { TypedArray } from 'geotiff';
 
 const defaultProps = {

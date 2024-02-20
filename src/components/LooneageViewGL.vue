@@ -446,7 +446,7 @@ function getMiddleVert(node: LayoutNode<Track>): number {
     return node.x - looneageViewStore.rowHeight / 2;
 }
 
-function createKeyFrameSnippets(): CellSnippetsLayer | null {
+function createKeyFrameSnippets(): (CellSnippetsLayer | PathLayer)[] | null {
     if (!layoutRoot.value) return null;
     const occupied: BBox[] = [];
 
