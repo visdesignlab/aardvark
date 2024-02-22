@@ -174,12 +174,9 @@ export const useDatasetSelectionStore = defineStore(
         );
 
         function getServerUrl(path: string): string {
-            return (
-                'https://' +
-                datasetSelectionTrrackedStore.serverUrl +
-                '/' +
-                path
-            );
+            let base = 'https://' + datasetSelectionTrrackedStore.serverUrl;
+            if (!path.startsWith('/')) base = base + '/';
+            return base + path;
         }
 
         const segmentationFolderUrl = computed<string>(() => {
