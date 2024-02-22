@@ -18,7 +18,6 @@ export const useLooneageViewStore = defineStore(storeId, () => {
     function setDefaultAttrKey() {
         if (!cellMetaData.dataInitialized) return;
         if (cellMetaData.headers?.includes(attrKey.value)) return;
-        // console.count('setDefaultAttrKey.skip');
         skipTrackingMap.map.set(storeId, true);
         attrKey.value = cellMetaData.headerKeys.mass;
     }
@@ -55,8 +54,6 @@ export const useLooneageViewStore = defineStore(storeId, () => {
 
     function setReasonableModHeight() {
         if (!cellMetaData.dataInitialized) return;
-        skipTrackingMap.map.set(storeId, true); // TODO: this logic I think is broken now.
-        // console.count('setReasonableModHeight.skip');
         baseline.value = 0;
         const extent = maxVal.value - minVal.value;
         if (extent === 0) {
