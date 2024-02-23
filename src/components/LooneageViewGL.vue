@@ -16,7 +16,10 @@ import { useImageViewerStoreUntrracked } from '@/stores/imageViewerStoreUntrrack
 import { useDatasetSelectionStore } from '@/stores/datasetSelectionStore';
 import { useDatasetSelectionTrrackedStore } from '@/stores/datasetSelectionTrrackedStore';
 import { useEventBusStore } from '@/stores/eventBusStore';
-import { useLooneageViewStore } from '@/stores/looneageViewStore';
+import {
+    useLooneageViewStore,
+    type SelectedSnippet,
+} from '@/stores/looneageViewStore';
 import { isEqual } from 'lodash-es';
 import { useGlobalSettings } from '@/stores/globalSettings';
 
@@ -423,7 +426,10 @@ function createHorizonChartLayers(): (
         | PolygonLayer
         | null
     )[] = [];
-    const destinations = [];
+    const pickingLayer: {
+        destination: [number, number, number, number];
+        trackId: string;
+    }[] = [];
     for (let node of layoutRoot.value.descendants()) {
         if (node.data === null) continue;
         const nodeWithData = node as LayoutNode<Track>;
@@ -443,24 +449,35 @@ function createHorizonChartLayers(): (
             width,
             looneageViewStore.rowHeight,
         ];
-        destinations.push(destination);
+        pickingLayer.push({ destination, trackId: track.trackId });
     }
     const destinationLayer = new PolygonLayer({
         id: 'destination-rectangle-layer',
-        data: destinations,
+        data: pickingLayer,
         pickable: true,
-        getPolygon: (d: [number, number, number, number]) => [
-            [d[1], d[0]],
-            [d[1] + d[2], d[0]],
-            [d[1] + d[2], d[0] - d[3]],
-            [d[1], d[0] - d[3]],
-        ],
+        getPolygon: (pickingData: {
+            destination: [number, number, number, number];
+            trackId: string;
+        }) => {
+            const d = pickingData.destination;
+            return [
+                [d[1], d[0]],
+                [d[1] + d[2], d[0]],
+                [d[1] + d[2], d[0] - d[3]],
+                [d[1], d[0] - d[3]],
+            ];
+        },
         getFillColor: [255, 0, 255, 0],
         getLineColor: [128, 128, 128, 255],
         getLineWidth: 0,
         onHover: (info: PickingInfo) => {
-            // console.log(info);
-            // console.log(info.coordinate);
+            if (!cellMetaData.trackMap) return;
+            if (!info.picked) {
+                hoveredTime.value = null;
+                hoveredSnippet.value = null;
+                renderDeckGL();
+                return;
+            }
             const xPos = info.coordinate?.[0] ?? null;
             const newTime =
                 xPos !== null
@@ -468,6 +485,19 @@ function createHorizonChartLayers(): (
                     : null;
             if (newTime !== hoveredTime.value) {
                 hoveredTime.value = newTime;
+                const trackId = info.object.trackId;
+                const track = cellMetaData.trackMap.get(trackId);
+                if (!track) {
+                    console.error('track not found when hovering');
+                    return;
+                }
+                const index = track.cells.findIndex(
+                    (cell) => cellMetaData.getTime(cell) === newTime
+                );
+                hoveredSnippet.value = {
+                    trackId,
+                    index,
+                };
                 renderDeckGL();
             }
         },
@@ -512,6 +542,8 @@ function createHorizonChartLayers(): (
     return layers;
 }
 
+const hoveredSnippet = ref<SelectedSnippet | null>(null);
+
 function hexListToRgba(hexList: readonly string[]): number[] {
     const rgbaList: number[] = [];
     for (let colorHex of hexList) {
@@ -543,12 +575,28 @@ function getMiddleVert(node: LayoutNode<Track>): number {
 function createKeyFrameSnippets(): (CellSnippetsLayer | PathLayer)[] | null {
     if (!layoutRoot.value) return null;
     const occupied: BBox[] = [];
+    const userSelectedSnippetBBoxes: BBox[] = [];
 
-    // add all horizon charts as occupied rectangles
+    const destWidth = scaleForConstantVisualSize(
+        looneageViewStore.snippetDestSize,
+        'x'
+    );
+
+    const destHeight = scaleForConstantVisualSize(
+        looneageViewStore.snippetDestSize,
+        'y'
+    );
+
+    const tickPadding = getHorizonSnippetPadding();
+    const aboveOffset = looneageViewStore.rowHeight + tickPadding;
+    const belowOffset = destHeight + tickPadding;
+
+    let hoveredBBox: BBox | null = null;
     for (let node of layoutRoot.value.descendants()) {
         if (node.data === null) continue;
         const nodeWithData = node as LayoutNode<Track>;
         if (!horizonInViewport(nodeWithData)) continue; // for performance
+        // add horizon chart as occupied rectangle
         const left = getLeftPosition(nodeWithData);
         const right = getRightPosition(nodeWithData);
         const chartBBox: BBox = [
@@ -558,25 +606,31 @@ function createKeyFrameSnippets(): (CellSnippetsLayer | PathLayer)[] | null {
             node.x - looneageViewStore.rowHeight,
         ];
         occupied.push(chartBBox);
+
+        if (
+            hoveredSnippet.value &&
+            hoveredSnippet.value.trackId === node.data.trackId
+        ) {
+            // TODO: add hovered snippet to user selected snippets
+            hoveredBBox = getSnippetBBox(
+                hoveredSnippet.value.index,
+                nodeWithData,
+                false,
+                aboveOffset,
+                belowOffset,
+                destWidth,
+                destHeight
+            );
+            userSelectedSnippetBBoxes.push(hoveredBBox);
+        }
     }
 
     const selections = [];
     const ticks: [number, number][][] = [];
-    const tickPadding = getHorizonSnippetPadding();
     for (let node of layoutRoot.value.descendants()) {
         if (node.data === null) continue;
         const nodeWithData = node as LayoutNode<Track>;
         if (!horizonInViewport(nodeWithData)) continue; // for performance
-
-        const destWidth = scaleForConstantVisualSize(
-            looneageViewStore.snippetDestSize,
-            'x'
-        );
-
-        const destHeight = scaleForConstantVisualSize(
-            looneageViewStore.snippetDestSize,
-            'y'
-        );
 
         const centeredBBox: BBox = [
             getLeftPosition(nodeWithData) - destWidth / 2,
@@ -585,11 +639,9 @@ function createKeyFrameSnippets(): (CellSnippetsLayer | PathLayer)[] | null {
             node.x - destHeight,
         ];
         const aboveBBox: BBox = [...centeredBBox];
-        const aboveOffset = looneageViewStore.rowHeight + tickPadding;
         aboveBBox[1] -= aboveOffset;
         aboveBBox[3] -= aboveOffset;
         const belowBBox: BBox = [...centeredBBox];
-        const belowOffset = destHeight + tickPadding;
         belowBBox[1] += belowOffset;
         belowBBox[3] += belowOffset;
 
@@ -610,30 +662,22 @@ function createKeyFrameSnippets(): (CellSnippetsLayer | PathLayer)[] | null {
         for (const { index, nearestDistance } of keyframeOrder) {
             // exit loop if this point would overlap existing points
             if (nearestDistance <= destWidth) break;
-
-            let destY = node.x;
-            if (displayBelow) {
-                destY += belowOffset;
-            } else {
-                destY -= aboveOffset;
-            }
-            const cell = track.cells[index];
-            const t = cellMetaData.getTime(cell);
-            const destX =
-                getLeftPosition(nodeWithData) +
-                t -
-                track.attrNum['min_time'] -
-                destWidth / 2;
-            const destination: BBox = [
-                destX,
-                destY,
-                destX + destWidth,
-                destY - destHeight,
-            ];
+            const destination: BBox = getSnippetBBox(
+                index,
+                nodeWithData,
+                displayBelow,
+                aboveOffset,
+                belowOffset,
+                destWidth,
+                destHeight
+            );
 
             if (
+                !overlaps(destination, viewportBBox()) ||
                 occupied.some((bbox: BBox) => overlaps(bbox, destination)) ||
-                !overlaps(destination, viewportBBox())
+                userSelectedSnippetBBoxes.some((bbox: BBox) =>
+                    overlaps(bbox, destination)
+                )
             ) {
                 // this overlaps with existing occupied spaces, do not
                 // add this snippet to render, but continue adding the
@@ -663,6 +707,7 @@ function createKeyFrameSnippets(): (CellSnippetsLayer | PathLayer)[] | null {
                 );
             }
 
+            const cell = track.cells[index];
             const [x, y] = cellMetaData.getPosition(cell);
             const source = getBBoxAroundPoint(
                 x,
@@ -700,12 +745,31 @@ function createKeyFrameSnippets(): (CellSnippetsLayer | PathLayer)[] | null {
         }
     }
 
-    // console.log('creating cell snippet layer');
-    // console.log('selections', selections.length);
-    // const snippetCounts = selections.map((x) => x.snippets.length);
-    // console.log('snippetCounts', snippetCounts);
-    // const totalSnippets = snippetCounts.reduce((x, y) => x + y);
-    // console.log('totalSnippets', totalSnippets);
+    if (
+        hoveredSnippet.value &&
+        cellMetaData.trackMap != null &&
+        hoveredBBox !== null
+    ) {
+        const track = cellMetaData.trackMap.get(hoveredSnippet.value.trackId);
+        if (track) {
+            const cell = track.cells[hoveredSnippet.value.index];
+            const [x, y] = cellMetaData.getPosition(cell);
+            const source = getBBoxAroundPoint(
+                x,
+                y,
+                looneageViewStore.snippetSourceSize,
+                looneageViewStore.snippetSourceSize
+            );
+            const destination = hoveredBBox;
+            selections.push({
+                c: 0,
+                z: 0,
+                t: cellMetaData.getFrame(cell) - 1, // convert frame number to index
+                snippets: [{ source, destination }],
+            });
+        }
+    }
+
     const snippetLayer = new CellSnippetsLayer({
         loader: pixelSource.value,
         id: `key-frames-snippets-layer`,
@@ -729,6 +793,29 @@ function createKeyFrameSnippets(): (CellSnippetsLayer | PathLayer)[] | null {
         capRounded: false,
     });
     return [snippetLayer, snippetTickMarksLayer];
+}
+
+function getSnippetBBox(
+    index: number,
+    node: LayoutNode<Track>,
+    displayBelow: boolean,
+    aboveOffset: number,
+    belowOffset: number,
+    destWidth: number,
+    destHeight: number
+): BBox {
+    let destY = node.x;
+    if (displayBelow) {
+        destY += belowOffset;
+    } else {
+        destY -= aboveOffset;
+    }
+    const track = node.data;
+    const cell = track.cells[index];
+    const t = cellMetaData.getTime(cell);
+    const destX =
+        getLeftPosition(node) + t - track.attrNum['min_time'] - destWidth / 2;
+    return [destX, destY, destX + destWidth, destY - destHeight];
 }
 
 function valueExtent(track: Track, key: string): number {
@@ -1020,8 +1107,8 @@ function createCurrentTimeLayer(): PathLayer | null {
         id: 'current-time-layer',
         data: [[a, b]],
         getPath: (d: any) => d,
-        getColor: [45, 77, 255],
-        getWidth: 2,
+        getColor: [85, 77, 135],
+        getWidth: 1,
         widthUnits: 'pixels',
     });
 }
@@ -1035,13 +1122,13 @@ function renderDeckGL(): void {
     // if (segmentationData.value == null) return;
     const layers = [];
 
+    // layers.push(createCurrentTimeLayer());
     layers.push(createConnectingLinesLayer());
     layers.push(createTickMarksLayer());
     layers.push(createHorizonChartLayers());
     if (looneageViewStore.showSnippets) {
         layers.push(createKeyFrameSnippets());
     }
-    layers.push(createCurrentTimeLayer());
     // layers.push(createTrackLayer());
     // layers.push(createTestScatterLayer());
     // layers.push(createViewportRectangleLayer());

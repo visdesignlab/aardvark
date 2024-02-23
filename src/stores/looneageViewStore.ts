@@ -5,6 +5,13 @@ import { useSkipTrackingMap } from '@/stores/skipTrackingMap';
 import { schemeReds, schemeBlues } from 'd3-scale-chromatic';
 import { min as d3Min, max as d3Max } from 'd3-array';
 
+export interface SelectedSnippet {
+    trackId: string;
+    index: number;
+    extraBefore?: number;
+    extraAfter?: number;
+}
+
 const storeId = 'looneageViewStore';
 export const useLooneageViewStore = defineStore(storeId, () => {
     const cellMetaData = useCellMetaData();
@@ -68,6 +75,8 @@ export const useLooneageViewStore = defineStore(storeId, () => {
     const positiveColorScheme = ref({ label: 'Red', value: schemeReds });
     const negativeColorScheme = ref({ label: 'Blue', value: schemeBlues });
 
+    const pinnedSnippets = ref<SelectedSnippet[]>([]);
+
     return {
         attrKey,
         positiveColorScheme,
@@ -86,5 +95,6 @@ export const useLooneageViewStore = defineStore(storeId, () => {
         connectingLineWidth,
         spaceKeyframesEvenly,
         setReasonableModHeight,
+        pinnedSnippets,
     };
 });
