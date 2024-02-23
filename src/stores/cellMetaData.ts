@@ -363,9 +363,27 @@ export const useCellMetaData = defineStore('cellMetaData', () => {
     }
 
     const timestep = ref<number>(1);
+    const startTime = ref<number>(Infinity);
+    const timeList = ref<number[]>([]);
+
+    function getClosestTime(time: number): number {
+        if (timeList.value.length === 0) return 0;
+        // TODO: this could be optimized with a binary search
+        let closest = timeList.value[0];
+        let minDiff = Math.abs(time - closest);
+        for (let i = 1; i < timeList.value.length; i++) {
+            const diff = Math.abs(time - timeList.value[i]);
+            if (diff < minDiff) {
+                minDiff = diff;
+                closest = timeList.value[i];
+            }
+        }
+        return closest;
+    }
 
     function initCells(rawData: AnyAttributes[]): void {
         cellArray.value = [];
+        const timeSet = new Set<number>();
         let lastTime: number | null = null;
         let smallestTimestep: number = Infinity;
         for (let i = 0; i < rawData.length; i++) {
@@ -412,17 +430,22 @@ export const useCellMetaData = defineStore('cellMetaData', () => {
                 attrStr,
             };
             const time = getTime(cell);
+            timeSet.add(time);
             if (lastTime !== null) {
                 const timestep = time - lastTime;
                 if (timestep > 0 && timestep < smallestTimestep) {
                     smallestTimestep = timestep;
                 }
             }
+            if (time < startTime.value) {
+                startTime.value = time;
+            }
             lastTime = time;
             cellArray.value.push(cell);
         }
         timestep.value = smallestTimestep;
-        console.log('smallest timestep: ', smallestTimestep);
+        timeList.value = Array.from(timeSet).sort((a, b) => a - b);
+        console.log('timelist', timeList.value);
     }
 
     function initTracks(): void {
@@ -603,5 +626,8 @@ export const useCellMetaData = defineStore('cellMetaData', () => {
         makeLineageCellIterator,
         getSortedKeys,
         timestep,
+        startTime,
+        timeList,
+        getClosestTime,
     };
 });

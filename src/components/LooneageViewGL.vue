@@ -344,10 +344,10 @@ function createConnectingLinesLayer(): PathLayer | null {
     for (const node of layoutRoot.value.descendants()) {
         if (!node.parent) continue;
         if (node.data === null) continue;
-        const nodeWidthData = node as LayoutNode<Track>;
-        const childCenter = getMiddleVert(nodeWidthData);
+        const nodeWithData = node as LayoutNode<Track>;
+        const childCenter = getMiddleVert(nodeWithData);
         const parentRight = getRightPosition(node.parent);
-        const a = [getLeftPosition(nodeWidthData), childCenter];
+        const a = [getLeftPosition(nodeWithData), childCenter];
         const b = [parentRight, childCenter];
         const c = [parentRight, getMiddleVert(node.parent)];
         // lines.push({ source: a, target: b });
@@ -375,11 +375,11 @@ function createTickMarksLayer(): PathLayer | null {
     let lastX = null;
     for (const node of layoutRoot.value.descendants()) {
         if (node.data === null) continue;
-        const nodeWidthData = node as LayoutNode<Track>;
-        if (!horizonInViewport(nodeWidthData)) continue;
+        const nodeWithData = node as LayoutNode<Track>;
+        if (!horizonInViewport(nodeWithData)) continue;
         for (const cell of node.data.cells) {
             const x =
-                getLeftPosition(nodeWidthData) +
+                getLeftPosition(nodeWithData) +
                 cellMetaData.getTime(cell) -
                 node.data.attrNum['min_time'];
             if (lastX !== null) {
@@ -406,36 +406,76 @@ function createTickMarksLayer(): PathLayer | null {
     });
 }
 
+const hoveredTime: ref<number | null> = ref(null);
+
 function createHorizonChartLayers(): (
     | ScatterplotLayer
     | HorizonChartLayer
+    | PolygonLayer
     | null
 )[] {
     if (!cellMetaData.selectedTrack) return [];
     // if (!segmentationData.value) return [];
     if (!layoutRoot.value?.descendants()) return [];
-    const layers: (ScatterplotLayer | HorizonChartLayer | null)[] = [];
-    const testData = [];
+    const layers: (
+        | ScatterplotLayer
+        | HorizonChartLayer
+        | PolygonLayer
+        | null
+    )[] = [];
+    const destinations = [];
     for (let node of layoutRoot.value.descendants()) {
         if (node.data === null) continue;
-        const nodeWidthData = node as LayoutNode<Track>;
+        const nodeWithData = node as LayoutNode<Track>;
         // if (node.depth > looneageViewStore.maxDepth) continue;
-        layers.push(createHorizonChartLayer(nodeWidthData));
+        layers.push(createHorizonChartLayer(nodeWithData));
 
-        // const track = node.data;
-        // let left = getLeftPosition(node);
-        // let width = getTimeDuration(track);
-        // if (width === 0) {
-        //     width = cellMetaData.timestep;
-        //     left -= width / 2;
-        // }
-        // const destination: [number, number, number, number] = [
-        //     node.x,
-        //     left,
-        //     width,
-        //     looneageViewStore.rowHeight,
-        // ];
+        const track = node.data;
+        let left = getLeftPosition(nodeWithData);
+        let width = getTimeDuration(track);
+        if (width === 0) {
+            width = cellMetaData.timestep;
+            left -= width / 2;
+        }
+        const destination: [number, number, number, number] = [
+            node.x,
+            left,
+            width,
+            looneageViewStore.rowHeight,
+        ];
+        destinations.push(destination);
     }
+    const destinationLayer = new PolygonLayer({
+        id: 'destination-rectangle-layer',
+        data: destinations,
+        pickable: true,
+        getPolygon: (d: [number, number, number, number]) => [
+            [d[1], d[0]],
+            [d[1] + d[2], d[0]],
+            [d[1] + d[2], d[0] - d[3]],
+            [d[1], d[0] - d[3]],
+        ],
+        getFillColor: [255, 0, 255, 0],
+        getLineColor: [128, 128, 128, 255],
+        getLineWidth: 0,
+        onHover: (info: PickingInfo) => {
+            // console.log(info);
+            // console.log(info.coordinate);
+            const xPos = info.coordinate?.[0] ?? null;
+            const newTime =
+                xPos !== null
+                    ? cellMetaData.getClosestTime(xPos + cellMetaData.startTime)
+                    : null;
+            if (newTime !== hoveredTime.value) {
+                hoveredTime.value = newTime;
+                renderDeckGL();
+            }
+        },
+        onClick: (info: PickingInfo) => {
+            console.log(info);
+        },
+    });
+    layers.push(destinationLayer);
 
     // layers.push(
     //     new ScatterplotLayer({
@@ -507,10 +547,10 @@ function createKeyFrameSnippets(): (CellSnippetsLayer | PathLayer)[] | null {
     // add all horizon charts as occupied rectangles
     for (let node of layoutRoot.value.descendants()) {
         if (node.data === null) continue;
-        const nodeWidthData = node as LayoutNode<Track>;
-        if (!horizonInViewport(nodeWidthData)) continue; // for performance
-        const left = getLeftPosition(nodeWidthData);
-        const right = getRightPosition(nodeWidthData);
+        const nodeWithData = node as LayoutNode<Track>;
+        if (!horizonInViewport(nodeWithData)) continue; // for performance
+        const left = getLeftPosition(nodeWithData);
+        const right = getRightPosition(nodeWithData);
         const chartBBox: BBox = [
             left,
             node.x,
@@ -525,8 +565,8 @@ function createKeyFrameSnippets(): (CellSnippetsLayer | PathLayer)[] | null {
     const tickPadding = getHorizonSnippetPadding();
     for (let node of layoutRoot.value.descendants()) {
         if (node.data === null) continue;
-        const nodeWidthData = node as LayoutNode<Track>;
-        if (!horizonInViewport(nodeWidthData)) continue; // for performance
+        const nodeWithData = node as LayoutNode<Track>;
+        if (!horizonInViewport(nodeWithData)) continue; // for performance
 
         const destWidth = scaleForConstantVisualSize(
             looneageViewStore.snippetDestSize,
@@ -539,9 +579,9 @@ function createKeyFrameSnippets(): (CellSnippetsLayer | PathLayer)[] | null {
         );
 
         const centeredBBox: BBox = [
-            getLeftPosition(nodeWidthData) - destWidth / 2,
+            getLeftPosition(nodeWithData) - destWidth / 2,
             node.x,
-            getRightPosition(nodeWidthData) + destHeight / 2,
+            getRightPosition(nodeWithData) + destHeight / 2,
             node.x - destHeight,
         ];
         const aboveBBox: BBox = [...centeredBBox];
@@ -580,7 +620,7 @@ function createKeyFrameSnippets(): (CellSnippetsLayer | PathLayer)[] | null {
             const cell = track.cells[index];
             const t = cellMetaData.getTime(cell);
             const destX =
-                getLeftPosition(nodeWidthData) +
+                getLeftPosition(nodeWithData) +
                 t -
                 track.attrNum['min_time'] -
                 destWidth / 2;
@@ -639,7 +679,7 @@ function createKeyFrameSnippets(): (CellSnippetsLayer | PathLayer)[] | null {
             });
 
             const tickX =
-                getLeftPosition(nodeWidthData) +
+                getLeftPosition(nodeWithData) +
                 cellMetaData.getTime(cell) -
                 node.data.attrNum['min_time'];
             let tickSnippetY = node.x;
@@ -846,6 +886,7 @@ function createHorizonChartLayer(
 
     if (!horizonInViewport(node)) return null;
 
+    // bottom, left, width, height
     const destination: [number, number, number, number] = [
         node.x,
         left,
@@ -969,6 +1010,22 @@ function viewportBBox(): BBox {
 //     });
 // }
 
+function createCurrentTimeLayer(): PathLayer | null {
+    if (hoveredTime.value === null) return null;
+    // we place the start time at x=0, so we need to subtract the start time
+    const x = hoveredTime.value - cellMetaData.startTime;
+    const a = [x, 1000];
+    const b = [x, -1000];
+    return new PathLayer({
+        id: 'current-time-layer',
+        data: [[a, b]],
+        getPath: (d: any) => d,
+        getColor: [45, 77, 255],
+        getWidth: 2,
+        widthUnits: 'pixels',
+    });
+}
+
 function renderDeckGL(): void {
     if (deckgl == null) return;
     if (cellMetaData.selectedTrack == null) return;
@@ -984,6 +1041,7 @@ function renderDeckGL(): void {
     if (looneageViewStore.showSnippets) {
         layers.push(createKeyFrameSnippets());
     }
+    layers.push(createCurrentTimeLayer());
     // layers.push(createTrackLayer());
     // layers.push(createTestScatterLayer());
     // layers.push(createViewportRectangleLayer());
