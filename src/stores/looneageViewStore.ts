@@ -40,7 +40,7 @@ export const useLooneageViewStore = defineStore(storeId, () => {
         );
     });
 
-    const modHeight = ref<number>(100);
+    const modHeight = ref<number>(0);
     const baseline = ref<number>(0);
     const showLines = ref<boolean>(true);
     const spacing = ref<number>(4);
@@ -85,5 +85,6 @@ export const useLooneageViewStore = defineStore(storeId, () => {
         showSnippets,
         connectingLineWidth,
         spaceKeyframesEvenly,
+        setReasonableModHeight,
     };
 });

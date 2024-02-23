@@ -918,6 +918,9 @@ function viewportBBox(): BBox {
 function renderDeckGL(): void {
     if (deckgl == null) return;
     if (cellMetaData.selectedTrack == null) return;
+    if (looneageViewStore.modHeight === 0) {
+        looneageViewStore.setReasonableModHeight();
+    }
     // if (segmentationData.value == null) return;
     const layers = [];
 
