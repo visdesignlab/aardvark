@@ -445,7 +445,6 @@ export const useCellMetaData = defineStore('cellMetaData', () => {
         }
         timestep.value = smallestTimestep;
         timeList.value = Array.from(timeSet).sort((a, b) => a - b);
-        console.log('timelist', timeList.value);
     }
 
     function initTracks(): void {
