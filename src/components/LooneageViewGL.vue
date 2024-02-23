@@ -32,6 +32,7 @@ import {
     getHeight,
     getBBoxAroundPoint,
     overlaps,
+    overlapAmount,
 } from '@/util/imageSnippets';
 
 import {
@@ -413,39 +414,39 @@ function createHorizonChartLayers(): (
         //     width,
         //     looneageViewStore.rowHeight,
         // ];
-
-        // layers.push(
-        //     new ScatterplotLayer({
-        //         id: 'looneage-test-scatterplot-layer',
-        //         data: [
-        //             [left, node.x],
-        //             [left + width, -looneageViewStore.rowHeight],
-        //             // [85, -30],
-
-        //             // [0, 0],
-        //             // [85, -30],
-
-        //             // [85, -59],
-        //             // [172, -89],
-
-        //             // [85, 59],
-        //             // [172, 29],
-        //         ],
-        //         pickable: true,
-        //         opacity: 0.8,
-        //         stroked: true,
-        //         filled: true,
-        //         radiusScale: 1,
-        //         radiusMinPixels: 1,
-        //         radiusMaxPixels: 100,
-        //         lineWidthMinPixels: 0,
-        //         getLineWidth: 0,
-        //         getPosition: (d: any) => d,
-        //         getRadius: 10,
-        //         getFillColor: [255, 0, 255, 200],
-        //     })
-        // );
     }
+
+    // layers.push(
+    //     new ScatterplotLayer({
+    //         id: 'looneage-test-scatterplot-layer',
+    //         data: [
+    //             [0, 0],
+    //             [-19, 44],
+    //             // [85, -30],
+
+    //             // [0, 0],
+    //             // [85, -30],
+
+    //             // [85, -59],
+    //             // [172, -89],
+
+    //             // [85, 59],
+    //             // [172, 29],
+    //         ],
+    //         pickable: true,
+    //         opacity: 0.8,
+    //         stroked: true,
+    //         filled: true,
+    //         radiusScale: 1,
+    //         radiusMinPixels: 1,
+    //         radiusMaxPixels: 100,
+    //         lineWidthMinPixels: 0,
+    //         getLineWidth: 0,
+    //         getPosition: (d: any) => d,
+    //         getRadius: 5,
+    //         getFillColor: [255, 0, 255, 200],
+    //     })
+    // );
 
     return layers;
 }
@@ -501,30 +502,55 @@ function createKeyFrameSnippets(): (CellSnippetsLayer | PathLayer)[] | null {
     const tickPadding = getHorizonSnippetPadding();
     for (let node of layoutRoot.value.descendants()) {
         if (!horizonInViewport(node)) continue; // for performance
+
+        const destWidth = scaleForConstantVisualSize(
+            looneageViewStore.snippetDestSize,
+            'x'
+        );
+
+        const destHeight = scaleForConstantVisualSize(
+            looneageViewStore.snippetDestSize,
+            'y'
+        );
+
+        const centeredBBox: BBox = [
+            getLeftPosition(node) - destWidth / 2,
+            node.x,
+            getRightPosition(node) + destHeight / 2,
+            node.x - destHeight,
+        ];
+        const aboveBBox: BBox = [...centeredBBox];
+        const aboveOffset = looneageViewStore.rowHeight + tickPadding;
+        aboveBBox[1] -= aboveOffset;
+        aboveBBox[3] -= aboveOffset;
+        const belowBBox: BBox = [...centeredBBox];
+        const belowOffset = destHeight + tickPadding;
+        belowBBox[1] += belowOffset;
+        belowBBox[3] += belowOffset;
+
+        let aboveOverlap = 0;
+        let belowOverlap = 0;
+        for (const bbox of occupied) {
+            aboveOverlap += overlapAmount(aboveBBox, bbox);
+            belowOverlap += overlapAmount(belowBBox, bbox);
+        }
+        const displayBelow = aboveOverlap > belowOverlap;
+        // preffer to display above
+        // but if there is moe overlap above then place below
+
         const track = node.data;
         const keyframeOrder = getKeyFrameOrder(node.data);
         let newSnippetsOuterBBox: BBox | null = null;
 
         for (const { index, nearestDistance } of keyframeOrder) {
-            const destWidth = scaleForConstantVisualSize(
-                looneageViewStore.snippetDestSize,
-                'x'
-            );
             // exit loop if this point would overlap existing points
             if (nearestDistance <= destWidth) break;
-            const horizonSnippetPadding = tickPadding;
-            const destHeight = scaleForConstantVisualSize(
-                looneageViewStore.snippetDestSize,
-                'y'
-            );
+
             let destY = node.x;
-            const displayBelow = node.x > 0;
             if (displayBelow) {
-                destY += destHeight;
-                destY += horizonSnippetPadding;
+                destY += belowOffset;
             } else {
-                destY -= looneageViewStore.rowHeight;
-                destY -= horizonSnippetPadding;
+                destY -= aboveOffset;
             }
             const cell = track.cells[index];
             const t = cellMetaData.getTime(cell);

@@ -64,6 +64,16 @@ export function getBBoxAroundPoint(
     return [x - width / 2, y + height / 2, x + width / 2, y - height / 2];
 }
 
+export function overlapAmount(a: BBox, b: BBox): number {
+    // computed the area that overlaps between two bounding boxes
+    if (!overlaps(a, b)) return 0;
+    const left = Math.max(a[0], b[0]);
+    const right = Math.min(a[2], b[2]);
+    const bottom = Math.max(a[3], b[3]);
+    const top = Math.min(a[1], b[1]);
+    return (right - left) * (top - bottom);
+}
+
 export function overlaps(a: BBox, b: BBox): boolean {
     // to overlap the x dimension and y dimension must both overlap
     return (
