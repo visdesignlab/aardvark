@@ -111,8 +111,8 @@ const baselineValidate = computed({
         :dark="globalSettings.darkMode"
     />
     <q-toggle
-        label="Show Lines"
-        v-model="looneageViewStore.showLines"
+        label="Include sibling buffers"
+        v-model="looneageViewStore.includeSiblingBuffer"
         :dark="globalSettings.darkMode"
     />
     <q-card-section class="q-pl-none q-pr-none">
@@ -131,7 +131,7 @@ const baselineValidate = computed({
         <q-slider
             v-model="looneageViewStore.rowHeight"
             :min="4"
-            :max="100"
+            :max="200"
             label
             :dark="globalSettings.darkMode"
         />
@@ -152,7 +152,7 @@ const baselineValidate = computed({
         <q-slider
             v-model="looneageViewStore.spacing"
             :min="0"
-            :max="200"
+            :max="300"
             label
             :dark="globalSettings.darkMode"
         />

@@ -42,12 +42,12 @@ export const useLooneageViewStore = defineStore(storeId, () => {
 
     const modHeight = ref<number>(0);
     const baseline = ref<number>(0);
-    const showLines = ref<boolean>(true);
-    const spacing = ref<number>(4);
-    const rowHeight = ref<number>(16);
+    const spacing = ref<number>(82);
+    const includeSiblingBuffer = ref<boolean>(true);
+    const rowHeight = ref<number>(32);
     const snippetSourceSize = ref<number>(32);
     const snippetDestSize = ref<number>(64);
-    const maxDepth = ref<number>(4);
+    const maxDepth = ref<number>(3);
     const showSnippets = ref<boolean>(true);
     const connectingLineWidth = ref<number>(1);
     const spaceKeyframesEvenly = ref<boolean>(false);
@@ -74,8 +74,8 @@ export const useLooneageViewStore = defineStore(storeId, () => {
         negativeColorScheme,
         modHeight,
         baseline,
-        showLines,
         spacing,
+        includeSiblingBuffer,
         rowHeight,
         maxVal,
         minVal,

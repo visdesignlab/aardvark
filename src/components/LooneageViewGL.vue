@@ -79,11 +79,19 @@ const { width: deckGlWidth, height: deckGlHeight } =
 
 const tree = computed(() => {
     if (cellMetaData.selectedLineage == null) return null;
-    return hierarchy<Track>(
+    return hierarchy<Track | null>(
         cellMetaData.selectedLineage.founder,
-        (d: Track) => {
+        (d: Track | null) => {
+            if (d == null) return null;
             if (d.attrNum['generation'] < looneageViewStore.maxDepth) {
-                return d.children;
+                const children: (Track | null)[] = d.children;
+                if (looneageViewStore.includeSiblingBuffer) {
+                    // insert null into index 1
+                    const withBufferNode = [...children];
+                    withBufferNode.splice(1, 0, null);
+                    return withBufferNode;
+                }
+                return children;
             }
             return null;
         }
@@ -113,10 +121,17 @@ function getTimeOffsetBetweenParentChild(track: Track): number {
     return getTimeDurationForLayout(track) - getTimeDuration(track);
 }
 
-const layoutRoot = computed<LayoutNode<Track> | null>(() => {
+const layoutRoot = computed<LayoutNode<Track | null> | null>(() => {
     if (cellMetaData.selectedLineage == null) return null;
-    return flextree<Track>({
-        nodeSize: (node: LayoutNode<Track>) => {
+    return flextree<Track | null>({
+        nodeSize: (node: LayoutNode<Track | null>) => {
+            if (node.data == null)
+                return [
+                    looneageViewStore.rowHeight,
+                    // looneageViewStore.rowBufferHeight -
+                    //     2 * looneageViewStore.spacing,
+                    cellMetaData.timestep,
+                ];
             const timeWidth = getTimeDurationForLayout(node.data);
             return [looneageViewStore.rowHeight, timeWidth];
         },
@@ -328,9 +343,11 @@ function createConnectingLinesLayer(): PathLayer | null {
     const lines = [];
     for (const node of layoutRoot.value.descendants()) {
         if (!node.parent) continue;
-        const childCenter = getMiddleVert(node);
+        if (node.data === null) continue;
+        const nodeWidthData = node as LayoutNode<Track>;
+        const childCenter = getMiddleVert(nodeWidthData);
         const parentRight = getRightPosition(node.parent);
-        const a = [getLeftPosition(node), childCenter];
+        const a = [getLeftPosition(nodeWidthData), childCenter];
         const b = [parentRight, childCenter];
         const c = [parentRight, getMiddleVert(node.parent)];
         // lines.push({ source: a, target: b });
@@ -357,10 +374,12 @@ function createTickMarksLayer(): PathLayer | null {
     const lines = [];
     let lastX = null;
     for (const node of layoutRoot.value.descendants()) {
-        if (!horizonInViewport(node)) continue;
+        if (node.data === null) continue;
+        const nodeWidthData = node as LayoutNode<Track>;
+        if (!horizonInViewport(nodeWidthData)) continue;
         for (const cell of node.data.cells) {
             const x =
-                getLeftPosition(node) +
+                getLeftPosition(nodeWidthData) +
                 cellMetaData.getTime(cell) -
                 node.data.attrNum['min_time'];
             if (lastX !== null) {
@@ -398,8 +417,10 @@ function createHorizonChartLayers(): (
     const layers: (ScatterplotLayer | HorizonChartLayer | null)[] = [];
     const testData = [];
     for (let node of layoutRoot.value.descendants()) {
+        if (node.data === null) continue;
+        const nodeWidthData = node as LayoutNode<Track>;
         // if (node.depth > looneageViewStore.maxDepth) continue;
-        layers.push(createHorizonChartLayer(node));
+        layers.push(createHorizonChartLayer(nodeWidthData));
 
         // const track = node.data;
         // let left = getLeftPosition(node);
@@ -485,9 +506,11 @@ function createKeyFrameSnippets(): (CellSnippetsLayer | PathLayer)[] | null {
 
     // add all horizon charts as occupied rectangles
     for (let node of layoutRoot.value.descendants()) {
-        if (!horizonInViewport(node)) continue; // for performance
-        const left = getLeftPosition(node);
-        const right = getRightPosition(node);
+        if (node.data === null) continue;
+        const nodeWidthData = node as LayoutNode<Track>;
+        if (!horizonInViewport(nodeWidthData)) continue; // for performance
+        const left = getLeftPosition(nodeWidthData);
+        const right = getRightPosition(nodeWidthData);
         const chartBBox: BBox = [
             left,
             node.x,
@@ -501,7 +524,9 @@ function createKeyFrameSnippets(): (CellSnippetsLayer | PathLayer)[] | null {
     const ticks: [number, number][][] = [];
     const tickPadding = getHorizonSnippetPadding();
     for (let node of layoutRoot.value.descendants()) {
-        if (!horizonInViewport(node)) continue; // for performance
+        if (node.data === null) continue;
+        const nodeWidthData = node as LayoutNode<Track>;
+        if (!horizonInViewport(nodeWidthData)) continue; // for performance
 
         const destWidth = scaleForConstantVisualSize(
             looneageViewStore.snippetDestSize,
@@ -514,9 +539,9 @@ function createKeyFrameSnippets(): (CellSnippetsLayer | PathLayer)[] | null {
         );
 
         const centeredBBox: BBox = [
-            getLeftPosition(node) - destWidth / 2,
+            getLeftPosition(nodeWidthData) - destWidth / 2,
             node.x,
-            getRightPosition(node) + destHeight / 2,
+            getRightPosition(nodeWidthData) + destHeight / 2,
             node.x - destHeight,
         ];
         const aboveBBox: BBox = [...centeredBBox];
@@ -555,7 +580,7 @@ function createKeyFrameSnippets(): (CellSnippetsLayer | PathLayer)[] | null {
             const cell = track.cells[index];
             const t = cellMetaData.getTime(cell);
             const destX =
-                getLeftPosition(node) +
+                getLeftPosition(nodeWidthData) +
                 t -
                 track.attrNum['min_time'] -
                 destWidth / 2;
@@ -614,7 +639,7 @@ function createKeyFrameSnippets(): (CellSnippetsLayer | PathLayer)[] | null {
             });
 
             const tickX =
-                getLeftPosition(node) +
+                getLeftPosition(nodeWidthData) +
                 cellMetaData.getTime(cell) -
                 node.data.attrNum['min_time'];
             let tickSnippetY = node.x;
