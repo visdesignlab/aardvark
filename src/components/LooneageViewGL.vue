@@ -341,6 +341,11 @@ const dataXExtent = computed<[number, number]>(() => {
     return [minTime, maxTime];
 });
 
+const lineageMinTime = computed<number>(() => {
+    if (!cellMetaData.selectedLineage) return 0;
+    return cellMetaData.selectedLineage.founder.attrNum['min_time'];
+});
+
 function createConnectingLinesLayer(): PathLayer | null {
     if (!layoutRoot.value?.descendants()) return null;
     const lines = [];
@@ -481,7 +486,7 @@ function createHorizonChartLayers(): (
             const xPos = info.coordinate?.[0] ?? null;
             const newTime =
                 xPos !== null
-                    ? cellMetaData.getClosestTime(xPos + cellMetaData.startTime)
+                    ? cellMetaData.getClosestTime(xPos + lineageMinTime.value)
                     : null;
             if (newTime !== hoveredTime.value) {
                 hoveredTime.value = newTime;
@@ -494,6 +499,11 @@ function createHorizonChartLayers(): (
                 const index = track.cells.findIndex(
                     (cell) => cellMetaData.getTime(cell) === newTime
                 );
+                if (index === -1) {
+                    hoveredSnippet.value = null;
+                    renderDeckGL();
+                    return;
+                }
                 hoveredSnippet.value = {
                     trackId,
                     index,
@@ -612,24 +622,6 @@ function createKeyFrameSnippets(): (CellSnippetsLayer | PathLayer)[] | null {
             node.x - looneageViewStore.rowHeight,
         ];
         occupied.push(chartBBox);
-
-        if (
-            hoveredSnippet.value &&
-            hoveredSnippet.value.trackId === node.data.trackId
-        ) {
-            // TODO: add hovered snippet to user selected snippets
-            hoveredBBox = getSnippetBBox(
-                hoveredSnippet.value.index,
-                nodeWithData,
-                false,
-                aboveOffset,
-                belowOffset,
-                destWidth,
-                destHeight
-            );
-            hoveredNode = nodeWithData;
-            userSelectedSnippetBBoxes.push(hoveredBBox);
-        }
     }
 
     const selections = [];
@@ -661,6 +653,23 @@ function createKeyFrameSnippets(): (CellSnippetsLayer | PathLayer)[] | null {
         const displayBelow = aboveOverlap > belowOverlap;
         // preffer to display above
         // but if there is moe overlap above then place below
+
+        if (
+            hoveredSnippet.value &&
+            hoveredSnippet.value.trackId === node.data.trackId
+        ) {
+            hoveredBBox = getSnippetBBox(
+                hoveredSnippet.value.index,
+                nodeWithData,
+                displayBelow,
+                aboveOffset,
+                belowOffset,
+                destWidth,
+                destHeight
+            );
+            hoveredNode = nodeWithData;
+            userSelectedSnippetBBoxes.push(hoveredBBox);
+        }
 
         const track = node.data;
         const keyframeOrder = getKeyFrameOrder(node.data);
@@ -823,6 +832,10 @@ function getSnippetBBox(
     }
     const track = node.data;
     const cell = track.cells[index];
+    if (cell == null) {
+        console.error('cell is null, can not get bbox');
+        return [0, 0, 0, 0];
+    }
     const t = cellMetaData.getTime(cell);
     const destX =
         getLeftPosition(node) + t - track.attrNum['min_time'] - destWidth / 2;
@@ -1139,7 +1152,7 @@ function viewportBBox(): BBox {
 function createCurrentTimeLayer(): PathLayer | null {
     if (hoveredTime.value === null) return null;
     // we place the start time at x=0, so we need to subtract the start time
-    const x = hoveredTime.value - cellMetaData.startTime;
+    const x = hoveredTime.value - lineageMinTime.value;
     const a = [x, 1000];
     const b = [x, -1000];
     return new PathLayer({
