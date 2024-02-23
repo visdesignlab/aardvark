@@ -572,6 +572,11 @@ function getMiddleVert(node: LayoutNode<Track>): number {
     return node.x - looneageViewStore.rowHeight / 2;
 }
 
+interface TickData {
+    path: [number, number][];
+    hovered: boolean;
+}
+
 function createKeyFrameSnippets(): (CellSnippetsLayer | PathLayer)[] | null {
     if (!layoutRoot.value) return null;
     const occupied: BBox[] = [];
@@ -592,6 +597,7 @@ function createKeyFrameSnippets(): (CellSnippetsLayer | PathLayer)[] | null {
     const belowOffset = destHeight + tickPadding;
 
     let hoveredBBox: BBox | null = null;
+    let hoveredNode: LayoutNode<Track> | null = null;
     for (let node of layoutRoot.value.descendants()) {
         if (node.data === null) continue;
         const nodeWithData = node as LayoutNode<Track>;
@@ -621,12 +627,13 @@ function createKeyFrameSnippets(): (CellSnippetsLayer | PathLayer)[] | null {
                 destWidth,
                 destHeight
             );
+            hoveredNode = nodeWithData;
             userSelectedSnippetBBoxes.push(hoveredBBox);
         }
     }
 
     const selections = [];
-    const ticks: [number, number][][] = [];
+    const ticks: TickData[] = [];
     for (let node of layoutRoot.value.descendants()) {
         if (node.data === null) continue;
         const nodeWithData = node as LayoutNode<Track>;
@@ -722,23 +729,14 @@ function createKeyFrameSnippets(): (CellSnippetsLayer | PathLayer)[] | null {
                 t: cellMetaData.getFrame(cell) - 1, // convert frame number to index
                 snippets: [{ source, destination }],
             });
-
-            const tickX =
-                getLeftPosition(nodeWithData) +
-                cellMetaData.getTime(cell) -
-                node.data.attrNum['min_time'];
-            let tickSnippetY = node.x;
-            let tickHorizonY = node.x;
-            if (displayBelow) {
-                tickSnippetY += tickPadding;
-                tickSnippetY += looneageViewStore.rowHeight;
-            } else {
-                tickSnippetY -= looneageViewStore.rowHeight + tickPadding;
-            }
-            ticks.push([
-                [tickX, tickSnippetY],
-                [tickX, tickHorizonY],
-            ]);
+            const tickData = getTickData(
+                nodeWithData,
+                cell,
+                tickPadding,
+                displayBelow,
+                false
+            );
+            ticks.push(tickData);
         }
         if (newSnippetsOuterBBox !== null) {
             occupied.push(newSnippetsOuterBBox);
@@ -748,10 +746,12 @@ function createKeyFrameSnippets(): (CellSnippetsLayer | PathLayer)[] | null {
     if (
         hoveredSnippet.value &&
         cellMetaData.trackMap != null &&
-        hoveredBBox !== null
+        hoveredBBox !== null &&
+        hoveredNode !== null
     ) {
         const track = cellMetaData.trackMap.get(hoveredSnippet.value.trackId);
         if (track) {
+            // add hovered image snippet to selections
             const cell = track.cells[hoveredSnippet.value.index];
             const [x, y] = cellMetaData.getPosition(cell);
             const source = getBBoxAroundPoint(
@@ -767,6 +767,16 @@ function createKeyFrameSnippets(): (CellSnippetsLayer | PathLayer)[] | null {
                 t: cellMetaData.getFrame(cell) - 1, // convert frame number to index
                 snippets: [{ source, destination }],
             });
+
+            // add tick mark for hovered snippet
+            const tickData = getTickData(
+                hoveredNode,
+                cell,
+                tickPadding,
+                false,
+                true
+            );
+            ticks.push(tickData);
         }
     }
 
@@ -786,10 +796,11 @@ function createKeyFrameSnippets(): (CellSnippetsLayer | PathLayer)[] | null {
     const snippetTickMarksLayer = new PathLayer({
         id: 'snippet-tick-marks-layer',
         data: ticks,
-        getPath: (d: any) => d,
-        getColor: [130, 145, 170, 150],
+        getPath: (d: any) => d.path,
+        getColor: (d) =>
+            d.hovered ? [130, 145, 170, 200] : [130, 145, 170, 150],
         // getColor: [255, 255, 255],
-        getWidth: 1.5,
+        getWidth: (d) => (d.hovered ? 3 : 1.5),
         widthUnits: 'pixels',
         capRounded: false,
     });
@@ -817,6 +828,34 @@ function getSnippetBBox(
     const destX =
         getLeftPosition(node) + t - track.attrNum['min_time'] - destWidth / 2;
     return [destX, destY, destX + destWidth, destY - destHeight];
+}
+
+function getTickData(
+    node: LayoutNode<Track>,
+    cell: Cell,
+    tickPadding: number,
+    displayBelow: boolean,
+    hovered: boolean
+): TickData {
+    const tickX =
+        getLeftPosition(node) +
+        cellMetaData.getTime(cell) -
+        node.data.attrNum['min_time'];
+    let tickSnippetY = node.x;
+    let tickHorizonY = node.x;
+    if (displayBelow) {
+        tickSnippetY += tickPadding;
+        tickSnippetY += looneageViewStore.rowHeight;
+    } else {
+        tickSnippetY -= looneageViewStore.rowHeight + tickPadding;
+    }
+    return {
+        path: [
+            [tickX, tickSnippetY],
+            [tickX, tickHorizonY],
+        ],
+        hovered,
+    };
 }
 
 function valueExtent(track: Track, key: string): number {
