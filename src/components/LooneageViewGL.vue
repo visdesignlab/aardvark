@@ -414,7 +414,7 @@ function createTickMarksLayer(): PathLayer | null {
     });
 }
 
-const hoveredTime: ref<number | null> = ref(null);
+const hoveredTime = ref<number | null>(null);
 
 function createHorizonChartLayers(): (
     | ScatterplotLayer
