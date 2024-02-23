@@ -780,6 +780,17 @@ function createKeyFrameSnippets(): (CellSnippetsLayer | PathLayer)[] | null {
         }
     }
 
+    const snippetTickMarksLayer = new PathLayer({
+        id: 'snippet-tick-marks-layer',
+        data: ticks,
+        getPath: (d: any) => d.path,
+        getColor: (d) =>
+            d.hovered ? [130, 145, 170, 200] : [130, 145, 170, 150],
+        // getColor: [255, 255, 255],
+        getWidth: (d) => (d.hovered ? 3 : 1.5),
+        widthUnits: 'pixels',
+        capRounded: false,
+    });
     const snippetLayer = new CellSnippetsLayer({
         loader: pixelSource.value,
         id: `key-frames-snippets-layer`,
@@ -792,19 +803,7 @@ function createKeyFrameSnippets(): (CellSnippetsLayer | PathLayer)[] | null {
             console.log('clicked');
         },
     });
-
-    const snippetTickMarksLayer = new PathLayer({
-        id: 'snippet-tick-marks-layer',
-        data: ticks,
-        getPath: (d: any) => d.path,
-        getColor: (d) =>
-            d.hovered ? [130, 145, 170, 200] : [130, 145, 170, 150],
-        // getColor: [255, 255, 255],
-        getWidth: (d) => (d.hovered ? 3 : 1.5),
-        widthUnits: 'pixels',
-        capRounded: false,
-    });
-    return [snippetLayer, snippetTickMarksLayer];
+    return [snippetTickMarksLayer, snippetLayer];
 }
 
 function getSnippetBBox(
@@ -845,7 +844,7 @@ function getTickData(
     let tickHorizonY = node.x;
     if (displayBelow) {
         tickSnippetY += tickPadding;
-        tickSnippetY += looneageViewStore.rowHeight;
+        tickHorizonY -= looneageViewStore.rowHeight;
     } else {
         tickSnippetY -= looneageViewStore.rowHeight + tickPadding;
     }
