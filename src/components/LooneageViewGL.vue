@@ -167,6 +167,9 @@ const initialViewState = {
     minZoom: -8,
     maxZoom: 8,
 };
+// this mirror is required because the deckgl viewstate is out of sync by one frame
+// when we call renderDeckGL from onViewStateChange
+const viewStateMirror = ref(initialViewState);
 onMounted(() => {
     deckgl = new Deck({
         initialViewState,
@@ -193,11 +196,11 @@ onMounted(() => {
         // },
         // onWebGLInitialized: () => console.log('onWebGLInitialized'),
         onViewStateChange: ({ viewState, oldViewState }) => {
-            console.log('view state change');
             viewState.zoom[1] = 0;
             if (oldViewState && !isEqual(viewState.zoom, oldViewState.zoom)) {
                 viewState.target[1] = oldViewState.target[1];
             }
+            viewStateMirror.value = viewState as any;
             renderDeckGL();
             return viewState;
         },
@@ -849,16 +852,14 @@ function scaleForConstantVisualSize(
     size: number,
     direction: 'x' | 'y'
 ): number {
-    const viewState = deckgl.viewState?.looneageController ?? initialViewState;
-    const { zoom } = viewState;
+    const { zoom } = viewStateMirror.value;
     const z = direction === 'x' ? zoom[0] : zoom[1];
     // scale the size based on the inverse of the zoom so the visual is consistent
     return size * 2 ** -z;
 }
 
 function viewportBBox(): BBox {
-    const viewState = deckgl.viewState?.looneageController ?? initialViewState;
-    const { target } = viewState;
+    const { target } = viewStateMirror.value;
     // const buffer = -300; // add buffer so data is fetched a bit before it is panned into view.
     const width = scaleForConstantVisualSize(
         deckGlWidth.value + viewportBuffer.value,
