@@ -18,6 +18,7 @@ import { useDatasetSelectionTrrackedStore } from '@/stores/datasetSelectionTrrac
 import { useEventBusStore } from '@/stores/eventBusStore';
 import { useLooneageViewStore } from '@/stores/looneageViewStore';
 import { isEqual } from 'lodash-es';
+import { useGlobalSettings } from '@/stores/globalSettings';
 
 import { Pool } from 'geotiff';
 import type { Feature } from 'geojson';
@@ -54,6 +55,7 @@ import {
 import HorizonChartLayer from './layers/HorizonChartLayer/HorizonChartLayer';
 
 const cellMetaData = useCellMetaData();
+const globalSettings = useGlobalSettings();
 
 const dataPointSelection = useDataPointSelection();
 const imageViewerStore = useImageViewerStore();
@@ -68,6 +70,7 @@ const eventBusStore = useEventBusStore();
 const segmentationStore = useSegmentationStore();
 const looneageViewStore = useLooneageViewStore();
 const { attrKey, spaceKeyframesEvenly } = storeToRefs(looneageViewStore);
+const { darkMode } = storeToRefs(globalSettings);
 
 const deckGlContainer = ref(null);
 const { width: deckGlWidth, height: deckGlHeight } =
@@ -377,7 +380,7 @@ function createTickMarksLayer(): PathLayer | null {
         id: 'horizon-tick-marks-layer',
         data: lines,
         getPath: (d: any) => d,
-        getColor: [180, 180, 180],
+        getColor: darkMode.value ? [100, 100, 100] : [180, 180, 180],
         getWidth: getRawHorizonSnippetPadding / 2,
         widthUnits: 'pixels',
     });
@@ -629,7 +632,7 @@ function createKeyFrameSnippets(): (CellSnippetsLayer | PathLayer)[] | null {
         id: 'snippet-tick-marks-layer',
         data: ticks,
         getPath: (d: any) => d,
-        getColor: [100, 100, 100],
+        getColor: darkMode.value ? [180, 180, 180] : [100, 100, 100],
         getWidth: getRawHorizonSnippetPadding / 2,
         widthUnits: 'pixels',
         capRounded: false,
@@ -665,7 +668,6 @@ watch(attrKey, () => {
     keyframeOrderLookup.value = new Map();
 });
 watch(spaceKeyframesEvenly, () => {
-    console.log('key even toggled');
     keyframeOrderLookup.value = new Map();
     renderDeckGL();
 });
@@ -940,6 +942,7 @@ function renderDeckGL(): void {
     });
     // console.log('done: render test deckgl');
 }
+watch(darkMode, renderDeckGL);
 watch(dataPointSelection.$state, renderDeckGL);
 watch(imageViewerStore.$state, renderDeckGL);
 watch(looneageViewStore.$state, renderDeckGL);
