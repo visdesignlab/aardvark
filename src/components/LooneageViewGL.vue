@@ -731,9 +731,9 @@ function createKeyFrameSnippets(): (CellSnippetsLayer | PathLayer)[] | null {
             let tickHorizonY = node.x;
             if (displayBelow) {
                 tickSnippetY += tickPadding;
+                tickSnippetY += looneageViewStore.rowHeight;
             } else {
                 tickSnippetY -= looneageViewStore.rowHeight + tickPadding;
-                tickHorizonY -= looneageViewStore.rowHeight;
             }
             ticks.push([
                 [tickX, tickSnippetY],
@@ -787,8 +787,9 @@ function createKeyFrameSnippets(): (CellSnippetsLayer | PathLayer)[] | null {
         id: 'snippet-tick-marks-layer',
         data: ticks,
         getPath: (d: any) => d,
-        getColor: darkMode.value ? [180, 180, 180] : [100, 100, 100],
-        getWidth: getRawHorizonSnippetPadding / 2,
+        getColor: [130, 145, 170, 150],
+        // getColor: [255, 255, 255],
+        getWidth: 1.5,
         widthUnits: 'pixels',
         capRounded: false,
     });
