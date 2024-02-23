@@ -129,7 +129,7 @@ void main(void) {
   if (instanceModOffsets >= 0) {
     vFillColor = positiveColors[instanceModOffsets];
   } else if (instanceModOffsets == -1) {
-    vFillColor = vec4(1.0, 1.0, 1.0, 1.0); // white
+    vFillColor = vec4(0.96, 0.96, 0.96, 1.0); // white
   } else {
     vFillColor = negativeColors[-1 * instanceModOffsets - 2];
   }
