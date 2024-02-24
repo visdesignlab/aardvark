@@ -43,6 +43,16 @@ const shortExpName = computed<string>(() => {
 </script>
 
 <template>
+    <q-btn
+        outline
+        rounded
+        class="full-width q-mb-md"
+        @click="
+            datasetSelectionTrrackedStore.serverUrl =
+                'apps.vdl.sci.utah.edu/aardvark-s3'
+        "
+        >Load Example Dataset</q-btn
+    >
     <q-input
         ref="serverInputRef"
         v-model="datasetSelectionTrrackedStore.serverUrl"
