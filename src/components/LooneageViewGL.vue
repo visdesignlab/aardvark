@@ -477,39 +477,11 @@ function createHorizonChartLayers(): (
         getLineWidth: 0,
         onHover: (info: PickingInfo) => {
             if (!cellMetaData.trackMap) return;
-            if (!info.picked) {
-                hoveredTime.value = null;
-                hoveredSnippet.value = null;
-                renderDeckGL();
-                return;
-            }
-            const xPos = info.coordinate?.[0] ?? null;
-            const newTime =
-                xPos !== null
-                    ? cellMetaData.getClosestTime(xPos + lineageMinTime.value)
-                    : null;
-            if (newTime !== hoveredTime.value) {
-                hoveredTime.value = newTime;
-                const trackId = info.object.trackId;
-                const track = cellMetaData.trackMap.get(trackId);
-                if (!track) {
-                    console.error('track not found when hovering');
-                    return;
-                }
-                const index = track.cells.findIndex(
-                    (cell) => cellMetaData.getTime(cell) === newTime
-                );
-                if (index === -1) {
-                    hoveredSnippet.value = null;
-                    renderDeckGL();
-                    return;
-                }
-                hoveredSnippet.value = {
-                    trackId,
-                    index,
-                };
-                renderDeckGL();
-            }
+            const { selectedSnippet, time } = processHorizonPickingInfo(info);
+            if (isEqual(selectedSnippet, hoveredSnippet.value)) return;
+            hoveredTime.value = time;
+            hoveredSnippet.value = selectedSnippet;
+            renderDeckGL();
         },
         onClick: (info: PickingInfo) => {
             console.log(info);
@@ -550,6 +522,42 @@ function createHorizonChartLayers(): (
     // );
 
     return layers;
+}
+
+interface HorizonPickingResult {
+    selectedSnippet: SelectedSnippet | null;
+    time: number | null;
+}
+
+function processHorizonPickingInfo(info: PickingInfo): HorizonPickingResult {
+    const result: HorizonPickingResult = { selectedSnippet: null, time: null };
+    if (!cellMetaData.trackMap) return result;
+    if (!info.picked) {
+        result.time = null;
+        result.selectedSnippet = null;
+        return result;
+    }
+    const xPos = info.coordinate?.[0] ?? null;
+    const newTime =
+        xPos !== null
+            ? cellMetaData.getClosestTime(xPos + lineageMinTime.value)
+            : null;
+    result.time = newTime;
+
+    const trackId = info.object.trackId;
+    const track = cellMetaData.trackMap.get(trackId);
+    if (!track) {
+        console.error('track not found when hovering');
+        return result;
+    }
+    const index = track.cells.findIndex(
+        (cell) => cellMetaData.getTime(cell) === newTime
+    );
+    result.selectedSnippet = {
+        trackId,
+        index,
+    };
+    return result;
 }
 
 const hoveredSnippet = ref<SelectedSnippet | null>(null);
