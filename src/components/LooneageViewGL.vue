@@ -36,6 +36,7 @@ import {
     getBBoxAroundPoint,
     overlaps,
     overlapAmount,
+    outerBBox,
 } from '@/util/imageSnippets';
 
 import {
@@ -854,21 +855,9 @@ function createKeyFrameSnippets(): (CellSnippetsLayer | PathLayer)[] | null {
             if (newSnippetsOuterBBox === null) {
                 newSnippetsOuterBBox = [...destination];
             } else {
-                newSnippetsOuterBBox[0] = Math.min(
-                    newSnippetsOuterBBox[0],
-                    destination[0]
-                );
-                newSnippetsOuterBBox[1] = Math.max(
-                    newSnippetsOuterBBox[1],
-                    destination[1]
-                );
-                newSnippetsOuterBBox[2] = Math.max(
-                    newSnippetsOuterBBox[2],
-                    destination[2]
-                );
-                newSnippetsOuterBBox[3] = Math.min(
-                    newSnippetsOuterBBox[3],
-                    destination[3]
+                newSnippetsOuterBBox = outerBBox(
+                    newSnippetsOuterBBox,
+                    destination
                 );
             }
 

@@ -90,3 +90,12 @@ function overlaps1D(
 ): boolean {
     return aMax >= bMin && aMin <= bMax;
 }
+
+export function outerBBox(a: BBox, b: BBox): BBox {
+    return [
+        Math.min(a[0], b[0]),
+        Math.max(a[1], b[1]),
+        Math.max(a[2], b[2]),
+        Math.min(a[3], b[3]),
+    ];
+}
