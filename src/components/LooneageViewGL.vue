@@ -729,6 +729,7 @@ function createKeyFrameSnippets(): (CellSnippetsLayer | PathLayer)[] | null {
             const cell = track.cells[index];
             let frameIndex = cellMetaData.getFrame(cell) - 1; // convert frame number to index
             // account for offset if past first/last frame
+            const edgeIndexOffset = snippet.index + indexOffset - index;
             frameIndex += snippet.index + indexOffset - index;
             if (
                 frameIndex < 0 ||
@@ -753,12 +754,13 @@ function createKeyFrameSnippets(): (CellSnippetsLayer | PathLayer)[] | null {
             });
             const tickData = getTickData(
                 node,
+                index,
                 cell,
                 tickPadding,
                 displayBelow,
                 false,
                 true,
-                indexOffset
+                edgeIndexOffset
             );
             ticks.push(tickData);
         }
@@ -802,6 +804,7 @@ function createKeyFrameSnippets(): (CellSnippetsLayer | PathLayer)[] | null {
             // add tick mark for hovered snippet
             const tickData = getTickData(
                 node,
+                hoveredSnippet.value.index,
                 cell,
                 tickPadding,
                 false,
@@ -891,6 +894,7 @@ function createKeyFrameSnippets(): (CellSnippetsLayer | PathLayer)[] | null {
             });
             const tickData = getTickData(
                 nodeWithData,
+                index,
                 cell,
                 tickPadding,
                 displayBelow,
@@ -954,17 +958,26 @@ function getSnippetBBox(
         return [0, 0, 0, 0];
     }
     const t = cellMetaData.getTime(cell);
+
     let destX =
         getLeftPosition(node) + t - track.attrNum['min_time'] - destWidth / 2;
     if (indexOffset) {
+        const offsetT = getOffsetTime(track, index, indexOffset);
         const snippetPadding = scaleForConstantVisualSize(2, 'x');
-        destX += indexOffset * (destWidth + snippetPadding);
+        const evenDestX = destX + indexOffset * (destWidth + snippetPadding);
+        const realDestX = destX + offsetT - t;
+        if (indexOffset > 0) {
+            destX = Math.max(evenDestX, realDestX);
+        } else {
+            destX = Math.min(evenDestX, realDestX);
+        }
     }
     return [destX, destY, destX + destWidth, destY - destHeight];
 }
 
 function getTickData(
     node: LayoutNode<Track>,
+    cellIndex: number,
     cell: Cell,
     tickPadding: number,
     displayBelow: boolean,
@@ -972,19 +985,12 @@ function getTickData(
     pinned: boolean,
     indexOffset?: number
 ): TickData {
-    const t = cellMetaData.getTime(cell);
     let tickX = getLeftPosition(node) - node.data.attrNum['min_time'];
+    let t = cellMetaData.getTime(cell);
     if (indexOffset) {
-        const i = cellMetaData.timeList.findIndex((time) => time === t);
-        if (i === -1) {
-            console.error('could not find time in timeList');
-        } else {
-            const offsetT = cellMetaData.timeList[i + indexOffset];
-            tickX += offsetT;
-        }
-    } else {
-        tickX += t;
+        t = getOffsetTime(node.data, cellIndex, indexOffset);
     }
+    tickX += t;
     let tickSnippetY = node.x;
     let tickHorizonY = node.x;
     if (displayBelow) {
@@ -1001,6 +1007,29 @@ function getTickData(
         hovered,
         pinned,
     };
+}
+
+function getOffsetTime(
+    track: Track,
+    cellIndex: number,
+    offset: number
+): number {
+    const offsetCellIndex = cellIndex + offset;
+    if (offsetCellIndex < 0 || offsetCellIndex >= track.cells.length) {
+        // todo
+        const cell = track.cells[cellIndex];
+        const t = cellMetaData.getTime(cell);
+        const i = cellMetaData.timeList.findIndex((time) => time === t);
+        if (i === -1) {
+            console.error('could not find time in timeList');
+            return -1;
+        } else {
+            return cellMetaData.timeList[i + offset];
+        }
+    } else {
+        const cell = track.cells[offsetCellIndex];
+        return cellMetaData.getTime(cell);
+    }
 }
 
 function valueExtent(track: Track, key: string): number {
