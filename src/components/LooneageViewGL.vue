@@ -484,7 +484,11 @@ function createHorizonChartLayers(): (
             renderDeckGL();
         },
         onClick: (info: PickingInfo) => {
-            console.log(info);
+            if (!cellMetaData.trackMap) return;
+            const { selectedSnippet, time } = processHorizonPickingInfo(info);
+            if (!selectedSnippet) return;
+            looneageViewStore.pinnedSnippets.push(selectedSnippet);
+            renderDeckGL();
         },
     });
     layers.push(destinationLayer);
@@ -595,11 +599,20 @@ interface TickData {
     hovered: boolean;
 }
 
+interface SnippetRenderInfo {
+    node: LayoutNode<Track>;
+    displayBelow: boolean;
+}
+
 function createKeyFrameSnippets(): (CellSnippetsLayer | PathLayer)[] | null {
     if (!layoutRoot.value) return null;
+    // used for collision detection, to prevent overlapping. The logic
+    // is slightly different for the horizon charts and the user selected
+    // snippets, which include hovered and pinned snippets
     const occupied: BBox[] = [];
     const userSelectedSnippetBBoxes: BBox[] = [];
 
+    // set up a few variables that will be used in the loops
     const destWidth = scaleForConstantVisualSize(
         looneageViewStore.snippetDestSize,
         'x'
@@ -614,13 +627,20 @@ function createKeyFrameSnippets(): (CellSnippetsLayer | PathLayer)[] | null {
     const aboveOffset = looneageViewStore.rowHeight + tickPadding;
     const belowOffset = destHeight + tickPadding;
 
-    let hoveredBBox: BBox | null = null;
-    let hoveredNode: LayoutNode<Track> | null = null;
+    const trackIdToRenderInfo = new Map<string, SnippetRenderInfo>();
+    // this is needed to keep track of render info, so that user selected
+    // snippets can be added after the auto selected snippets on the correct
+    // side (above/below)
+
+    // add horizon chart as occupied rectangle
     for (let node of layoutRoot.value.descendants()) {
         if (node.data === null) continue;
         const nodeWithData = node as LayoutNode<Track>;
+        trackIdToRenderInfo.set(nodeWithData.data.trackId, {
+            node: nodeWithData,
+            displayBelow: false,
+        });
         if (!horizonInViewport(nodeWithData)) continue; // for performance
-        // add horizon chart as occupied rectangle
         const left = getLeftPosition(nodeWithData);
         const right = getRightPosition(nodeWithData);
         const chartBBox: BBox = [
@@ -632,6 +652,10 @@ function createKeyFrameSnippets(): (CellSnippetsLayer | PathLayer)[] | null {
         occupied.push(chartBBox);
     }
 
+    // get snippet placement for each horizon chart. All snippets will be placed
+    // on the same side of the chart. Find the side with more free space, and prefer
+    // the top in  at tie. This calculation should be done before the user selected snippets
+    // it is jarring if hovering/selecting  causes the side to change.
     const selections = [];
     const ticks: TickData[] = [];
     for (let node of layoutRoot.value.descendants()) {
@@ -661,25 +685,112 @@ function createKeyFrameSnippets(): (CellSnippetsLayer | PathLayer)[] | null {
         const displayBelow = aboveOverlap > belowOverlap;
         // preffer to display above
         // but if there is moe overlap above then place below
+        const track = node.data;
+        const renderInfo = trackIdToRenderInfo.get(track.trackId);
+        if (renderInfo) {
+            renderInfo.displayBelow = displayBelow;
+        }
+    }
 
-        if (
-            hoveredSnippet.value &&
-            hoveredSnippet.value.trackId === node.data.trackId
-        ) {
-            hoveredBBox = getSnippetBBox(
+    // TODO: add pinned snippets to user selected, and selections
+    for (const snippet of looneageViewStore.pinnedSnippets) {
+        const track = cellMetaData.trackMap?.get(snippet.trackId);
+        if (!track) continue;
+        const renderInfo = trackIdToRenderInfo.get(track.trackId);
+        if (!renderInfo) {
+            console.error('could not find render info');
+            continue;
+        }
+
+        const { displayBelow, node } = renderInfo;
+        const pinnedBbox = getSnippetBBox(
+            snippet.index,
+            node,
+            displayBelow,
+            aboveOffset,
+            belowOffset,
+            destWidth,
+            destHeight
+        );
+
+        userSelectedSnippetBBoxes.push(pinnedBbox);
+
+        const cell = track.cells[snippet.index];
+        const [x, y] = cellMetaData.getPosition(cell);
+        const source = getBBoxAroundPoint(
+            x,
+            y,
+            looneageViewStore.snippetSourceSize,
+            looneageViewStore.snippetSourceSize
+        );
+        selections.push({
+            c: 0,
+            z: 0,
+            t: cellMetaData.getFrame(cell) - 1, // convert frame number to index
+            snippets: [{ source, destination: pinnedBbox }],
+        });
+        const tickData = getTickData(
+            node,
+            cell,
+            tickPadding,
+            displayBelow,
+            true
+        );
+        ticks.push(tickData);
+    }
+
+    // add the hovered snippet to render, and to collisions
+    if (hoveredSnippet.value && cellMetaData.trackMap != null) {
+        const trackId = hoveredSnippet.value.trackId;
+        const renderInfo = trackIdToRenderInfo.get(trackId);
+        if (renderInfo) {
+            const { node, displayBelow } = renderInfo;
+            const track = node.data;
+            const hoveredBBox = getSnippetBBox(
                 hoveredSnippet.value.index,
-                nodeWithData,
+                node,
                 displayBelow,
                 aboveOffset,
                 belowOffset,
                 destWidth,
                 destHeight
             );
-            hoveredNode = nodeWithData;
             userSelectedSnippetBBoxes.push(hoveredBBox);
-        }
 
+            // add hovered image snippet to selections
+            const cell = track.cells[hoveredSnippet.value.index];
+            const [x, y] = cellMetaData.getPosition(cell);
+            const source = getBBoxAroundPoint(
+                x,
+                y,
+                looneageViewStore.snippetSourceSize,
+                looneageViewStore.snippetSourceSize
+            );
+            const destination = hoveredBBox;
+            selections.push({
+                c: 0,
+                z: 0,
+                t: cellMetaData.getFrame(cell) - 1, // convert frame number to index
+                snippets: [{ source, destination }],
+            });
+
+            // add tick mark for hovered snippet
+            const tickData = getTickData(node, cell, tickPadding, false, true);
+            ticks.push(tickData);
+        }
+    }
+
+    // add the automatic snippets, avoiding horizons and user selected snippets
+    for (const node of layoutRoot.value.descendants()) {
+        if (node.data === null) continue;
+        const nodeWithData = node as LayoutNode<Track>;
         const track = node.data;
+        const renderInfo = trackIdToRenderInfo.get(track.trackId);
+        if (!renderInfo) {
+            console.error('could not find render info');
+            continue;
+        }
+        const { displayBelow } = renderInfo;
         const keyframeOrder = getKeyFrameOrder(node.data);
         let newSnippetsOuterBBox: BBox | null = null;
 
@@ -760,43 +871,7 @@ function createKeyFrameSnippets(): (CellSnippetsLayer | PathLayer)[] | null {
         }
     }
 
-    if (
-        hoveredSnippet.value &&
-        cellMetaData.trackMap != null &&
-        hoveredBBox !== null &&
-        hoveredNode !== null
-    ) {
-        const track = cellMetaData.trackMap.get(hoveredSnippet.value.trackId);
-        if (track) {
-            // add hovered image snippet to selections
-            const cell = track.cells[hoveredSnippet.value.index];
-            const [x, y] = cellMetaData.getPosition(cell);
-            const source = getBBoxAroundPoint(
-                x,
-                y,
-                looneageViewStore.snippetSourceSize,
-                looneageViewStore.snippetSourceSize
-            );
-            const destination = hoveredBBox;
-            selections.push({
-                c: 0,
-                z: 0,
-                t: cellMetaData.getFrame(cell) - 1, // convert frame number to index
-                snippets: [{ source, destination }],
-            });
-
-            // add tick mark for hovered snippet
-            const tickData = getTickData(
-                hoveredNode,
-                cell,
-                tickPadding,
-                false,
-                true
-            );
-            ticks.push(tickData);
-        }
-    }
-
+    // create the actual layers now the data is generated
     const snippetTickMarksLayer = new PathLayer({
         id: 'snippet-tick-marks-layer',
         data: ticks,
