@@ -560,6 +560,7 @@ function processHorizonPickingInfo(info: PickingInfo): HorizonPickingResult {
     result.selectedSnippet = {
         trackId,
         index,
+        extraFrames: 2,
     };
     return result;
 }
@@ -702,43 +703,65 @@ function createKeyFrameSnippets(): (CellSnippetsLayer | PathLayer)[] | null {
             console.error('could not find render info');
             continue;
         }
+        for (
+            let indexOffset = -snippet.extraFrames;
+            indexOffset <= snippet.extraFrames;
+            indexOffset++
+        ) {
+            const { displayBelow, node } = renderInfo;
+            const pinnedBbox = getSnippetBBox(
+                snippet.index,
+                node,
+                displayBelow,
+                aboveOffset,
+                belowOffset,
+                destWidth,
+                destHeight,
+                indexOffset
+            );
+            if (!overlaps(pinnedBbox, viewportBBox())) continue;
 
-        const { displayBelow, node } = renderInfo;
-        const pinnedBbox = getSnippetBBox(
-            snippet.index,
-            node,
-            displayBelow,
-            aboveOffset,
-            belowOffset,
-            destWidth,
-            destHeight
-        );
+            userSelectedSnippetBBoxes.push(pinnedBbox); // TODO: mrerge into one outer bbox
 
-        userSelectedSnippetBBoxes.push(pinnedBbox);
+            let index = snippet.index + indexOffset;
+            index = Math.max(index, 0);
+            index = Math.min(index, track.cells.length - 1);
+            const cell = track.cells[index];
+            let frameIndex = cellMetaData.getFrame(cell) - 1; // convert frame number to index
+            // account for offset if past first/last frame
+            frameIndex += snippet.index + indexOffset - index;
+            if (
+                frameIndex < 0 ||
+                frameIndex >= imageViewerStoreUntrracked.sizeT
+            ) {
+                continue;
+            }
 
-        const cell = track.cells[snippet.index];
-        const [x, y] = cellMetaData.getPosition(cell);
-        const source = getBBoxAroundPoint(
-            x,
-            y,
-            looneageViewStore.snippetSourceSize,
-            looneageViewStore.snippetSourceSize
-        );
-        selections.push({
-            c: 0,
-            z: 0,
-            t: cellMetaData.getFrame(cell) - 1, // convert frame number to index
-            snippets: [{ source, destination: pinnedBbox }],
-        });
-        const tickData = getTickData(
-            node,
-            cell,
-            tickPadding,
-            displayBelow,
-            false,
-            true
-        );
-        ticks.push(tickData);
+            const [x, y] = cellMetaData.getPosition(cell);
+            const source = getBBoxAroundPoint(
+                x,
+                y,
+                looneageViewStore.snippetSourceSize,
+                looneageViewStore.snippetSourceSize
+            );
+
+            selections.push({
+                c: 0,
+                z: 0,
+                t: frameIndex,
+                snippets: [{ source, destination: pinnedBbox }],
+            });
+            const tickData = getTickData(
+                node,
+                cell,
+                tickPadding,
+                displayBelow,
+                false,
+                true,
+                indexOffset
+            );
+            ticks.push(tickData);
+        }
     }
 
     // add the hovered snippet to render, and to collisions
@@ -915,7 +938,8 @@ function getSnippetBBox(
     aboveOffset: number,
     belowOffset: number,
     destWidth: number,
-    destHeight: number
+    destHeight: number,
+    indexOffset?: number
 ): BBox {
     let destY = node.x;
     if (displayBelow) {
@@ -930,8 +954,12 @@ function getSnippetBBox(
         return [0, 0, 0, 0];
     }
     const t = cellMetaData.getTime(cell);
-    const destX =
+    let destX =
         getLeftPosition(node) + t - track.attrNum['min_time'] - destWidth / 2;
+    if (indexOffset) {
+        const snippetPadding = scaleForConstantVisualSize(2, 'x');
+        destX += indexOffset * (destWidth + snippetPadding);
+    }
     return [destX, destY, destX + destWidth, destY - destHeight];
 }
 
@@ -941,12 +969,22 @@ function getTickData(
     tickPadding: number,
     displayBelow: boolean,
     hovered: boolean,
-    pinned: boolean
+    pinned: boolean,
+    indexOffset?: number
 ): TickData {
-    const tickX =
-        getLeftPosition(node) +
-        cellMetaData.getTime(cell) -
-        node.data.attrNum['min_time'];
+    const t = cellMetaData.getTime(cell);
+    let tickX = getLeftPosition(node) - node.data.attrNum['min_time'];
+    if (indexOffset) {
+        const i = cellMetaData.timeList.findIndex((time) => time === t);
+        if (i === -1) {
+            console.error('could not find time in timeList');
+        } else {
+            const offsetT = cellMetaData.timeList[i + indexOffset];
+            tickX += offsetT;
+        }
+    } else {
+        tickX += t;
+    }
     let tickSnippetY = node.x;
     let tickHorizonY = node.x;
     if (displayBelow) {

@@ -8,8 +8,7 @@ import { min as d3Min, max as d3Max } from 'd3-array';
 export interface SelectedSnippet {
     trackId: string;
     index: number;
-    extraBefore?: number;
-    extraAfter?: number;
+    extraFrames: number;
 }
 
 interface PinnedSnippetLookup {
