@@ -699,6 +699,7 @@ function createKeyFrameSnippets(): (CellSnippetsLayer | PathLayer)[] | null {
             console.error('could not find render info');
             continue;
         }
+        let outerPinnedBBox: BBox | null = null;
         for (
             let indexOffset = -snippet.extraFrames;
             indexOffset <= snippet.extraFrames;
@@ -717,7 +718,11 @@ function createKeyFrameSnippets(): (CellSnippetsLayer | PathLayer)[] | null {
             );
             if (!overlaps(pinnedBbox, viewportBBox())) continue;
 
-            userSelectedSnippetBBoxes.push(pinnedBbox); // TODO: mrerge into one outer bbox
+            if (outerPinnedBBox === null) {
+                outerPinnedBBox = [...pinnedBbox];
+            } else {
+                outerPinnedBBox = outerBBox(outerPinnedBBox, pinnedBbox);
+            }
 
             let index = snippet.index + indexOffset;
             index = Math.max(index, 0);
@@ -759,6 +764,9 @@ function createKeyFrameSnippets(): (CellSnippetsLayer | PathLayer)[] | null {
                 edgeIndexOffset
             );
             ticks.push(tickData);
+        }
+        if (outerPinnedBBox) {
+            userSelectedSnippetBBoxes.push(outerPinnedBBox);
         }
     }
 
