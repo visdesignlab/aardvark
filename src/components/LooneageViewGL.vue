@@ -287,7 +287,6 @@ function constructGeometry(track: Track): number[] {
     // small visual bug. This value is arbitrary, but is less likely to
     // be found in data than 0.
 
-    // TODO: return something reasonable if track.cells.length === 1
     if (track.cells.length === 1) {
         const cell = track.cells[0];
         const x = cellMetaData.getTime(cell);
@@ -318,11 +317,7 @@ function constructGeometry(track: Track): number[] {
     return geometry;
 }
 
-const testModOffests = computed(() => {
-    // TODO: maybe need to calculate?
-
-    return [-8, -7, -6, -5, -4, -3, -2, -1, 0, 1, 2, 3, 4, 5];
-});
+const testModOffests = [-8, -7, -6, -5, -4, -3, -2, -1, 0, 1, 2, 3, 4, 5];
 
 // const destination = computed<[number, number, number, number]>(() => [
 //     0,
@@ -1016,7 +1011,6 @@ function getOffsetTime(
 ): number {
     const offsetCellIndex = cellIndex + offset;
     if (offsetCellIndex < 0 || offsetCellIndex >= track.cells.length) {
-        // todo
         const cell = track.cells[cellIndex];
         const t = cellMetaData.getTime(cell);
         const i = cellMetaData.timeList.findIndex((time) => time === t);
@@ -1173,6 +1167,14 @@ function horizonInViewport(node: LayoutNode<Track>): boolean {
     return overlaps(chartBBox, viewportBBox());
 }
 
+const positiveColors = computed<number[]>(() => {
+    return hexListToRgba(looneageViewStore.positiveColorScheme.value[6]);
+});
+
+const negativeColors = computed<number[]>(() => {
+    return hexListToRgba(looneageViewStore.negativeColorScheme.value[6]);
+});
+
 function createHorizonChartLayer(
     node: LayoutNode<Track>
 ): HorizonChartLayer | null {
@@ -1195,14 +1197,6 @@ function createHorizonChartLayer(
         looneageViewStore.rowHeight,
     ];
 
-    // TODO: make these once
-    const positiveColors = hexListToRgba(
-        looneageViewStore.positiveColorScheme.value[6]
-    );
-    const negativeColors = hexListToRgba(
-        looneageViewStore.negativeColorScheme.value[6]
-    );
-
     // const minTime = cellMetaData.getFrame(cellMetaData.selectedTrack.cells[0]);
     // const lastIndex = cellMetaData.selectedTrack.cells.length - 1;
     // const maxTime = cellMetaData.getFrame(
@@ -1217,7 +1211,7 @@ function createHorizonChartLayer(
 
     const horizonChartLayer = new HorizonChartLayer({
         id: `custom-horizon-chart-layer-${track.trackId}`,
-        data: testModOffests.value,
+        data: testModOffests,
 
         instanceData: constructGeometry(track),
         destination,
@@ -1227,8 +1221,8 @@ function createHorizonChartLayer(
         binSize: looneageViewStore.modHeight,
 
         getModOffset: (d: any) => d,
-        positiveColors,
-        negativeColors,
+        positiveColors: positiveColors.value,
+        negativeColors: negativeColors.value,
         updateTriggers: {
             instanceData: testGeometry.value,
         },
