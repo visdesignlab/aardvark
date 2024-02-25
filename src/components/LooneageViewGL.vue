@@ -485,9 +485,9 @@ function createHorizonChartLayers(): (
         },
         onClick: (info: PickingInfo) => {
             if (!cellMetaData.trackMap) return;
-            const { selectedSnippet, time } = processHorizonPickingInfo(info);
+            const { selectedSnippet } = processHorizonPickingInfo(info);
             if (!selectedSnippet) return;
-            looneageViewStore.pinnedSnippets.push(selectedSnippet);
+            looneageViewStore.togglePinnedSnippet(selectedSnippet);
             renderDeckGL();
         },
     });
@@ -597,6 +597,7 @@ function getMiddleVert(node: LayoutNode<Track>): number {
 interface TickData {
     path: [number, number][];
     hovered: boolean;
+    pinned: boolean;
 }
 
 interface SnippetRenderInfo {
@@ -692,8 +693,8 @@ function createKeyFrameSnippets(): (CellSnippetsLayer | PathLayer)[] | null {
         }
     }
 
-    // TODO: add pinned snippets to user selected, and selections
-    for (const snippet of looneageViewStore.pinnedSnippets) {
+    // add pinned snippets to user selected, and selections
+    for (const snippet of Object.values(looneageViewStore.pinnedSnippets)) {
         const track = cellMetaData.trackMap?.get(snippet.trackId);
         if (!track) continue;
         const renderInfo = trackIdToRenderInfo.get(track.trackId);
@@ -734,6 +735,7 @@ function createKeyFrameSnippets(): (CellSnippetsLayer | PathLayer)[] | null {
             cell,
             tickPadding,
             displayBelow,
+            false,
             true
         );
         ticks.push(tickData);
@@ -775,7 +777,14 @@ function createKeyFrameSnippets(): (CellSnippetsLayer | PathLayer)[] | null {
             });
 
             // add tick mark for hovered snippet
-            const tickData = getTickData(node, cell, tickPadding, false, true);
+            const tickData = getTickData(
+                node,
+                cell,
+                tickPadding,
+                false,
+                true,
+                false
+            );
             ticks.push(tickData);
         }
     }
@@ -862,6 +871,7 @@ function createKeyFrameSnippets(): (CellSnippetsLayer | PathLayer)[] | null {
                 cell,
                 tickPadding,
                 displayBelow,
+                false,
                 false
             );
             ticks.push(tickData);
@@ -877,7 +887,7 @@ function createKeyFrameSnippets(): (CellSnippetsLayer | PathLayer)[] | null {
         data: ticks,
         getPath: (d: any) => d.path,
         getColor: (d) =>
-            d.hovered ? [130, 145, 170, 200] : [130, 145, 170, 150],
+            d.hovered | d.pinned ? [130, 145, 170, 200] : [130, 145, 170, 150],
         // getColor: [255, 255, 255],
         getWidth: (d) => (d.hovered ? 3 : 1.5),
         widthUnits: 'pixels',
@@ -930,7 +940,8 @@ function getTickData(
     cell: Cell,
     tickPadding: number,
     displayBelow: boolean,
-    hovered: boolean
+    hovered: boolean,
+    pinned: boolean
 ): TickData {
     const tickX =
         getLeftPosition(node) +
@@ -950,6 +961,7 @@ function getTickData(
             [tickX, tickHorizonY],
         ],
         hovered,
+        pinned,
     };
 }
 

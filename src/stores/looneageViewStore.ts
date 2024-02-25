@@ -12,6 +12,10 @@ export interface SelectedSnippet {
     extraAfter?: number;
 }
 
+interface PinnedSnippetLookup {
+    [key: string]: SelectedSnippet;
+}
+
 const storeId = 'looneageViewStore';
 export const useLooneageViewStore = defineStore(storeId, () => {
     const cellMetaData = useCellMetaData();
@@ -75,7 +79,16 @@ export const useLooneageViewStore = defineStore(storeId, () => {
     const positiveColorScheme = ref({ label: 'Red', value: schemeReds });
     const negativeColorScheme = ref({ label: 'Blue', value: schemeBlues });
 
-    const pinnedSnippets = ref<SelectedSnippet[]>([]);
+    const pinnedSnippets = ref<PinnedSnippetLookup>({});
+
+    function togglePinnedSnippet(snippet: SelectedSnippet) {
+        const key = snippet.trackId + '-' + snippet.index;
+        if (key in pinnedSnippets.value) {
+            delete pinnedSnippets.value[key];
+        } else {
+            pinnedSnippets.value[key] = snippet;
+        }
+    }
 
     return {
         attrKey,
@@ -96,5 +109,6 @@ export const useLooneageViewStore = defineStore(storeId, () => {
         spaceKeyframesEvenly,
         setReasonableModHeight,
         pinnedSnippets,
+        togglePinnedSnippet,
     };
 });
