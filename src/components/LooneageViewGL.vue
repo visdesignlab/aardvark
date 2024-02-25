@@ -556,7 +556,7 @@ function processHorizonPickingInfo(info: PickingInfo): HorizonPickingResult {
     result.selectedSnippet = {
         trackId,
         index,
-        extraFrames: 2,
+        extraFrames: 1,
     };
     return result;
 }
@@ -700,12 +700,26 @@ function createKeyFrameSnippets(): (CellSnippetsLayer | PathLayer)[] | null {
             continue;
         }
         let outerPinnedBBox: BBox | null = null;
+        const { displayBelow, node } = renderInfo;
         for (
             let indexOffset = -snippet.extraFrames;
             indexOffset <= snippet.extraFrames;
             indexOffset++
         ) {
-            const { displayBelow, node } = renderInfo;
+            let index = snippet.index + indexOffset;
+            index = Math.max(index, 0);
+            index = Math.min(index, track.cells.length - 1);
+            const cell = track.cells[index];
+            let frameIndex = cellMetaData.getFrame(cell) - 1; // convert frame number to index
+            // account for offset if past first/last frame
+            const edgeIndexOffset = snippet.index + indexOffset - index;
+            frameIndex += snippet.index + indexOffset - index;
+            if (
+                frameIndex < 0 ||
+                frameIndex >= imageViewerStoreUntrracked.sizeT
+            ) {
+                continue;
+            }
             const pinnedBbox = getSnippetBBox(
                 snippet.index,
                 node,
@@ -722,21 +736,6 @@ function createKeyFrameSnippets(): (CellSnippetsLayer | PathLayer)[] | null {
                 outerPinnedBBox = [...pinnedBbox];
             } else {
                 outerPinnedBBox = outerBBox(outerPinnedBBox, pinnedBbox);
-            }
-
-            let index = snippet.index + indexOffset;
-            index = Math.max(index, 0);
-            index = Math.min(index, track.cells.length - 1);
-            const cell = track.cells[index];
-            let frameIndex = cellMetaData.getFrame(cell) - 1; // convert frame number to index
-            // account for offset if past first/last frame
-            const edgeIndexOffset = snippet.index + indexOffset - index;
-            frameIndex += snippet.index + indexOffset - index;
-            if (
-                frameIndex < 0 ||
-                frameIndex >= imageViewerStoreUntrracked.sizeT
-            ) {
-                continue;
             }
 
             const [x, y] = cellMetaData.getPosition(cell);
@@ -766,6 +765,7 @@ function createKeyFrameSnippets(): (CellSnippetsLayer | PathLayer)[] | null {
             ticks.push(tickData);
         }
         if (outerPinnedBBox) {
+            console.log('pinned', outerPinnedBBox);
             userSelectedSnippetBBoxes.push(outerPinnedBBox);
         }
     }
@@ -775,47 +775,80 @@ function createKeyFrameSnippets(): (CellSnippetsLayer | PathLayer)[] | null {
         const trackId = hoveredSnippet.value.trackId;
         const renderInfo = trackIdToRenderInfo.get(trackId);
         if (renderInfo) {
-            const { node, displayBelow } = renderInfo;
-            const track = node.data;
-            const hoveredBBox = getSnippetBBox(
-                hoveredSnippet.value.index,
-                node,
-                displayBelow,
-                aboveOffset,
-                belowOffset,
-                destWidth,
-                destHeight
-            );
-            userSelectedSnippetBBoxes.push(hoveredBBox);
+            let outerHoveredBBox: BBox | null = null;
+            const { displayBelow, node } = renderInfo;
+            for (
+                let indexOffset = -hoveredSnippet.value.extraFrames;
+                indexOffset <= hoveredSnippet.value.extraFrames;
+                indexOffset++
+            ) {
+                const track = node.data;
 
-            // add hovered image snippet to selections
-            const cell = track.cells[hoveredSnippet.value.index];
-            const [x, y] = cellMetaData.getPosition(cell);
-            const source = getBBoxAroundPoint(
-                x,
-                y,
-                looneageViewStore.snippetSourceSize,
-                looneageViewStore.snippetSourceSize
-            );
-            const destination = hoveredBBox;
-            selections.push({
-                c: 0,
-                z: 0,
-                t: cellMetaData.getFrame(cell) - 1, // convert frame number to index
-                snippets: [{ source, destination }],
-            });
+                let index = hoveredSnippet.value.index + indexOffset;
+                index = Math.max(index, 0);
+                index = Math.min(index, track.cells.length - 1);
 
-            // add tick mark for hovered snippet
-            const tickData = getTickData(
-                node,
-                hoveredSnippet.value.index,
-                cell,
-                tickPadding,
-                false,
-                true,
-                false
-            );
-            ticks.push(tickData);
+                // add hovered image snippet to selections
+                const cell = track.cells[index];
+                let frameIndex = cellMetaData.getFrame(cell) - 1; // convert frame number to index
+                // account for offset if past first/last frame
+                const edgeIndexOffset =
+                    hoveredSnippet.value.index + indexOffset - index;
+                frameIndex += hoveredSnippet.value.index + indexOffset - index;
+                if (
+                    frameIndex < 0 ||
+                    frameIndex >= imageViewerStoreUntrracked.sizeT
+                ) {
+                    continue;
+                }
+                const hoveredBBox = getSnippetBBox(
+                    hoveredSnippet.value.index,
+                    node,
+                    displayBelow,
+                    aboveOffset,
+                    belowOffset,
+                    destWidth,
+                    destHeight,
+                    indexOffset
+                );
+                if (outerHoveredBBox === null) {
+                    outerHoveredBBox = [...hoveredBBox];
+                } else {
+                    outerHoveredBBox = outerBBox(outerHoveredBBox, hoveredBBox);
+                }
+
+                const [x, y] = cellMetaData.getPosition(cell);
+                const source = getBBoxAroundPoint(
+                    x,
+                    y,
+                    looneageViewStore.snippetSourceSize,
+                    looneageViewStore.snippetSourceSize
+                );
+                const destination = hoveredBBox;
+                selections.push({
+                    c: 0,
+                    z: 0,
+                    t: frameIndex,
+                    snippets: [{ source, destination }],
+                });
+
+                // add tick mark for hovered snippet
+                const tickData = getTickData(
+                    node,
+                    index,
+                    cell,
+                    tickPadding,
+                    false,
+                    true,
+                    false,
+                    edgeIndexOffset
+                );
+                ticks.push(tickData);
+            }
+            if (outerHoveredBBox) {
+                console.log('hovered', outerHoveredBBox);
+                userSelectedSnippetBBoxes.push(outerHoveredBBox);
+            }
         }
     }
 
