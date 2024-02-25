@@ -595,6 +595,7 @@ interface TickData {
     path: [number, number][];
     hovered: boolean;
     pinned: boolean;
+    drawerLine: boolean;
 }
 
 interface SnippetRenderInfo {
@@ -760,13 +761,20 @@ function createKeyFrameSnippets(): (CellSnippetsLayer | PathLayer)[] | null {
                 displayBelow,
                 false,
                 true,
-                edgeIndexOffset
+                edgeIndexOffset,
+                indexOffset ? true : false
             );
             ticks.push(tickData);
         }
         if (outerPinnedBBox) {
-            console.log('pinned', outerPinnedBBox);
             userSelectedSnippetBBoxes.push(outerPinnedBBox);
+            if (snippet.extraFrames > 0) {
+                const windowDrawerData = getWindowDrawer(
+                    outerPinnedBBox,
+                    displayBelow
+                );
+                ticks.push(windowDrawerData);
+            }
         }
     }
 
@@ -838,16 +846,23 @@ function createKeyFrameSnippets(): (CellSnippetsLayer | PathLayer)[] | null {
                     index,
                     cell,
                     tickPadding,
-                    false,
+                    displayBelow,
                     true,
                     false,
-                    edgeIndexOffset
+                    edgeIndexOffset,
+                    indexOffset ? true : false
                 );
                 ticks.push(tickData);
             }
             if (outerHoveredBBox) {
-                console.log('hovered', outerHoveredBBox);
                 userSelectedSnippetBBoxes.push(outerHoveredBBox);
+                if (hoveredSnippet.value.extraFrames > 0) {
+                    const windowDrawerData = getWindowDrawer(
+                        outerHoveredBBox,
+                        displayBelow
+                    );
+                    ticks.push(windowDrawerData);
+                }
             }
         }
     }
@@ -938,8 +953,19 @@ function createKeyFrameSnippets(): (CellSnippetsLayer | PathLayer)[] | null {
         id: 'snippet-tick-marks-layer',
         data: ticks,
         getPath: (d: any) => d.path,
-        getColor: (d) =>
-            d.hovered | d.pinned ? [130, 145, 170, 200] : [130, 145, 170, 150],
+        getColor: (d: any) => {
+            if (d.hovered | d.pinned) {
+                return [130, 145, 170, 200];
+            } else if (d.drawerLine) {
+                if (globalSettings.darkMode) {
+                    return [195, 217, 250, 200];
+                } else {
+                    return [65, 72, 85, 200];
+                }
+            } else {
+                return [130, 145, 170, 150];
+            }
+        },
         // getColor: [255, 255, 255],
         getWidth: (d) => (d.hovered ? 3 : 1.5),
         widthUnits: 'pixels',
@@ -988,8 +1014,8 @@ function getSnippetBBox(
         getLeftPosition(node) + t - track.attrNum['min_time'] - destWidth / 2;
     if (indexOffset) {
         const offsetT = getOffsetTime(track, index, indexOffset);
-        const snippetPadding = scaleForConstantVisualSize(2, 'x');
-        const evenDestX = destX + indexOffset * (destWidth + snippetPadding);
+        const evenDestX =
+            destX + indexOffset * (destWidth + getBetweenSnippetPadding());
         const realDestX = destX + offsetT - t;
         if (indexOffset > 0) {
             destX = Math.max(evenDestX, realDestX);
@@ -1008,7 +1034,8 @@ function getTickData(
     displayBelow: boolean,
     hovered: boolean,
     pinned: boolean,
-    indexOffset?: number
+    indexOffset?: number,
+    bufferTick = false
 ): TickData {
     let tickX = getLeftPosition(node) - node.data.attrNum['min_time'];
     let t = cellMetaData.getTime(cell);
@@ -1021,8 +1048,14 @@ function getTickData(
     if (displayBelow) {
         tickSnippetY += tickPadding;
         tickHorizonY -= looneageViewStore.rowHeight;
+        if (bufferTick) {
+            tickSnippetY -= getSnippetDrawerLinePadding();
+        }
     } else {
         tickSnippetY -= looneageViewStore.rowHeight + tickPadding;
+        if (bufferTick) {
+            tickSnippetY += getSnippetDrawerLinePadding();
+        }
     }
     return {
         path: [
@@ -1031,6 +1064,34 @@ function getTickData(
         ],
         hovered,
         pinned,
+        drawerLine: false,
+    };
+}
+
+function getWindowDrawer(outerBBox: BBox, displayBelow: boolean): TickData {
+    const [left, top, right, bottom] = outerBBox;
+    const x1 = left - getBetweenSnippetPadding();
+    const x2 = right + getBetweenSnippetPadding();
+    let y1;
+    let y2;
+    if (displayBelow) {
+        y1 = bottom - getSnippetDrawerLinePadding();
+        y2 = y1 + 2 * getSnippetDrawerLinePadding();
+    } else {
+        y1 = top + getSnippetDrawerLinePadding();
+        y2 = y1 - 2 * getSnippetDrawerLinePadding();
+    }
+
+    return {
+        path: [
+            [x1, y2],
+            [x1, y1],
+            [x2, y1],
+            [x2, y2],
+        ],
+        hovered: false,
+        pinned: false,
+        drawerLine: true,
     };
 }
 
@@ -1066,13 +1127,21 @@ function valueExtent(track: Track, key: string): number {
     return max - min;
 }
 
-const getRawHorizonSnippetPadding = 6;
+const getRawHorizonSnippetPadding = 8;
 function getHorizonSnippetPadding(): number {
     return scaleForConstantVisualSize(getRawHorizonSnippetPadding, 'y');
 }
 
 function minTickMarkSpace(): number {
     return scaleForConstantVisualSize(4.5, 'x');
+}
+
+function getSnippetDrawerLinePadding(): number {
+    return scaleForConstantVisualSize(2, 'y');
+}
+
+function getBetweenSnippetPadding(): number {
+    return scaleForConstantVisualSize(2, 'x');
 }
 
 interface KeyframeInfo {
