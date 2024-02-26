@@ -11,6 +11,7 @@ import {
 import { useDataPointSelection } from '@/stores/dataPointSelection';
 import { useSegmentationStore } from '@/stores/segmentationStore';
 import CellSnippetsLayer from './layers/CellSnippetsLayer';
+import type { Selection } from './layers/CellSnippetsLayer';
 import { useImageViewerStore } from '@/stores/imageViewerStore';
 import { useImageViewerStoreUntrracked } from '@/stores/imageViewerStoreUntrracked';
 import { useDatasetSelectionStore } from '@/stores/datasetSelectionStore';
@@ -711,7 +712,21 @@ function createKeyFrameSnippets():
     // on the same side of the chart. Find the side with more free space, and prefer
     // the top in  at tie. This calculation should be done before the user selected snippets
     // it is jarring if hovering/selecting  causes the side to change.
-    const selections = [];
+    const selections: Selection[] = [];
+    const addSelection = (selection: Selection) => {
+        const matchingSelection = selections.find(
+            (s) =>
+                s.c === selection.c &&
+                s.z === selection.z &&
+                s.t === selection.t
+        );
+        if (matchingSelection) {
+            matchingSelection.snippets.push(...selection.snippets);
+        } else {
+            selections.push(selection);
+        }
+    };
+
     const snippetPickingData: {
         trackId: string;
         index: number;
@@ -808,8 +823,7 @@ function createKeyFrameSnippets():
                 looneageViewStore.snippetSourceSize,
                 looneageViewStore.snippetSourceSize
             );
-
-            selections.push({
+            addSelection({
                 c: 0,
                 z: 0,
                 t: frameIndex,
@@ -900,7 +914,7 @@ function createKeyFrameSnippets():
                     looneageViewStore.snippetSourceSize
                 );
                 const destination = hoveredBBox;
-                selections.push({
+                addSelection({
                     c: 0,
                     z: 0,
                     t: frameIndex,
@@ -997,8 +1011,7 @@ function createKeyFrameSnippets():
                 looneageViewStore.snippetSourceSize,
                 looneageViewStore.snippetSourceSize
             );
-
-            selections.push({
+            addSelection({
                 c: 0,
                 z: 0,
                 t: cellMetaData.getFrame(cell) - 1, // convert frame number to index

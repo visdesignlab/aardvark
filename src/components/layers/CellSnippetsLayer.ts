@@ -60,7 +60,7 @@ const defaultProps = {
  * @property {Array=} extensions [deck.gl extensions](https://deck.gl/docs/developer-guide/custom-layers/layer-extensions) to add to the layers.
  */
 
-interface Selection {
+export interface Selection {
     c: number;
     t: number;
     z: number;
