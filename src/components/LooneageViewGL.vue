@@ -405,9 +405,8 @@ function createConnectingLinesLayer(): PathLayer | null {
 
 function createTickMarksLayer(): PathLayer | null {
     if (!layoutRoot.value?.descendants()) return null;
-    const padding = getHorizonSnippetPadding() / 2;
+    const height = getTickmarkHeight();
     const spaceThreshold = minTickMarkSpace();
-    // const padding = 20;
     const lines = [];
     let lastX = null;
     for (const node of layoutRoot.value.descendants()) {
@@ -426,8 +425,8 @@ function createTickMarksLayer(): PathLayer | null {
                 // is a performance hit.
             }
             lastX = x;
-            const bottom = node.x + padding;
-            const top = node.x - padding - looneageViewStore.rowHeight;
+            const bottom = node.x + height;
+            const top = node.x - height - looneageViewStore.rowHeight;
             const a = [x, bottom];
             const b = [x, top];
             lines.push([a, b]);
@@ -438,7 +437,7 @@ function createTickMarksLayer(): PathLayer | null {
         data: lines,
         getPath: (d: any) => d,
         getColor: darkMode.value ? [100, 100, 100] : [180, 180, 180],
-        getWidth: getRawHorizonSnippetPadding / 2,
+        getWidth: getTickmarkWidth(),
         widthUnits: 'pixels',
     });
 }
@@ -1316,9 +1315,16 @@ function valueExtent(track: Track, key: string): number {
     return max - min;
 }
 
-const getRawHorizonSnippetPadding = 8;
 function getHorizonSnippetPadding(): number {
-    return scaleForConstantVisualSize(getRawHorizonSnippetPadding, 'y');
+    return scaleForConstantVisualSize(8, 'y');
+}
+
+function getTickmarkHeight(): number {
+    return scaleForConstantVisualSize(3, 'y');
+}
+
+function getTickmarkWidth(): number {
+    return 2; // expects pixel units
 }
 
 function minTickMarkSpace(): number {
