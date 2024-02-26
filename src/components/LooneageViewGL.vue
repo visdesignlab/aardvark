@@ -657,7 +657,9 @@ interface SnippetRenderInfo {
     displayBelow: boolean;
 }
 
-function createKeyFrameSnippets(): (CellSnippetsLayer | PathLayer)[] | null {
+function createKeyFrameSnippets():
+    | (CellSnippetsLayer | PathLayer | PolygonLayer)[]
+    | null {
     if (!layoutRoot.value) return null;
     // used for collision detection, to prevent overlapping. The logic
     // is slightly different for the horizon charts and the user selected
@@ -710,6 +712,12 @@ function createKeyFrameSnippets(): (CellSnippetsLayer | PathLayer)[] | null {
     // the top in  at tie. This calculation should be done before the user selected snippets
     // it is jarring if hovering/selecting  causes the side to change.
     const selections = [];
+    const snippetPickingData: {
+        trackId: string;
+        index: number;
+        destination: BBox;
+    }[] = [];
+
     const ticks: TickData[] = [];
     for (let node of layoutRoot.value.descendants()) {
         if (node.data === null) continue;
@@ -807,6 +815,11 @@ function createKeyFrameSnippets(): (CellSnippetsLayer | PathLayer)[] | null {
                 t: frameIndex,
                 snippets: [{ source, destination: pinnedBbox }],
             });
+            snippetPickingData.push({
+                trackId: track.trackId,
+                index: snippet.index,
+                destination: pinnedBbox,
+            });
             const tickData = getTickData(
                 node,
                 index,
@@ -892,6 +905,11 @@ function createKeyFrameSnippets(): (CellSnippetsLayer | PathLayer)[] | null {
                     z: 0,
                     t: frameIndex,
                     snippets: [{ source, destination }],
+                });
+                snippetPickingData.push({
+                    trackId: track.trackId,
+                    index: hoveredSnippet.value.index,
+                    destination,
                 });
 
                 // add tick mark for hovered snippet
@@ -986,6 +1004,11 @@ function createKeyFrameSnippets(): (CellSnippetsLayer | PathLayer)[] | null {
                 t: cellMetaData.getFrame(cell) - 1, // convert frame number to index
                 snippets: [{ source, destination }],
             });
+            snippetPickingData.push({
+                trackId: track.trackId,
+                index,
+                destination,
+            });
             const tickData = getTickData(
                 nodeWithData,
                 index,
@@ -1033,11 +1056,110 @@ function createKeyFrameSnippets(): (CellSnippetsLayer | PathLayer)[] | null {
         channelsVisible: [true],
         extensions: [colormapExtension],
         colormap: imageViewerStore.colormap,
-        onClick: () => {
-            console.log('clicked');
+    });
+
+    const snippetPickingLayer = new PolygonLayer({
+        id: 'snippet-picking-layer',
+        data: snippetPickingData,
+        pickable: true,
+        getPolygon: (pickingData: {
+            destination: [number, number, number, number]; // left, top, right, bottom
+            trackId: string;
+            index: number;
+        }) => {
+            const d = pickingData.destination;
+            return [
+                [d[0], d[1]],
+                [d[2], d[1]],
+                [d[2], d[3]],
+                [d[0], d[3]],
+            ];
+        },
+        getFillColor: [255, 0, 255, 0],
+        getLineColor: [20, 230, 20, 200],
+        getLineWidth: (d: any) => {
+            if (
+                hoveredSnippet.value?.trackId === d.trackId &&
+                hoveredSnippet.value?.index === d.index
+            ) {
+                return 1;
+            }
+            return 0;
+        },
+
+        lineWidthUnits: 'pixels',
+        onHover: (info: PickingInfo) => {
+            if (!cellMetaData.trackMap) return;
+            if (!info.picked) {
+                hoveredSnippet.value = null;
+                hoveredTime.value = null;
+                renderDeckGL();
+                return;
+            }
+            const { trackId, index } = info.object;
+            let selectedSnippet = looneageViewStore.getSnippet(trackId, index);
+
+            const track = cellMetaData.trackMap.get(trackId);
+            if (!track) return;
+            const cell = track.cells[index];
+            const time = cellMetaData.getTime(cell);
+            hoveredTime.value = time;
+            if (!selectedSnippet) {
+                // not currently pinned a auto placed snippet
+                selectedSnippet = {
+                    trackId,
+                    index,
+                    extraFrames: 1,
+                };
+                hoveredSnippet.value = selectedSnippet;
+                hoveredTime.value = null;
+                renderDeckGL();
+                return;
+            }
+            if (isEqual(selectedSnippet, hoveredSnippet.value)) return;
+            hoveredSnippet.value = { ...selectedSnippet };
+            if (hoveredSnippet.value) {
+                const matchingPinnedSnippet =
+                    looneageViewStore.getMatchingPinnedSnippet(
+                        hoveredSnippet.value
+                    );
+                if (matchingPinnedSnippet) {
+                    hoveredSnippet.value.extraFrames =
+                        matchingPinnedSnippet.extraFrames + 1;
+                }
+            }
+            console.log('hover end');
+            renderDeckGL();
+        },
+        onClick: (info: PickingInfo) => {
+            if (!cellMetaData.trackMap) return;
+            const { trackId, index } = info.object;
+            let selectedSnippet = looneageViewStore.getSnippet(trackId, index);
+            if (!selectedSnippet) {
+                // not currently pinned a auto placed snippet
+                selectedSnippet = {
+                    trackId,
+                    index,
+                    extraFrames: 1,
+                };
+            }
+            if (shiftDown.value) {
+                selectedSnippet =
+                    looneageViewStore.concealPinnedSnippet(selectedSnippet);
+            } else {
+                selectedSnippet =
+                    looneageViewStore.revealPinnedSnippet(selectedSnippet);
+            }
+            if (selectedSnippet) {
+                hoveredSnippet.value = { ...selectedSnippet };
+            } else if (hoveredSnippet.value) {
+                hoveredSnippet.value = null;
+            }
+            renderDeckGL();
         },
     });
-    return [snippetTickMarksLayer, snippetLayer];
+
+    return [snippetTickMarksLayer, snippetLayer, snippetPickingLayer];
 }
 
 function getSnippetBBox(

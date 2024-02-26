@@ -121,6 +121,18 @@ export const useLooneageViewStore = defineStore(storeId, () => {
         return snippet.trackId + '-' + snippet.index;
     }
 
+    function getSnippet(
+        trackId: string,
+        index: number
+    ): SelectedSnippet | null {
+        const key = trackId + '-' + index;
+        if (key in pinnedSnippets.value) {
+            return pinnedSnippets.value[key];
+        } else {
+            return null;
+        }
+    }
+
     return {
         attrKey,
         positiveColorScheme,
@@ -143,5 +155,6 @@ export const useLooneageViewStore = defineStore(storeId, () => {
         revealPinnedSnippet,
         concealPinnedSnippet,
         getMatchingPinnedSnippet,
+        getSnippet,
     };
 });
