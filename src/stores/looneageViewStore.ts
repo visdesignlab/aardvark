@@ -80,13 +80,45 @@ export const useLooneageViewStore = defineStore(storeId, () => {
 
     const pinnedSnippets = ref<PinnedSnippetLookup>({});
 
-    function togglePinnedSnippet(snippet: SelectedSnippet) {
-        const key = snippet.trackId + '-' + snippet.index;
+    function revealPinnedSnippet(snippet: SelectedSnippet): SelectedSnippet {
+        const key = getSnippetKey(snippet);
         if (key in pinnedSnippets.value) {
-            delete pinnedSnippets.value[key];
+            pinnedSnippets.value[key].extraFrames += 1;
         } else {
             pinnedSnippets.value[key] = snippet;
         }
+        return pinnedSnippets.value[key];
+    }
+
+    function concealPinnedSnippet(
+        snippet: SelectedSnippet
+    ): SelectedSnippet | null {
+        const key = getSnippetKey(snippet);
+        if (key in pinnedSnippets.value) {
+            pinnedSnippets.value[key].extraFrames -= 1;
+            if (pinnedSnippets.value[key].extraFrames < 0) {
+                delete pinnedSnippets.value[key];
+                return null;
+            } else {
+                return pinnedSnippets.value[key];
+            }
+        }
+        return null;
+    }
+
+    function getMatchingPinnedSnippet(
+        snippet: SelectedSnippet
+    ): SelectedSnippet | null {
+        const key = getSnippetKey(snippet);
+
+        if (!(key in pinnedSnippets.value)) {
+            return null;
+        }
+        return pinnedSnippets.value[key];
+    }
+
+    function getSnippetKey(snippet: SelectedSnippet): string {
+        return snippet.trackId + '-' + snippet.index;
     }
 
     return {
@@ -108,6 +140,8 @@ export const useLooneageViewStore = defineStore(storeId, () => {
         spaceKeyframesEvenly,
         setReasonableModHeight,
         pinnedSnippets,
-        togglePinnedSnippet,
+        revealPinnedSnippet,
+        concealPinnedSnippet,
+        getMatchingPinnedSnippet,
     };
 });

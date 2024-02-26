@@ -39,6 +39,8 @@ import {
     outerBBox,
 } from '@/util/imageSnippets';
 
+import { useKeypress } from 'vue3-keypress';
+
 import {
     loadOmeTiff,
     getChannelStats,
@@ -76,6 +78,36 @@ const segmentationStore = useSegmentationStore();
 const looneageViewStore = useLooneageViewStore();
 const { attrKey, spaceKeyframesEvenly } = storeToRefs(looneageViewStore);
 const { darkMode } = storeToRefs(globalSettings);
+
+const shiftDown = ref(false);
+useKeypress({
+    keyEvent: 'keydown',
+    onAnyKey: (e: any) => {
+        const event = e.event as KeyboardEvent;
+        if (event.code === 'ShiftLeft' || event.code === 'ShiftRight') {
+            onShiftDown();
+        }
+    },
+    keyBinds: [],
+});
+useKeypress({
+    keyEvent: 'keyup',
+    onAnyKey: (e: any) => {
+        const event = e.event as KeyboardEvent;
+        if (event.code === 'ShiftLeft' || event.code === 'ShiftRight') {
+            onShiftUp();
+        }
+    },
+    keyBinds: [],
+});
+
+function onShiftDown() {
+    shiftDown.value = true;
+}
+
+function onShiftUp() {
+    shiftDown.value = false;
+}
 
 const deckGlContainer = ref(null);
 const { width: deckGlWidth, height: deckGlHeight } =
@@ -477,13 +509,35 @@ function createHorizonChartLayers(): (
             if (isEqual(selectedSnippet, hoveredSnippet.value)) return;
             hoveredTime.value = time;
             hoveredSnippet.value = selectedSnippet;
+            if (hoveredSnippet.value) {
+                const matchingPinnedSnippet =
+                    looneageViewStore.getMatchingPinnedSnippet(
+                        hoveredSnippet.value
+                    );
+                if (matchingPinnedSnippet) {
+                    hoveredSnippet.value.extraFrames =
+                        matchingPinnedSnippet.extraFrames + 1;
+                }
+            }
             renderDeckGL();
         },
         onClick: (info: PickingInfo) => {
             if (!cellMetaData.trackMap) return;
-            const { selectedSnippet } = processHorizonPickingInfo(info);
+            let { selectedSnippet } = processHorizonPickingInfo(info);
             if (!selectedSnippet) return;
-            looneageViewStore.togglePinnedSnippet(selectedSnippet);
+            if (shiftDown.value) {
+                selectedSnippet =
+                    looneageViewStore.concealPinnedSnippet(selectedSnippet);
+            } else {
+                selectedSnippet =
+                    looneageViewStore.revealPinnedSnippet(selectedSnippet);
+            }
+            if (selectedSnippet) {
+                hoveredSnippet.value = { ...selectedSnippet };
+                hoveredSnippet.value.extraFrames += 1;
+            } else if (hoveredSnippet.value) {
+                hoveredSnippet.value.extraFrames = 0;
+            }
             renderDeckGL();
         },
     });
@@ -556,7 +610,7 @@ function processHorizonPickingInfo(info: PickingInfo): HorizonPickingResult {
     result.selectedSnippet = {
         trackId,
         index,
-        extraFrames: 1,
+        extraFrames: 0,
     };
     return result;
 }
@@ -967,7 +1021,7 @@ function createKeyFrameSnippets(): (CellSnippetsLayer | PathLayer)[] | null {
             }
         },
         // getColor: [255, 255, 255],
-        getWidth: (d) => (d.hovered ? 3 : 1.5),
+        getWidth: (d: any) => (d.hovered ? 3 : 1.5),
         widthUnits: 'pixels',
         capRounded: false,
     });

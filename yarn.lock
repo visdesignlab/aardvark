@@ -4155,6 +4155,11 @@ vue-tsc@^1.0.12:
     "@vue/typescript" "1.8.13"
     semver "^7.3.8"
 
+vue3-keypress@^4.0.1:
+  version "4.0.1"
+  resolved "https://registry.npmjs.org/vue3-keypress/-/vue3-keypress-4.0.1.tgz"
+  integrity sha512-oKxLpVsQq1iosuwi38fbH+K2NL2HqbFT8U7yE1fzxcUB0Mup1vS7OcnNMqkgv+FHFJTNvlYAOwLctVK/ahz6Ng==
+
 vue@^3.2.45:
   version "3.3.4"
   resolved "https://registry.npmjs.org/vue/-/vue-3.3.4.tgz"
