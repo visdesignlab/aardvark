@@ -27,6 +27,8 @@ uniform bool extruded;
 uniform bool isWireframe;
 uniform float elevationScale;
 uniform float opacity;
+uniform float zoomX; // related to the camera's zoom level
+uniform float scale; // scale geometry related to the source/dest ratio
 
 varying vec4 vColor;
 
@@ -73,6 +75,11 @@ void calculatePosition(PolygonProps props) {
   pos64Low = mix(props.positions64Low, props.nextPositions64Low, vertexPositions.x);
 #else
   pos = props.positions;
+
+  // const scale
+  pos.x *= pow(2.0, -zoomX);
+  // pos.y *= pow(2.0, -scale);
+
   pos.x += props.translateOffsets.x;
   pos.y += props.translateOffsets.y;
   pos64Low = props.positions64Low;

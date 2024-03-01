@@ -1643,19 +1643,21 @@ function createCellBoundaryLayer(
 ): SolidPolygonLayer | null {
     const x = 10;
     const y = 0.5;
+    const offsetX = 0;
+    const offsetY = 0;
 
     const testGeo = [
-        [0 * x, 1 * x],
-        [y * 0.5878 * x, 0.809 * x * y],
-        [0.9511 * x, 0.309 * x],
-        [y * 0.9511 * x, -0.309 * x * y],
-        [0.5878 * x, -0.809 * x],
-        [y * 0 * x, -1 * x * y],
-        [-0.5878 * x, -0.809 * x],
-        [y * -0.9511 * x, -0.309 * x * y],
-        [-0.9511 * x, 0.309 * x],
-        [y * -0.5878 * x, 0.809 * x * y],
-        [0 * x, 1 * x],
+        [offsetX + 0 * x, 1 * x + offsetY],
+        [offsetX + y * 0.5878 * x, 0.809 * x * y + offsetY],
+        [offsetX + 0.9511 * x, 0.309 * x + offsetY],
+        [offsetX + y * 0.9511 * x, -0.309 * x * y + offsetY],
+        [offsetX + 0.5878 * x, -0.809 * x + offsetY],
+        [offsetX + y * 0 * x, -1 * x * y + offsetY],
+        [offsetX + -0.5878 * x, -0.809 * x + offsetY],
+        [offsetX + y * -0.9511 * x, -0.309 * x * y + offsetY],
+        [offsetX + -0.9511 * x, 0.309 * x + offsetY],
+        [offsetX + y * -0.5878 * x, 0.809 * x * y + offsetY],
+        [offsetX + 0 * x, 1 * x + offsetY],
     ];
     const data = snippetCellInfo.map((info) => {
         const cell = info.cell;
@@ -1681,6 +1683,8 @@ function createCellBoundaryLayer(
         material: false,
         filled: true,
         wireframe: false,
+        zoomX: viewStateMirror.value.zoom[0],
+        scale: 1,
     });
     return layer;
 }
