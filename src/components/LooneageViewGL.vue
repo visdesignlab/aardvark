@@ -659,9 +659,17 @@ interface SnippetRenderInfo {
     displayBelow: boolean;
 }
 
-function createKeyFrameSnippets():
-    | (CellSnippetsLayer | PathLayer | PolygonLayer)[]
-    | null {
+interface SnippetCellInfo {
+    cell: Cell;
+    destinationBottomLeft: [number, number];
+}
+
+interface KeyFrameSnippetsResult {
+    snippetCellInfo: SnippetCellInfo[];
+    layers: (CellSnippetsLayer | PathLayer | PolygonLayer)[];
+}
+
+function createKeyFrameSnippets(): KeyFrameSnippetsResult | null {
     if (!layoutRoot.value) return null;
     // used for collision detection, to prevent overlapping. The logic
     // is slightly different for the horizon charts and the user selected
@@ -714,6 +722,7 @@ function createKeyFrameSnippets():
     // the top in  at tie. This calculation should be done before the user selected snippets
     // it is jarring if hovering/selecting  causes the side to change.
     const selections: Selection[] = [];
+    const snippetCellInfo: SnippetCellInfo[] = [];
     const addSelection = (selection: Selection) => {
         const matchingSelection = selections.find(
             (s) =>
@@ -830,6 +839,10 @@ function createKeyFrameSnippets():
                 t: frameIndex,
                 snippets: [{ source, destination: pinnedBbox }],
             });
+            snippetCellInfo.push({
+                cell,
+                destinationBottomLeft: [pinnedBbox[0], pinnedBbox[1]],
+            });
             snippetPickingData.push({
                 trackId: track.trackId,
                 index: snippet.index,
@@ -920,6 +933,10 @@ function createKeyFrameSnippets():
                     z: 0,
                     t: frameIndex,
                     snippets: [{ source, destination }],
+                });
+                snippetCellInfo.push({
+                    cell,
+                    destinationBottomLeft: [hoveredBBox[0], hoveredBBox[1]],
                 });
                 snippetPickingData.push({
                     trackId: track.trackId,
@@ -1017,6 +1034,10 @@ function createKeyFrameSnippets():
                 z: 0,
                 t: cellMetaData.getFrame(cell) - 1, // convert frame number to index
                 snippets: [{ source, destination }],
+            });
+            snippetCellInfo.push({
+                cell,
+                destinationBottomLeft: [destination[0], destination[1]],
             });
             snippetPickingData.push({
                 trackId: track.trackId,
@@ -1172,8 +1193,8 @@ function createKeyFrameSnippets():
             renderDeckGL();
         },
     });
-
-    return [snippetTickMarksLayer, snippetLayer, snippetPickingLayer];
+    const layers = [snippetTickMarksLayer, snippetLayer, snippetPickingLayer];
+    return { snippetCellInfo, layers };
 }
 
 function getSnippetBBox(
@@ -1617,56 +1638,44 @@ function createCurrentTimeLayer(): PathLayer | null {
     });
 }
 
-function createCellBoundaryLayer(): SolidPolygonLayer | null {
-    const x = 100;
+function createCellBoundaryLayer(
+    snippetCellInfo: SnippetCellInfo[]
+): SolidPolygonLayer | null {
+    const x = 10;
     const y = 0.5;
-    const data = [
-        {
-            polygon: [
-                // Crescent moon shape (sort of)
-                [
-                    [0 * x, 1 * x],
-                    [0.9511 * x, 0.309 * x],
-                    [0.5878 * x, -0.809 * x],
-                    [-0.5878 * x, -0.809 * x],
-                    [-0.9511 * x, 0.309 * x],
-                    [0 * x, 1 * x],
-                ],
-            ],
-        },
-        {
-            polygon: [
-                // star chape
-                [
-                    [0 * x, 1 * x],
-                    [y * 0.5878 * x, 0.809 * x * y],
-                    [0.9511 * x, 0.309 * x],
-                    [y * 0.9511 * x, -0.309 * x * y],
-                    [0.5878 * x, -0.809 * x],
-                    [y * 0 * x, -1 * x * y],
-                    [-0.5878 * x, -0.809 * x],
-                    [y * -0.9511 * x, -0.309 * x * y],
-                    [-0.9511 * x, 0.309 * x],
-                    [y * -0.5878 * x, 0.809 * x * y],
-                    [0 * x, 1 * x],
-                ],
-            ],
-        },
+
+    const testGeo = [
+        [0 * x, 1 * x],
+        [y * 0.5878 * x, 0.809 * x * y],
+        [0.9511 * x, 0.309 * x],
+        [y * 0.9511 * x, -0.309 * x * y],
+        [0.5878 * x, -0.809 * x],
+        [y * 0 * x, -1 * x * y],
+        [-0.5878 * x, -0.809 * x],
+        [y * -0.9511 * x, -0.309 * x * y],
+        [-0.9511 * x, 0.309 * x],
+        [y * -0.5878 * x, 0.809 * x * y],
+        [0 * x, 1 * x],
     ];
+    const data = snippetCellInfo.map((info) => {
+        const cell = info.cell;
+        const [x, y] = info.destinationBottomLeft;
+        // const source = getBBoxAroundPoint(
+        //     x,
+        //     y,
+        //     looneageViewStore.snippetSourceSize,
+        //     looneageViewStore.snippetSourceSize
+        // );
+        return {
+            polygon: testGeo,
+            offset: info.destinationBottomLeft,
+        };
+    });
 
     const layer = new SolidPolygonLayer({
-        /*
-         * Data format:
-         * [
-         *   {polygon: [[0, 0], [0, 1], [1, 1], [1, 0], [0, 0]]},   // Simple polygon (array of coords)
-         *   {polygon: [                                            // Complex polygon with one hole
-         *     [[0, 0], [0, 2], [2, 2], [2, 0], [0, 0]],            // (array of array of coords)
-         *     [[0, 0], [0, 1], [1, 1], [1, 0], [0, 0]]
-         *   ]}
-         * ]
-         */
         data,
         getPolygon: (d: any) => d.polygon,
+        getTranslateOffset: (d: any) => d.offset,
         getFillColor: [255, 0, 0, 120],
         extruded: false,
         material: false,
@@ -1690,9 +1699,14 @@ function renderDeckGL(): void {
     layers.push(createTickMarksLayer());
     layers.push(createHorizonChartLayers());
     if (looneageViewStore.showSnippets) {
-        layers.push(createKeyFrameSnippets());
+        const keyFrameSnippetsResult = createKeyFrameSnippets();
+        if (keyFrameSnippetsResult) {
+            const { snippetCellInfo, layers: keyFrameSnippetLayers } =
+                keyFrameSnippetsResult;
+            layers.push(...keyFrameSnippetLayers);
+            layers.push(createCellBoundaryLayer(snippetCellInfo));
+        }
     }
-    layers.push(createCellBoundaryLayer());
     // layers.push(createTrackLayer());
     // layers.push(createTestScatterLayer());
     // layers.push(createViewportRectangleLayer());

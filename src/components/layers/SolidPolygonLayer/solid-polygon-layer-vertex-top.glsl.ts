@@ -28,7 +28,9 @@ attribute vec3 positions64Low;
 attribute float elevations;
 attribute vec4 fillColors;
 attribute vec4 lineColors;
+attribute vec2 translateOffsets;
 attribute vec3 pickingColors;
+
 
 ${main}
 
@@ -41,6 +43,7 @@ void main(void) {
   props.fillColors = fillColors;
   props.lineColors = lineColors;
   props.pickingColors = pickingColors;
+  props.translateOffsets = translateOffsets;
 
   calculatePosition(props);
 }

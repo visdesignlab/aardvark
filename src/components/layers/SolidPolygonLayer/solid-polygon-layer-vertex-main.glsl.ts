@@ -39,6 +39,7 @@ struct PolygonProps {
   vec3 positions64Low;
   vec3 nextPositions64Low;
   float elevations;
+  vec2 translateOffsets;
 };
 
 vec3 project_offset_normal(vec3 vector) {
@@ -72,6 +73,8 @@ void calculatePosition(PolygonProps props) {
   pos64Low = mix(props.positions64Low, props.nextPositions64Low, vertexPositions.x);
 #else
   pos = props.positions;
+  pos.x += props.translateOffsets.x;
+  pos.y += props.translateOffsets.y;
   pos64Low = props.positions64Low;
 #endif
 

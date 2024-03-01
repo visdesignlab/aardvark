@@ -100,6 +100,10 @@ type _SolidPolygonLayerProps<DataT> = {
      * @default [0, 0, 0, 255]
      */
     getLineColor?: Accessor<DataT, Color>;
+    /** Translate offset accessor.
+     * @default [0, 0]
+     */
+    getTranslateOffset?: Accessor<DataT, [number, number]>;
 
     /**
      * Material settings for lighting effect. Applies if `extruded: true`
@@ -130,6 +134,7 @@ const defaultProps: DefaultProps<SolidPolygonLayerProps> = {
     getElevation: { type: 'accessor', value: 1000 },
     getFillColor: { type: 'accessor', value: DEFAULT_COLOR },
     getLineColor: { type: 'accessor', value: DEFAULT_COLOR },
+    getTranslateOffset: { type: 'accessor', value: [0, 0] },
 
     material: true,
 };
@@ -304,6 +309,13 @@ export default class SolidPolygonLayer<
                         divisor: 1,
                     },
                 },
+            },
+            translateOffsets: {
+                size: 2,
+                type: GL.DOUBLE,
+                // fp64: this.use64bitPositions(),
+                accessor: 'getTranslateOffset',
+                defaultValue: [0, 0],
             },
             pickingColors: {
                 size: 3,
