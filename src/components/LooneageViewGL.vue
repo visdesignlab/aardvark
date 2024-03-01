@@ -56,9 +56,11 @@ import {
     PathLayer,
     PolygonLayer,
     ScatterplotLayer,
-    SolidPolygonLayer,
+    // SolidPolygonLayer,
     TextLayer,
 } from '@deck.gl/layers/typed';
+
+import SolidPolygonLayer from './layers/SolidPolygonLayer/solid-polygon-layer';
 
 import HorizonChartLayer from './layers/HorizonChartLayer/HorizonChartLayer';
 
@@ -1615,6 +1617,65 @@ function createCurrentTimeLayer(): PathLayer | null {
     });
 }
 
+function createCellBoundaryLayer(): SolidPolygonLayer | null {
+    const x = 100;
+    const data = [
+        {
+            polygon: [
+                // Crescent moon shape
+                [
+                    [x / 2, x / 2],
+                    [x, x / 2],
+                    [x, x],
+                    [0, x],
+                    [0, 0],
+                    [x / 2, x / 2],
+                ],
+            ],
+        }, // Simple polygon (array of coords)
+        // {
+        //     polygon: [
+        //         // Complex polygon with one hole
+        //         [
+        //             [0, 0],
+        //             [0, 2 * x],
+        //             [2 * x, 2 * x],
+        //             [2 * x, 0],
+        //             [0, 0],
+        //         ], // (array of array of coords)
+        //         [
+        //             [x / 2, x / 2],
+        //             [x / 2, x],
+        //             [x, x],
+        //             [x, x / 2],
+        //             [x / 2, x / 2],
+        //         ],
+        //     ],
+        // },
+    ];
+
+    const layer = new SolidPolygonLayer({
+        /*
+         * Data format:
+         * [
+         *   {polygon: [[0, 0], [0, 1], [1, 1], [1, 0], [0, 0]]},   // Simple polygon (array of coords)
+         *   {polygon: [                                            // Complex polygon with one hole
+         *     [[0, 0], [0, 2], [2, 2], [2, 0], [0, 0]],            // (array of array of coords)
+         *     [[0, 0], [0, 1], [1, 1], [1, 0], [0, 0]]
+         *   ]}
+         * ]
+         */
+        data,
+        getPolygon: (d: any) => d.polygon,
+        getFillColor: [255, 0, 0, 120],
+        extruded: false,
+        material: false,
+        filled: true,
+        wireframe: false,
+    });
+    return layer;
+}
+
 function renderDeckGL(): void {
     if (deckgl == null) return;
     if (cellMetaData.selectedTrack == null) return;
@@ -1631,6 +1692,7 @@ function renderDeckGL(): void {
     if (looneageViewStore.showSnippets) {
         layers.push(createKeyFrameSnippets());
     }
+    layers.push(createCellBoundaryLayer());
     // layers.push(createTrackLayer());
     // layers.push(createTestScatterLayer());
     // layers.push(createViewportRectangleLayer());
