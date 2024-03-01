@@ -1667,8 +1667,9 @@ function createCellBoundaryLayer(
             const [x, y] = info.destinationBottomLeft;
             const feature = cellSegmentationData.value?.find(
                 (feature) =>
-                    feature?.properties?.id === trackId &&
-                    feature?.properties?.frame === frame
+                    // TODO === should work, but JZ data still has id stored as number, when it should be a string
+                    feature?.properties?.id == trackId &&
+                    feature?.properties?.frame == frame
             );
             const [cellX, cellY] = cellMetaData.getPosition(cell);
             return {
