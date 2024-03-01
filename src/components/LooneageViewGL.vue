@@ -838,10 +838,13 @@ function createKeyFrameSnippets(): KeyFrameSnippetsResult | null {
                 t: frameIndex,
                 snippets: [{ source, destination: pinnedBbox }],
             });
-            snippetCellInfo.push({
-                cell,
-                destinationBottomLeft: [pinnedBbox[0], pinnedBbox[1]],
-            });
+            if (edgeIndexOffset === 0) {
+                // add for the cell boundary only if snippet is within track bounds
+                snippetCellInfo.push({
+                    cell,
+                    destinationBottomLeft: [pinnedBbox[0], pinnedBbox[1]],
+                });
+            }
             snippetPickingData.push({
                 trackId: track.trackId,
                 index: snippet.index,
@@ -933,10 +936,13 @@ function createKeyFrameSnippets(): KeyFrameSnippetsResult | null {
                     t: frameIndex,
                     snippets: [{ source, destination }],
                 });
-                snippetCellInfo.push({
-                    cell,
-                    destinationBottomLeft: [hoveredBBox[0], hoveredBBox[1]],
-                });
+                if (edgeIndexOffset === 0) {
+                    // add for the cell boundary only if snippet is within track bounds
+                    snippetCellInfo.push({
+                        cell,
+                        destinationBottomLeft: [hoveredBBox[0], hoveredBBox[1]],
+                    });
+                }
                 snippetPickingData.push({
                     trackId: track.trackId,
                     index: hoveredSnippet.value.index,
