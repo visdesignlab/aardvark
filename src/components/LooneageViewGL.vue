@@ -1658,7 +1658,6 @@ function createCellBoundaryLayer(
             const cell = info.cell;
             const trackId = cell.trackId;
             const frame = cellMetaData.getFrame(cell);
-            console.log();
             const [x, y] = info.destinationBottomLeft;
             const feature = cellSegmentationData.value?.find(
                 (feature) =>
@@ -1669,11 +1668,12 @@ function createCellBoundaryLayer(
             return {
                 // @ts-ignore coordinates does exist on geometry
                 polygon: feature?.geometry?.coordinates,
+                center: [cellX, cellY],
                 offset: [
-                    x -
-                        (cellX - looneageViewStore.snippetDestSize / 2) *
+                    x +
+                        (looneageViewStore.snippetDestSize / 2) *
                             2 ** -viewStateMirror.value.zoom[0],
-                    y - cellY - looneageViewStore.snippetDestSize / 2,
+                    y - looneageViewStore.snippetDestSize / 2,
                 ],
             };
         })
@@ -1682,6 +1682,7 @@ function createCellBoundaryLayer(
     const layer = new SolidPolygonLayer({
         data,
         getPolygon: (d: any) => d.polygon,
+        getCenter: (d: any) => d.center,
         getTranslateOffset: (d: any) => d.offset,
         getFillColor: [255, 0, 0, 120],
         extruded: false,
@@ -1689,7 +1690,7 @@ function createCellBoundaryLayer(
         filled: true,
         wireframe: false,
         zoomX: viewStateMirror.value.zoom[0],
-        scale: 1,
+        scale: looneageViewStore.snippetZoom, // maybe need inverse?
     });
     return layer;
 }

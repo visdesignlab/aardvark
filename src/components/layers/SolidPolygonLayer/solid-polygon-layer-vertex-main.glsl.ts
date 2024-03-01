@@ -41,6 +41,7 @@ struct PolygonProps {
   vec3 positions64Low;
   vec3 nextPositions64Low;
   float elevations;
+  vec2 centers;
   vec2 translateOffsets;
 };
 
@@ -75,13 +76,22 @@ void calculatePosition(PolygonProps props) {
   pos64Low = mix(props.positions64Low, props.nextPositions64Low, vertexPositions.x);
 #else
   pos = props.positions;
+  
+  // the cell boundary so it's center is at origin
+  pos.x -= props.centers.x;
+  pos.y -= props.centers.y;
 
-  // const scale
+  // account for the source/dest ratio
+  pos.x *= scale;
+  pos.y *= scale;
+
+  // account for the camera scaling
   pos.x *= pow(2.0, -zoomX);
-  // pos.y *= pow(2.0, -scale);
 
+  // translate to the center of the snippet display position
   pos.x += props.translateOffsets.x;
   pos.y += props.translateOffsets.y;
+
   pos64Low = props.positions64Low;
 #endif
 

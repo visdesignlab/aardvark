@@ -100,6 +100,10 @@ type _SolidPolygonLayerProps<DataT> = {
      * @default [0, 0, 0, 255]
      */
     getLineColor?: Accessor<DataT, Color>;
+    /** Center of Polygon.
+     * @default [0, 0]
+     */
+    getCenter?: Accessor<DataT, [number, number]>;
     /** Translate offset accessor.
      * @default [0, 0]
      */
@@ -134,6 +138,7 @@ const defaultProps: DefaultProps<SolidPolygonLayerProps> = {
     getElevation: { type: 'accessor', value: 1000 },
     getFillColor: { type: 'accessor', value: DEFAULT_COLOR },
     getLineColor: { type: 'accessor', value: DEFAULT_COLOR },
+    getCenter: { type: 'accessor', value: [0, 0] },
     getTranslateOffset: { type: 'accessor', value: [0, 0] },
 
     material: true,
@@ -310,10 +315,15 @@ export default class SolidPolygonLayer<
                     },
                 },
             },
+            centers: {
+                size: 2,
+                type: GL.DOUBLE,
+                accessor: 'getCenter',
+                defaultValue: [0, 0],
+            },
             translateOffsets: {
                 size: 2,
                 type: GL.DOUBLE,
-                // fp64: this.use64bitPositions(),
                 accessor: 'getTranslateOffset',
                 defaultValue: [0, 0],
             },
