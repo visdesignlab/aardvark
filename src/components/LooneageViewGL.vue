@@ -1619,39 +1619,39 @@ function createCurrentTimeLayer(): PathLayer | null {
 
 function createCellBoundaryLayer(): SolidPolygonLayer | null {
     const x = 100;
+    const y = 0.5;
     const data = [
         {
             polygon: [
-                // Crescent moon shape
+                // Crescent moon shape (sort of)
                 [
-                    [x / 2, x / 2],
-                    [x, x / 2],
-                    [x, x],
-                    [0, x],
-                    [0, 0],
-                    [x / 2, x / 2],
+                    [0 * x, 1 * x],
+                    [0.9511 * x, 0.309 * x],
+                    [0.5878 * x, -0.809 * x],
+                    [-0.5878 * x, -0.809 * x],
+                    [-0.9511 * x, 0.309 * x],
+                    [0 * x, 1 * x],
                 ],
             ],
-        }, // Simple polygon (array of coords)
-        // {
-        //     polygon: [
-        //         // Complex polygon with one hole
-        //         [
-        //             [0, 0],
-        //             [0, 2 * x],
-        //             [2 * x, 2 * x],
-        //             [2 * x, 0],
-        //             [0, 0],
-        //         ], // (array of array of coords)
-        //         [
-        //             [x / 2, x / 2],
-        //             [x / 2, x],
-        //             [x, x],
-        //             [x, x / 2],
-        //             [x / 2, x / 2],
-        //         ],
-        //     ],
-        // },
+        },
+        {
+            polygon: [
+                // star chape
+                [
+                    [0 * x, 1 * x],
+                    [y * 0.5878 * x, 0.809 * x * y],
+                    [0.9511 * x, 0.309 * x],
+                    [y * 0.9511 * x, -0.309 * x * y],
+                    [0.5878 * x, -0.809 * x],
+                    [y * 0 * x, -1 * x * y],
+                    [-0.5878 * x, -0.809 * x],
+                    [y * -0.9511 * x, -0.309 * x * y],
+                    [-0.9511 * x, 0.309 * x],
+                    [y * -0.5878 * x, 0.809 * x * y],
+                    [0 * x, 1 * x],
+                ],
+            ],
+        },
     ];
 
     const layer = new SolidPolygonLayer({
