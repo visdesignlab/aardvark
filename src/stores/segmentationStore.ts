@@ -62,9 +62,19 @@ export const useSegmentationStore = defineStore('segmentationStore', () => {
         );
     }
 
+    async function getCellSegmentations(
+        cells: Cell[]
+    ): Promise<Feature[] | undefined> {
+        const promises = cells.map((cell) => getCellSegmentation(cell));
+        return (await Promise.all(promises)).filter(
+            (x) => x != null
+        ) as Feature[];
+    }
+
     return {
         getFrameSegmentations,
         // getTrackSegmentations,
         getCellSegmentation,
+        getCellSegmentations,
     };
 });

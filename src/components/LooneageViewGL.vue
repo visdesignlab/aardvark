@@ -333,7 +333,6 @@ function constructGeometry(track: Track): number[] {
         geometry.push(x1, y);
         geometry.push(x2, hackyBottom);
         geometry.push(x2, y);
-        console.log('stuub geometry');
         return geometry;
     }
 
@@ -1638,41 +1637,47 @@ function createCurrentTimeLayer(): PathLayer | null {
     });
 }
 
+const currentSnippetCellInfo = ref<SnippetCellInfo[]>();
+const cellSegmentationData = ref<Feature[]>();
+watch(cellSegmentationData, () => {
+    renderDeckGL();
+});
 function createCellBoundaryLayer(
     snippetCellInfo: SnippetCellInfo[]
 ): SolidPolygonLayer | null {
-    const x = 10;
-    const y = 0.5;
-    const offsetX = 0;
-    const offsetY = 0;
+    // maybe need abort logic, deff need to avoid infinite loop here...
+    // segmentationStore
+    //     .getCellSegmentations(snippetCellInfo.map((info) => info.cell))
+    //     .then((data) => {
+    //         cellSegmentationData.value = data;
+    //     });
+    if (cellSegmentationData.value == null) return null;
 
-    const testGeo = [
-        [offsetX + 0 * x, 1 * x + offsetY],
-        [offsetX + y * 0.5878 * x, 0.809 * x * y + offsetY],
-        [offsetX + 0.9511 * x, 0.309 * x + offsetY],
-        [offsetX + y * 0.9511 * x, -0.309 * x * y + offsetY],
-        [offsetX + 0.5878 * x, -0.809 * x + offsetY],
-        [offsetX + y * 0 * x, -1 * x * y + offsetY],
-        [offsetX + -0.5878 * x, -0.809 * x + offsetY],
-        [offsetX + y * -0.9511 * x, -0.309 * x * y + offsetY],
-        [offsetX + -0.9511 * x, 0.309 * x + offsetY],
-        [offsetX + y * -0.5878 * x, 0.809 * x * y + offsetY],
-        [offsetX + 0 * x, 1 * x + offsetY],
-    ];
-    const data = snippetCellInfo.map((info) => {
-        const cell = info.cell;
-        const [x, y] = info.destinationBottomLeft;
-        // const source = getBBoxAroundPoint(
-        //     x,
-        //     y,
-        //     looneageViewStore.snippetSourceSize,
-        //     looneageViewStore.snippetSourceSize
-        // );
-        return {
-            polygon: testGeo,
-            offset: info.destinationBottomLeft,
-        };
-    });
+    const data = snippetCellInfo
+        .map((info) => {
+            const cell = info.cell;
+            const trackId = cell.trackId;
+            const frame = cellMetaData.getFrame(cell);
+            console.log();
+            const [x, y] = info.destinationBottomLeft;
+            const feature = cellSegmentationData.value?.find(
+                (feature) =>
+                    feature?.properties?.id === trackId &&
+                    feature?.properties?.frame === frame
+            );
+            const [cellX, cellY] = cellMetaData.getPosition(cell);
+            return {
+                // @ts-ignore coordinates does exist on geometry
+                polygon: feature?.geometry?.coordinates,
+                offset: [
+                    x -
+                        (cellX - looneageViewStore.snippetDestSize / 2) *
+                            2 ** -viewStateMirror.value.zoom[0],
+                    y - cellY - looneageViewStore.snippetDestSize / 2,
+                ],
+            };
+        })
+        .filter((d) => d.polygon !== undefined);
 
     const layer = new SolidPolygonLayer({
         data,
@@ -1708,6 +1713,16 @@ function renderDeckGL(): void {
             const { snippetCellInfo, layers: keyFrameSnippetLayers } =
                 keyFrameSnippetsResult;
             layers.push(...keyFrameSnippetLayers);
+            if (!isEqual(currentSnippetCellInfo.value, snippetCellInfo)) {
+                currentSnippetCellInfo.value = snippetCellInfo;
+                segmentationStore
+                    .getCellSegmentations(
+                        snippetCellInfo.map((info) => info.cell)
+                    )
+                    .then((data) => {
+                        cellSegmentationData.value = data;
+                    });
+            }
             layers.push(createCellBoundaryLayer(snippetCellInfo));
         }
     }
