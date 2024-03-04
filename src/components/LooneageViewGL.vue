@@ -510,16 +510,6 @@ function createHorizonChartLayers(): (
             if (isEqual(selectedSnippet, hoveredSnippet.value)) return;
             hoveredTime.value = time;
             hoveredSnippet.value = selectedSnippet;
-            if (hoveredSnippet.value) {
-                const matchingPinnedSnippet =
-                    looneageViewStore.getMatchingPinnedSnippet(
-                        hoveredSnippet.value
-                    );
-                if (matchingPinnedSnippet) {
-                    hoveredSnippet.value.extraFrames =
-                        matchingPinnedSnippet.extraFrames + 1;
-                }
-            }
             renderDeckGL();
         },
         onClick: (info: PickingInfo) => {
