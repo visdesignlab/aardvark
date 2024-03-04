@@ -1,3 +1,6 @@
+// Modified from the SolidPolygonLayer included in deck.gl.
+// the following is the orginal license for the ScatterPlotLayer:
+//
 // Copyright (c) 2015 - 2017 Uber Technologies, Inc.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -25,7 +28,6 @@ export default `\
 
 attribute vec3 positions;
 attribute vec3 positions64Low;
-attribute float elevations;
 attribute vec4 fillColors;
 attribute vec4 lineColors;
 attribute vec2 centers;
@@ -40,7 +42,6 @@ void main(void) {
 
   props.positions = positions;
   props.positions64Low = positions64Low;
-  props.elevations = elevations;
   props.fillColors = fillColors;
   props.lineColors = lineColors;
   props.pickingColors = pickingColors;
