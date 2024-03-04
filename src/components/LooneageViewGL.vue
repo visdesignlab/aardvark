@@ -40,6 +40,8 @@ import {
     outerBBox,
 } from '@/util/imageSnippets';
 
+import { LRUCache } from 'lru-cache';
+
 import { useKeypress } from 'vue3-keypress';
 
 import {
@@ -225,6 +227,10 @@ const initialViewState = {
     minZoom: -8,
     maxZoom: 8,
 };
+
+const lruCache = new LRUCache({
+    max: 250,
+});
 // this mirror is required because the deckgl viewstate is out of sync by one frame
 // when we call renderDeckGL from onViewStateChange
 const viewStateMirror = ref(initialViewState);
@@ -1128,6 +1134,7 @@ function createKeyFrameSnippets(): KeyFrameSnippetsResult | null {
         channelsVisible: [true],
         extensions: [colormapExtension],
         colormap: imageViewerStore.colormap,
+        cache: lruCache,
     });
 
     let hoverLayer = null;
@@ -1140,6 +1147,7 @@ function createKeyFrameSnippets(): KeyFrameSnippetsResult | null {
             channelsVisible: [true],
             extensions: [colormapExtension],
             colormap: imageViewerStore.colormap,
+            cache: lruCache,
         });
     }
 
@@ -1190,7 +1198,7 @@ function createKeyFrameSnippets(): KeyFrameSnippetsResult | null {
             const time = cellMetaData.getTime(cell);
             hoveredTime.value = time;
             if (!selectedSnippet) {
-                // not currently pinned a auto placed snippet
+                // not currently pinned auto placed snippet
                 selectedSnippet = {
                     trackId,
                     index,

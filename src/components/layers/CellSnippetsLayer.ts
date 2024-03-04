@@ -9,8 +9,6 @@ import {
     AdditiveColormapExtension,
     SIGNAL_ABORTED,
 } from '@hms-dbmi/viv';
-import { LRUCache } from 'lru-cache';
-
 import { ColorPaletteExtension } from '@vivjs/extensions';
 
 import { isEqual } from 'lodash-es';
@@ -98,14 +96,14 @@ class CellSnippetsLayer extends CompositeLayer {
     }
 
     initializeState() {
-        this.state.cache = new LRUCache({
-            max: 250,
-        });
+        // this.state.cache = new LRUCache({
+        //     max: 250,
+        // });
         this.state.inFlightRequests = new Map<string, InFlightRequest>();
     }
 
     finalizeState() {
-        this.state.cache.clear();
+        // this.state.cache.clear();
     }
 
     getSnippetKey(c: number, t: number, z: number, source: number[]): string {
@@ -116,23 +114,20 @@ class CellSnippetsLayer extends CompositeLayer {
         return [selection.c, selection.t, selection.z].toString();
     }
 
-    matchSelectionsToData(
-        selections: Selection[],
-        data: SnippetData[]
-    ): { newData: SnippetData[]; unmatchedSelections: Selection[] } {
+    matchSelectionsToData(selections: Selection[]): {
+        newData: SnippetData[];
+        unmatchedSelections: Selection[];
+    } {
         const newData: SnippetData[] = [];
         const unmatchedSelections: Selection[] = [];
-        if (!data) {
-            // no data yet, everything is unmatched
-            return { newData, unmatchedSelections: selections };
-        }
+
         for (const selection of selections) {
             const { c, t, z, snippets } = selection;
-            const unmatchedSnippets = [];
+            const unmatchedSnippets: Snippet[] = [];
             for (const snippet of snippets) {
                 const key = this.getSnippetKey(c, t, z, snippet.source);
-                if (this.state.cache.has(key)) {
-                    const snippetData = this.state.cache.get(key);
+                if (this.props.cache.has(key)) {
+                    const snippetData = this.props.cache.get(key);
                     newData.push({
                         index: { c, t, z },
                         source: snippet.source,
@@ -141,29 +136,7 @@ class CellSnippetsLayer extends CompositeLayer {
                     });
                     continue;
                 }
-                // this.state.cache.set(key, raster.data);
-
-                const match = data.find((d) => {
-                    if (
-                        d.index.c === c &&
-                        d.index.t === t &&
-                        d.index.z === z &&
-                        d.source[0] === snippet.source[0] &&
-                        d.source[1] === snippet.source[1] &&
-                        d.source[2] === snippet.source[2] &&
-                        d.source[3] === snippet.source[3]
-                    ) {
-                        // newData.push(d);
-                        return true;
-                    }
-                    return false;
-                });
-                if (match) {
-                    match.destination = snippet.destination;
-                    newData.push(match);
-                } else {
-                    unmatchedSnippets.push(snippet);
-                }
+                unmatchedSnippets.push(snippet);
             }
             if (unmatchedSnippets.length) {
                 unmatchedSelections.push({
@@ -188,11 +161,9 @@ class CellSnippetsLayer extends CompositeLayer {
         const { loader } = this.props;
         if (!loader) return;
 
-        const { data } = this.state;
-        // find selections that already have data cached in lru, or the previous data
+        // find selections that already have data cached in lru
         const { newData, unmatchedSelections } = this.matchSelectionsToData(
-            props.selections,
-            data
+            props.selections
         );
         const loadingDestinations: BBox[] = [];
 
@@ -262,7 +233,7 @@ class CellSnippetsLayer extends CompositeLayer {
                             snippet.source
                         );
                         const key = this.getSnippetKey(c, t, z, snippet.source);
-                        this.state.cache.set(key, snippetData);
+                        this.props.cache.set(key, snippetData);
 
                         loadedData.push({
                             data: snippetData,
@@ -292,7 +263,6 @@ class CellSnippetsLayer extends CompositeLayer {
 
     renderLayers() {
         const layers = [];
-
         layers.push(this.createLoadingUnderLayer());
         layers.push(this.createImageSnippetLayers());
         return layers;
