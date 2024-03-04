@@ -45,6 +45,8 @@ struct PolygonProps {
   vec2 translateOffsets;
 };
 
+out vec2 centeredPosition;
+
 vec3 project_offset_normal(vec3 vector) {
   if (project_uCoordinateSystem == COORDINATE_SYSTEM_LNGLAT ||
     project_uCoordinateSystem == COORDINATE_SYSTEM_LNGLAT_OFFSETS) {
@@ -84,6 +86,9 @@ void calculatePosition(PolygonProps props) {
   // account for the source/dest ratio
   pos.x *= scale;
   pos.y *= scale;
+
+  // store the centered position so clipping can happen in fragment shader
+  centeredPosition = pos.xy;
 
   // account for the camera scaling
   pos.x *= pow(2.0, -zoomX);

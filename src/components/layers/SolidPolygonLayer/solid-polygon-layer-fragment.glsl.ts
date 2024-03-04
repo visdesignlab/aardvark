@@ -23,10 +23,35 @@ export default `\
 
 precision highp float;
 
+uniform float clipSize;
+
 varying vec4 vColor;
+in vec2 centeredPosition;
+
 
 void main(void) {
-  gl_FragColor = vColor;
+  // float clipSize = 10.0;
+  float border = 2.0;
+  float padding = 1.0;
+  // set color to green if the point is within the square of size clipSize
+  if (abs(centeredPosition.x) < clipSize / 2.0 && abs(centeredPosition.y) < clipSize / 2.0) {
+    // color inside the square based on settings passed in
+    gl_FragColor = vColor;
+  } else if (
+    abs(centeredPosition.x) < clipSize / 2.0 + padding
+ && abs(centeredPosition.y) < clipSize / 2.0 + padding) {
+    // discard the padding space
+    discard;
+  } else if (
+    abs(centeredPosition.x) < clipSize / 2.0 + border + padding
+ && abs(centeredPosition.y) < clipSize / 2.0 + border + padding
+ ) {
+    // color a small line around the square when it is outside the square
+    gl_FragColor = vec4(1.0, 0.0, 0.0, 0.75);
+  } else {
+    // discard past this border
+    discard;
+  }
 
   DECKGL_FILTER_COLOR(gl_FragColor, geometry);
 }

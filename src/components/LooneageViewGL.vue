@@ -1691,13 +1691,14 @@ function createCellBoundaryLayer(
         getPolygon: (d: any) => d.polygon,
         getCenter: (d: any) => d.center,
         getTranslateOffset: (d: any) => d.offset,
-        getFillColor: [255, 0, 0, 120],
+        getFillColor: [0, 255, 0, 120],
         extruded: false,
         material: false,
         filled: true,
         wireframe: false,
         zoomX: viewStateMirror.value.zoom[0],
-        scale: looneageViewStore.snippetZoom, // maybe need inverse?
+        scale: looneageViewStore.snippetZoom,
+        clipSize: looneageViewStore.snippetDestSize,
     });
     return layer;
 }

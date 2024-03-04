@@ -382,8 +382,15 @@ export default class SolidPolygonLayer<
     }
 
     draw({ uniforms }) {
-        const { extruded, filled, wireframe, elevationScale, zoomX, scale } =
-            this.props;
+        const {
+            extruded,
+            filled,
+            wireframe,
+            elevationScale,
+            zoomX,
+            scale,
+            clipSize,
+        } = this.props;
         const { topModel, sideModel, polygonTesselator } = this.state;
 
         const renderUniforms = {
@@ -392,6 +399,7 @@ export default class SolidPolygonLayer<
             elevationScale,
             zoomX,
             scale,
+            clipSize,
         };
 
         // Note: the order is important
