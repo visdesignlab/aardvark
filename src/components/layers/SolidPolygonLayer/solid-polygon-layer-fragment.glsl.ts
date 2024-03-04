@@ -24,6 +24,7 @@ export default `\
 precision highp float;
 
 uniform float clipSize;
+uniform bool clip;
 
 varying vec4 vColor;
 in vec2 centeredPosition;
@@ -34,7 +35,7 @@ void main(void) {
   float border = 2.0;
   float padding = 1.0;
   // set color to green if the point is within the square of size clipSize
-  if (abs(centeredPosition.x) < clipSize / 2.0 && abs(centeredPosition.y) < clipSize / 2.0) {
+  if (!clip || abs(centeredPosition.x) < clipSize / 2.0 && abs(centeredPosition.y) < clipSize / 2.0) {
     // color inside the square based on settings passed in
     gl_FragColor = vColor;
   } else if (

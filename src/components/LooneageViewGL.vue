@@ -1775,6 +1775,7 @@ function createCellBoundaryLayer(
         zoomX: viewStateMirror.value.zoom[0],
         scale: looneageViewStore.snippetZoom,
         clipSize: looneageViewStore.snippetDestSize,
+        clip: true,
     });
 
     const hoveredLayer = new SolidPolygonLayer({
@@ -1791,6 +1792,7 @@ function createCellBoundaryLayer(
         zoomX: viewStateMirror.value.zoom[0],
         scale: looneageViewStore.snippetZoom,
         clipSize: looneageViewStore.snippetDestSize,
+        clip: false,
     });
 
     return { mainLayer, hoveredLayer };

@@ -390,6 +390,7 @@ export default class SolidPolygonLayer<
             zoomX,
             scale,
             clipSize,
+            clip,
         } = this.props;
         const { topModel, sideModel, polygonTesselator } = this.state;
 
@@ -400,6 +401,7 @@ export default class SolidPolygonLayer<
             zoomX,
             scale,
             clipSize,
+            clip,
         };
 
         // Note: the order is important
