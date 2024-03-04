@@ -817,7 +817,15 @@ function createKeyFrameSnippets(): KeyFrameSnippetsResult | null {
                 destHeight,
                 indexOffset
             );
-            if (!overlaps(pinnedBbox, viewportBBox())) continue;
+            if (
+                !overlaps(
+                    pinnedBbox,
+                    viewportBBox(),
+                    getBetweenSnippetPaddingX(),
+                    getBetweenSnippetPaddingY()
+                )
+            )
+                continue;
 
             if (outerPinnedBBox === null) {
                 outerPinnedBBox = [...pinnedBbox];
@@ -992,7 +1000,8 @@ function createKeyFrameSnippets(): KeyFrameSnippetsResult | null {
 
         for (const { index, nearestDistance } of keyframeOrder) {
             // exit loop if this point would overlap existing points
-            if (nearestDistance <= destWidth) break;
+            if (nearestDistance <= destWidth + getBetweenSnippetPaddingX())
+                break;
             const destination: BBox = getSnippetBBox(
                 index,
                 nodeWithData,
@@ -1004,10 +1013,27 @@ function createKeyFrameSnippets(): KeyFrameSnippetsResult | null {
             );
 
             if (
-                !overlaps(destination, viewportBBox()) ||
-                occupied.some((bbox: BBox) => overlaps(bbox, destination)) ||
+                !overlaps(
+                    destination,
+                    viewportBBox(),
+                    getBetweenSnippetPaddingX(),
+                    getBetweenSnippetPaddingY()
+                ) ||
+                occupied.some((bbox: BBox) =>
+                    overlaps(
+                        bbox,
+                        destination,
+                        getBetweenSnippetPaddingX(),
+                        getBetweenSnippetPaddingY()
+                    )
+                ) ||
                 userSelectedSnippetBBoxes.some((bbox: BBox) =>
-                    overlaps(bbox, destination)
+                    overlaps(
+                        bbox,
+                        destination,
+                        getBetweenSnippetPaddingX(),
+                        getBetweenSnippetPaddingY()
+                    )
                 )
             ) {
                 // this overlaps with existing occupied spaces, do not
@@ -1231,7 +1257,7 @@ function getSnippetBBox(
     if (indexOffset) {
         const offsetT = getOffsetTime(track, index, indexOffset);
         const evenDestX =
-            destX + indexOffset * (destWidth + getBetweenSnippetPadding());
+            destX + indexOffset * (destWidth + getBetweenSnippetPaddingX());
         const realDestX = destX + offsetT - t;
         if (indexOffset > 0) {
             destX = Math.max(evenDestX, realDestX);
@@ -1286,8 +1312,8 @@ function getTickData(
 
 function getWindowDrawer(outerBBox: BBox, displayBelow: boolean): TickData {
     const [left, top, right, bottom] = outerBBox;
-    const x1 = left - getBetweenSnippetPadding();
-    const x2 = right + getBetweenSnippetPadding();
+    const x1 = left - getBetweenSnippetPaddingX() / 2.0;
+    const x2 = right + getBetweenSnippetPaddingX() / 2.0;
     let y1;
     let y2;
     if (displayBelow) {
@@ -1344,7 +1370,7 @@ function valueExtent(track: Track, key: string): number {
 }
 
 function getHorizonSnippetPadding(): number {
-    return scaleForConstantVisualSize(8, 'y');
+    return scaleForConstantVisualSize(9, 'y');
 }
 
 function getTickmarkHeight(): number {
@@ -1360,11 +1386,15 @@ function minTickMarkSpace(): number {
 }
 
 function getSnippetDrawerLinePadding(): number {
-    return scaleForConstantVisualSize(2, 'y');
+    return scaleForConstantVisualSize(3, 'y');
 }
 
-function getBetweenSnippetPadding(): number {
-    return scaleForConstantVisualSize(2, 'x');
+function getBetweenSnippetPaddingX(): number {
+    return scaleForConstantVisualSize(8, 'x');
+}
+
+function getBetweenSnippetPaddingY(): number {
+    return scaleForConstantVisualSize(8, 'y');
 }
 
 interface KeyframeInfo {
@@ -1476,7 +1506,7 @@ const viewportBuffer = computed<number>(() => {
     // for performance. Probably makes sense for this to depend
     // on the snippet destination size that way the number of
     // snippets "preloaded" around edges is constant.
-    return looneageViewStore.snippetDestSize * 2;
+    return looneageViewStore.snippetDestSize;
 });
 
 function horizonInViewport(node: LayoutNode<Track>): boolean {
@@ -1486,7 +1516,12 @@ function horizonInViewport(node: LayoutNode<Track>): boolean {
         getRightPosition(node),
         node.x - looneageViewStore.rowHeight,
     ];
-    return overlaps(chartBBox, viewportBBox());
+    return overlaps(
+        chartBBox,
+        viewportBBox(),
+        getBetweenSnippetPaddingX(),
+        getBetweenSnippetPaddingY()
+    );
 }
 
 const positiveColors = computed<number[]>(() => {

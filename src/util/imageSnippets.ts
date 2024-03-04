@@ -74,11 +74,16 @@ export function overlapAmount(a: BBox, b: BBox): number {
     return (right - left) * (top - bottom);
 }
 
-export function overlaps(a: BBox, b: BBox): boolean {
+export function overlaps(
+    a: BBox,
+    b: BBox,
+    betweenSpaceX?: number,
+    betweenSpaceY?: number
+): boolean {
     // to overlap the x dimension and y dimension must both overlap
     return (
-        overlaps1D(a[0], a[2], b[0], b[2]) && // left and right
-        overlaps1D(a[3], a[1], b[3], b[1]) // bottom and top
+        overlaps1D(a[0], a[2], b[0], b[2], betweenSpaceX) && // left and right
+        overlaps1D(a[3], a[1], b[3], b[1], betweenSpaceY) // bottom and top
     );
 }
 
@@ -86,8 +91,13 @@ function overlaps1D(
     aMin: number,
     aMax: number,
     bMin: number,
-    bMax: number
+    bMax: number,
+    betweenSpace?: number
 ): boolean {
+    if (betweenSpace !== undefined) {
+        aMin -= betweenSpace;
+        aMax += betweenSpace;
+    }
     return aMax >= bMin && aMin <= bMax;
 }
 
