@@ -651,11 +651,14 @@ interface SnippetRenderInfo {
 interface SnippetCellInfo {
     cell: Cell;
     destinationBottomLeft: [number, number];
+    hovered: boolean;
 }
 
 interface KeyFrameSnippetsResult {
     snippetCellInfo: SnippetCellInfo[];
     layers: (CellSnippetsLayer | PathLayer | PolygonLayer)[];
+    hoverLayer: CellSnippetsLayer | null;
+    pickingLayer: PolygonLayer;
 }
 
 function createKeyFrameSnippets(): KeyFrameSnippetsResult | null {
@@ -711,9 +714,10 @@ function createKeyFrameSnippets(): KeyFrameSnippetsResult | null {
     // the top in  at tie. This calculation should be done before the user selected snippets
     // it is jarring if hovering/selecting  causes the side to change.
     const selections: Selection[] = [];
+    const hoverSelections: Selection[] = [];
     const snippetCellInfo: SnippetCellInfo[] = [];
-    const addSelection = (selection: Selection) => {
-        const matchingSelection = selections.find(
+    const addSelection = (selection: Selection, collection: Selection[]) => {
+        const matchingSelection = collection.find(
             (s) =>
                 s.c === selection.c &&
                 s.z === selection.z &&
@@ -722,7 +726,7 @@ function createKeyFrameSnippets(): KeyFrameSnippetsResult | null {
         if (matchingSelection) {
             matchingSelection.snippets.push(...selection.snippets);
         } else {
-            selections.push(selection);
+            collection.push(selection);
         }
     };
 
@@ -830,17 +834,21 @@ function createKeyFrameSnippets(): KeyFrameSnippetsResult | null {
                 looneageViewStore.snippetSourceSize,
                 looneageViewStore.snippetSourceSize
             );
-            addSelection({
-                c: 0,
-                z: 0,
-                t: frameIndex,
-                snippets: [{ source, destination: pinnedBbox }],
-            });
+            addSelection(
+                {
+                    c: 0,
+                    z: 0,
+                    t: frameIndex,
+                    snippets: [{ source, destination: pinnedBbox }],
+                },
+                selections
+            );
             if (edgeIndexOffset === 0) {
                 // add for the cell boundary only if snippet is within track bounds
                 snippetCellInfo.push({
                     cell,
                     destinationBottomLeft: [pinnedBbox[0], pinnedBbox[1]],
+                    hovered: false,
                 });
             }
             snippetPickingData.push({
@@ -928,17 +936,21 @@ function createKeyFrameSnippets(): KeyFrameSnippetsResult | null {
                     looneageViewStore.snippetSourceSize
                 );
                 const destination = hoveredBBox;
-                addSelection({
-                    c: 0,
-                    z: 0,
-                    t: frameIndex,
-                    snippets: [{ source, destination }],
-                });
+                addSelection(
+                    {
+                        c: 0,
+                        z: 0,
+                        t: frameIndex,
+                        snippets: [{ source, destination }],
+                    },
+                    hoverSelections
+                );
                 if (edgeIndexOffset === 0) {
                     // add for the cell boundary only if snippet is within track bounds
                     snippetCellInfo.push({
                         cell,
                         destinationBottomLeft: [hoveredBBox[0], hoveredBBox[1]],
+                        hovered: true,
                     });
                 }
                 snippetPickingData.push({
@@ -1050,15 +1062,19 @@ function createKeyFrameSnippets(): KeyFrameSnippetsResult | null {
                 looneageViewStore.snippetSourceSize,
                 looneageViewStore.snippetSourceSize
             );
-            addSelection({
-                c: 0,
-                z: 0,
-                t: cellMetaData.getFrame(cell) - 1, // convert frame number to index
-                snippets: [{ source, destination }],
-            });
+            addSelection(
+                {
+                    c: 0,
+                    z: 0,
+                    t: cellMetaData.getFrame(cell) - 1, // convert frame number to index
+                    snippets: [{ source, destination }],
+                },
+                selections
+            );
             snippetCellInfo.push({
                 cell,
                 destinationBottomLeft: [destination[0], destination[1]],
+                hovered: false,
             });
             snippetPickingData.push({
                 trackId: track.trackId,
@@ -1113,6 +1129,19 @@ function createKeyFrameSnippets(): KeyFrameSnippetsResult | null {
         extensions: [colormapExtension],
         colormap: imageViewerStore.colormap,
     });
+
+    let hoverLayer = null;
+    if (hoverSelections.length > 0) {
+        hoverLayer = new CellSnippetsLayer({
+            loader: pixelSource.value,
+            id: `hovered-snippets-layer`,
+            contrastLimits: contrastLimit.value,
+            selections: hoverSelections,
+            channelsVisible: [true],
+            extensions: [colormapExtension],
+            colormap: imageViewerStore.colormap,
+        });
+    }
 
     const snippetPickingLayer = new PolygonLayer({
         id: 'snippet-picking-layer',
@@ -1214,8 +1243,14 @@ function createKeyFrameSnippets(): KeyFrameSnippetsResult | null {
             renderDeckGL();
         },
     });
-    const layers = [snippetTickMarksLayer, snippetLayer, snippetPickingLayer];
-    return { snippetCellInfo, layers };
+
+    const layers = [snippetTickMarksLayer, snippetLayer];
+    return {
+        snippetCellInfo,
+        layers,
+        hoverLayer,
+        pickingLayer: snippetPickingLayer,
+    };
 }
 
 function getSnippetBBox(
@@ -1673,9 +1708,15 @@ const cellSegmentationData = ref<Feature[]>();
 watch(cellSegmentationData, () => {
     renderDeckGL();
 });
+
+interface BoundaryLayerResult {
+    mainLayer: SolidPolygonLayer | null;
+    hoveredLayer: SolidPolygonLayer | null;
+}
+
 function createCellBoundaryLayer(
     snippetCellInfo: SnippetCellInfo[]
-): SolidPolygonLayer | null {
+): BoundaryLayerResult | null {
     // maybe need abort logic, deff need to avoid infinite loop here...
     // segmentationStore
     //     .getCellSegmentations(snippetCellInfo.map((info) => info.cell))
@@ -1700,6 +1741,7 @@ function createCellBoundaryLayer(
             return {
                 // @ts-ignore coordinates does exist on geometry
                 polygon: feature?.geometry?.coordinates,
+                hovered: info.hovered,
                 center: [cellX, cellY],
                 offset: [
                     x +
@@ -1711,8 +1753,9 @@ function createCellBoundaryLayer(
         })
         .filter((d) => d.polygon !== undefined);
 
-    const layer = new SolidPolygonLayer({
-        data,
+    const mainLayer = new SolidPolygonLayer({
+        id: 'cell-boundary-layer',
+        data: data.filter((d) => !d.hovered),
         getPolygon: (d: any) => d.polygon,
         getCenter: (d: any) => d.center,
         getTranslateOffset: (d: any) => d.offset,
@@ -1725,7 +1768,24 @@ function createCellBoundaryLayer(
         scale: looneageViewStore.snippetZoom,
         clipSize: looneageViewStore.snippetDestSize,
     });
-    return layer;
+
+    const hoveredLayer = new SolidPolygonLayer({
+        id: 'hovered-cell-boundary-layer',
+        data: data.filter((d) => d.hovered),
+        getPolygon: (d: any) => d.polygon,
+        getCenter: (d: any) => d.center,
+        getTranslateOffset: (d: any) => d.offset,
+        getFillColor: [0, 255, 0, 120],
+        extruded: false,
+        material: false,
+        filled: true,
+        wireframe: false,
+        zoomX: viewStateMirror.value.zoom[0],
+        scale: looneageViewStore.snippetZoom,
+        clipSize: looneageViewStore.snippetDestSize,
+    });
+
+    return { mainLayer, hoveredLayer };
 }
 
 function renderDeckGL(): void {
@@ -1744,8 +1804,12 @@ function renderDeckGL(): void {
     if (looneageViewStore.showSnippets) {
         const keyFrameSnippetsResult = createKeyFrameSnippets();
         if (keyFrameSnippetsResult) {
-            const { snippetCellInfo, layers: keyFrameSnippetLayers } =
-                keyFrameSnippetsResult;
+            const {
+                snippetCellInfo,
+                layers: keyFrameSnippetLayers,
+                hoverLayer: snippetHoverLayer,
+                pickingLayer,
+            } = keyFrameSnippetsResult;
             layers.push(...keyFrameSnippetLayers);
             if (!isEqual(currentSnippetCellInfo.value, snippetCellInfo)) {
                 currentSnippetCellInfo.value = snippetCellInfo;
@@ -1757,7 +1821,17 @@ function renderDeckGL(): void {
                         cellSegmentationData.value = data;
                     });
             }
-            layers.push(createCellBoundaryLayer(snippetCellInfo));
+            const boundaryLayerResult =
+                createCellBoundaryLayer(snippetCellInfo);
+            if (boundaryLayerResult) {
+                layers.push(boundaryLayerResult.mainLayer);
+                layers.push(snippetHoverLayer);
+                layers.push(boundaryLayerResult.hoveredLayer);
+            } else {
+                layers.push(snippetHoverLayer);
+            }
+            layers.push(pickingLayer);
+            // todo add hover layer for boundary
         }
     }
     // layers.push(createTrackLayer());
