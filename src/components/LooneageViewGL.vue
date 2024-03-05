@@ -62,7 +62,7 @@ import {
     TextLayer,
 } from '@deck.gl/layers/typed';
 
-import SolidPolygonLayer from './layers/SolidPolygonLayer/solid-polygon-layer';
+import SolidPolygonLayer from './layers/SnippetSegmentationLayer/SnippetSegmentationLayer';
 
 import HorizonChartLayer from './layers/HorizonChartLayer/HorizonChartLayer';
 

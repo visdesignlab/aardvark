@@ -25,8 +25,8 @@ import { Model, hasFeatures, FEATURES } from '@luma.gl/core';
 // Polygon geometry generation is managed by the polygon tesselator
 import PolygonTesselator from './polygon-tesselator';
 
-import vsTop from './solid-polygon-layer-vertex-top.glsl';
-import fs from './solid-polygon-layer-fragment.glsl';
+import vsTop from './SnippetSegmentationLayer-vertex-top.glsl';
+import fs from './SnippetSegmentationLayer-fragment.glsl';
 
 import type {
     LayerProps,

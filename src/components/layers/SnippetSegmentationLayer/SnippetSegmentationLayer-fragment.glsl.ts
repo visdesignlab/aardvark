@@ -18,43 +18,42 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-import main from './solid-polygon-layer-vertex-main.glsl';
-
 export default `\
-#define SHADER_NAME solid-polygon-layer-vertex-shader-side
-#define IS_SIDE_VERTEX
+#define SHADER_NAME SnippetSegmentationLayer-fragment-shader
 
+precision highp float;
 
-attribute vec3 instancePositions;
-attribute vec3 nextPositions;
-attribute vec3 instancePositions64Low;
-attribute vec3 nextPositions64Low;
-attribute float instanceElevations;
-attribute vec4 instanceFillColors;
-attribute vec4 instanceLineColors;
-attribute vec3 instancePickingColors;
+uniform float clipSize;
+uniform bool clip;
 
-${main}
+varying vec4 vColor;
+in vec2 centeredPosition;
+
 
 void main(void) {
-  PolygonProps props;
+  // float clipSize = 10.0;
+  float border = 2.0;
+  float padding = 1.0;
+  // set color to green if the point is within the square of size clipSize
+  if (!clip || abs(centeredPosition.x) < clipSize / 2.0 && abs(centeredPosition.y) < clipSize / 2.0) {
+    // color inside the square based on settings passed in
+    gl_FragColor = vColor;
+  } else if (
+    abs(centeredPosition.x) < clipSize / 2.0 + padding
+ && abs(centeredPosition.y) < clipSize / 2.0 + padding) {
+    // discard the padding space
+    discard;
+  } else if (
+    abs(centeredPosition.x) < clipSize / 2.0 + border + padding
+ && abs(centeredPosition.y) < clipSize / 2.0 + border + padding
+ ) {
+    // color a small line around the square when it is outside the square
+    gl_FragColor = vec4(1.0, 0.0, 0.0, 0.75);
+  } else {
+    // discard past this border
+    discard;
+  }
 
-  #if RING_WINDING_ORDER_CW == 1
-    props.positions = instancePositions;
-    props.positions64Low = instancePositions64Low;
-    props.nextPositions = nextPositions;
-    props.nextPositions64Low = nextPositions64Low;
-  #else
-    props.positions = nextPositions;
-    props.positions64Low = nextPositions64Low;
-    props.nextPositions = instancePositions;
-    props.nextPositions64Low = instancePositions64Low;
-  #endif
-  props.elevations = instanceElevations;
-  props.fillColors = instanceFillColors;
-  props.lineColors = instanceLineColors;
-  props.pickingColors = instancePickingColors;
-
-  calculatePosition(props);
+  DECKGL_FILTER_COLOR(gl_FragColor, geometry);
 }
 `;

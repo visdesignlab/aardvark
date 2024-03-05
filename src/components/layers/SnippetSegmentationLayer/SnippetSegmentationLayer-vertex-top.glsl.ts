@@ -21,10 +21,10 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-import main from './solid-polygon-layer-vertex-main.glsl';
+import main from './SnippetSegmentationLayer-vertex-main.glsl';
 
 export default `\
-#define SHADER_NAME solid-polygon-layer-vertex-shader
+#define SHADER_NAME SnippetSegmentationLayer-vertex-shader
 
 attribute vec3 positions;
 attribute vec3 positions64Low;
