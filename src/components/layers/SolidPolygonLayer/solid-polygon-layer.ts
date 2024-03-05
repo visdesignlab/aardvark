@@ -18,33 +18,23 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-import {
-    Layer,
-    project32,
-    // gouraudLighting,
-    // picking,
-    COORDINATE_SYSTEM,
-} from '@deck.gl/core';
+import { Layer, project32 } from '@deck.gl/core';
 import GL from '@luma.gl/constants';
-import { Model, Geometry, hasFeatures, FEATURES } from '@luma.gl/core';
+import { Model, hasFeatures, FEATURES } from '@luma.gl/core';
 
 // Polygon geometry generation is managed by the polygon tesselator
 import PolygonTesselator from './polygon-tesselator';
 
 import vsTop from './solid-polygon-layer-vertex-top.glsl';
-// import vsSide from './solid-polygon-layer-vertex-side.glsl';
 import fs from './solid-polygon-layer-fragment.glsl';
 
 import type {
     LayerProps,
     LayerDataSource,
     Color,
-    // Material,
     Accessor,
     AccessorFunction,
     UpdateParameters,
-    // GetPickingInfoParams,
-    // PickingInfo,
     DefaultProps,
 } from '@deck.gl/core';
 import type { PolygonGeometry } from './polygon';
@@ -54,37 +44,6 @@ type _SolidPolygonLayerProps<DataT> = {
     /** Whether to fill the polygons
      * @default true
      */
-    // filled?: boolean;
-    /** Whether to extrude the polygons
-     * @default false
-     */
-    // extruded?: boolean;
-    /** Whether to generate a line wireframe of the polygon.
-     * @default false
-     */
-    // wireframe?: boolean;
-    /**
-     * (Experimental) If `false`, will skip normalizing the coordinates returned by `getPolygon`.
-     * @default true
-     */
-    // _normalize?: boolean;
-    /**
-     * (Experimental) This prop is only effective with `_normalize: false`.
-     * It specifies the winding order of rings in the polygon data, one of 'CW' (clockwise) and 'CCW' (counter-clockwise)
-     */
-    // _windingOrder?: 'CW' | 'CCW';
-
-    /**
-     * (Experimental) This prop is only effective with `XYZ` data.
-     * When true, polygon tesselation will be performed on the plane with the largest area, instead of the xy plane.
-     * @default false
-     */
-    // _full3d?: boolean;
-
-    /** Elevation multiplier.
-     * @default 1
-     */
-    // elevationScale?: number;
 
     /** Polygon geometry accessor. */
     getPolygon?: AccessorFunction<DataT, PolygonGeometry>;
@@ -125,15 +84,6 @@ export type SolidPolygonLayerProps<DataT = any> =
 const DEFAULT_COLOR: [number, number, number, number] = [0, 0, 0, 255];
 
 const defaultProps: DefaultProps<SolidPolygonLayerProps> = {
-    // filled: true,
-    // extruded: false,
-    // wireframe: false,
-    // _normalize: true,
-    // _windingOrder: 'CW',
-    // _full3d: false,
-
-    // elevationScale: { type: 'number', min: 0, value: 1 },
-
     getPolygon: { type: 'accessor', value: (f) => f.polygon },
     // getElevation: { type: 'accessor', value: 1000 },
     getFillColor: { type: 'accessor', value: DEFAULT_COLOR },
@@ -187,25 +137,7 @@ export default class SolidPolygonLayer<
     }
 
     initializeState() {
-        const { gl, viewport } = this.context;
-        // let { coordinateSystem } = this.props;
-        // const { _full3d } = this.props;
-        // if (
-        //     viewport.isGeospatial &&
-        //     coordinateSystem === COORDINATE_SYSTEM.DEFAULT
-        // ) {
-        //     coordinateSystem = COORDINATE_SYSTEM.LNGLAT;
-        // }
-
-        // let preproject: ((xy: number[]) => number[]) | undefined;
-
-        // if (coordinateSystem === COORDINATE_SYSTEM.LNGLAT) {
-        //     // if (_full3d) {
-        //     //     preproject = viewport.projectPosition.bind(viewport);
-        //     // } else {
-        //     preproject = viewport.projectFlat.bind(viewport);
-        //     // }
-        // }
+        const { gl } = this.context;
 
         this.setState({
             numInstances: 0,
@@ -223,8 +155,6 @@ export default class SolidPolygonLayer<
 
         const attributeManager = this.getAttributeManager()!;
         const noAlloc = true;
-
-        // attributeManager.remove(['instancePickingColors']);
 
         /* eslint-disable max-len */
         attributeManager.add({
@@ -267,19 +197,6 @@ export default class SolidPolygonLayer<
                 update: this.calculateVertexValid,
                 noAlloc,
             },
-            // elevations: {
-            //     size: 1,
-            //     transition: ATTRIBUTE_TRANSITION,
-            //     accessor: 'getElevation',
-            //     shaderAttributes: {
-            //         elevations: {
-            //             divisor: 0,
-            //         },
-            //         instanceElevations: {
-            //             divisor: 1,
-            //         },
-            //     },
-            // },
             fillColors: {
                 size: this.props.colorFormat.length,
                 type: GL.UNSIGNED_BYTE,
@@ -324,96 +241,21 @@ export default class SolidPolygonLayer<
                 accessor: 'getTranslateOffset',
                 defaultValue: [0, 0],
             },
-            // pickingColors: {
-            //     size: 3,
-            //     type: GL.UNSIGNED_BYTE,
-            //     accessor: (object, { index, target: value }) =>
-            //         this.encodePickingColor(
-            //             object && object.__source
-            //                 ? object.__source.index
-            //                 : index,
-            //             value
-            //         ),
-            //     shaderAttributes: {
-            //         pickingColors: {
-            //             divisor: 0,
-            //         },
-            //         instancePickingColors: {
-            //             divisor: 1,
-            //         },
-            //     },
-            // },
         });
         /* eslint-enable max-len */
     }
 
-    // getPickingInfo(params: GetPickingInfoParams): PickingInfo {
-    //     const info = super.getPickingInfo(params);
-    //     const { index } = info;
-    //     const { data } = this.props;
-
-    //     // Check if data comes from a composite layer, wrapped with getSubLayerRow
-    //     if (data[0] && data[0].__source) {
-    //         // index decoded from picking color refers to the source index
-    //         info.object = (data as any[]).find(
-    //             (d) => d.__source.index === index
-    //         );
-    //     }
-    //     return info;
-    // }
-
-    // disablePickingIndex(objectIndex: number) {
-    //     const { data } = this.props;
-
-    //     // Check if data comes from a composite layer, wrapped with getSubLayerRow
-    //     if (data[0] && data[0].__source) {
-    //         // index decoded from picking color refers to the source index
-    //         for (let i = 0; i < (data as any[]).length; i++) {
-    //             if (data[i].__source.index === objectIndex) {
-    //                 this._disablePickingIndex(i);
-    //             }
-    //         }
-    //     } else {
-    //         super.disablePickingIndex(objectIndex);
-    //     }
-    // }
-
     draw({ uniforms }) {
-        const {
-            // extruded,
-            // filled,
-            // wireframe,
-            // elevationScale,
-            zoomX,
-            scale,
-            clipSize,
-            clip,
-        } = this.props;
+        const { zoomX, scale, clipSize, clip } = this.props;
         const { topModel, polygonTesselator } = this.state;
 
         const renderUniforms = {
             ...uniforms,
-            // extruded: Boolean(extruded),
-            // elevationScale,
             zoomX,
             scale,
             clipSize,
             clip,
         };
-
-        // Note: the order is important
-        // if (sideModel) {
-        //     sideModel.setInstanceCount(polygonTesselator.instanceCount - 1);
-        //     sideModel.setUniforms(renderUniforms);
-        //     // if (wireframe) {
-        //     //     sideModel.setDrawMode(GL.LINE_STRIP);
-        //     //     sideModel.setUniforms({ isWireframe: true }).draw();
-        //     // }
-        //     // if (filled) {
-        //     sideModel.setDrawMode(GL.TRIANGLE_FAN);
-        //     sideModel.setUniforms({ isWireframe: false }).draw();
-        //     // }
-        // }
 
         if (topModel) {
             topModel.setVertexCount(polygonTesselator.vertexCount);
@@ -426,13 +268,10 @@ export default class SolidPolygonLayer<
 
         this.updateGeometry(updateParams);
 
-        const { props, oldProps, changeFlags } = updateParams;
+        const { changeFlags } = updateParams;
         const attributeManager = this.getAttributeManager();
 
-        const regenerateModels = changeFlags.extensionsChanged; // || props.filled !== oldProps.filled; // ||
-        // props.extruded !== oldProps.extruded;
-
-        if (regenerateModels) {
+        if (changeFlags.extensionsChanged) {
             this.state.models?.forEach((model) => model.delete());
 
             this.setState(this._getModels(this.context.gl));
@@ -440,11 +279,7 @@ export default class SolidPolygonLayer<
         }
     }
 
-    protected updateGeometry({
-        props,
-        oldProps,
-        changeFlags,
-    }: UpdateParameters<this>) {
+    protected updateGeometry({ props, changeFlags }: UpdateParameters<this>) {
         const geometryConfigChanged =
             changeFlags.dataChanged ||
             (changeFlags.updateTriggersChanged &&
@@ -468,7 +303,6 @@ export default class SolidPolygonLayer<
                 resolution: this.context.viewport.resolution,
                 fp64: this.use64bitPositions(),
                 dataChanged: changeFlags.dataChanged,
-                // full3d: props._full3d,
             });
 
             this.setState({
@@ -487,10 +321,6 @@ export default class SolidPolygonLayer<
     protected _getModels(gl: WebGLRenderingContext): Model {
         const { id } = this.props;
 
-        // let topModel;
-        // let sideModel;
-
-        // if (filled) {
         const shaders = this.getShaders();
         shaders.defines.NON_INSTANCED_MODEL = 1;
 
@@ -508,28 +338,6 @@ export default class SolidPolygonLayer<
             vertexCount: 0,
             isIndexed: true,
         });
-        // }
-        // if (extruded) {
-        //     sideModel = new Model(gl, {
-        //         ...this.getShaders('side'),
-        //         id: `${id}-side`,
-        //         geometry: new Geometry({
-        //             drawMode: GL.LINES,
-        //             vertexCount: 4,
-        //             attributes: {
-        //                 // top right - top left - bootom left - bottom right
-        //                 vertexPositions: {
-        //                     size: 2,
-        //                     value: new Float32Array([1, 0, 0, 0, 0, 1, 1, 1]),
-        //                 },
-        //             },
-        //         }),
-        //         instanceCount: 0,
-        //         isInstanced: 1,
-        //     });
-
-        //     sideModel.userData.excludeAttributes = { indices: true };
-        // }
 
         return {
             models: [topModel],
