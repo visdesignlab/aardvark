@@ -79,7 +79,7 @@ type _SolidPolygonLayerProps<DataT> = {
      * When true, polygon tesselation will be performed on the plane with the largest area, instead of the xy plane.
      * @default false
      */
-    _full3d?: boolean;
+    // _full3d?: boolean;
 
     /** Elevation multiplier.
      * @default 1
@@ -130,7 +130,7 @@ const defaultProps: DefaultProps<SolidPolygonLayerProps> = {
     // wireframe: false,
     _normalize: true,
     _windingOrder: 'CW',
-    _full3d: false,
+    // _full3d: false,
 
     // elevationScale: { type: 'number', min: 0, value: 1 },
 
@@ -192,7 +192,7 @@ export default class SolidPolygonLayer<
     initializeState() {
         const { gl, viewport } = this.context;
         let { coordinateSystem } = this.props;
-        const { _full3d } = this.props;
+        // const { _full3d } = this.props;
         if (
             viewport.isGeospatial &&
             coordinateSystem === COORDINATE_SYSTEM.DEFAULT
@@ -203,11 +203,11 @@ export default class SolidPolygonLayer<
         let preproject: ((xy: number[]) => number[]) | undefined;
 
         if (coordinateSystem === COORDINATE_SYSTEM.LNGLAT) {
-            if (_full3d) {
-                preproject = viewport.projectPosition.bind(viewport);
-            } else {
-                preproject = viewport.projectFlat.bind(viewport);
-            }
+            // if (_full3d) {
+            //     preproject = viewport.projectPosition.bind(viewport);
+            // } else {
+            preproject = viewport.projectFlat.bind(viewport);
+            // }
         }
 
         this.setState({
@@ -471,7 +471,7 @@ export default class SolidPolygonLayer<
                 resolution: this.context.viewport.resolution,
                 fp64: this.use64bitPositions(),
                 dataChanged: changeFlags.dataChanged,
-                full3d: props._full3d,
+                // full3d: props._full3d,
             });
 
             this.setState({
