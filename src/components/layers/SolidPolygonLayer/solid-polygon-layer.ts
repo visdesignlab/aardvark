@@ -165,7 +165,7 @@ export default class SolidPolygonLayer<
 
     state!: {
         topModel?: Model;
-        sideModel?: Model;
+        // sideModel?: Model;
         models?: Model[];
         numInstances: number;
         polygonTesselator: PolygonTesselator;
@@ -389,7 +389,7 @@ export default class SolidPolygonLayer<
             clipSize,
             clip,
         } = this.props;
-        const { topModel, sideModel, polygonTesselator } = this.state;
+        const { topModel, polygonTesselator } = this.state;
 
         const renderUniforms = {
             ...uniforms,
@@ -402,18 +402,18 @@ export default class SolidPolygonLayer<
         };
 
         // Note: the order is important
-        if (sideModel) {
-            sideModel.setInstanceCount(polygonTesselator.instanceCount - 1);
-            sideModel.setUniforms(renderUniforms);
-            // if (wireframe) {
-            //     sideModel.setDrawMode(GL.LINE_STRIP);
-            //     sideModel.setUniforms({ isWireframe: true }).draw();
-            // }
-            // if (filled) {
-            sideModel.setDrawMode(GL.TRIANGLE_FAN);
-            sideModel.setUniforms({ isWireframe: false }).draw();
-            // }
-        }
+        // if (sideModel) {
+        //     sideModel.setInstanceCount(polygonTesselator.instanceCount - 1);
+        //     sideModel.setUniforms(renderUniforms);
+        //     // if (wireframe) {
+        //     //     sideModel.setDrawMode(GL.LINE_STRIP);
+        //     //     sideModel.setUniforms({ isWireframe: true }).draw();
+        //     // }
+        //     // if (filled) {
+        //     sideModel.setDrawMode(GL.TRIANGLE_FAN);
+        //     sideModel.setUniforms({ isWireframe: false }).draw();
+        //     // }
+        // }
 
         if (topModel) {
             topModel.setVertexCount(polygonTesselator.vertexCount);
@@ -488,7 +488,7 @@ export default class SolidPolygonLayer<
         const { id } = this.props;
 
         // let topModel;
-        let sideModel;
+        // let sideModel;
 
         // if (filled) {
         const shaders = this.getShaders('top');
@@ -532,9 +532,8 @@ export default class SolidPolygonLayer<
         // }
 
         return {
-            models: [sideModel, topModel].filter(Boolean),
+            models: [topModel],
             topModel,
-            sideModel,
         };
     }
 
