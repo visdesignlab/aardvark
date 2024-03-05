@@ -112,11 +112,11 @@ vec3 getLineJoinOffset(
   vec3 deltaB3 = (nextPoint - currPoint);
 
   mat3 rotationMatrix;
-  bool needsRotation = false; //!billboard && project_needs_rotation(currPoint, rotationMatrix);
-  if (needsRotation) {
-    deltaA3 = deltaA3 * rotationMatrix;
-    deltaB3 = deltaB3 * rotationMatrix;
-  }
+  // bool needsRotation = false; //!billboard && project_needs_rotation(currPoint, rotationMatrix);
+  // if (needsRotation) {
+  //   deltaA3 = deltaA3 * rotationMatrix;
+  //   deltaB3 = deltaB3 * rotationMatrix;
+  // }
   vec2 deltaA = deltaA3.xy / width;
   vec2 deltaB = deltaB3.xy / width;
 
@@ -194,9 +194,9 @@ vec3 getLineJoinOffset(
   float isValid = step(instanceTypes, 3.5);
   vec3 offset = vec3(offsetVec * width * isValid, 0.0);
 
-  if (needsRotation) {
-    offset = rotationMatrix * offset;
-  }
+  // if (needsRotation) {
+  //   offset = rotationMatrix * offset;
+  // }
   return offset;
 }
 
