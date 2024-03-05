@@ -22,7 +22,7 @@
 // THE SOFTWARE.
 
 export default `\
-#define SHADER_NAME path-layer-fragment-shader
+#define SHADER_NAME SnippetSegmentationOutlineLayer-fragment-shader
 
 precision highp float;
 

@@ -26,8 +26,8 @@ import GL from '@luma.gl/constants';
 import { Model, Geometry } from '@luma.gl/engine';
 import PathTesselator from './path-tesselator';
 
-import vs from './path-layer-vertex.glsl';
-import fs from './path-layer-fragment.glsl';
+import vs from './SnippetSegmentationOutlineLayer-vertex.glsl';
+import fs from './SnippetSegmentationOutlineLayer-fragment.glsl';
 
 import type {
     LayerProps,

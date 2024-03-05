@@ -22,7 +22,7 @@
 // THE SOFTWARE.
 
 export default `\
-#define SHADER_NAME path-layer-vertex-shader
+#define SHADER_NAME SnippetSegmentationOutlineLayer-vertex-shader
 
 attribute vec2 positions;
 

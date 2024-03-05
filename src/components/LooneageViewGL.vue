@@ -63,7 +63,7 @@ import {
 } from '@deck.gl/layers/typed';
 
 import SnippetSegmentationLayer from './layers/SnippetSegmentationLayer/SnippetSegmentationLayer';
-import SnippetSegmentationOutlineLayer from './layers/path-layer/path-layer';
+import SnippetSegmentationOutlineLayer from './layers/SnippetSegmentationOutlineLayer/SnippetSegmentationOutlineLayer';
 
 import HorizonChartLayer from './layers/HorizonChartLayer/HorizonChartLayer';
 
