@@ -1326,11 +1326,15 @@ function getTickData(
         tickHorizonY -= looneageViewStore.rowHeight;
         if (bufferTick) {
             tickSnippetY -= getSnippetDrawerLinePadding();
+        } else {
+            tickSnippetY += looneageViewStore.snippetDestSize / 2.0;
         }
     } else {
         tickSnippetY -= looneageViewStore.rowHeight + tickPadding;
         if (bufferTick) {
             tickSnippetY += getSnippetDrawerLinePadding();
+        } else {
+            tickSnippetY -= looneageViewStore.snippetDestSize / 2.0;
         }
     }
     return {
@@ -1832,10 +1836,10 @@ function renderDeckGL(): void {
                 hoverLayer: snippetHoverLayer,
                 pickingLayer,
             } = keyFrameSnippetsResult;
+            layers.push(snippetTickLayer);
             if (looneageViewStore.showSnippetImage) {
                 layers.push(keyFrameSnippetLayer);
             }
-            layers.push(snippetTickLayer);
             if (!isEqual(currentSnippetCellInfo.value, snippetCellInfo)) {
                 currentSnippetCellInfo.value = snippetCellInfo;
                 segmentationStore
