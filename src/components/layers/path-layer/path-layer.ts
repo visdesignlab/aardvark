@@ -84,7 +84,7 @@ type _PathLayerProps<DataT> = {
      * If `false`, the width always faces up (z).
      * @default false
      */
-    billboard?: boolean;
+    // billboard?: boolean;
     /**
      * (Experimental) If `'loop'` or `'open'`, will skip normalizing the coordinates returned by `getPath` and instead assume all paths are to be loops or open paths.
      * When normalization is disabled, paths must be specified in the format of flat array. Open paths must contain at least 2 vertices and closed paths must contain at least 3 vertices.
@@ -136,7 +136,7 @@ const defaultProps: DefaultProps<PathLayerProps> = {
     jointRounded: false,
     capRounded: false,
     miterLimit: { type: 'number', min: 0, value: 4 },
-    billboard: false,
+    // billboard: false,
     _pathType: null,
 
     getPath: { type: 'accessor', value: (object) => object.path },
@@ -356,7 +356,7 @@ export default class PathLayer<
         const {
             jointRounded,
             capRounded,
-            billboard,
+            // billboard,
             miterLimit,
             widthUnits,
             widthScale,
@@ -373,7 +373,7 @@ export default class PathLayer<
             .setUniforms({
                 jointType: Number(jointRounded),
                 capType: Number(capRounded),
-                billboard,
+                // billboard,
                 widthUnits: UNIT[widthUnits],
                 widthScale,
                 miterLimit,
