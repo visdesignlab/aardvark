@@ -63,6 +63,7 @@ import {
 } from '@deck.gl/layers/typed';
 
 import SnippetSegmentationLayer from './layers/SnippetSegmentationLayer/SnippetSegmentationLayer';
+import SnippetSegmentationOutlineLayer from './layers/path-layer/path-layer';
 
 import HorizonChartLayer from './layers/HorizonChartLayer/HorizonChartLayer';
 
@@ -1723,8 +1724,8 @@ watch(cellSegmentationData, () => {
 });
 
 interface BoundaryLayerResult {
-    mainLayer: SnippetSegmentationLayer | null;
-    hoveredLayer: SnippetSegmentationLayer | null;
+    mainLayers: (SnippetSegmentationLayer | PathLayer)[] | null;
+    hoveredLayers: (SnippetSegmentationLayer | PathLayer)[] | null;
 }
 
 function createCellBoundaryLayer(
@@ -1766,48 +1767,65 @@ function createCellBoundaryLayer(
         })
         .filter((d) => d.polygon !== undefined);
 
-    const mainLayer = new SnippetSegmentationLayer({
-        id: 'cell-boundary-layer',
-        data: data.filter((d) => !d.hovered),
-        getPolygon: (d: any) => d.polygon,
-        getCenter: (d: any) => d.center,
-        getTranslateOffset: (d: any) => d.offset,
-        // getFillColor: [0, 55, 190, 100],
-        getFillColor: [
-            253,
-            227,
-            9,
-            looneageViewStore.showSnippetImage ? 120 : 255,
-        ],
-        // extruded: false,
-        // material: false,
-        // filled: true,
-        // wireframe: false,
-        zoomX: viewStateMirror.value.zoom[0],
-        scale: looneageViewStore.snippetZoom,
-        clipSize: looneageViewStore.snippetDestSize,
-        clip: true,
-    });
+    const mainLayers = [];
+    mainLayers.push(
+        new SnippetSegmentationLayer({
+            id: 'cell-boundary-layer',
+            data: data.filter((d) => !d.hovered),
+            getPolygon: (d: any) => d.polygon,
+            getCenter: (d: any) => d.center,
+            getTranslateOffset: (d: any) => d.offset,
+            // getFillColor: [0, 55, 190, 100],
+            getFillColor: [
+                253,
+                227,
+                9,
+                looneageViewStore.showSnippetImage ? 120 : 255,
+            ],
+            // extruded: false,
+            // material: false,
+            // filled: true,
+            // wireframe: false,
+            zoomX: viewStateMirror.value.zoom[0],
+            scale: looneageViewStore.snippetZoom,
+            clipSize: looneageViewStore.snippetDestSize,
+            clip: true,
+        })
+    );
 
-    const hoveredLayer = new SnippetSegmentationLayer({
-        id: 'hovered-cell-boundary-layer',
-        data: data.filter((d) => d.hovered),
-        getPolygon: (d: any) => d.polygon,
-        getCenter: (d: any) => d.center,
-        getTranslateOffset: (d: any) => d.offset,
-        getFillColor: [
-            253,
-            227,
-            9,
-            looneageViewStore.showSnippetImage ? 120 : 255,
-        ],
-        zoomX: viewStateMirror.value.zoom[0],
-        scale: looneageViewStore.snippetZoom,
-        clipSize: looneageViewStore.snippetDestSize,
-        clip: hoveredSnippet.value?.extraFrames ? true : false, // only clip if single hover frame is shown
-    });
+    mainLayers.push(
+        new SnippetSegmentationOutlineLayer({
+            id: 'cell-boundary-outline-layer',
+            data: data.filter((d) => !d.hovered),
+            getPath: (d: any) => d.polygon[0],
+            getColor: [0, 255, 255, 255],
+            getWidth: 2,
+            widthUnits: 'pixels',
+        })
+    );
 
-    return { mainLayer, hoveredLayer };
+    const hoveredLayers = [];
+    hoveredLayers.push(
+        new SnippetSegmentationLayer({
+            id: 'hovered-cell-boundary-layer',
+            data: data.filter((d) => d.hovered),
+            getPolygon: (d: any) => d.polygon,
+            getCenter: (d: any) => d.center,
+            getTranslateOffset: (d: any) => d.offset,
+            getFillColor: [
+                253,
+                227,
+                9,
+                looneageViewStore.showSnippetImage ? 120 : 255,
+            ],
+            zoomX: viewStateMirror.value.zoom[0],
+            scale: looneageViewStore.snippetZoom,
+            clipSize: looneageViewStore.snippetDestSize,
+            clip: hoveredSnippet.value?.extraFrames ? true : false, // only clip if single hover frame is shown
+        })
+    );
+
+    return { mainLayers, hoveredLayers };
 }
 
 function renderDeckGL(): void {
@@ -1854,13 +1872,13 @@ function renderDeckGL(): void {
                 createCellBoundaryLayer(snippetCellInfo);
             if (boundaryLayerResult) {
                 if (looneageViewStore.showSnippetOutline) {
-                    layers.push(boundaryLayerResult.mainLayer);
+                    layers.push(boundaryLayerResult.mainLayers);
                 }
                 if (looneageViewStore.showSnippetImage) {
                     layers.push(snippetHoverLayer);
                 }
                 if (looneageViewStore.showSnippetOutline) {
-                    layers.push(boundaryLayerResult.hoveredLayer);
+                    layers.push(boundaryLayerResult.hoveredLayers);
                 }
             } else if (looneageViewStore.showSnippetImage) {
                 layers.push(snippetHoverLayer);
@@ -1868,8 +1886,7 @@ function renderDeckGL(): void {
             layers.push(pickingLayer);
         }
     }
-    // layers.push(createTrackLayer());
-    // layers.push(createTestScatterLayer());
+
     // layers.push(createViewportRectangleLayer());
     deckgl.setProps({
         layers,
