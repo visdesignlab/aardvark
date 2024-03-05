@@ -21,7 +21,7 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-import { Layer, project32, picking, UNIT } from '@deck.gl/core';
+import { Layer, project32 } from '@deck.gl/core';
 import { Geometry } from '@luma.gl/engine';
 import { Model } from '@luma.gl/engine';
 import GL from '@luma.gl/constants';
@@ -96,7 +96,7 @@ export default class HorizonChartLayer<
     };
 
     getShaders() {
-        return super.getShaders({ vs, fs, modules: [project32, picking] });
+        return super.getShaders({ vs, fs, modules: [project32] });
     }
 
     initializeState() {

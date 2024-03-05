@@ -21,8 +21,8 @@
 import {
     Layer,
     project32,
-    gouraudLighting,
-    picking,
+    // gouraudLighting,
+    // picking,
     COORDINATE_SYSTEM,
 } from '@deck.gl/core';
 import GL from '@luma.gl/constants';
@@ -43,8 +43,8 @@ import type {
     Accessor,
     AccessorFunction,
     UpdateParameters,
-    GetPickingInfoParams,
-    PickingInfo,
+    // GetPickingInfoParams,
+    // PickingInfo,
     DefaultProps,
 } from '@deck.gl/core';
 import type { PolygonGeometry } from './polygon';
@@ -178,7 +178,7 @@ export default class SolidPolygonLayer<
             defines: {
                 RING_WINDING_ORDER_CW: 1,
             },
-            modules: [project32, picking],
+            modules: [project32],
         });
     }
 
@@ -224,7 +224,7 @@ export default class SolidPolygonLayer<
         const attributeManager = this.getAttributeManager()!;
         const noAlloc = true;
 
-        attributeManager.remove(['instancePickingColors']);
+        // attributeManager.remove(['instancePickingColors']);
 
         /* eslint-disable max-len */
         attributeManager.add({
@@ -324,59 +324,59 @@ export default class SolidPolygonLayer<
                 accessor: 'getTranslateOffset',
                 defaultValue: [0, 0],
             },
-            pickingColors: {
-                size: 3,
-                type: GL.UNSIGNED_BYTE,
-                accessor: (object, { index, target: value }) =>
-                    this.encodePickingColor(
-                        object && object.__source
-                            ? object.__source.index
-                            : index,
-                        value
-                    ),
-                shaderAttributes: {
-                    pickingColors: {
-                        divisor: 0,
-                    },
-                    instancePickingColors: {
-                        divisor: 1,
-                    },
-                },
-            },
+            // pickingColors: {
+            //     size: 3,
+            //     type: GL.UNSIGNED_BYTE,
+            //     accessor: (object, { index, target: value }) =>
+            //         this.encodePickingColor(
+            //             object && object.__source
+            //                 ? object.__source.index
+            //                 : index,
+            //             value
+            //         ),
+            //     shaderAttributes: {
+            //         pickingColors: {
+            //             divisor: 0,
+            //         },
+            //         instancePickingColors: {
+            //             divisor: 1,
+            //         },
+            //     },
+            // },
         });
         /* eslint-enable max-len */
     }
 
-    getPickingInfo(params: GetPickingInfoParams): PickingInfo {
-        const info = super.getPickingInfo(params);
-        const { index } = info;
-        const { data } = this.props;
+    // getPickingInfo(params: GetPickingInfoParams): PickingInfo {
+    //     const info = super.getPickingInfo(params);
+    //     const { index } = info;
+    //     const { data } = this.props;
 
-        // Check if data comes from a composite layer, wrapped with getSubLayerRow
-        if (data[0] && data[0].__source) {
-            // index decoded from picking color refers to the source index
-            info.object = (data as any[]).find(
-                (d) => d.__source.index === index
-            );
-        }
-        return info;
-    }
+    //     // Check if data comes from a composite layer, wrapped with getSubLayerRow
+    //     if (data[0] && data[0].__source) {
+    //         // index decoded from picking color refers to the source index
+    //         info.object = (data as any[]).find(
+    //             (d) => d.__source.index === index
+    //         );
+    //     }
+    //     return info;
+    // }
 
-    disablePickingIndex(objectIndex: number) {
-        const { data } = this.props;
+    // disablePickingIndex(objectIndex: number) {
+    //     const { data } = this.props;
 
-        // Check if data comes from a composite layer, wrapped with getSubLayerRow
-        if (data[0] && data[0].__source) {
-            // index decoded from picking color refers to the source index
-            for (let i = 0; i < (data as any[]).length; i++) {
-                if (data[i].__source.index === objectIndex) {
-                    this._disablePickingIndex(i);
-                }
-            }
-        } else {
-            super.disablePickingIndex(objectIndex);
-        }
-    }
+    //     // Check if data comes from a composite layer, wrapped with getSubLayerRow
+    //     if (data[0] && data[0].__source) {
+    //         // index decoded from picking color refers to the source index
+    //         for (let i = 0; i < (data as any[]).length; i++) {
+    //             if (data[i].__source.index === objectIndex) {
+    //                 this._disablePickingIndex(i);
+    //             }
+    //         }
+    //     } else {
+    //         super.disablePickingIndex(objectIndex);
+    //     }
+    // }
 
     draw({ uniforms }) {
         const {
