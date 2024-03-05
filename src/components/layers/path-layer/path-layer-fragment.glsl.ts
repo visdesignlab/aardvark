@@ -44,10 +44,6 @@ uniform float clipSize;
 uniform bool clip;
 
 void main(void) {
-  // duplicated in SnippetSegmentationLayer-fragment.glsl.ts
-  float border = 2.0;
-  float padding = 1.0;
-
 
   geometry.uv = vPathPosition;
 
