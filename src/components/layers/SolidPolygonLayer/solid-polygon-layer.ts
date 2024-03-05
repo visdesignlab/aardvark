@@ -171,7 +171,7 @@ export default class SolidPolygonLayer<
         polygonTesselator: PolygonTesselator;
     };
 
-    getShaders(type) {
+    getShaders() {
         return super.getShaders({
             vs: vsTop,
             fs,
@@ -491,7 +491,7 @@ export default class SolidPolygonLayer<
         // let sideModel;
 
         // if (filled) {
-        const shaders = this.getShaders('top');
+        const shaders = this.getShaders();
         shaders.defines.NON_INSTANCED_MODEL = 1;
 
         const topModel = new Model(gl, {
