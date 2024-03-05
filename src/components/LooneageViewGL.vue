@@ -1791,21 +1791,16 @@ function createCellBoundaryLayer(
         getPolygon: (d: any) => d.polygon,
         getCenter: (d: any) => d.center,
         getTranslateOffset: (d: any) => d.offset,
-        // getFillColor: [0, 55, 190, 100],
         getFillColor: [
             253,
             227,
             9,
             looneageViewStore.showSnippetImage ? 120 : 255,
         ],
-        // extruded: false,
-        // material: false,
-        // filled: true,
-        // wireframe: false,
         zoomX: viewStateMirror.value.zoom[0],
         scale: looneageViewStore.snippetZoom,
         clipSize: looneageViewStore.snippetDestSize,
-        clip: false,
+        clip: hoveredSnippet.value?.extraFrames ? true : false, // only clip if single hover frame is shown
     });
 
     return { mainLayer, hoveredLayer };
