@@ -62,7 +62,7 @@ import {
     TextLayer,
 } from '@deck.gl/layers/typed';
 
-import SolidPolygonLayer from './layers/SnippetSegmentationLayer/SnippetSegmentationLayer';
+import SnippetSegmentationLayer from './layers/SnippetSegmentationLayer/SnippetSegmentationLayer';
 
 import HorizonChartLayer from './layers/HorizonChartLayer/HorizonChartLayer';
 
@@ -1718,8 +1718,8 @@ watch(cellSegmentationData, () => {
 });
 
 interface BoundaryLayerResult {
-    mainLayer: SolidPolygonLayer | null;
-    hoveredLayer: SolidPolygonLayer | null;
+    mainLayer: SnippetSegmentationLayer | null;
+    hoveredLayer: SnippetSegmentationLayer | null;
 }
 
 function createCellBoundaryLayer(
@@ -1761,7 +1761,7 @@ function createCellBoundaryLayer(
         })
         .filter((d) => d.polygon !== undefined);
 
-    const mainLayer = new SolidPolygonLayer({
+    const mainLayer = new SnippetSegmentationLayer({
         id: 'cell-boundary-layer',
         data: data.filter((d) => !d.hovered),
         getPolygon: (d: any) => d.polygon,
@@ -1778,7 +1778,7 @@ function createCellBoundaryLayer(
         clip: true,
     });
 
-    const hoveredLayer = new SolidPolygonLayer({
+    const hoveredLayer = new SnippetSegmentationLayer({
         id: 'hovered-cell-boundary-layer',
         data: data.filter((d) => d.hovered),
         getPolygon: (d: any) => d.polygon,

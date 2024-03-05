@@ -20,7 +20,8 @@
 
 import { Layer, project32 } from '@deck.gl/core';
 import GL from '@luma.gl/constants';
-import { Model, hasFeatures, FEATURES } from '@luma.gl/core';
+import { Model } from '@luma.gl/engine';
+// import { Model, hasFeatures, FEATURES } from '@luma.gl/core';
 
 // Polygon geometry generation is managed by the polygon tesselator
 import PolygonTesselator from './polygon-tesselator';
@@ -36,7 +37,7 @@ import type {
     AccessorFunction,
     UpdateParameters,
     DefaultProps,
-} from '@deck.gl/core';
+} from '@deck.gl/core/typed';
 import type { PolygonGeometry } from './polygon';
 
 type _SolidPolygonLayerProps<DataT> = {
@@ -68,13 +69,10 @@ type _SolidPolygonLayerProps<DataT> = {
      */
     getTranslateOffset?: Accessor<DataT, [number, number]>;
 
-    /**
-     * Material settings for lighting effect. Applies if `extruded: true`
-     *
-     * @default true
-     * @see https://deck.gl/docs/developer-guide/using-lighting
-     */
-    // material?: Material;
+    zoomX: number;
+    scale: number;
+    clipSize: number;
+    clip: Accessor<DataT, boolean>;
 };
 
 /** Render filled and/or extruded polygons. */
@@ -90,12 +88,16 @@ const defaultProps: DefaultProps<SolidPolygonLayerProps> = {
     getLineColor: { type: 'accessor', value: DEFAULT_COLOR },
     getCenter: { type: 'accessor', value: [0, 0] },
     getTranslateOffset: { type: 'accessor', value: [0, 0] },
+    zoomX: 0,
+    scale: 1,
+    clipSize: 1000,
+    clip: false,
 
     // material: true,
 };
 
 const ATTRIBUTE_TRANSITION = {
-    enter: (value, chunk) => {
+    enter: (value: any, chunk: any) => {
         return chunk.length
             ? chunk.subarray(chunk.length - value.length)
             : value;
@@ -146,10 +148,7 @@ export default class SolidPolygonLayer<
                 // Provide a preproject function if the coordinates are in lnglat
                 // preproject,
                 fp64: this.use64bitPositions(),
-                IndexType:
-                    !gl || hasFeatures(gl, FEATURES.ELEMENT_INDEX_UINT32)
-                        ? Uint32Array
-                        : Uint16Array,
+                IndexType: Uint32Array,
             }),
         });
 
@@ -245,7 +244,7 @@ export default class SolidPolygonLayer<
         /* eslint-enable max-len */
     }
 
-    draw({ uniforms }) {
+    draw({ uniforms }: any) {
         const { zoomX, scale, clipSize, clip } = this.props;
         const { topModel, polygonTesselator } = this.state;
 
@@ -263,6 +262,7 @@ export default class SolidPolygonLayer<
         }
     }
 
+    // @ts-ignore
     updateState(updateParams: UpdateParameters<this>) {
         super.updateState(updateParams);
 
@@ -279,6 +279,7 @@ export default class SolidPolygonLayer<
         }
     }
 
+    // @ts-ignore
     protected updateGeometry({ props, changeFlags }: UpdateParameters<this>) {
         const geometryConfigChanged =
             changeFlags.dataChanged ||
@@ -318,7 +319,10 @@ export default class SolidPolygonLayer<
         }
     }
 
-    protected _getModels(gl: WebGLRenderingContext): Model {
+    protected _getModels(gl: WebGLRenderingContext): {
+        models: Model[];
+        topModel: Model;
+    } {
         const { id } = this.props;
 
         const shaders = this.getShaders();
@@ -345,19 +349,19 @@ export default class SolidPolygonLayer<
         };
     }
 
-    protected calculateIndices(attribute) {
+    protected calculateIndices(attribute: any) {
         const { polygonTesselator } = this.state;
         attribute.startIndices = polygonTesselator.indexStarts;
         attribute.value = polygonTesselator.get('indices');
     }
 
-    protected calculatePositions(attribute) {
+    protected calculatePositions(attribute: any) {
         const { polygonTesselator } = this.state;
         attribute.startIndices = polygonTesselator.vertexStarts;
         attribute.value = polygonTesselator.get('positions');
     }
 
-    protected calculateVertexValid(attribute) {
+    protected calculateVertexValid(attribute: any) {
         attribute.value = this.state.polygonTesselator.get('vertexValid');
     }
 }

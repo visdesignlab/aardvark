@@ -59,7 +59,7 @@ export default class PolygonTesselator extends Tesselator<
         full3d?: boolean;
     }
 > {
-    constructor(opts) {
+    constructor(opts: any) {
         const { fp64, IndexType = Uint32Array } = opts;
         super({
             ...opts,
@@ -88,7 +88,7 @@ export default class PolygonTesselator extends Tesselator<
     }
 
     /** Override base Tesselator method */
-    updateGeometry(opts) {
+    updateGeometry(opts: any) {
         super.updateGeometry(opts);
 
         const externalIndices = this.buffers.indices;
@@ -154,7 +154,7 @@ export default class PolygonTesselator extends Tesselator<
     }
 
     /** Override base Tesselator method */
-    protected getGeometryFromBuffer(buffer) {
+    protected getGeometryFromBuffer(buffer: any) {
         if (this.normalize || !this.buffers.indices) {
             return super.getGeometryFromBuffer(buffer);
         }
