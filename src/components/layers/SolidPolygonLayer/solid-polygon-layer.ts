@@ -84,7 +84,7 @@ type _SolidPolygonLayerProps<DataT> = {
     /** Elevation multiplier.
      * @default 1
      */
-    elevationScale?: number;
+    // elevationScale?: number;
 
     /** Polygon geometry accessor. */
     getPolygon?: AccessorFunction<DataT, PolygonGeometry>;
@@ -132,7 +132,7 @@ const defaultProps: DefaultProps<SolidPolygonLayerProps> = {
     _windingOrder: 'CW',
     _full3d: false,
 
-    elevationScale: { type: 'number', min: 0, value: 1 },
+    // elevationScale: { type: 'number', min: 0, value: 1 },
 
     getPolygon: { type: 'accessor', value: (f) => f.polygon },
     getElevation: { type: 'accessor', value: 1000 },
@@ -386,7 +386,7 @@ export default class SolidPolygonLayer<
             // extruded,
             // filled,
             // wireframe,
-            elevationScale,
+            // elevationScale,
             zoomX,
             scale,
             clipSize,
@@ -397,7 +397,7 @@ export default class SolidPolygonLayer<
         const renderUniforms = {
             ...uniforms,
             // extruded: Boolean(extruded),
-            elevationScale,
+            // elevationScale,
             zoomX,
             scale,
             clipSize,
