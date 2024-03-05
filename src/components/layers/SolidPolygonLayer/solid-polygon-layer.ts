@@ -72,7 +72,7 @@ type _SolidPolygonLayerProps<DataT> = {
      * (Experimental) This prop is only effective with `_normalize: false`.
      * It specifies the winding order of rings in the polygon data, one of 'CW' (clockwise) and 'CCW' (counter-clockwise)
      */
-    _windingOrder?: 'CW' | 'CCW';
+    // _windingOrder?: 'CW' | 'CCW';
 
     /**
      * (Experimental) This prop is only effective with `XYZ` data.
@@ -129,7 +129,7 @@ const defaultProps: DefaultProps<SolidPolygonLayerProps> = {
     // extruded: false,
     // wireframe: false,
     _normalize: true,
-    _windingOrder: 'CW',
+    // _windingOrder: 'CW',
     // _full3d: false,
 
     // elevationScale: { type: 'number', min: 0, value: 1 },
@@ -176,10 +176,7 @@ export default class SolidPolygonLayer<
             vs: vsTop,
             fs,
             defines: {
-                RING_WINDING_ORDER_CW:
-                    !this.props._normalize && this.props._windingOrder === 'CCW'
-                        ? 0
-                        : 1,
+                RING_WINDING_ORDER_CW: 1,
             },
             modules: [project32, gouraudLighting, picking],
         });
