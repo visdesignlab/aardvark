@@ -1780,12 +1780,7 @@ function createCellBoundaryLayer(
             getCenter: (d: any) => d.center,
             getTranslateOffset: (d: any) => d.offset,
             // getFillColor: [0, 55, 190, 100],
-            getFillColor: [
-                253,
-                227,
-                9,
-                looneageViewStore.showSnippetImage ? 120 : 255,
-            ],
+            getFillColor: [253, 227, 9, 185],
             // extruded: false,
             // material: false,
             // filled: true,
@@ -1794,6 +1789,7 @@ function createCellBoundaryLayer(
             scale: looneageViewStore.snippetZoom,
             clipSize: looneageViewStore.snippetDestSize,
             clip: true,
+            filled: !looneageViewStore.showSnippetImage, // only fill if not showing image
         })
     );
 
@@ -1802,8 +1798,8 @@ function createCellBoundaryLayer(
             id: 'cell-boundary-outline-layer',
             data: data.filter((d) => !d.hovered),
             getPath: (d: any) => d.polygon[0],
-            getColor: [0, 255, 255, 255],
-            getWidth: 2,
+            getColor: [253, 227, 9, 255],
+            getWidth: 1,
             widthUnits: 'pixels',
             jointRounded: true,
             getCenter: (d: any) => d.center,
@@ -1823,16 +1819,12 @@ function createCellBoundaryLayer(
             getPolygon: (d: any) => d.polygon,
             getCenter: (d: any) => d.center,
             getTranslateOffset: (d: any) => d.offset,
-            getFillColor: [
-                253,
-                227,
-                9,
-                looneageViewStore.showSnippetImage ? 120 : 255,
-            ],
+            getFillColor: [253, 227, 9, 185],
             zoomX: viewStateMirror.value.zoom[0],
             scale: looneageViewStore.snippetZoom,
             clipSize: looneageViewStore.snippetDestSize,
             clip: hoveredSnippet.value?.extraFrames ? true : false, // only clip if single hover frame is shown
+            filled: !looneageViewStore.showSnippetImage, // only fill if not showing image
         })
     );
 
@@ -1841,7 +1833,7 @@ function createCellBoundaryLayer(
             id: 'hovered-cell-boundary-outline-layer',
             data: data.filter((d) => d.hovered),
             getPath: (d: any) => d.polygon[0],
-            getColor: [0, 255, 255, 255],
+            getColor: [253, 227, 9, 255],
             getWidth: 2,
             widthUnits: 'pixels',
             jointRounded: true,

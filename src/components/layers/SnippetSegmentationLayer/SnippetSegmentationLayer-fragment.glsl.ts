@@ -25,6 +25,7 @@ precision highp float;
 
 uniform float clipSize;
 uniform bool clip;
+uniform bool filled;
 
 varying vec4 vColor;
 in vec2 centeredPosition;
@@ -36,11 +37,16 @@ void main(void) {
   float padding = 1.0;
   // set color to green if the point is within the square of size clipSize
   if (abs(centeredPosition.x) < clipSize / 2.0 && abs(centeredPosition.y) < clipSize / 2.0) {
-    // color inside the square based on settings passed in
-    gl_FragColor = vColor;
+    if (filled) {
+      // color inside the square
+      gl_FragColor = vColor;
+    } else {
+      // discard the inside of the square, only have outline
+      discard;
+    }
   } else if (!clip) {
-    // if outside the square and clip is not enabled, color the point with a higher alpha
-    gl_FragColor = vec4(vColor.rgb, 0.85);
+    // if outside the square and clip is not enabled, fill the area
+    gl_FragColor = vColor;
   } else if (
     abs(centeredPosition.x) < clipSize / 2.0 + padding
  && abs(centeredPosition.y) < clipSize / 2.0 + padding) {

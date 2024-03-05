@@ -73,6 +73,7 @@ type _SolidPolygonLayerProps<DataT> = {
     scale: number;
     clipSize: number;
     clip: Accessor<DataT, boolean>;
+    filled: Accessor<DataT, boolean>;
 };
 
 /** Render filled and/or extruded polygons. */
@@ -92,6 +93,7 @@ const defaultProps: DefaultProps<SolidPolygonLayerProps> = {
     scale: 1,
     clipSize: 1000,
     clip: false,
+    filled: false,
 
     // material: true,
 };
@@ -245,7 +247,7 @@ export default class SolidPolygonLayer<
     }
 
     draw({ uniforms }: any) {
-        const { zoomX, scale, clipSize, clip } = this.props;
+        const { zoomX, scale, clipSize, clip, filled } = this.props;
         const { topModel, polygonTesselator } = this.state;
 
         const renderUniforms = {
@@ -254,6 +256,7 @@ export default class SolidPolygonLayer<
             scale,
             clipSize,
             clip,
+            filled,
         };
 
         if (topModel) {
