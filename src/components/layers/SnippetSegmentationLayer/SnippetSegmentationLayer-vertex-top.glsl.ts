@@ -29,7 +29,6 @@ export default `\
 attribute vec3 positions;
 attribute vec3 positions64Low;
 attribute vec4 fillColors;
-attribute vec4 lineColors;
 attribute vec2 centers;
 attribute vec2 translateOffsets;
 attribute vec3 pickingColors;
@@ -43,7 +42,6 @@ void main(void) {
   props.positions = positions;
   props.positions64Low = positions64Low;
   props.fillColors = fillColors;
-  props.lineColors = lineColors;
   props.pickingColors = pickingColors;
   props.centers = centers;
   props.translateOffsets = translateOffsets;

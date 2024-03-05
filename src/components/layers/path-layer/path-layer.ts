@@ -80,12 +80,6 @@ type _PathLayerProps<DataT> = {
      */
     miterLimit?: number;
     /**
-     * If `true`, extrude the path in screen space (width always faces the camera).
-     * If `false`, the width always faces up (z).
-     * @default false
-     */
-    // billboard?: boolean;
-    /**
      * (Experimental) If `'loop'` or `'open'`, will skip normalizing the coordinates returned by `getPath` and instead assume all paths are to be loops or open paths.
      * When normalization is disabled, paths must be specified in the format of flat array. Open paths must contain at least 2 vertices and closed paths must contain at least 3 vertices.
      * @default null
@@ -121,7 +115,7 @@ type _PathLayerProps<DataT> = {
     zoomX: number;
     scale: number;
     clipSize: number;
-    clip: Accessor<DataT, boolean>;
+    clip: boolean;
 };
 
 export type PathLayerProps<DataT = any> = _PathLayerProps<DataT> & LayerProps;
@@ -136,14 +130,10 @@ const defaultProps: DefaultProps<PathLayerProps> = {
     jointRounded: false,
     capRounded: false,
     miterLimit: { type: 'number', min: 0, value: 4 },
-    // billboard: false,
     _pathType: null,
-
     getPath: { type: 'accessor', value: (object) => object.path },
     getColor: { type: 'accessor', value: DEFAULT_COLOR },
     getWidth: { type: 'accessor', value: 1 },
-
-    // deprecated props
     rounded: { deprecatedFor: ['jointRounded', 'capRounded'] },
     getCenter: { type: 'accessor', value: [0, 0] },
     getTranslateOffset: { type: 'accessor', value: [0, 0] },
@@ -356,7 +346,6 @@ export default class PathLayer<
         const {
             jointRounded,
             capRounded,
-            // billboard,
             miterLimit,
             widthUnits,
             widthScale,
@@ -373,7 +362,6 @@ export default class PathLayer<
             .setUniforms({
                 jointType: Number(jointRounded),
                 capType: Number(capRounded),
-                // billboard,
                 widthUnits: UNIT[widthUnits],
                 widthScale,
                 miterLimit,

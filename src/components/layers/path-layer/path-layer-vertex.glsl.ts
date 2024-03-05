@@ -46,7 +46,6 @@ uniform float widthMaxPixels;
 uniform float jointType;
 uniform float capType;
 uniform float miterLimit;
-// uniform bool billboard;
 uniform int widthUnits;
 
 uniform float opacity;
@@ -62,11 +61,9 @@ const float EPSILON = 0.001;
 const vec3 ZERO_OFFSET = vec3(0.0);
 
 
-// segmentation additions
+// segmentation snippet additions
 attribute vec2 centers;
 attribute vec2 translateOffsets;
-
-
 out vec2 centeredPosition;
 uniform float zoomX; // related to the camera's zoom level
 uniform float scale; // scale geometry related to the source/dest ratio
@@ -111,12 +108,6 @@ vec3 getLineJoinOffset(
   vec3 deltaA3 = (currPoint - prevPoint);
   vec3 deltaB3 = (nextPoint - currPoint);
 
-  mat3 rotationMatrix;
-  // bool needsRotation = false; //!billboard && project_needs_rotation(currPoint, rotationMatrix);
-  // if (needsRotation) {
-  //   deltaA3 = deltaA3 * rotationMatrix;
-  //   deltaB3 = deltaB3 * rotationMatrix;
-  // }
   vec2 deltaA = deltaA3.xy / width;
   vec2 deltaB = deltaB3.xy / width;
 
@@ -194,9 +185,6 @@ vec3 getLineJoinOffset(
   float isValid = step(instanceTypes, 3.5);
   vec3 offset = vec3(offsetVec * width * isValid, 0.0);
 
-  // if (needsRotation) {
-  //   offset = rotationMatrix * offset;
-  // }
   return offset;
 }
 
@@ -232,30 +220,6 @@ void main() {
     widthMinPixels, widthMaxPixels) / 2.0);
   vec3 width;
 
-  // if (billboard) {
-  //   // Extrude in clipspace
-  //   vec4 prevPositionScreen = project_position_to_clipspace(prevPosition, prevPosition64Low, ZERO_OFFSET);
-  //   vec4 currPositionScreen = project_position_to_clipspace(currPosition, currPosition64Low, ZERO_OFFSET, geometry.position);
-  //   vec4 nextPositionScreen = project_position_to_clipspace(nextPosition, nextPosition64Low, ZERO_OFFSET);
-
-  //   clipLine(prevPositionScreen, currPositionScreen);
-  //   clipLine(nextPositionScreen, currPositionScreen);
-  //   clipLine(currPositionScreen, mix(nextPositionScreen, prevPositionScreen, isEnd));
-
-  //   width = vec3(widthPixels, 0.0);
-  //   DECKGL_FILTER_SIZE(width, geometry);
-
-  //   vec3 offset = getLineJoinOffset(
-  //     prevPositionScreen.xyz / prevPositionScreen.w,
-  //     currPositionScreen.xyz / currPositionScreen.w,
-  //     nextPositionScreen.xyz / nextPositionScreen.w,
-  //     project_pixel_size_to_clipspace(width.xy)
-  //   );
-
-  //   DECKGL_FILTER_GL_POSITION(currPositionScreen, geometry);
-  //   gl_Position = vec4(currPositionScreen.xyz + offset * currPositionScreen.w, currPositionScreen.w);
-  // } else {
-    // Extrude in commonspace
   prevPosition = project_position(prevPosition, prevPosition64Low);
   currPosition = project_position(currPosition, currPosition64Low);
   nextPosition = project_position(nextPosition, nextPosition64Low);
@@ -266,8 +230,8 @@ void main() {
   vec3 offset = getLineJoinOffset(prevPosition, currPosition, nextPosition, width.xy);
   geometry.position = vec4(currPosition + offset, 1.0);
   gl_Position = project_common_position_to_clipspace(geometry.position);
+
   DECKGL_FILTER_GL_POSITION(gl_Position, geometry);
-  // }
   DECKGL_FILTER_COLOR(vColor, geometry);
 }
 `;

@@ -32,7 +32,6 @@ varying vec4 vColor;
 
 struct PolygonProps {
   vec4 fillColors;
-  vec4 lineColors;
   vec3 positions;
   vec3 nextPositions;
   vec3 pickingColors;

@@ -61,10 +61,6 @@ type _SolidPolygonLayerProps<DataT> = {
     /** Stroke color accessor.
      * @default [0, 0, 0, 255]
      */
-    getLineColor?: Accessor<DataT, Color>;
-    /** Center of Polygon.
-     * @default [0, 0]
-     */
     getCenter?: Accessor<DataT, [number, number]>;
     /** Translate offset accessor.
      * @default [0, 0]
@@ -74,8 +70,8 @@ type _SolidPolygonLayerProps<DataT> = {
     zoomX: number;
     scale: number;
     clipSize: number;
-    clip: Accessor<DataT, boolean>;
-    filled: Accessor<DataT, boolean>;
+    clip: boolean;
+    filled: boolean;
 };
 
 /** Render filled and/or extruded polygons. */
@@ -88,7 +84,6 @@ const defaultProps: DefaultProps<SolidPolygonLayerProps> = {
     getPolygon: { type: 'accessor', value: (f) => f.polygon },
     // getElevation: { type: 'accessor', value: 1000 },
     getFillColor: { type: 'accessor', value: DEFAULT_COLOR },
-    getLineColor: { type: 'accessor', value: DEFAULT_COLOR },
     getCenter: { type: 'accessor', value: [0, 0] },
     getTranslateOffset: { type: 'accessor', value: [0, 0] },
     zoomX: 0,
@@ -96,8 +91,6 @@ const defaultProps: DefaultProps<SolidPolygonLayerProps> = {
     clipSize: 1000,
     clip: false,
     filled: false,
-
-    // material: true,
 };
 
 const ATTRIBUTE_TRANSITION = {
@@ -121,7 +114,6 @@ export default class SolidPolygonLayer<
 
     state!: {
         topModel?: Model;
-        // sideModel?: Model;
         models?: Model[];
         numInstances: number;
         polygonTesselator: PolygonTesselator;
@@ -212,22 +204,6 @@ export default class SolidPolygonLayer<
                         divisor: 0,
                     },
                     instanceFillColors: {
-                        divisor: 1,
-                    },
-                },
-            },
-            lineColors: {
-                size: this.props.colorFormat.length,
-                type: GL.UNSIGNED_BYTE,
-                normalized: true,
-                transition: ATTRIBUTE_TRANSITION,
-                accessor: 'getLineColor',
-                defaultValue: DEFAULT_COLOR,
-                shaderAttributes: {
-                    lineColors: {
-                        divisor: 0,
-                    },
-                    instanceLineColors: {
                         divisor: 1,
                     },
                 },

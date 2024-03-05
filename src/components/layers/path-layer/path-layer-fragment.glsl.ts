@@ -60,9 +60,11 @@ void main(void) {
       discard;
     }
   }
+
   if (!clip || abs(centeredPosition.x) < clipSize / 2.0 && abs(centeredPosition.y) < clipSize / 2.0) {
     gl_FragColor = vColor;
   } else {
+    // clip the outline if it is outside of the bounds
     discard;
   }
 
