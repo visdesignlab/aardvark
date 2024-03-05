@@ -67,7 +67,7 @@ type _SolidPolygonLayerProps<DataT> = {
      * (Experimental) If `false`, will skip normalizing the coordinates returned by `getPolygon`.
      * @default true
      */
-    _normalize?: boolean;
+    // _normalize?: boolean;
     /**
      * (Experimental) This prop is only effective with `_normalize: false`.
      * It specifies the winding order of rings in the polygon data, one of 'CW' (clockwise) and 'CCW' (counter-clockwise)
@@ -128,7 +128,7 @@ const defaultProps: DefaultProps<SolidPolygonLayerProps> = {
     // filled: true,
     // extruded: false,
     // wireframe: false,
-    _normalize: true,
+    // _normalize: true,
     // _windingOrder: 'CW',
     // _full3d: false,
 
@@ -458,7 +458,7 @@ export default class SolidPolygonLayer<
             const buffers = (props.data as any).attributes || {};
             polygonTesselator.updateGeometry({
                 data: props.data,
-                normalize: props._normalize,
+                normalize: true,
                 geometryBuffer: buffers.getPolygon,
                 buffers,
                 getGeometry: props.getPolygon,
