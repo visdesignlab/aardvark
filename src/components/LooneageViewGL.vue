@@ -662,7 +662,8 @@ interface SnippetCellInfo {
 
 interface KeyFrameSnippetsResult {
     snippetCellInfo: SnippetCellInfo[];
-    layers: (CellSnippetsLayer | PathLayer | PolygonLayer)[];
+    imageLayer: CellSnippetsLayer | null;
+    snippetTickLayer: PathLayer | null;
     hoverLayer: CellSnippetsLayer | null;
     pickingLayer: PolygonLayer;
 }
@@ -1252,10 +1253,10 @@ function createKeyFrameSnippets(): KeyFrameSnippetsResult | null {
         },
     });
 
-    const layers = [snippetTickMarksLayer, snippetLayer];
     return {
         snippetCellInfo,
-        layers,
+        imageLayer: snippetLayer,
+        snippetTickLayer: snippetTickMarksLayer,
         hoverLayer,
         pickingLayer: snippetPickingLayer,
     };
@@ -1811,16 +1812,23 @@ function renderDeckGL(): void {
     layers.push(createConnectingLinesLayer());
     layers.push(createTickMarksLayer());
     layers.push(createHorizonChartLayers());
-    if (looneageViewStore.showSnippets) {
+    if (
+        looneageViewStore.showSnippetImage ||
+        looneageViewStore.showSnippetOutline
+    ) {
         const keyFrameSnippetsResult = createKeyFrameSnippets();
         if (keyFrameSnippetsResult) {
             const {
                 snippetCellInfo,
-                layers: keyFrameSnippetLayers,
+                imageLayer: keyFrameSnippetLayer,
+                snippetTickLayer,
                 hoverLayer: snippetHoverLayer,
                 pickingLayer,
             } = keyFrameSnippetsResult;
-            layers.push(...keyFrameSnippetLayers);
+            if (looneageViewStore.showSnippetImage) {
+                layers.push(keyFrameSnippetLayer);
+            }
+            layers.push(snippetTickLayer);
             if (!isEqual(currentSnippetCellInfo.value, snippetCellInfo)) {
                 currentSnippetCellInfo.value = snippetCellInfo;
                 segmentationStore
@@ -1834,14 +1842,19 @@ function renderDeckGL(): void {
             const boundaryLayerResult =
                 createCellBoundaryLayer(snippetCellInfo);
             if (boundaryLayerResult) {
-                layers.push(boundaryLayerResult.mainLayer);
-                layers.push(snippetHoverLayer);
-                layers.push(boundaryLayerResult.hoveredLayer);
-            } else {
+                if (looneageViewStore.showSnippetOutline) {
+                    layers.push(boundaryLayerResult.mainLayer);
+                }
+                if (looneageViewStore.showSnippetImage) {
+                    layers.push(snippetHoverLayer);
+                }
+                if (looneageViewStore.showSnippetOutline) {
+                    layers.push(boundaryLayerResult.hoveredLayer);
+                }
+            } else if (looneageViewStore.showSnippetImage) {
                 layers.push(snippetHoverLayer);
             }
             layers.push(pickingLayer);
-            // todo add hover layer for boundary
         }
     }
     // layers.push(createTrackLayer());

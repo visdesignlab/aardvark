@@ -61,7 +61,8 @@ export const useLooneageViewStore = defineStore(storeId, () => {
         return snippetDestSize.value / snippetSourceSize.value;
     });
     const maxDepth = ref<number>(3);
-    const showSnippets = ref<boolean>(true);
+    const showSnippetImage = ref<boolean>(true);
+    const showSnippetOutline = ref<boolean>(true);
     const connectingLineWidth = ref<number>(1);
     const spaceKeyframesEvenly = ref<boolean>(false);
 
@@ -151,7 +152,8 @@ export const useLooneageViewStore = defineStore(storeId, () => {
         snippetDestSize,
         snippetZoom,
         maxDepth,
-        showSnippets,
+        showSnippetImage,
+        showSnippetOutline,
         connectingLineWidth,
         spaceKeyframesEvenly,
         setReasonableModHeight,
