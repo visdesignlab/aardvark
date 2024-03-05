@@ -1,5 +1,5 @@
 // Modified from the SolidPolygonLayer included in deck.gl.
-// the following is the orginal license for the ScatterPlotLayer:
+// the following is the orginal license for the SolidPolygonLayer:
 //
 // Copyright (c) 2015 - 2017 Uber Technologies, Inc.
 //

@@ -1,3 +1,5 @@
+// Modified from the PathLayer included in deck.gl.
+
 import {
     cutPolylineByGrid,
     cutPolylineByMercatorBounds,

@@ -1,3 +1,6 @@
+// Modified from the SolidPolygonLayer included in deck.gl.
+// the following is the orginal license for the SolidPolygonLayer:
+//
 // Copyright (c) 2015 - 2017 Uber Technologies, Inc.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -21,7 +24,6 @@
 import { Layer, project32 } from '@deck.gl/core';
 import GL from '@luma.gl/constants';
 import { Model } from '@luma.gl/engine';
-// import { Model, hasFeatures, FEATURES } from '@luma.gl/core';
 
 // Polygon geometry generation is managed by the polygon tesselator
 import PolygonTesselator from './polygon-tesselator';
