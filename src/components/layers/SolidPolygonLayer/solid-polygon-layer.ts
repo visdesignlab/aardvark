@@ -91,7 +91,7 @@ type _SolidPolygonLayerProps<DataT> = {
     /** Extrusion height accessor.
      * @default 1000
      */
-    getElevation?: Accessor<DataT, number>;
+    // getElevation?: Accessor<DataT, number>;
     /** Fill color accessor.
      * @default [0, 0, 0, 255]
      */
@@ -135,7 +135,7 @@ const defaultProps: DefaultProps<SolidPolygonLayerProps> = {
     // elevationScale: { type: 'number', min: 0, value: 1 },
 
     getPolygon: { type: 'accessor', value: (f) => f.polygon },
-    getElevation: { type: 'accessor', value: 1000 },
+    // getElevation: { type: 'accessor', value: 1000 },
     getFillColor: { type: 'accessor', value: DEFAULT_COLOR },
     getLineColor: { type: 'accessor', value: DEFAULT_COLOR },
     getCenter: { type: 'accessor', value: [0, 0] },
@@ -270,19 +270,19 @@ export default class SolidPolygonLayer<
                 update: this.calculateVertexValid,
                 noAlloc,
             },
-            elevations: {
-                size: 1,
-                transition: ATTRIBUTE_TRANSITION,
-                accessor: 'getElevation',
-                shaderAttributes: {
-                    elevations: {
-                        divisor: 0,
-                    },
-                    instanceElevations: {
-                        divisor: 1,
-                    },
-                },
-            },
+            // elevations: {
+            //     size: 1,
+            //     transition: ATTRIBUTE_TRANSITION,
+            //     accessor: 'getElevation',
+            //     shaderAttributes: {
+            //         elevations: {
+            //             divisor: 0,
+            //         },
+            //         instanceElevations: {
+            //             divisor: 1,
+            //         },
+            //     },
+            // },
             fillColors: {
                 size: this.props.colorFormat.length,
                 type: GL.UNSIGNED_BYTE,
