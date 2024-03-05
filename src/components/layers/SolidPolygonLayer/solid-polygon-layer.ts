@@ -39,7 +39,7 @@ import type {
     LayerProps,
     LayerDataSource,
     Color,
-    Material,
+    // Material,
     Accessor,
     AccessorFunction,
     UpdateParameters,
@@ -115,7 +115,7 @@ type _SolidPolygonLayerProps<DataT> = {
      * @default true
      * @see https://deck.gl/docs/developer-guide/using-lighting
      */
-    material?: Material;
+    // material?: Material;
 };
 
 /** Render filled and/or extruded polygons. */
@@ -141,7 +141,7 @@ const defaultProps: DefaultProps<SolidPolygonLayerProps> = {
     getCenter: { type: 'accessor', value: [0, 0] },
     getTranslateOffset: { type: 'accessor', value: [0, 0] },
 
-    material: true,
+    // material: true,
 };
 
 const ATTRIBUTE_TRANSITION = {
