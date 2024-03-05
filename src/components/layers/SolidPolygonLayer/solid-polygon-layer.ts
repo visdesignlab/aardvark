@@ -54,7 +54,7 @@ type _SolidPolygonLayerProps<DataT> = {
     /** Whether to fill the polygons
      * @default true
      */
-    filled?: boolean;
+    // filled?: boolean;
     /** Whether to extrude the polygons
      * @default false
      */
@@ -62,7 +62,7 @@ type _SolidPolygonLayerProps<DataT> = {
     /** Whether to generate a line wireframe of the polygon.
      * @default false
      */
-    wireframe?: boolean;
+    // wireframe?: boolean;
     /**
      * (Experimental) If `false`, will skip normalizing the coordinates returned by `getPolygon`.
      * @default true
@@ -125,9 +125,9 @@ export type SolidPolygonLayerProps<DataT = any> =
 const DEFAULT_COLOR: [number, number, number, number] = [0, 0, 0, 255];
 
 const defaultProps: DefaultProps<SolidPolygonLayerProps> = {
-    filled: true,
+    // filled: true,
     // extruded: false,
-    wireframe: false,
+    // wireframe: false,
     _normalize: true,
     _windingOrder: 'CW',
     _full3d: false,
@@ -384,8 +384,8 @@ export default class SolidPolygonLayer<
     draw({ uniforms }) {
         const {
             // extruded,
-            filled,
-            wireframe,
+            // filled,
+            // wireframe,
             elevationScale,
             zoomX,
             scale,
@@ -408,14 +408,14 @@ export default class SolidPolygonLayer<
         if (sideModel) {
             sideModel.setInstanceCount(polygonTesselator.instanceCount - 1);
             sideModel.setUniforms(renderUniforms);
-            if (wireframe) {
-                sideModel.setDrawMode(GL.LINE_STRIP);
-                sideModel.setUniforms({ isWireframe: true }).draw();
-            }
-            if (filled) {
-                sideModel.setDrawMode(GL.TRIANGLE_FAN);
-                sideModel.setUniforms({ isWireframe: false }).draw();
-            }
+            // if (wireframe) {
+            //     sideModel.setDrawMode(GL.LINE_STRIP);
+            //     sideModel.setUniforms({ isWireframe: true }).draw();
+            // }
+            // if (filled) {
+            sideModel.setDrawMode(GL.TRIANGLE_FAN);
+            sideModel.setUniforms({ isWireframe: false }).draw();
+            // }
         }
 
         if (topModel) {
@@ -432,8 +432,7 @@ export default class SolidPolygonLayer<
         const { props, oldProps, changeFlags } = updateParams;
         const attributeManager = this.getAttributeManager();
 
-        const regenerateModels =
-            changeFlags.extensionsChanged || props.filled !== oldProps.filled; // ||
+        const regenerateModels = changeFlags.extensionsChanged; // || props.filled !== oldProps.filled; // ||
         // props.extruded !== oldProps.extruded;
 
         if (regenerateModels) {
@@ -489,30 +488,30 @@ export default class SolidPolygonLayer<
     }
 
     protected _getModels(gl: WebGLRenderingContext): Model {
-        const { id, filled } = this.props;
+        const { id } = this.props;
 
-        let topModel;
+        // let topModel;
         let sideModel;
 
-        if (filled) {
-            const shaders = this.getShaders('top');
-            shaders.defines.NON_INSTANCED_MODEL = 1;
+        // if (filled) {
+        const shaders = this.getShaders('top');
+        shaders.defines.NON_INSTANCED_MODEL = 1;
 
-            topModel = new Model(gl, {
-                ...shaders,
-                id: `${id}-top`,
-                drawMode: GL.TRIANGLES,
-                attributes: {
-                    vertexPositions: new Float32Array([0, 1]),
-                },
-                uniforms: {
-                    isWireframe: false,
-                    isSideVertex: false,
-                },
-                vertexCount: 0,
-                isIndexed: true,
-            });
-        }
+        const topModel = new Model(gl, {
+            ...shaders,
+            id: `${id}-top`,
+            drawMode: GL.TRIANGLES,
+            attributes: {
+                vertexPositions: new Float32Array([0, 1]),
+            },
+            uniforms: {
+                isWireframe: false,
+                isSideVertex: false,
+            },
+            vertexCount: 0,
+            isIndexed: true,
+        });
+        // }
         // if (extruded) {
         //     sideModel = new Model(gl, {
         //         ...this.getShaders('side'),
