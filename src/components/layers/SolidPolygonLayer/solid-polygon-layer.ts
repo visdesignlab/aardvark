@@ -58,7 +58,7 @@ type _SolidPolygonLayerProps<DataT> = {
     /** Whether to extrude the polygons
      * @default false
      */
-    extruded?: boolean;
+    // extruded?: boolean;
     /** Whether to generate a line wireframe of the polygon.
      * @default false
      */
@@ -126,7 +126,7 @@ const DEFAULT_COLOR: [number, number, number, number] = [0, 0, 0, 255];
 
 const defaultProps: DefaultProps<SolidPolygonLayerProps> = {
     filled: true,
-    extruded: false,
+    // extruded: false,
     wireframe: false,
     _normalize: true,
     _windingOrder: 'CW',
@@ -383,7 +383,7 @@ export default class SolidPolygonLayer<
 
     draw({ uniforms }) {
         const {
-            extruded,
+            // extruded,
             filled,
             wireframe,
             elevationScale,
@@ -396,7 +396,7 @@ export default class SolidPolygonLayer<
 
         const renderUniforms = {
             ...uniforms,
-            extruded: Boolean(extruded),
+            // extruded: Boolean(extruded),
             elevationScale,
             zoomX,
             scale,
@@ -433,9 +433,8 @@ export default class SolidPolygonLayer<
         const attributeManager = this.getAttributeManager();
 
         const regenerateModels =
-            changeFlags.extensionsChanged ||
-            props.filled !== oldProps.filled ||
-            props.extruded !== oldProps.extruded;
+            changeFlags.extensionsChanged || props.filled !== oldProps.filled; // ||
+        // props.extruded !== oldProps.extruded;
 
         if (regenerateModels) {
             this.state.models?.forEach((model) => model.delete());
@@ -490,7 +489,7 @@ export default class SolidPolygonLayer<
     }
 
     protected _getModels(gl: WebGLRenderingContext): Model {
-        const { id, filled, extruded } = this.props;
+        const { id, filled } = this.props;
 
         let topModel;
         let sideModel;
@@ -514,27 +513,27 @@ export default class SolidPolygonLayer<
                 isIndexed: true,
             });
         }
-        if (extruded) {
-            sideModel = new Model(gl, {
-                ...this.getShaders('side'),
-                id: `${id}-side`,
-                geometry: new Geometry({
-                    drawMode: GL.LINES,
-                    vertexCount: 4,
-                    attributes: {
-                        // top right - top left - bootom left - bottom right
-                        vertexPositions: {
-                            size: 2,
-                            value: new Float32Array([1, 0, 0, 0, 0, 1, 1, 1]),
-                        },
-                    },
-                }),
-                instanceCount: 0,
-                isInstanced: 1,
-            });
+        // if (extruded) {
+        //     sideModel = new Model(gl, {
+        //         ...this.getShaders('side'),
+        //         id: `${id}-side`,
+        //         geometry: new Geometry({
+        //             drawMode: GL.LINES,
+        //             vertexCount: 4,
+        //             attributes: {
+        //                 // top right - top left - bootom left - bottom right
+        //                 vertexPositions: {
+        //                     size: 2,
+        //                     value: new Float32Array([1, 0, 0, 0, 0, 1, 1, 1]),
+        //                 },
+        //             },
+        //         }),
+        //         instanceCount: 0,
+        //         isInstanced: 1,
+        //     });
 
-            sideModel.userData.excludeAttributes = { indices: true };
-        }
+        //     sideModel.userData.excludeAttributes = { indices: true };
+        // }
 
         return {
             models: [sideModel, topModel].filter(Boolean),
