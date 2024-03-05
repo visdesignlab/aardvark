@@ -35,9 +35,12 @@ void main(void) {
   float border = 2.0;
   float padding = 1.0;
   // set color to green if the point is within the square of size clipSize
-  if (!clip || abs(centeredPosition.x) < clipSize / 2.0 && abs(centeredPosition.y) < clipSize / 2.0) {
+  if (abs(centeredPosition.x) < clipSize / 2.0 && abs(centeredPosition.y) < clipSize / 2.0) {
     // color inside the square based on settings passed in
     gl_FragColor = vColor;
+  } else if (!clip) {
+    // if outside the square and clip is not enabled, color the point with a higher alpha
+    gl_FragColor = vec4(vColor.rgb, 0.85);
   } else if (
     abs(centeredPosition.x) < clipSize / 2.0 + padding
  && abs(centeredPosition.y) < clipSize / 2.0 + padding) {
