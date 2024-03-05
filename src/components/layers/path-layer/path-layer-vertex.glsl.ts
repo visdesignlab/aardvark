@@ -36,6 +36,7 @@ attribute float instanceStrokeWidths;
 attribute vec4 instanceColors;
 attribute vec3 instancePickingColors;
 
+
 uniform float widthScale;
 uniform float widthMinPixels;
 uniform float widthMaxPixels;
@@ -56,6 +57,39 @@ varying float vJointType;
 
 const float EPSILON = 0.001;
 const vec3 ZERO_OFFSET = vec3(0.0);
+
+
+// segmentation additions
+attribute vec2 centers;
+attribute vec2 translateOffsets;
+
+
+out vec2 centeredPosition;
+uniform float zoomX; // related to the camera's zoom level
+uniform float scale; // scale geometry related to the source/dest ratio
+
+vec3 adjustToSnippet(vec3 position, out vec2 centerPos) {
+  vec3 outPos = position;
+  outPos.x -= centers.x;
+  outPos.y -= centers.y;
+
+  outPos.x *= scale;
+  outPos.y *= scale;
+
+  centerPos = outPos.xy;
+
+  outPos.x *= pow(2.0, -zoomX);
+
+  outPos.x += translateOffsets.x;
+  outPos.y += translateOffsets.y;
+
+  return outPos;
+}
+
+vec3 adjustToSnippet(vec3 position) {
+  vec2 dummy;
+  return adjustToSnippet(position, dummy);
+}
 
 float flipIfTrue(bool flag) {
   return -(float(flag) * 2. - 1.);
@@ -178,13 +212,15 @@ void main() {
 
   float isEnd = positions.x;
 
-  vec3 prevPosition = mix(instanceLeftPositions, instanceStartPositions, isEnd);
+  vec3 prevPosition = adjustToSnippet(mix(instanceLeftPositions, instanceStartPositions, isEnd));
   vec3 prevPosition64Low = mix(instanceLeftPositions64Low, instanceStartPositions64Low, isEnd);
 
-  vec3 currPosition = mix(instanceStartPositions, instanceEndPositions, isEnd);
+  vec2 centerPos;
+  vec3 currPosition = adjustToSnippet(mix(instanceStartPositions, instanceEndPositions, isEnd), centerPos);
+  centeredPosition = centerPos;
   vec3 currPosition64Low = mix(instanceStartPositions64Low, instanceEndPositions64Low, isEnd);
 
-  vec3 nextPosition = mix(instanceEndPositions, instanceRightPositions, isEnd);
+  vec3 nextPosition = adjustToSnippet(mix(instanceEndPositions, instanceRightPositions, isEnd));
   vec3 nextPosition64Low = mix(instanceEndPositions64Low, instanceRightPositions64Low, isEnd);
 
   geometry.worldPosition = currPosition;

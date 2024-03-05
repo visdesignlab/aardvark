@@ -20,7 +20,7 @@
 
 import { Layer, project32, picking, UNIT } from '@deck.gl/core';
 import GL from '@luma.gl/constants';
-import { Model, Geometry } from '@luma.gl/core';
+import { Model, Geometry } from '@luma.gl/engine';
 import PathTesselator from './path-tesselator';
 
 import vs from './path-layer-vertex.glsl';
@@ -37,7 +37,7 @@ import type {
     GetPickingInfoParams,
     PickingInfo,
     DefaultProps,
-} from '@deck.gl/core';
+} from '@deck.gl/core/typed';
 import type { PathGeometry } from './path';
 
 type _PathLayerProps<DataT> = {
@@ -106,6 +106,19 @@ type _PathLayerProps<DataT> = {
      * @deprecated Use `jointRounded` and `capRounded` instead
      */
     rounded?: boolean;
+
+    /** Center of Polygon.
+     * @default [0, 0]
+     */
+    getCenter?: Accessor<DataT, [number, number]>;
+    /** Translate offset accessor.
+     * @default [0, 0]
+     */
+    getTranslateOffset?: Accessor<DataT, [number, number]>;
+    zoomX: number;
+    scale: number;
+    clipSize: number;
+    clip: Accessor<DataT, boolean>;
 };
 
 export type PathLayerProps<DataT = any> = _PathLayerProps<DataT> & LayerProps;
@@ -129,6 +142,12 @@ const defaultProps: DefaultProps<PathLayerProps> = {
 
     // deprecated props
     rounded: { deprecatedFor: ['jointRounded', 'capRounded'] },
+    getCenter: { type: 'accessor', value: [0, 0] },
+    getTranslateOffset: { type: 'accessor', value: [0, 0] },
+    zoomX: 0,
+    scale: 1,
+    clipSize: 1000,
+    clip: false,
 };
 
 const ATTRIBUTE_TRANSITION = {
@@ -146,6 +165,10 @@ export default class PathLayer<
 > extends Layer<ExtraPropsT & Required<_PathLayerProps<DataT>>> {
     static defaultProps = defaultProps;
     static layerName = 'PathLayer';
+
+    constructor(props: PathLayerProps<DataT>) {
+        super(props);
+    }
 
     state!: {
         model?: Model;
@@ -223,6 +246,18 @@ export default class PathLayer<
                         value
                     ),
             },
+            centers: {
+                size: 2,
+                type: GL.DOUBLE,
+                accessor: 'getCenter',
+                defaultValue: [0, 0],
+            },
+            translateOffsets: {
+                size: 2,
+                type: GL.DOUBLE,
+                accessor: 'getTranslateOffset',
+                defaultValue: [0, 0],
+            },
         });
         /* eslint-enable max-len */
 
@@ -233,6 +268,7 @@ export default class PathLayer<
         });
     }
 
+    // @ts-ignore
     updateState(params: UpdateParameters<this>) {
         super.updateState(params);
         const { props, changeFlags } = params;
@@ -323,6 +359,10 @@ export default class PathLayer<
             widthScale,
             widthMinPixels,
             widthMaxPixels,
+            zoomX,
+            scale,
+            clipSize,
+            clip,
         } = this.props;
 
         this.state.model
@@ -336,6 +376,10 @@ export default class PathLayer<
                 miterLimit,
                 widthMinPixels,
                 widthMaxPixels,
+                zoomX,
+                scale,
+                clipSize,
+                clip,
             })
             .draw();
     }

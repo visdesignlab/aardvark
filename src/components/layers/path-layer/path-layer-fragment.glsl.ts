@@ -37,7 +37,18 @@ varying vec2 vPathPosition;
 varying float vPathLength;
 varying float vJointType;
 
+
+
+in vec2 centeredPosition;
+uniform float clipSize;
+uniform bool clip;
+
 void main(void) {
+  // duplicated in SnippetSegmentationLayer-fragment.glsl.ts
+  float border = 2.0;
+  float padding = 1.0;
+
+
   geometry.uv = vPathPosition;
 
   if (vPathPosition.y < 0.0 || vPathPosition.y > vPathLength) {
@@ -50,7 +61,13 @@ void main(void) {
       discard;
     }
   }
-  gl_FragColor = vColor;
+  if (!clip || abs(centeredPosition.x) < clipSize / 2.0 && abs(centeredPosition.y) < clipSize / 2.0) {
+    gl_FragColor = vColor;
+  } else {
+    discard;
+  }
+
+
 
   DECKGL_FILTER_COLOR(gl_FragColor, geometry);
 }
