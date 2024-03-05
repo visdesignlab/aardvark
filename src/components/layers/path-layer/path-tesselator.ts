@@ -43,7 +43,7 @@ export default class PathTesselator extends Tesselator<
         loop?: boolean;
     }
 > {
-    constructor(opts) {
+    constructor(opts: any) {
         super({
             ...opts,
             attributes: {
@@ -66,7 +66,7 @@ export default class PathTesselator extends Tesselator<
     }
 
     /* Implement base Tesselator interface */
-    protected getGeometryFromBuffer(buffer) {
+    protected getGeometryFromBuffer(buffer: any) {
         if (this.normalize) {
             return super.getGeometryFromBuffer(buffer);
         }

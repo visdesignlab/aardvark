@@ -151,7 +151,7 @@ const defaultProps: DefaultProps<PathLayerProps> = {
 };
 
 const ATTRIBUTE_TRANSITION = {
-    enter: (value, chunk) => {
+    enter: (value: any, chunk: any) => {
         return chunk.length
             ? chunk.subarray(chunk.length - value.length)
             : value;
@@ -238,7 +238,7 @@ export default class PathLayer<
             instancePickingColors: {
                 size: 3,
                 type: GL.UNSIGNED_BYTE,
-                accessor: (object, { index, target: value }) =>
+                accessor: (object: any, { index, target: value }: any) =>
                     this.encodePickingColor(
                         object && object.__source
                             ? object.__source.index
@@ -349,7 +349,7 @@ export default class PathLayer<
         }
     }
 
-    draw({ uniforms }) {
+    draw({ uniforms }: any) {
         const {
             jointRounded,
             capRounded,
@@ -366,7 +366,7 @@ export default class PathLayer<
         } = this.props;
 
         this.state.model
-            .setUniforms(uniforms)
+            ?.setUniforms(uniforms)
             .setUniforms({
                 jointType: Number(jointRounded),
                 capType: Number(capRounded),
@@ -446,14 +446,14 @@ export default class PathLayer<
         });
     }
 
-    protected calculatePositions(attribute) {
+    protected calculatePositions(attribute: any) {
         const { pathTesselator } = this.state;
 
         attribute.startIndices = pathTesselator.vertexStarts;
         attribute.value = pathTesselator.get('positions');
     }
 
-    protected calculateSegmentTypes(attribute) {
+    protected calculateSegmentTypes(attribute: any) {
         const { pathTesselator } = this.state;
 
         attribute.startIndices = pathTesselator.vertexStarts;

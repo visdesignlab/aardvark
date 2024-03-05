@@ -4,7 +4,7 @@ import {
 } from '@math.gl/polygon';
 
 import type { NumericArray } from '@math.gl/core';
-import type { Position } from '@deck.gl/core';
+import type { Position } from '@deck.gl/core/typed';
 
 export type NestedPathGeometry = Position[];
 export type FlatPathGeometry = NumericArray;
@@ -28,6 +28,7 @@ export function normalizePath(
         flatPath = new Array(length);
         for (let i = 0; i < path.length; i++) {
             for (let j = 0; j < size; j++) {
+                // @ts-ignore
                 flatPath[i * size + j] = path[i][j] || 0;
             }
         }
