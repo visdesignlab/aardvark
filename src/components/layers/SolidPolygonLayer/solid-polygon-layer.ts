@@ -178,7 +178,7 @@ export default class SolidPolygonLayer<
             defines: {
                 RING_WINDING_ORDER_CW: 1,
             },
-            modules: [project32, gouraudLighting, picking],
+            modules: [project32, picking],
         });
     }
 
