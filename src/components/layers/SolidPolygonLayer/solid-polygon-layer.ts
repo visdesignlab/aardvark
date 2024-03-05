@@ -32,7 +32,7 @@ import { Model, Geometry, hasFeatures, FEATURES } from '@luma.gl/core';
 import PolygonTesselator from './polygon-tesselator';
 
 import vsTop from './solid-polygon-layer-vertex-top.glsl';
-import vsSide from './solid-polygon-layer-vertex-side.glsl';
+// import vsSide from './solid-polygon-layer-vertex-side.glsl';
 import fs from './solid-polygon-layer-fragment.glsl';
 
 import type {
@@ -173,7 +173,7 @@ export default class SolidPolygonLayer<
 
     getShaders(type) {
         return super.getShaders({
-            vs: type === 'top' ? vsTop : vsSide,
+            vs: vsTop,
             fs,
             defines: {
                 RING_WINDING_ORDER_CW:
