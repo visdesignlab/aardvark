@@ -373,7 +373,7 @@ export const useGridstackLayoutStore = defineStore(
             name: 'Default',
             editable: false,
             editing: false,
-            id: 'system_layout_2',
+            id: defaultId,
             initialItems: cloneDeep(allEqualItems),
             currentItems: cloneDeep(allEqualItems),
         };
