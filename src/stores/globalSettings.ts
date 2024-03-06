@@ -18,7 +18,7 @@ export const useGlobalSettings = defineStore('globalSettings', () => {
             name: 'Select Dataset Location',
             faKey: 'fa-database',
             id: uuidv4(),
-            show: false,
+            show: true,
             component: 'DatasetSelector',
         },
         {
@@ -51,7 +51,7 @@ export const useGlobalSettings = defineStore('globalSettings', () => {
         // },
     ]);
 
-    const activePageIndex = ref<number | null>(null);
+    const activePageIndex = ref<number | null>(0);
     const activePage = computed<SettingsPage | null>(() => {
         if (activePageIndex.value == null) return null;
         return settingsPages.value[activePageIndex.value];
