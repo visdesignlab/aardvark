@@ -4,11 +4,12 @@ import { useQuasar } from 'quasar';
 import { useGlobalSettings } from '@/stores/globalSettings';
 import { useDatasetSelectionTrrackedStore } from '@/stores/datasetSelectionTrrackedStore';
 import { useDatasetSelectionStore } from '@/stores/datasetSelectionStore';
+import { useDataPointSelection } from '@/stores/dataPointSelection';
 
 const globalSettings = useGlobalSettings();
 const datasetSelectionStore = useDatasetSelectionStore();
-
 const datasetSelectionTrrackedStore = useDatasetSelectionTrrackedStore();
+const dataPointSelection = useDataPointSelection();
 const $q = useQuasar();
 
 const serverInputRef = ref<any>(null);
@@ -40,6 +41,14 @@ const shortExpName = computed<string>(() => {
     }
     return shortName;
 });
+
+function openExampleDataset() {
+    datasetSelectionTrrackedStore.serverUrl =
+        'apps.vdl.sci.utah.edu/aardvark-s3';
+
+    datasetSelectionTrrackedStore.currentExperimentFilename = 'Example_1.json';
+    datasetSelectionTrrackedStore.selectedLocationIds['loc_4_well_23'] = true;
+}
 </script>
 
 <template>
@@ -47,10 +56,7 @@ const shortExpName = computed<string>(() => {
         outline
         rounded
         class="full-width q-mb-md"
-        @click="
-            datasetSelectionTrrackedStore.serverUrl =
-                'apps.vdl.sci.utah.edu/aardvark-s3'
-        "
+        @click="openExampleDataset"
         >Load Example Dataset</q-btn
     >
     <q-input
