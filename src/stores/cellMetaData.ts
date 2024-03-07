@@ -549,6 +549,9 @@ export const useCellMetaData = defineStore('cellMetaData', () => {
         for (const lineage of lineageArray.value) {
             lineage.attrNum['cell_count'] = computeCellCount(lineage.founder);
             lineage.attrNum['generations'] = computeTreeHeight(lineage.founder);
+            lineage.attrNum['max_mass_decrease'] = computeMaxMassDecrease(
+                lineage.founder
+            );
         }
     }
 
@@ -566,6 +569,30 @@ export const useCellMetaData = defineStore('cellMetaData', () => {
             maxChildHeight = Math.max(maxChildHeight, computeTreeHeight(child));
         }
         return 1 + maxChildHeight;
+    }
+
+    function computeMaxMassDecrease(track: Track): number {
+        let maxMassDelta = computeTrackMaxMassDecrease(track);
+        for (const child of track.children) {
+            maxMassDelta = Math.max(
+                maxMassDelta,
+                computeMaxMassDecrease(child)
+            );
+        }
+        return maxMassDelta;
+    }
+
+    function computeTrackMaxMassDecrease(track: Track): number {
+        if (track.cells.length < 8) return 0;
+        let maxMassDelta = 0;
+        for (let i = 1; i < track.cells.length - 1; i++) {
+            const prev = track.cells[i - 1];
+            const curr = track.cells[i];
+            const next = track.cells[i + 1];
+            const massDelta = (getMass(prev) - getMass(next)) / getMass(curr);
+            maxMassDelta = Math.max(maxMassDelta, massDelta);
+        }
+        return maxMassDelta;
     }
 
     function getMass(cell: Cell): number {
