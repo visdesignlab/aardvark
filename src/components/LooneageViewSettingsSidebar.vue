@@ -24,7 +24,6 @@ const colorSchemeOptions = [
     { label: 'Red', value: schemeReds },
     { label: 'Blue', value: schemeBlues },
     { label: 'Green', value: schemeGreens },
-    { label: 'Grey', value: schemeGreys },
     { label: 'Orange', value: schemeOranges },
     { label: 'Purple', value: schemePurples },
 ];
