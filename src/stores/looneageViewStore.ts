@@ -76,7 +76,13 @@ export const useLooneageViewStore = defineStore(storeId, () => {
         }
         modHeight.value = extent / 5;
     }
-    watch(() => cellMetaData.headerKeys, setReasonableModHeight);
+    // watch(
+    //     () => cellMetaData.headerKeys,
+    //     () => {
+    //         console.log('header key change');
+    //         setReasonableModHeight();
+    //     }
+    // );
     watch(attrKey, setReasonableModHeight);
 
     const positiveColorScheme = ref({ label: 'Red', value: schemeReds });
