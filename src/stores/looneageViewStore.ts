@@ -2,7 +2,7 @@ import { ref, watch, computed } from 'vue';
 import { defineStore } from 'pinia';
 import { useCellMetaData, type Cell } from '@/stores/cellMetaData';
 import { useSkipTrackingMap } from '@/stores/skipTrackingMap';
-import { schemeReds, schemeBlues } from 'd3-scale-chromatic';
+import { schemeReds, schemeBlues, schemeGreens } from 'd3-scale-chromatic';
 import { min as d3Min, max as d3Max } from 'd3-array';
 
 export interface SelectedSnippet {
@@ -15,10 +15,48 @@ interface PinnedSnippetLookup {
     [key: string]: SelectedSnippet;
 }
 
+export interface InnerHorizonChartSettings {
+    attrKey: string;
+    positiveColorScheme: {
+        label: string;
+        value: readonly (readonly string[])[];
+    };
+    negativeColorScheme: {
+        label: string;
+        value: readonly (readonly string[])[];
+    };
+    modHeight: number;
+    baseline: number;
+}
+
 const storeId = 'looneageViewStore';
 export const useLooneageViewStore = defineStore(storeId, () => {
     const cellMetaData = useCellMetaData();
     const skipTrackingMap = useSkipTrackingMap();
+
+    const horizonChartSettingList = ref<InnerHorizonChartSettings[]>([
+        {
+            attrKey: 'Dry Mass (pg)',
+            positiveColorScheme: { label: 'Red', value: schemeReds },
+            negativeColorScheme: { label: 'Blue', value: schemeBlues },
+            modHeight: 200,
+            baseline: 0,
+        },
+        {
+            attrKey: 'Sphericity ()',
+            positiveColorScheme: { label: 'Green', value: schemeGreens },
+            negativeColorScheme: { label: 'Blue', value: schemeBlues },
+            modHeight: 0.15,
+            baseline: 0,
+        },
+        {
+            attrKey: 'Area (µm²)',
+            positiveColorScheme: { label: 'Blue', value: schemeBlues },
+            negativeColorScheme: { label: 'Blue', value: schemeBlues },
+            modHeight: 500,
+            baseline: 0,
+        },
+    ]);
 
     const attrKey = ref<string>(cellMetaData.headerKeys.mass); // Default to mass
     // console.log('atterKey default: ', attrKey.value);
@@ -52,6 +90,7 @@ export const useLooneageViewStore = defineStore(storeId, () => {
 
     const modHeight = ref<number>(0);
     const baseline = ref<number>(0);
+
     const spacing = ref<number>(82);
     const includeSiblingBuffer = ref<boolean>(true);
     const rowHeight = ref<number>(32);
@@ -144,6 +183,7 @@ export const useLooneageViewStore = defineStore(storeId, () => {
     }
 
     return {
+        horizonChartSettingList,
         attrKey,
         positiveColorScheme,
         negativeColorScheme,

@@ -20,6 +20,7 @@ import { useEventBusStore } from '@/stores/eventBusStore';
 import {
     useLooneageViewStore,
     type SelectedSnippet,
+    type InnerHorizonChartSettings,
 } from '@/stores/looneageViewStore';
 import { isEqual } from 'lodash-es';
 import { useGlobalSettings } from '@/stores/globalSettings';
@@ -383,9 +384,8 @@ onMounted(() => {
 //     return geometry;
 // });
 
-function constructGeometry(track: Track): number[] {
+function constructGeometry(track: Track, key: string): number[] {
     const geometry: number[] = [];
-    const key = looneageViewStore.attrKey;
 
     const hackyBottom = -404.123456789;
     // this is a hack to make the shaders work correctly.
@@ -539,7 +539,22 @@ function createHorizonChartLayers(): (
         if (node.data === null) continue;
         const nodeWithData = node as LayoutNode<Track>;
         // if (node.depth > looneageViewStore.maxDepth) continue;
-        layers.push(createHorizonChartLayer(nodeWithData));
+        for (
+            let i = 0;
+            i < looneageViewStore.horizonChartSettingList.length;
+            i++
+        ) {
+            const horizonChartSettings =
+                looneageViewStore.horizonChartSettingList[i];
+            layers.push(
+                createHorizonChartLayer(
+                    nodeWithData,
+                    horizonChartSettings,
+                    i,
+                    looneageViewStore.horizonChartSettingList.length
+                )
+            );
+        }
 
         const track = node.data;
         let left = getLeftPosition(nodeWithData);
@@ -1639,7 +1654,10 @@ const negativeColors = computed<number[]>(() => {
 });
 
 function createHorizonChartLayer(
-    node: LayoutNode<Track>
+    node: LayoutNode<Track>,
+    settings: InnerHorizonChartSettings,
+    dimIndex: number, // the 0-based index of the attribute dimension, 0 is placed on top.
+    dimCount: number // the total number of dimensions
 ): HorizonChartLayer | null {
     if (!cellMetaData.selectedLineage) return null;
     const track = node.data;
@@ -1652,12 +1670,13 @@ function createHorizonChartLayer(
 
     if (!horizonInViewport(node)) return null;
 
+    const innerHeight = looneageViewStore.rowHeight / dimCount;
     // bottom, left, width, height
     const destination: [number, number, number, number] = [
-        node.x,
+        node.x - innerHeight * (dimCount - dimIndex - 1),
         left,
         width,
-        looneageViewStore.rowHeight,
+        innerHeight,
     ];
 
     // const minTime = cellMetaData.getFrame(cellMetaData.selectedTrack.cells[0]);
@@ -1672,7 +1691,7 @@ function createHorizonChartLayer(
         dataXExtent = [dataXExtent[0] - width / 2, dataXExtent[0] + width / 2];
     }
 
-    const geometryData = constructGeometry(track);
+    const geometryData = constructGeometry(track, settings.attrKey);
     const horizonChartLayer = new HorizonChartLayer({
         id: `custom-horizon-chart-layer-${track.trackId}`,
         data: testModOffests,
@@ -1681,12 +1700,12 @@ function createHorizonChartLayer(
         destination,
         dataXExtent,
 
-        baseline: looneageViewStore.baseline,
-        binSize: looneageViewStore.modHeight,
+        baseline: settings.baseline,
+        binSize: settings.modHeight,
 
         getModOffset: (d: any) => d,
-        positiveColors: positiveColors.value,
-        negativeColors: negativeColors.value,
+        positiveColors: hexListToRgba(settings.positiveColorScheme.value[6]),
+        negativeColors: hexListToRgba(settings.negativeColorScheme.value[6]),
         updateTriggers: {
             instanceData: geometryData,
         },
