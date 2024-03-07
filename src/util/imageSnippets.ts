@@ -7,6 +7,19 @@ export type BBox = [
     number // bottom
 ];
 
+// this is a better type, because the ordering is more explicit in code
+// that consumes it. I also like min/max better than top/bottom
+// because it is agnostic to the coordinate system.
+//
+// Ideally BBox should be migrated, but publications
+// are more important 🤷
+export type BetterBBox = {
+    minX: number;
+    maxX: number;
+    minY: number;
+    maxY: number;
+};
+
 export function getMaxHeight(segmentations: Feature[]): number {
     let maxHeight = 0;
     for (const segmentation of segmentations) {

@@ -2,14 +2,23 @@
 import { useCellMetaData } from '@/stores/cellMetaData';
 import { useGlobalSettings } from '@/stores/globalSettings';
 import { useLooneageViewStore } from '@/stores/looneageViewStore';
+import { useEventBusStore } from '@/stores/eventBusStore';
 
 const cellMetaData = useCellMetaData();
 const globalSettings = useGlobalSettings();
 const looneageViewStore = useLooneageViewStore();
+const eventBusStore = useEventBusStore();
 </script>
 
 <template>
     <template v-if="cellMetaData.dataInitialized">
+        <q-btn
+            round
+            flat
+            @click="eventBusStore.emitter.emit('resetLooneageView')"
+            icon="center_focus_strong"
+            title="reset view"
+        />
         <q-select
             dense
             label="Attribute"

@@ -32,6 +32,7 @@ import {
     expandHeight,
     getMaxHeight,
     type BBox,
+    type BetterBBox,
     getWidth,
     getHeight,
     getBBoxAroundPoint,
@@ -78,7 +79,7 @@ const datasetSelectionTrrackedStore = useDatasetSelectionTrrackedStore();
 const { currentLocationMetadata } = storeToRefs(datasetSelectionStore);
 const { contrastLimitSlider } = storeToRefs(imageViewerStoreUntrracked);
 const { frameNumber } = storeToRefs(imageViewerStore);
-const { selectedTrack } = storeToRefs(cellMetaData);
+const { selectedTrack, selectedLineage } = storeToRefs(cellMetaData);
 const eventBusStore = useEventBusStore();
 const segmentationStore = useSegmentationStore();
 const looneageViewStore = useLooneageViewStore();
@@ -181,6 +182,27 @@ const layoutRoot = computed<LayoutNode<Track | null> | null>(() => {
     })(tree.value);
 });
 
+const treeBBox = computed<BetterBBox | null>(() => {
+    if (layoutRoot.value == null) return null;
+    let minX = 0;
+    let maxX = 0;
+    let minY = 0;
+    let maxY = 0;
+    for (let node of layoutRoot.value.descendants()) {
+        if (node.data == null) continue;
+        const left = getLeftPosition(node as LayoutNode<Track>);
+        const right = getRightPosition(node as LayoutNode<Track>);
+        const top = node.x;
+        const bottom = node.x - looneageViewStore.rowHeight;
+        minX = Math.min(minX, left);
+        maxX = Math.max(maxX, right);
+        minY = Math.min(minY, bottom);
+        maxY = Math.max(maxY, top);
+    }
+
+    return { minX, maxX, minY, maxY };
+});
+
 const colormapExtension = new AdditiveColormapExtension();
 
 const contrastLimit = computed<[number, number][]>(() => {
@@ -218,9 +240,51 @@ watch(currentLocationMetadata, async () => {
     renderDeckGL();
 });
 
-//////////////////////////
-// end temp test code   //
-//////////////////////////
+eventBusStore.emitter.on('resetLooneageView', resetView);
+function resetView() {
+    if (deckgl == null) return;
+    if (treeBBox.value == null) return;
+    // console.log('resetting looneage view');
+    // get center
+    let { minX, maxX, minY, maxY } = treeBBox.value;
+    const x = (minX + maxX) / 2 + Math.random() * 0.00001;
+    // Why random? See https://github.com/visgl/deck.gl/issues/8198
+
+    minY -= looneageViewStore.snippetDestSize + getHorizonSnippetPadding();
+    const y = (minY + maxY) / 2;
+
+    // get Scale X to fit width
+    let zoomX = 1;
+    const solverIterations = 10;
+    for (let i = 0; i < solverIterations; i++) {
+        // zoomX depends on zoomX. We are finding the solution iteratively.
+        // Fortunately this converges quickly.
+        zoomX =
+            deckGlWidth.value /
+            (maxX -
+                minX +
+                (3 * looneageViewStore.snippetDestSize +
+                    5 * getBetweenSnippetPaddingXRaw()) /
+                    zoomX);
+    }
+    // add margin
+    // zoomX *= 0.9;
+
+    // transform to log scale
+    zoomX = Math.log2(zoomX);
+
+    const newViewState = {
+        zoom: [zoomX, 0],
+        target: [x, y],
+        minZoom: -8,
+        maxZoom: 8,
+    };
+    viewStateMirror.value = newViewState;
+
+    deckgl.setProps({ initialViewState: newViewState });
+    renderDeckGL();
+}
+
 let deckgl: any | null = null;
 const initialViewState = {
     zoom: [0, 0],
@@ -275,49 +339,49 @@ onMounted(() => {
     // renderDeckGL();
 });
 
-const testGeometry = computed<number[]>(() => {
-    if (!cellMetaData.selectedTrack) return [];
-    // const areaGen = area<Cell>()
-    //     .x((d: Cell) => cellMetaData.getTime(d))
-    //     .y1((d: Cell) => 10 * cellMetaData.getMass(d))
-    //     .y0(0);
+// const testGeometry = computed<number[]>(() => {
+//     if (!cellMetaData.selectedTrack) return [];
+//     // const areaGen = area<Cell>()
+//     //     .x((d: Cell) => cellMetaData.getTime(d))
+//     //     .y1((d: Cell) => 10 * cellMetaData.getMass(d))
+//     //     .y0(0);
 
-    const geometry: number[] = [];
-    const key = looneageViewStore.attrKey;
-    let x = 0;
-    let y = 0;
-    // min/max just for debugging
-    let minY = Infinity;
-    let maxY = -Infinity;
+//     const geometry: number[] = [];
+//     const key = looneageViewStore.attrKey;
+//     let x = 0;
+//     let y = 0;
+//     // min/max just for debugging
+//     let minY = Infinity;
+//     let maxY = -Infinity;
 
-    let minX = Infinity;
-    let maxX = -Infinity;
+//     let minX = Infinity;
+//     let maxX = -Infinity;
 
-    const testBottom = -404.123456789;
-    // this is a hack to make the shaders work correctly.
-    // this value is used in the shaders to determine the non value side
-    // of the geometry. If a data has this exact value there will be a
-    // small visual bug. This value is arbitrary, but is less likely to
-    // be found in data than 0.
+//     const testBottom = -404.123456789;
+//     // this is a hack to make the shaders work correctly.
+//     // this value is used in the shaders to determine the non value side
+//     // of the geometry. If a data has this exact value there will be a
+//     // small visual bug. This value is arbitrary, but is less likely to
+//     // be found in data than 0.
 
-    const firstX = cellMetaData.getTime(cellMetaData.selectedTrack.cells[0]);
-    geometry.push(firstX, testBottom);
-    for (const cell of cellMetaData.selectedTrack.cells) {
-        y = cell.attrNum[key];
-        minY = Math.min(minY, y);
-        maxY = Math.max(maxY, y);
+//     const firstX = cellMetaData.getTime(cellMetaData.selectedTrack.cells[0]);
+//     geometry.push(firstX, testBottom);
+//     for (const cell of cellMetaData.selectedTrack.cells) {
+//         y = cell.attrNum[key];
+//         minY = Math.min(minY, y);
+//         maxY = Math.max(maxY, y);
 
-        x = cellMetaData.getTime(cell);
-        minX = Math.min(minX, x);
-        maxX = Math.max(maxX, x);
+//         x = cellMetaData.getTime(cell);
+//         minX = Math.min(minX, x);
+//         maxX = Math.max(maxX, x);
 
-        geometry.push(x, y);
-        geometry.push(x, testBottom);
-    }
+//         geometry.push(x, y);
+//         geometry.push(x, testBottom);
+//     }
 
-    geometry.push(x, testBottom);
-    return geometry;
-});
+//     geometry.push(x, testBottom);
+//     return geometry;
+// });
 
 function constructGeometry(track: Track): number[] {
     const geometry: number[] = [];
@@ -368,15 +432,15 @@ const testModOffests = [-8, -7, -6, -5, -4, -3, -2, -1, 0, 1, 2, 3, 4, 5];
 //     looneageViewStore.rowHeight,
 // ]);
 
-const dataXExtent = computed<[number, number]>(() => {
-    if (!cellMetaData.selectedTrack) return [0, 0];
-    const minTime = cellMetaData.getFrame(cellMetaData.selectedTrack.cells[0]);
-    const lastIndex = cellMetaData.selectedTrack.cells.length - 1;
-    const maxTime = cellMetaData.getFrame(
-        cellMetaData.selectedTrack.cells[lastIndex]
-    );
-    return [minTime, maxTime];
-});
+// const dataXExtent = computed<[number, number]>(() => {
+//     if (!cellMetaData.selectedTrack) return [0, 0];
+//     const minTime = cellMetaData.getFrame(cellMetaData.selectedTrack.cells[0]);
+//     const lastIndex = cellMetaData.selectedTrack.cells.length - 1;
+//     const maxTime = cellMetaData.getFrame(
+//         cellMetaData.selectedTrack.cells[lastIndex]
+//     );
+//     return [minTime, maxTime];
+// });
 
 const lineageMinTime = computed<number>(() => {
     if (!cellMetaData.selectedLineage) return 0;
@@ -458,7 +522,7 @@ function createHorizonChartLayers(): (
     | PolygonLayer
     | null
 )[] {
-    if (!cellMetaData.selectedTrack) return [];
+    if (!cellMetaData.selectedLineage) return [];
     // if (!segmentationData.value) return [];
     if (!layoutRoot.value?.descendants()) return [];
     const layers: (
@@ -1428,8 +1492,11 @@ function getSnippetDrawerLinePadding(): number {
     return scaleForConstantVisualSize(3, 'y');
 }
 
+function getBetweenSnippetPaddingXRaw(): number {
+    return 8;
+}
 function getBetweenSnippetPaddingX(): number {
-    return scaleForConstantVisualSize(8, 'x');
+    return scaleForConstantVisualSize(getBetweenSnippetPaddingXRaw(), 'x');
 }
 
 function getBetweenSnippetPaddingY(): number {
@@ -1574,7 +1641,7 @@ const negativeColors = computed<number[]>(() => {
 function createHorizonChartLayer(
     node: LayoutNode<Track>
 ): HorizonChartLayer | null {
-    if (!cellMetaData.selectedTrack) return null;
+    if (!cellMetaData.selectedLineage) return null;
     const track = node.data;
     let left = getLeftPosition(node);
     let width = getTimeDuration(track);
@@ -1619,9 +1686,9 @@ function createHorizonChartLayer(
         getModOffset: (d: any) => d,
         positiveColors: positiveColors.value,
         negativeColors: negativeColors.value,
-        updateTriggers: {
-            instanceData: testGeometry.value,
-        },
+        // updateTriggers: {
+        //     instanceData: testGeometry.value,
+        // },
     });
 
     return horizonChartLayer; //, scatterplotLayer, textLayer];
@@ -1629,8 +1696,9 @@ function createHorizonChartLayer(
 
 // const segmentationData = ref<Feature[]>();
 
-watch(selectedTrack, () => {
-    renderDeckGL();
+watch(selectedLineage, () => {
+    looneageViewStore.setDefaultAttrKey();
+    resetView(); // resetView  calls renderDeckGL
 });
 
 function scaleForConstantVisualSize(
@@ -1851,7 +1919,7 @@ function createCellBoundaryLayer(
 
 function renderDeckGL(): void {
     if (deckgl == null) return;
-    if (cellMetaData.selectedTrack == null) return;
+    if (cellMetaData.selectedLineage == null) return;
     if (looneageViewStore.modHeight === 0) {
         looneageViewStore.setReasonableModHeight();
     }

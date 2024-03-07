@@ -55,12 +55,12 @@ export const useLooneageViewStore = defineStore(storeId, () => {
     const spacing = ref<number>(82);
     const includeSiblingBuffer = ref<boolean>(true);
     const rowHeight = ref<number>(32);
-    const snippetSourceSize = ref<number>(32);
+    const snippetSourceSize = ref<number>(64);
     const snippetDestSize = ref<number>(64);
     const snippetZoom = computed<number>(() => {
         return snippetDestSize.value / snippetSourceSize.value;
     });
-    const maxDepth = ref<number>(3);
+    const maxDepth = ref<number>(2);
     const showSnippetImage = ref<boolean>(true);
     const showSnippetOutline = ref<boolean>(true);
     const connectingLineWidth = ref<number>(1);
@@ -162,5 +162,6 @@ export const useLooneageViewStore = defineStore(storeId, () => {
         concealPinnedSnippet,
         getMatchingPinnedSnippet,
         getSnippet,
+        setDefaultAttrKey,
     };
 });

@@ -3,6 +3,7 @@ import { computed } from 'vue';
 import { useCellMetaData } from '@/stores/cellMetaData';
 import { useGlobalSettings } from '@/stores/globalSettings';
 import { useLooneageViewStore } from '@/stores/looneageViewStore';
+import { useEventBusStore } from '@/stores/eventBusStore';
 import { clamp } from 'lodash-es';
 
 import {
@@ -17,6 +18,7 @@ import {
 const cellMetaData = useCellMetaData();
 const globalSettings = useGlobalSettings();
 const looneageViewStore = useLooneageViewStore();
+const eventBusStore = useEventBusStore();
 
 const colorSchemeOptions = [
     { label: 'Red', value: schemeReds },
@@ -56,6 +58,12 @@ const baselineValidate = computed({
 </script>
 
 <template>
+    <q-btn
+        @click="eventBusStore.emitter.emit('resetLooneageView')"
+        icon="center_focus_strong"
+        outline
+        >Reset View</q-btn
+    >
     <q-select
         label="Attribute"
         v-model="looneageViewStore.attrKey"
