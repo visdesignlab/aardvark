@@ -33,7 +33,7 @@ const eventBusStore = useEventBusStore();
         <q-slider
             v-model="looneageViewStore.rowHeight"
             :min="4"
-            :max="100"
+            :max="240"
             label
             :dark="globalSettings.darkMode"
             class="q-ml-md max-w-150"

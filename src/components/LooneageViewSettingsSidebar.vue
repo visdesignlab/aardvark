@@ -134,7 +134,7 @@ const baselineValidate = computed({
         <q-slider
             v-model="looneageViewStore.rowHeight"
             :min="4"
-            :max="200"
+            :max="240"
             label
             :dark="globalSettings.darkMode"
         />
