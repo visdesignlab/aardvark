@@ -1672,11 +1672,12 @@ function createHorizonChartLayer(
         dataXExtent = [dataXExtent[0] - width / 2, dataXExtent[0] + width / 2];
     }
 
+    const geometryData = constructGeometry(track);
     const horizonChartLayer = new HorizonChartLayer({
         id: `custom-horizon-chart-layer-${track.trackId}`,
         data: testModOffests,
 
-        instanceData: constructGeometry(track),
+        instanceData: geometryData,
         destination,
         dataXExtent,
 
@@ -1686,9 +1687,9 @@ function createHorizonChartLayer(
         getModOffset: (d: any) => d,
         positiveColors: positiveColors.value,
         negativeColors: negativeColors.value,
-        // updateTriggers: {
-        //     instanceData: testGeometry.value,
-        // },
+        updateTriggers: {
+            instanceData: geometryData,
+        },
     });
 
     return horizonChartLayer; //, scatterplotLayer, textLayer];
