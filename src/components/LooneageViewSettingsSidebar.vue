@@ -44,7 +44,7 @@ const horizonSettingsModal = ref(false);
     >
 
     <q-dialog v-model="horizonSettingsModal">
-        <q-card style="min-width: 900px">
+        <q-card style="min-width: 900px" :dark="globalSettings.darkMode">
             <q-card-section class="row items-center q-pb-none">
                 <div class="text-h6">Configure Horizon Charts</div>
                 <q-space />
