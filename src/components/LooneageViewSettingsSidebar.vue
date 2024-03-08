@@ -123,7 +123,10 @@ const horizonSettingsModal = ref(false);
                         class="q-mr-sm"
                     />
                     <q-icon
-                        v-if="index === 0"
+                        v-if="
+                            looneageViewStore.horizonChartSettingList.length ===
+                            1
+                        "
                         name="lock"
                         size="sm"
                         class="q-mt-md q-mb-md"
