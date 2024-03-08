@@ -34,29 +34,27 @@ export const useLooneageViewStore = defineStore(storeId, () => {
     const cellMetaData = useCellMetaData();
     const skipTrackingMap = useSkipTrackingMap();
 
-    const horizonChartSettingList = ref<InnerHorizonChartSettings[]>([
-        {
-            attrKey: 'Dry Mass (pg)',
-            positiveColorScheme: { label: 'Red', value: schemeReds },
-            negativeColorScheme: { label: 'Blue', value: schemeBlues },
-            modHeight: 200,
-            baseline: 0,
-        },
-        {
-            attrKey: 'Sphericity ()',
-            positiveColorScheme: { label: 'Green', value: schemeGreens },
-            negativeColorScheme: { label: 'Blue', value: schemeBlues },
-            modHeight: 0.15,
-            baseline: 0,
-        },
-        {
-            attrKey: 'Area (µm²)',
-            positiveColorScheme: { label: 'Blue', value: schemeBlues },
-            negativeColorScheme: { label: 'Blue', value: schemeBlues },
-            modHeight: 500,
-            baseline: 0,
-        },
-    ]);
+    const horizonChartSettingList = ref<InnerHorizonChartSettings[]>([]);
+
+    function setDefaultHorizonChartSettingList() {
+        const modHeight = getReasonableModHeight(attrKey.value);
+        if (modHeight === null) return [];
+        horizonChartSettingList.value = [
+            {
+                attrKey: cellMetaData.headerKeys.mass,
+                positiveColorScheme: {
+                    label: 'Reds',
+                    value: schemeReds,
+                },
+                negativeColorScheme: {
+                    label: 'Blues',
+                    value: schemeBlues,
+                },
+                modHeight,
+                baseline: 0,
+            },
+        ];
+    }
 
     function addHorizonChart() {
         // duplicate the last item in horizonChartSettingList and add it to the end
@@ -86,24 +84,6 @@ export const useLooneageViewStore = defineStore(storeId, () => {
         attrKey.value = cellMetaData.headerKeys.mass;
     }
 
-    const minVal = computed<number>(() => {
-        return (
-            d3Min(
-                cellMetaData.cellArray ?? [],
-                (point: Cell) => point.attrNum[attrKey.value]
-            ) ?? NaN
-        );
-    });
-
-    const maxVal = computed<number>(() => {
-        return (
-            d3Max(
-                cellMetaData.cellArray ?? [],
-                (point: Cell) => point.attrNum[attrKey.value]
-            ) ?? NaN
-        );
-    });
-
     const modHeight = ref<number>(0);
     const baseline = ref<number>(0);
 
@@ -121,27 +101,53 @@ export const useLooneageViewStore = defineStore(storeId, () => {
     const connectingLineWidth = ref<number>(1);
     const spaceKeyframesEvenly = ref<boolean>(false);
 
-    function setReasonableModHeight() {
-        if (!cellMetaData.dataInitialized) return;
-        baseline.value = 0;
-        const extent = maxVal.value - minVal.value;
-        if (extent === 0) {
-            modHeight.value = 1;
-            return;
-        }
-        modHeight.value = extent / 5;
-    }
-    // watch(
-    //     () => cellMetaData.headerKeys,
-    //     () => {
-    //         console.log('header key change');
-    //         setReasonableModHeight();
-    //     }
-    // );
-    watch(attrKey, setReasonableModHeight);
+    function getReasonableModHeight(key: string): number | null {
+        if (!cellMetaData.dataInitialized) return null;
+        const minValue =
+            d3Min(
+                cellMetaData.cellArray ?? [],
+                (point: Cell) => point.attrNum[key] as number
+            ) ?? 0;
 
-    const positiveColorScheme = ref({ label: 'Red', value: schemeReds });
-    const negativeColorScheme = ref({ label: 'Blue', value: schemeBlues });
+        const maxValue =
+            d3Max(
+                cellMetaData.cellArray ?? [],
+                (point: Cell) => point.attrNum[key] as number
+            ) ?? 0;
+
+        const extent = maxValue - minValue;
+        if (extent === 0) {
+            return 1;
+        }
+        return extent / 5;
+    }
+
+    watch(
+        () => horizonChartSettingList.value.map((x) => x.attrKey),
+        (newVal: string[], oldVal: string[]) => {
+            if (newVal.length < oldVal.length) {
+                // item deleted, no change needed.
+                return;
+            }
+            let changedIndex = -1;
+            if (newVal.length > oldVal.length) {
+                // item added, use the last item
+                changedIndex = newVal.length - 1;
+            } else {
+                // find the index that changed
+                changedIndex = newVal.findIndex((x, i) => x !== oldVal[i]);
+            }
+            if (changedIndex < 0) {
+                throw new Error('no changed index found');
+            }
+            const setting = horizonChartSettingList.value[changedIndex];
+            const modHeight = getReasonableModHeight(setting.attrKey);
+            if (modHeight === null) return;
+            setting.modHeight = modHeight;
+        }
+    );
+
+    watch(attrKey, setDefaultHorizonChartSettingList); // TODO: update to creat new default list of settings
 
     const pinnedSnippets = ref<PinnedSnippetLookup>({});
 
@@ -201,15 +207,15 @@ export const useLooneageViewStore = defineStore(storeId, () => {
     return {
         horizonChartSettingList,
         attrKey,
-        positiveColorScheme,
-        negativeColorScheme,
+        // positiveColorScheme,
+        // negativeColorScheme,
         modHeight,
         baseline,
         spacing,
         includeSiblingBuffer,
         rowHeight,
-        maxVal,
-        minVal,
+        // maxVal,
+        // minVal,
         snippetSourceSize,
         snippetDestSize,
         snippetZoom,
@@ -218,7 +224,7 @@ export const useLooneageViewStore = defineStore(storeId, () => {
         showSnippetOutline,
         connectingLineWidth,
         spaceKeyframesEvenly,
-        setReasonableModHeight,
+        // setReasonableModHeight,
         pinnedSnippets,
         revealPinnedSnippet,
         concealPinnedSnippet,

@@ -1645,13 +1645,13 @@ function horizonInViewport(node: LayoutNode<Track>): boolean {
     );
 }
 
-const positiveColors = computed<number[]>(() => {
-    return hexListToRgba(looneageViewStore.positiveColorScheme.value[6]);
-});
+// const positiveColors = computed<number[]>(() => {
+//     return hexListToRgba(looneageViewStore.positiveColorScheme.value[6]);
+// });
 
-const negativeColors = computed<number[]>(() => {
-    return hexListToRgba(looneageViewStore.negativeColorScheme.value[6]);
-});
+// const negativeColors = computed<number[]>(() => {
+//     return hexListToRgba(looneageViewStore.negativeColorScheme.value[6]);
+// });
 
 function createHorizonChartLayer(
     node: LayoutNode<Track>,
@@ -1940,9 +1940,9 @@ function createCellBoundaryLayer(
 function renderDeckGL(): void {
     if (deckgl == null) return;
     if (cellMetaData.selectedLineage == null) return;
-    if (looneageViewStore.modHeight === 0) {
-        looneageViewStore.setReasonableModHeight();
-    }
+    // if (looneageViewStore.modHeight === 0) {
+    //     looneageViewStore.setReasonableModHeight();
+    // }
     // if (segmentationData.value == null) return;
     const layers = [];
 
