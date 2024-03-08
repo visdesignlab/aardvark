@@ -2,7 +2,7 @@ import { ref, watch, computed } from 'vue';
 import { defineStore } from 'pinia';
 import { useCellMetaData, type Cell } from '@/stores/cellMetaData';
 import { useSkipTrackingMap } from '@/stores/skipTrackingMap';
-import { schemeReds, schemeBlues, schemeGreens } from 'd3-scale-chromatic';
+import { schemeReds, schemeBlues } from 'd3-scale-chromatic';
 import { min as d3Min, max as d3Max } from 'd3-array';
 
 export interface SelectedSnippet {
@@ -37,17 +37,31 @@ export const useLooneageViewStore = defineStore(storeId, () => {
     const horizonChartSettingList = ref<InnerHorizonChartSettings[]>([]);
 
     function setDefaultHorizonChartSettingList() {
-        const modHeight = getReasonableModHeight(attrKey.value);
+        if (!cellMetaData.dataInitialized) return;
+        if (
+            horizonChartSettingList.value.length > 0 &&
+            horizonChartSettingList.value.every((setting) =>
+                cellMetaData.headers?.includes(setting.attrKey)
+            )
+        ) {
+            return;
+        }
+        console.log('not all matched');
+
+        skipTrackingMap.map.set(storeId, true);
+
+        const attrKey = cellMetaData.headerKeys.mass;
+        const modHeight = getReasonableModHeight(attrKey);
         if (modHeight === null) return [];
         horizonChartSettingList.value = [
             {
-                attrKey: cellMetaData.headerKeys.mass,
+                attrKey,
                 positiveColorScheme: {
-                    label: 'Reds',
+                    label: 'Red',
                     value: schemeReds,
                 },
                 negativeColorScheme: {
-                    label: 'Blues',
+                    label: 'Blue',
                     value: schemeBlues,
                 },
                 modHeight,
@@ -90,20 +104,7 @@ export const useLooneageViewStore = defineStore(storeId, () => {
         horizonChartSettingList.value.splice(index, 1);
     }
 
-    const attrKey = ref<string>(cellMetaData.headerKeys.mass); // Default to mass
-    // console.log('atterKey default: ', attrKey.value);
-    watch(() => cellMetaData.headerKeys, setDefaultAttrKey);
-    watch(attrKey, setDefaultAttrKey);
-
-    function setDefaultAttrKey() {
-        if (!cellMetaData.dataInitialized) return;
-        if (cellMetaData.headers?.includes(attrKey.value)) return;
-        skipTrackingMap.map.set(storeId, true);
-        attrKey.value = cellMetaData.headerKeys.mass;
-    }
-
-    const modHeight = ref<number>(0);
-    const baseline = ref<number>(0);
+    watch(() => cellMetaData.headerKeys, setDefaultHorizonChartSettingList);
 
     const spacing = ref<number>(82);
     const includeSiblingBuffer = ref<boolean>(true);
@@ -140,32 +141,30 @@ export const useLooneageViewStore = defineStore(storeId, () => {
         return extent / 5;
     }
 
-    watch(
-        () => horizonChartSettingList.value.map((x) => x.attrKey),
-        (newVal: string[], oldVal: string[]) => {
-            if (newVal.length < oldVal.length) {
-                // item deleted, no change needed.
-                return;
-            }
-            let changedIndex = -1;
-            if (newVal.length > oldVal.length) {
-                // item added, use the last item
-                changedIndex = newVal.length - 1;
-            } else {
-                // find the index that changed
-                changedIndex = newVal.findIndex((x, i) => x !== oldVal[i]);
-            }
-            if (changedIndex < 0) {
-                throw new Error('no changed index found');
-            }
-            const setting = horizonChartSettingList.value[changedIndex];
-            const modHeight = getReasonableModHeight(setting.attrKey);
-            if (modHeight === null) return;
-            setting.modHeight = modHeight;
-        }
-    );
+    const attrKeyList = computed(() => {
+        if (!cellMetaData.dataInitialized) return [];
+        return horizonChartSettingList.value.map((x) => x.attrKey);
+    });
 
-    watch(attrKey, setDefaultHorizonChartSettingList); // TODO: update to creat new default list of settings
+    watch(attrKeyList, (newVal: string[], oldVal: string[]) => {
+        if (newVal.length < oldVal.length) {
+            // item deleted, no change needed.
+            return;
+        }
+        let changedIndex = -1;
+        if (newVal.length > oldVal.length) {
+            // item added, use the last item
+            changedIndex = newVal.length - 1;
+        } else {
+            // find the index that changed
+            changedIndex = newVal.findIndex((x, i) => x !== oldVal[i]);
+        }
+        if (changedIndex < 0) return;
+        const setting = horizonChartSettingList.value[changedIndex];
+        const modHeight = getReasonableModHeight(setting.attrKey);
+        if (modHeight === null) return;
+        setting.modHeight = modHeight;
+    });
 
     const pinnedSnippets = ref<PinnedSnippetLookup>({});
 
@@ -224,16 +223,10 @@ export const useLooneageViewStore = defineStore(storeId, () => {
 
     return {
         horizonChartSettingList,
-        attrKey,
-        // positiveColorScheme,
-        // negativeColorScheme,
-        modHeight,
-        baseline,
+        attrKeyList,
         spacing,
         includeSiblingBuffer,
         rowHeight,
-        // maxVal,
-        // minVal,
         snippetSourceSize,
         snippetDestSize,
         snippetZoom,
@@ -242,13 +235,12 @@ export const useLooneageViewStore = defineStore(storeId, () => {
         showSnippetOutline,
         connectingLineWidth,
         spaceKeyframesEvenly,
-        // setReasonableModHeight,
         pinnedSnippets,
         revealPinnedSnippet,
         concealPinnedSnippet,
         getMatchingPinnedSnippet,
         getSnippet,
-        setDefaultAttrKey,
+        setDefaultHorizonChartSettingList,
         addHorizonChart,
         removeHorizonChart,
     };

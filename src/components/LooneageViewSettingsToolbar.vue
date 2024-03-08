@@ -19,14 +19,6 @@ const eventBusStore = useEventBusStore();
             icon="center_focus_strong"
             title="reset view"
         />
-        <q-select
-            dense
-            label="Attribute"
-            v-model="looneageViewStore.attrKey"
-            :options="cellMetaData.cellNumAttributeHeaderNames"
-            :dark="globalSettings.darkMode"
-            class="min-w-75 q-ml-xs"
-        />
         <q-badge class="q-ml-sm" outline :color="globalSettings.normalizedBlack"
             >Height:</q-badge
         >

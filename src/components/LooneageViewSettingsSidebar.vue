@@ -28,33 +28,6 @@ const colorSchemeOptions = [
     { label: 'Purple', value: schemePurples },
 ];
 
-const maxBands = 15;
-const minModHeight = computed(() => {
-    return (looneageViewStore.maxVal - looneageViewStore.minVal) / maxBands;
-});
-
-const modHeightValidate = computed({
-    get() {
-        return looneageViewStore.modHeight;
-    },
-    set(value) {
-        looneageViewStore.modHeight = Math.max(value, minModHeight.value);
-    },
-});
-
-const baselineValidate = computed({
-    get() {
-        return looneageViewStore.baseline;
-    },
-    set(value) {
-        looneageViewStore.baseline = clamp(
-            value,
-            Math.min(looneageViewStore.minVal, 0),
-            Math.max(looneageViewStore.maxVal, 0)
-        );
-    },
-});
-
 const horizonSettingsModal = ref(false);
 </script>
 
