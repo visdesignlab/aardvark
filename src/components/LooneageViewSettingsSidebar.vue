@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed } from 'vue';
+import { computed, ref } from 'vue';
 import { useCellMetaData } from '@/stores/cellMetaData';
 import { useGlobalSettings } from '@/stores/globalSettings';
 import { useLooneageViewStore } from '@/stores/looneageViewStore';
@@ -54,49 +54,106 @@ const baselineValidate = computed({
         );
     },
 });
+
+const horizonSettingsModal = ref(false);
 </script>
 
 <template>
     <q-btn
+        class="q-mb-sm"
         @click="eventBusStore.emitter.emit('resetLooneageView')"
         icon="center_focus_strong"
         outline
         >Reset View</q-btn
     >
-    <q-select
-        label="Attribute"
-        v-model="looneageViewStore.attrKey"
-        :options="cellMetaData.cellNumAttributeHeaderNames"
-        :dark="globalSettings.darkMode"
-        class="mb-1"
-    />
-    <q-select
-        label="Negative Color Scale"
-        v-model="looneageViewStore.negativeColorScheme"
-        :options="colorSchemeOptions"
-        :dark="globalSettings.darkMode"
-        class="mb-1"
-    />
-    <q-select
-        label="Positive Color Scale"
-        v-model="looneageViewStore.positiveColorScheme"
-        :options="colorSchemeOptions"
-        :dark="globalSettings.darkMode"
-        class="mb-1"
-    />
-    <q-input
-        label="Bin Size"
-        v-model.number="modHeightValidate"
-        type="number"
-        :dark="globalSettings.darkMode"
-        debounce="400"
-    />
-    <q-input
-        label="Baseline"
-        v-model.number="baselineValidate"
-        type="number"
-        :dark="globalSettings.darkMode"
-    />
+    <q-btn class="q-mb-sm" @click="horizonSettingsModal = true" outline
+        >Configure Horizon Charts</q-btn
+    >
+
+    <q-dialog v-model="horizonSettingsModal">
+        <q-card style="min-width: 900px">
+            <q-card-section class="row items-center q-pb-none">
+                <div class="text-h6">Configure Horizon Charts</div>
+                <q-space />
+                <q-btn icon="close" flat round dense v-close-popup />
+            </q-card-section>
+
+            <q-card-section>
+                <div
+                    v-for="(
+                        setting, index
+                    ) in looneageViewStore.horizonChartSettingList"
+                    :key="index"
+                    class="row no-wrap justify-center q-mb-lg"
+                >
+                    <q-select
+                        label="Attribute"
+                        v-model="setting.attrKey"
+                        :options="cellMetaData.cellNumAttributeHeaderNames"
+                        :dark="globalSettings.darkMode"
+                        class="q-mr-sm min-width-200"
+                    />
+                    <q-select
+                        label="Positive Colors"
+                        v-model="setting.positiveColorScheme"
+                        :options="colorSchemeOptions"
+                        :dark="globalSettings.darkMode"
+                        class="q-mr-sm min-width-130"
+                    />
+                    <q-select
+                        label="Negative Colors"
+                        v-model="setting.negativeColorScheme"
+                        :options="colorSchemeOptions"
+                        :dark="globalSettings.darkMode"
+                        class="q-mr-sm min-width-130"
+                    />
+                    <q-input
+                        label="Bin Size"
+                        v-model.number="setting.modHeight"
+                        type="number"
+                        :dark="globalSettings.darkMode"
+                        debounce="400"
+                        class="q-mr-sm"
+                    />
+                    <q-input
+                        label="Baseline"
+                        v-model.number="setting.baseline"
+                        type="number"
+                        :dark="globalSettings.darkMode"
+                        class="q-mr-sm"
+                    />
+                    <q-icon
+                        v-if="index === 0"
+                        name="lock"
+                        size="sm"
+                        class="q-mt-md q-mb-md"
+                    />
+                    <q-btn
+                        v-else
+                        icon="delete"
+                        outline
+                        dense
+                        class="q-mt-md q-mb-md"
+                        @click="looneageViewStore.removeHorizonChart(index)"
+                    />
+                </div>
+                <div class="row no-wrap justify-center q-ml-xl q-mr-xl q-mt-md">
+                    <q-btn
+                        outline
+                        icon="add_box"
+                        class="full-width"
+                        @click="looneageViewStore.addHorizonChart()"
+                        >Add Attribute</q-btn
+                    >
+                </div>
+            </q-card-section>
+
+            <q-card-actions align="right">
+                <q-btn flat label="Done" v-close-popup />
+            </q-card-actions>
+        </q-card>
+    </q-dialog>
+
     <q-toggle
         label="Show Snippet Image"
         v-model="looneageViewStore.showSnippetImage"
@@ -250,4 +307,11 @@ const baselineValidate = computed({
     </q-card-section>
 </template>
 
-<style scoped lang="scss"></style>
+<style scoped lang="scss">
+.min-width-130 {
+    min-width: 130px;
+}
+.min-width-200 {
+    min-width: 200px;
+}
+</style>

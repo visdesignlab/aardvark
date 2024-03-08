@@ -1693,7 +1693,7 @@ function createHorizonChartLayer(
 
     const geometryData = constructGeometry(track, settings.attrKey);
     const horizonChartLayer = new HorizonChartLayer({
-        id: `custom-horizon-chart-layer-${track.trackId}`,
+        id: `custom-horizon-chart-layer-${track.trackId}-${dimIndex}`,
         data: testModOffests,
 
         instanceData: geometryData,

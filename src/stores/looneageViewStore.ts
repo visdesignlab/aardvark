@@ -58,6 +58,22 @@ export const useLooneageViewStore = defineStore(storeId, () => {
         },
     ]);
 
+    function addHorizonChart() {
+        // duplicate the last item in horizonChartSettingList and add it to the end
+        const lastItem = horizonChartSettingList.value.slice(-1)[0];
+        horizonChartSettingList.value.push({
+            attrKey: lastItem.attrKey,
+            positiveColorScheme: lastItem.positiveColorScheme,
+            negativeColorScheme: lastItem.negativeColorScheme,
+            modHeight: lastItem.modHeight,
+            baseline: lastItem.baseline,
+        });
+    }
+
+    function removeHorizonChart(index: number) {
+        horizonChartSettingList.value.splice(index, 1);
+    }
+
     const attrKey = ref<string>(cellMetaData.headerKeys.mass); // Default to mass
     // console.log('atterKey default: ', attrKey.value);
     watch(() => cellMetaData.headerKeys, setDefaultAttrKey);
@@ -209,5 +225,7 @@ export const useLooneageViewStore = defineStore(storeId, () => {
         getMatchingPinnedSnippet,
         getSnippet,
         setDefaultAttrKey,
+        addHorizonChart,
+        removeHorizonChart,
     };
 });
