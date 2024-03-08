@@ -56,12 +56,30 @@ export const useLooneageViewStore = defineStore(storeId, () => {
         ];
     }
 
-    function addHorizonChart() {
+    function addHorizonChart(
+        colorSchemeOptions: {
+            label: string;
+            value: readonly (readonly string[])[];
+        }[]
+    ) {
+        // get the next color scheme in the list that isn't already in use
+        let colorScheme = colorSchemeOptions[0];
+        for (const scheme of colorSchemeOptions) {
+            if (
+                !horizonChartSettingList.value.some(
+                    (x) => x.positiveColorScheme.label === scheme.label
+                )
+            ) {
+                colorScheme = scheme;
+                break;
+            }
+        }
+
         // duplicate the last item in horizonChartSettingList and add it to the end
         const lastItem = horizonChartSettingList.value.slice(-1)[0];
         horizonChartSettingList.value.push({
             attrKey: lastItem.attrKey,
-            positiveColorScheme: lastItem.positiveColorScheme,
+            positiveColorScheme: colorScheme,
             negativeColorScheme: lastItem.negativeColorScheme,
             modHeight: lastItem.modHeight,
             baseline: lastItem.baseline,

@@ -145,7 +145,11 @@ const horizonSettingsModal = ref(false);
                         outline
                         icon="add_box"
                         class="full-width"
-                        @click="looneageViewStore.addHorizonChart()"
+                        @click="
+                            looneageViewStore.addHorizonChart(
+                                colorSchemeOptions
+                            )
+                        "
                         >Add Attribute</q-btn
                     >
                 </div>
