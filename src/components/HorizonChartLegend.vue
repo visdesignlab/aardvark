@@ -38,11 +38,12 @@ const scaleX = computed(() => {
         .range([0, props.chartWidth]);
 });
 function getLegendLabel(val: number): string {
-    const trueValue = val * looneageViewStore.modHeight + props.baseline;
-    const label = format('.2s')(trueValue);
-    if (val === -6) return label + ' <';
-    if (val === 6) return label + '+';
-    return label;
+    return '';
+    // const trueValue = val * looneageViewStore.modHeight + props.baseline;
+    // const label = format('.2s')(trueValue);
+    // if (val === -6) return label + ' <';
+    // if (val === 6) return label + '+';
+    // return label;
 }
 
 const svgContainer = ref<SVGElement | null>(null);
@@ -68,7 +69,7 @@ defineExpose({ exportSvg });
         :width="props.containerWidth"
         :height="containerHeight"
     >
-        <HorizonChart
+        <!-- <HorizonChart
             :chartWidth="props.chartWidth"
             :chartHeight="props.chartHeight"
             :data="fakeDataExtent"
@@ -86,7 +87,7 @@ defineExpose({ exportSvg });
             :timeAccessor="(x: number) => x"
             :valueAccessor="(x: number) => x"
             :info="'NA'"
-        ></HorizonChart>
+        ></HorizonChart> -->
 
         <g
             font-size="10"

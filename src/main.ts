@@ -6,7 +6,7 @@ import DatasetSelector from './components/globalSettings/DatasetSelector.vue';
 import LayoutSelector from './components/globalSettings/LayoutSelector.vue';
 import GeneralSettings from './components/globalSettings/GeneralSettings.vue';
 import StubView from './components/globalSettings/StubView.vue';
-import LooneageView from './components/LooneageView.vue';
+// import LooneageView from './components/LooneageView.vue';
 import CellTrackView from './components/CellTrackView.vue';
 import LooneageViewGL from './components/LooneageViewGL.vue';
 import LooneageViewSettingsSidebar from './components/LooneageViewSettingsSidebar.vue';
@@ -90,7 +90,7 @@ createApp(App)
         AggregateLineChartSettingsToolbar
     )
     .component('TrrackVisWrapper', TrrackVisWrapper)
-    .component('LooneageView', LooneageView)
+    // .component('LooneageView', LooneageView)
     .component('CellTrackView', CellTrackView)
     .component('LooneageViewGL', LooneageViewGL)
     .component('LooneageViewSettingsSidebar', LooneageViewSettingsSidebar)
