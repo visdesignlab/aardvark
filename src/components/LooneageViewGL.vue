@@ -351,8 +351,6 @@ onMounted(() => {
                 const val = formatter(cell.attrNum[attrKey]);
                 html += `<div>${attrKey}: ${val}</div>`;
             }
-
-            console.log(object);
             return {
                 html,
             };

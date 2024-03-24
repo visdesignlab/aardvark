@@ -17,6 +17,7 @@ import { useSegmentationStore } from '@/stores/segmentationStore';
 import { useEventBusStore } from '@/stores/eventBusStore';
 import { clamp } from 'lodash-es';
 import { Pool } from 'geotiff';
+import { useLooneageViewStore } from '@/stores/looneageViewStore';
 
 import {
     loadOmeTiff,
@@ -35,6 +36,7 @@ import {
 } from '@deck.gl/layers/typed';
 // @ts-ignore
 import { TripsLayer } from '@deck.gl/geo-layers';
+import { format } from 'd3-format';
 
 const cellMetaData = useCellMetaData();
 const segmentationStore = useSegmentationStore();
@@ -45,6 +47,7 @@ const datasetSelectionStore = useDatasetSelectionStore();
 const { currentLocationMetadata } = storeToRefs(datasetSelectionStore);
 const { contrastLimitSlider } = storeToRefs(imageViewerStoreUntrracked);
 const eventBusStore = useEventBusStore();
+const looneageViewStore = useLooneageViewStore();
 
 const deckGlContainer = ref(null);
 const { width: containerWidth, height: containerHeight } =
@@ -102,6 +105,34 @@ onMounted(() => {
         // onViewStateChange: () => console.log('onViewStateChange'),
         // onInteractionStateChange: () => console.log('onInteractionStateChange'),
         // onLoad: () => console.log('onLoad'),
+
+        getTooltip: ({ object }) => {
+            if (!object) return null;
+            console.log(object);
+            const { id, frame } = object.properties;
+            if (id == null) return null;
+            if (frame == null) return null;
+            const track = cellMetaData.trackMap?.get(id);
+            if (!track) return null;
+            const index = cellMetaData.getCellIndexWithFrame(track, frame);
+            if (index === -1) return null;
+            const cell = track.cells[index];
+            if (!cell) return null;
+            let html = `<h5>Cell: ${id}</h5>`;
+            html += `<div>Frame: ${frame}</div>`;
+            // const formatter = format('~s');
+            const formatter = format('.2f');
+            for (const {
+                attrKey,
+            } of looneageViewStore.horizonChartSettingList) {
+                const val = formatter(cell.attrNum[attrKey]);
+                html += `<div>${attrKey}: ${val}</div>`;
+            }
+
+            return {
+                html,
+            };
+        },
     });
     eventBusStore.emitter.on('resetImageView', resetView);
 });
