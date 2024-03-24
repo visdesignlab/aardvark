@@ -180,6 +180,28 @@ function storeSetup() {
         return (cell: Cell) => cell.attrNum[attributeKey.value];
     });
 
+    const selectedAggLineDataList = computed<AggLineData[]>(() => {
+        if (targetKey.value !== 'selected lineage') {
+            return [];
+        }
+        const trackId = dataPointSelection.selectedTrackId;
+        if (trackId === null) {
+            return [];
+        }
+        const selectedTrack = cellMetaData.trackMap?.get(trackId);
+        if (!selectedTrack) {
+            return [];
+        }
+        const aggLineData: AggLineData = [];
+        for (const cell of selectedTrack.cells) {
+            const frame = cellMetaData.getFrame(cell);
+            const value = accessor.value(cell);
+            const count = 1;
+            aggLineData.push({ frame, value, count });
+        }
+        return [medianFilterSmooth(aggLineData)];
+    });
+
     const aggLineDataList = computed<AggLineData[]>(() => {
         switch (targetKey.value) {
             case 'selected lineage': {
@@ -319,6 +341,7 @@ function storeSetup() {
         onSmoothWindowChange,
         aggLineDataList,
         aggLineDataListExtent,
+        selectedAggLineDataList,
         showVarianceBand,
     };
 }

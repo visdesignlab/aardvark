@@ -137,6 +137,16 @@ watch(yAxisGen, () => {
                         :d="areaGen(aggLine) ?? ''"
                     ></path>
                 </g>
+                <g :transform="`translate(${margin.left},${margin.top})`">
+                    <path
+                        :class="`selected agg-line ${globalSettings.normalizedDark}`"
+                        v-for="(
+                            aggLine, index
+                        ) in aggregateLineChartStore.selectedAggLineDataList"
+                        :key="index"
+                        :d="areaGen(aggLine) ?? ''"
+                    ></path>
+                </g>
             </svg>
         </div>
     </div>
@@ -154,14 +164,31 @@ watch(yAxisGen, () => {
     // opacity: 0.25;
 }
 
+.selected.agg-line {
+    stroke-width: 2px;
+    opacity: 1;
+}
+
 .dark {
-    stroke: hsl(0, 0%, 10%);
-    fill: hsl(0, 0%, 10%);
+    // stroke: hsl(0, 0%, 10%);
+    // fill: hsl(0, 0%, 10%);
+    stroke: #377eb8;
+    fill: #377eb8;
+}
+
+.dark.selected {
+    stroke: #b6a402;
 }
 
 .light {
-    stroke: hsl(0, 0%, 90%);
-    fill: hsl(0, 0%, 90%);
+    // stroke: hsl(0, 0%, 90%);
+    // fill: hsl(0, 0%, 90%);
+    stroke: #377eb8;
+    fill: #377eb8;
+}
+
+.light.selected {
+    stroke: #fde309;
 }
 
 .mw-250 {
