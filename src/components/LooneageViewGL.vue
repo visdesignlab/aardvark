@@ -9,6 +9,7 @@ import {
     type Cell,
 } from '@/stores/cellMetaData';
 import { useDataPointSelection } from '@/stores/dataPointSelection';
+import { useDataPointSelectionUntrracked } from '@/stores/dataPointSelectionUntrracked';
 import { useSegmentationStore } from '@/stores/segmentationStore';
 import CellSnippetsLayer from './layers/CellSnippetsLayer';
 import type { Selection } from './layers/CellSnippetsLayer';
@@ -75,6 +76,7 @@ const cellMetaData = useCellMetaData();
 const globalSettings = useGlobalSettings();
 
 const dataPointSelection = useDataPointSelection();
+const dataPointSelectionUntrracked = useDataPointSelectionUntrracked();
 const imageViewerStore = useImageViewerStore();
 const imageViewerStoreUntrracked = useImageViewerStoreUntrracked();
 const datasetSelectionStore = useDatasetSelectionStore();
@@ -333,7 +335,7 @@ onMounted(() => {
             if (!object) return null;
             const trackId = object.trackId;
             if (trackId == null) return null;
-            const time = hoveredTime.value;
+            const time = dataPointSelectionUntrracked.hoveredTime;
             if (time == null) return null;
             const track = cellMetaData.trackMap?.get(trackId);
             if (!track) return null;
@@ -341,10 +343,9 @@ onMounted(() => {
             if (index === -1) return null;
             const cell = track.cells[index];
             if (!cell) return null;
-            let html = `<h5>Cell: ${trackId}</h5>`;
-            html += `<div>Time: ${time}</div>`;
-            // const formatter = format('~s');
             const formatter = format('.2f');
+            let html = `<h5>Cell: ${trackId}</h5>`;
+            html += `<div>Time: ${formatter(time)}</div>`;
             for (const {
                 attrKey,
             } of looneageViewStore.horizonChartSettingList) {
@@ -471,8 +472,6 @@ function createTickMarksLayer(): PathLayer | null {
     });
 }
 
-const hoveredTime = ref<number | null>(null);
-
 function createHorizonChartLayers(): (
     | ScatterplotLayer
     | HorizonChartLayer
@@ -550,7 +549,7 @@ function createHorizonChartLayers(): (
             if (!cellMetaData.trackMap) return;
             const { selectedSnippet, time } = processHorizonPickingInfo(info);
             if (isEqual(selectedSnippet, hoveredSnippet.value)) return;
-            hoveredTime.value = time;
+            dataPointSelectionUntrracked.hoveredTime = time;
             hoveredSnippet.value = selectedSnippet;
             renderDeckGL();
         },
@@ -1187,7 +1186,7 @@ function createKeyFrameSnippets(): KeyFrameSnippetsResult | null {
             if (!cellMetaData.trackMap) return;
             if (!info.picked) {
                 hoveredSnippet.value = null;
-                hoveredTime.value = null;
+                dataPointSelectionUntrracked.hoveredTime = null;
                 renderDeckGL();
                 return;
             }
@@ -1198,7 +1197,7 @@ function createKeyFrameSnippets(): KeyFrameSnippetsResult | null {
             if (!track) return;
             const cell = track.cells[index];
             const time = cellMetaData.getTime(cell);
-            hoveredTime.value = time;
+            dataPointSelectionUntrracked.hoveredTime = time;
             if (!selectedSnippet) {
                 // not currently pinned auto placed snippet
                 selectedSnippet = {
@@ -1207,7 +1206,7 @@ function createKeyFrameSnippets(): KeyFrameSnippetsResult | null {
                     extraFrames: 1,
                 };
                 hoveredSnippet.value = selectedSnippet;
-                hoveredTime.value = null;
+                dataPointSelectionUntrracked.hoveredTime = null;
                 renderDeckGL();
                 return;
             }
@@ -1662,9 +1661,9 @@ function viewportBBox(): BBox {
 }
 
 function createCurrentTimeLayer(): PathLayer | null {
-    if (hoveredTime.value === null) return null;
+    if (dataPointSelectionUntrracked.hoveredTime === null) return null;
     // we place the start time at x=0, so we need to subtract the start time
-    const x = hoveredTime.value - lineageMinTime.value;
+    const x = dataPointSelectionUntrracked.hoveredTime - lineageMinTime.value;
     const a = [x, 1000];
     const b = [x, -1000];
     return new PathLayer({
@@ -1808,7 +1807,6 @@ function renderDeckGL(): void {
     if (cellMetaData.selectedLineage == null) return;
     const layers = [];
 
-    // layers.push(createCurrentTimeLayer());
     layers.push(createConnectingLinesLayer());
     layers.push(createTickMarksLayer());
     layers.push(createHorizonChartLayers());
@@ -1857,6 +1855,7 @@ function renderDeckGL(): void {
             layers.push(pickingLayer);
         }
     }
+    layers.push(createCurrentTimeLayer());
 
     // layers.push(createViewportRectangleLayer());
     deckgl.setProps({
