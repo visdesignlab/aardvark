@@ -324,7 +324,7 @@ function storeSetup() {
         return (
             (aggregatorKey.value == 'average' ||
                 aggregatorKey.value == 'median') &&
-            targetKey.value == 'entire location'
+            targetKey.value == 'entire location combined'
         );
     });
 
