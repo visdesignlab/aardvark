@@ -1,6 +1,6 @@
 import { ref, computed, watch } from 'vue';
 import { defineStore } from 'pinia';
-import { useCellMetaData, type Cell } from '@/stores/cellMetaData';
+import { useCellMetaData, type Cell, type Track } from '@/stores/cellMetaData';
 import { useSkipTrackingMap } from '@/stores/skipTrackingMap';
 import { useDataPointSelection } from '@/stores/dataPointSelection';
 import { useLooneageViewStore } from './looneageViewStore';
@@ -180,7 +180,60 @@ function storeSetup() {
         return (cell: Cell) => cell.attrNum[attributeKey.value];
     });
 
-    const selectedAggLineDataList = computed<AggLineData[]>(() => {
+    const selectedLineLineageConnections = computed<AggLineData[]>(() => {
+        if (targetKey.value !== 'selected lineage') {
+            return [];
+        }
+        const trackId = dataPointSelection.selectedTrackId;
+        if (trackId === null) {
+            return [];
+        }
+        const selectedTrack = cellMetaData.trackMap?.get(trackId);
+        if (!selectedTrack) {
+            return [];
+        }
+        const result: AggLineData[] = [];
+        const parent = cellMetaData.getParent(selectedTrack);
+        if (parent) {
+            const parentSelectedLine: AggLineData = [];
+            parentSelectedLine.push(getLastPoint(parent));
+
+            parentSelectedLine.push(getFirstPoint(selectedTrack));
+            result.push(parentSelectedLine);
+        }
+        const lastCell = getLastPoint(selectedTrack);
+        for (const child of selectedTrack.children) {
+            const selectedChildLine: AggLineData = [];
+            selectedChildLine.push(getFirstPoint(child));
+            selectedChildLine.push(lastCell);
+            result.push(selectedChildLine);
+        }
+        return result;
+    });
+
+    function getFirstPoint(track: Track, count = 1): AggDataPoint {
+        const firstCell = track.cells[0];
+        const frame = cellMetaData.getFrame(firstCell);
+        const value = accessor.value(firstCell);
+        return {
+            frame,
+            value,
+            count,
+        };
+    }
+
+    function getLastPoint(track: Track, count = 1): AggDataPoint {
+        const lastCell = track.cells[track.cells.length - 1];
+        const frame = cellMetaData.getFrame(lastCell);
+        const value = accessor.value(lastCell);
+        return {
+            frame,
+            value,
+            count,
+        };
+    }
+
+    const selectedLineData = computed<AggLineData>(() => {
         if (targetKey.value !== 'selected lineage') {
             return [];
         }
@@ -199,7 +252,7 @@ function storeSetup() {
             const count = 1;
             aggLineData.push({ frame, value, count });
         }
-        return [medianFilterSmooth(aggLineData)];
+        return medianFilterSmooth(aggLineData);
     });
 
     const aggLineDataList = computed<AggLineData[]>(() => {
@@ -341,7 +394,8 @@ function storeSetup() {
         onSmoothWindowChange,
         aggLineDataList,
         aggLineDataListExtent,
-        selectedAggLineDataList,
+        selectedLineData,
+        selectedLineLineageConnections,
         showVarianceBand,
     };
 }

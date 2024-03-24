@@ -9,7 +9,7 @@ import {
 } from '@/stores/aggregateLineChartStore';
 import { scaleLinear } from 'd3-scale';
 import { extent } from 'd3-array';
-import { area } from 'd3-shape';
+import { area, line } from 'd3-shape';
 import { axisBottom, axisLeft } from 'd3-axis';
 import { select } from 'd3-selection';
 import { format } from 'd3-format';
@@ -61,6 +61,14 @@ const areaGen = computed(() => {
         )
         .y1((aggPoint) =>
             scaleY.value(aggPoint.value - temp.value * aggPoint.count)
+        );
+});
+
+const lineGen = computed(() => {
+    return line<AggDataPoint>()
+        .x((aggPoint) => scaleX.value(aggPoint.frame))
+        .y((aggPoint) =>
+            scaleY.value(aggPoint.value + temp.value * aggPoint.count)
         );
 });
 
@@ -140,11 +148,22 @@ watch(yAxisGen, () => {
                 <g :transform="`translate(${margin.left},${margin.top})`">
                     <path
                         :class="`selected agg-line ${globalSettings.normalizedDark}`"
+                        v-if="aggregateLineChartStore.selectedLineData"
+                        :d="
+                            areaGen(aggregateLineChartStore.selectedLineData) ??
+                            ''
+                        "
+                    ></path>
+                </g>
+
+                <g :transform="`translate(${margin.left},${margin.top})`">
+                    <path
+                        :class="`connection selected agg-line ${globalSettings.normalizedDark}`"
                         v-for="(
                             aggLine, index
-                        ) in aggregateLineChartStore.selectedAggLineDataList"
+                        ) in aggregateLineChartStore.selectedLineLineageConnections"
                         :key="index"
-                        :d="areaGen(aggLine) ?? ''"
+                        :d="lineGen(aggLine) ?? ''"
                     ></path>
                 </g>
             </svg>
@@ -166,7 +185,12 @@ watch(yAxisGen, () => {
 
 .selected.agg-line {
     stroke-width: 2px;
-    opacity: 1;
+}
+
+.selected.connection.agg-line {
+    stroke-dasharray: 4.5 6;
+    stroke-width: 1.5px;
+    opacity: 0.7;
 }
 
 .dark {
