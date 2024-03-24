@@ -37,6 +37,7 @@ import {
 // @ts-ignore
 import { TripsLayer } from '@deck.gl/geo-layers';
 import { format } from 'd3-format';
+import colors from '@/util/colors';
 
 const cellMetaData = useCellMetaData();
 const segmentationStore = useSegmentationStore();
@@ -215,16 +216,16 @@ function createSegmentationsLayer(): typeof GeoJsonLayer {
                 info.properties?.id?.toString() ===
                 dataPointSelection.selectedTrackId
             ) {
-                return [77, 175, 74];
+                return colors.selected.rgb;
             }
-            return [55, 126, 184];
+            return colors.unselected.rgb;
         },
         getLineWidth: (info) => {
             if (
                 info.properties?.id?.toString() ===
                 dataPointSelection.selectedTrackId
             ) {
-                return 4;
+                return 3;
             }
             return 2;
         },
