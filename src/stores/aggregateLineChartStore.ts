@@ -2,6 +2,9 @@ import { ref, computed, watch } from 'vue';
 import { defineStore } from 'pinia';
 import { useCellMetaData, type Cell } from '@/stores/cellMetaData';
 import { useSkipTrackingMap } from '@/stores/skipTrackingMap';
+import { useDataPointSelection } from '@/stores/dataPointSelection';
+import { useLooneageViewStore } from './looneageViewStore';
+
 import { min, max, mean, sum, median, quantile, deviation } from 'd3-array';
 
 export interface AggLineData extends Array<AggDataPoint> {}
@@ -16,6 +19,8 @@ function storeSetup() {
     // the only reason I've separated this function is to reduce indendation :shrug:
     const cellMetaData = useCellMetaData();
     const skipTrackingMap = useSkipTrackingMap();
+    const dataPointSelection = useDataPointSelection();
+    const looneageViewStore = useLooneageViewStore();
 
     const aggregatorKey = ref<string>('average');
     const aggregatorOptions = ['average', 'total', 'min', 'median', 'max'];
@@ -61,9 +66,14 @@ function storeSetup() {
         attributeKey.value = cellMetaData.headerKeys.mass;
     }
 
-    const targetKey = ref<string>('entire location');
+    const targetKey = ref<string>('selected lineage');
 
-    const targetOptions = ['entire location', 'cell lineages', 'cell tracks'];
+    const targetOptions = [
+        'selected lineage',
+        'entire location combined',
+        'cell lineages combined',
+        'individual cell tracks',
+    ];
 
     const smoothWindow = ref(0);
     const smoothWindowComputed = computed({
@@ -172,7 +182,30 @@ function storeSetup() {
 
     const aggLineDataList = computed<AggLineData[]>(() => {
         switch (targetKey.value) {
-            case 'entire location': {
+            case 'selected lineage': {
+                const lineageId = dataPointSelection.selectedLineageId;
+                if (!lineageId) return [];
+                const lineage = cellMetaData.lineageMap?.get(lineageId);
+                if (!lineage) return [];
+
+                const result: AggLineData[] = [];
+                for (const track of cellMetaData.makeLineageTrackIterator(
+                    lineage.founder,
+                    looneageViewStore.maxDepth
+                )) {
+                    // for (const track of cellMetaData.trackArray) {
+                    const aggLineData: AggLineData = [];
+                    for (const cell of track.cells) {
+                        const frame = cellMetaData.getFrame(cell);
+                        const value = accessor.value(cell);
+                        const count = 1;
+                        aggLineData.push({ frame, value, count });
+                    }
+                    result.push(medianFilterSmooth(aggLineData));
+                }
+                return result;
+            }
+            case 'entire location combined': {
                 const singleLine: AggLineData = [];
                 for (const frame of cellMetaData?.frameList ?? []) {
                     const cellsAtFrame = cellMetaData.frameMap.get(frame);
@@ -189,7 +222,7 @@ function storeSetup() {
                 }
                 return [medianFilterSmooth(singleLine)];
             }
-            case 'cell lineages': {
+            case 'cell lineages combined': {
                 if (!cellMetaData?.lineageArray) return [];
                 const result: AggLineData[] = [];
 
@@ -214,7 +247,7 @@ function storeSetup() {
                 }
                 return result;
             }
-            case 'cell tracks': {
+            case 'individual cell tracks': {
                 if (!cellMetaData?.trackArray) return [];
                 const result: AggLineData[] = [];
                 for (const track of cellMetaData.trackArray) {

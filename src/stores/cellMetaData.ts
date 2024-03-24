@@ -181,11 +181,16 @@ export const useCellMetaData = defineStore('cellMetaData', () => {
         }
     }
 
-    function* makeLineageTrackIterator(founder: Track) {
+    function* makeLineageTrackIterator(
+        founder: Track,
+        maxDepth = Infinity,
+        currentDepth = 0
+    ) {
         yield founder;
+        if (currentDepth >= maxDepth) return;
         for (const daughter of founder.children) {
             const iterator: Generator<Track, void, unknown> =
-                makeLineageTrackIterator(daughter);
+                makeLineageTrackIterator(daughter, maxDepth, currentDepth + 1);
             for (const track of iterator) {
                 yield track;
             }

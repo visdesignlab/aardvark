@@ -23,7 +23,13 @@ const currentKey = computed({
 
 <template>
     <q-select
-        label="Aggregate"
+        label="show"
+        v-model="aggregateLineChartStore.targetKey"
+        :options="aggregateLineChartStore.targetOptions"
+        :dark="globalSettings.darkMode"
+    ></q-select>
+    <q-select
+        label="Aggregate with"
         :disable="aggregateLineChartStore.targetKey === 'cell tracks'"
         v-model="currentKey"
         :options="aggregateLineChartStore.aggregatorOptions"
@@ -35,12 +41,7 @@ const currentKey = computed({
         :options="cellMetaData.cellNumAttributeHeaderNames"
         :dark="globalSettings.darkMode"
     ></q-select>
-    <q-select
-        label="Target"
-        v-model="aggregateLineChartStore.targetKey"
-        :options="aggregateLineChartStore.targetOptions"
-        :dark="globalSettings.darkMode"
-    ></q-select>
+
     <q-select
         label="Band"
         :disable="!aggregateLineChartStore.showVarianceBand"
