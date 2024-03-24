@@ -218,7 +218,7 @@ function createSegmentationsLayer(): typeof GeoJsonLayer {
             ) {
                 return colors.selected.rgb;
             }
-            return colors.unselected.rgb;
+            return colors.unselectedBoundary.rgb;
         },
         getLineWidth: (info) => {
             if (
@@ -285,7 +285,9 @@ interface LineageLayout {
 
 interface Segment {
     from: [number, number];
+    fromId: string;
     to: [number, number];
+    toId: string;
 }
 
 interface LineagePoint {
@@ -310,23 +312,27 @@ function addSegmentsFromTrack(
         });
         return position;
     }
-    const childPositions: [number, number][] = [];
+    const childrenInfo: { id: string; position: [number, number] }[] = [];
+    // const childPositions: [number, number][] = [];
     const accumChildPositions: [number, number] = [0, 0];
     for (let child of track.children) {
         const childPos = addSegmentsFromTrack(child, layout);
         if (childPos === null) continue;
-        childPositions.push(childPos);
+        childrenInfo.push({ id: child.trackId, position: childPos });
+        // childPositions.push(childPos);
         accumChildPositions[0] += childPos[0];
         accumChildPositions[1] += childPos[1];
     }
-    if (childPositions.length === 0) return null;
-    accumChildPositions[0] /= childPositions.length;
-    accumChildPositions[1] /= childPositions.length;
+    if (childrenInfo.length === 0) return null;
+    accumChildPositions[0] /= childrenInfo.length;
+    accumChildPositions[1] /= childrenInfo.length;
 
-    for (let childPos of childPositions) {
+    for (let { id, position } of childrenInfo) {
         lines.push({
             from: accumChildPositions,
-            to: childPos,
+            fromId: track.trackId,
+            to: position,
+            toId: id,
         });
     }
     points.push({
@@ -365,7 +371,22 @@ function createLineageLayer(): LineLayer {
         getSourcePosition: (d: Segment) => d.from,
         getTargetPosition: (d: Segment) => d.to,
         // getColor: (d) => [Math.sqrt(d.inbound + d.outbound), 140, 0],
-        getColor: [228, 26, 28, 125],
+        getColor: (d: Segment) => {
+            if (
+                d.fromId === dataPointSelection.selectedTrackId ||
+                d.toId === dataPointSelection.selectedTrackId
+            ) {
+                const c: [number, number, number, number] = [
+                    ...colors.selected.rgba,
+                ];
+                c[3] = 125;
+                return c;
+            }
+            return [228, 26, 28, 125];
+        },
+        updateTriggers: {
+            getColor: dataPointSelection.selectedTrackId,
+        },
     });
 }
 
@@ -381,10 +402,27 @@ function createCenterPointLayer(): ScatterplotLayer {
         filled: true,
         getPosition: (d) => d.position,
         getRadius: (d) => (d.internal ? 6 : 4),
-        getFillColor: (d) =>
-            d.internal ? [228, 26, 28, 125] : [228, 26, 28, 0],
-        getLineColor: [228, 26, 28],
+        getFillColor: (d) => {
+            if (d.trackId === dataPointSelection.selectedTrackId) {
+                const c: [number, number, number, number] = [
+                    ...colors.selected.rgba,
+                ];
+                c[3] = 120;
+                return c;
+            }
+            return d.internal ? [228, 26, 28, 125] : [228, 26, 28, 0];
+        },
+        getLineColor: (d) => {
+            if (d.trackId === dataPointSelection.selectedTrackId) {
+                return colors.selectedDarker.rgb;
+            }
+            return [228, 26, 28];
+        },
         getStrokeWidth: 1,
+        updateTriggers: {
+            getFillColor: dataPointSelection.selectedTrackId,
+            getLineColor: dataPointSelection.selectedTrackId,
+        },
     });
 }
 
