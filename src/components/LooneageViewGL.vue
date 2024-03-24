@@ -421,13 +421,17 @@ function createConnectingLinesLayer(): PathLayer | null {
         const a = [getLeftPosition(nodeWithData), childCenter];
         const b = [parentRight, childCenter];
         const c = [parentRight, getMiddleVert(node.parent)];
-        lines.push([a, b, c]);
+        const selected =
+            node.parent.data.trackId === dataPointSelection.selectedTrackId ||
+            node.data.trackId === dataPointSelection.selectedTrackId;
+        lines.push({ path: [a, b, c], selected });
     }
     return new PathLayer({
         id: 'connecting-lines-layer',
         data: lines,
-        getPath: (d: any) => d,
-        getColor: [180, 180, 180],
+        getPath: (d: any) => d.path,
+        getColor: (d: any) =>
+            d.selected ? colors.selectedDarker.rgb : [180, 180, 180],
         getWidth: looneageViewStore.connectingLineWidth,
         widthUnits: 'pixels',
         jointRounded: true,
@@ -544,7 +548,7 @@ function createHorizonChartLayers(): (
             ];
         },
         getFillColor: [255, 0, 255, 0],
-        getLineColor: colors.selected.rgb,
+        getLineColor: colors.selectedDarker.rgb,
         getLineWidth: (d: any) =>
             d.trackId === dataPointSelection.selectedTrackId ? 3 : 0,
         lineWidthUnits: 'pixels',
@@ -1716,6 +1720,7 @@ function createCellBoundaryLayer(
                 // @ts-ignore coordinates does exist on geometry
                 polygon: feature?.geometry?.coordinates,
                 hovered: info.hovered,
+                selected: trackId === dataPointSelection.selectedTrackId,
                 center: [cellX, cellY],
                 offset: [
                     x +
@@ -1754,7 +1759,13 @@ function createCellBoundaryLayer(
             id: 'cell-boundary-outline-layer',
             data: data.filter((d) => !d.hovered),
             getPath: (d: any) => d.polygon[0],
-            getColor: [253, 227, 9, 255],
+            getColor: (d: any) => {
+                if (d.selected) {
+                    return colors.selected.rgb;
+                }
+                return colors.unselectedBoundary.rgb;
+                // [253, 227, 9, 255]
+            },
             getWidth: 1,
             widthUnits: 'pixels',
             jointRounded: true,
