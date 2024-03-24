@@ -381,6 +381,11 @@ export const useCellMetaData = defineStore('cellMetaData', () => {
         return closest;
     }
 
+    function getCellIndexWithTime(track: Track, time: number | null): number {
+        // TODO: this could also be optimized with a binary search
+        return track.cells.findIndex((cell) => getTime(cell) === time);
+    }
+
     function initCells(rawData: AnyAttributes[]): void {
         cellArray.value = [];
         const timeSet = new Set<number>();
@@ -655,5 +660,6 @@ export const useCellMetaData = defineStore('cellMetaData', () => {
         startTime,
         timeList,
         getClosestTime,
+        getCellIndexWithTime,
     };
 });

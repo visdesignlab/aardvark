@@ -29,6 +29,8 @@ import { Pool } from 'geotiff';
 import type { Feature } from 'geojson';
 import { flextree, type LayoutNode } from 'd3-flextree';
 import { hierarchy } from 'd3-hierarchy';
+import { format } from 'd3-format';
+
 import {
     expandHeight,
     getMaxHeight,
@@ -327,6 +329,34 @@ onMounted(() => {
             renderDeckGL();
             return viewState;
         },
+        getTooltip: ({ object }) => {
+            if (!object) return null;
+            const trackId = object.trackId;
+            if (trackId == null) return null;
+            const time = hoveredTime.value;
+            if (time == null) return null;
+            const track = cellMetaData.trackMap?.get(trackId);
+            if (!track) return null;
+            const index = cellMetaData.getCellIndexWithTime(track, time);
+            if (index === -1) return null;
+            const cell = track.cells[index];
+            if (!cell) return null;
+            let html = `<h5>Cell: ${trackId}</h5>`;
+            html += `<div>Time: ${time}</div>`;
+            // const formatter = format('~s');
+            const formatter = format('.2f');
+            for (const {
+                attrKey,
+            } of looneageViewStore.horizonChartSettingList) {
+                const val = formatter(cell.attrNum[attrKey]);
+                html += `<div>${attrKey}: ${val}</div>`;
+            }
+
+            console.log(object);
+            return {
+                html,
+            };
+        },
         // onInteractionStateChange: () => console.log('onInteractionStateChange'),
         // onLoad: () => console.log('onLoad'),
     });
@@ -577,9 +607,7 @@ function processHorizonPickingInfo(info: PickingInfo): HorizonPickingResult {
         console.error('track not found when hovering');
         return result;
     }
-    const index = track.cells.findIndex(
-        (cell) => cellMetaData.getTime(cell) === newTime
-    );
+    const index = cellMetaData.getCellIndexWithTime(track, newTime);
     result.selectedSnippet = {
         trackId,
         index,
