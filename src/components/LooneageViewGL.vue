@@ -31,6 +31,7 @@ import type { Feature } from 'geojson';
 import { flextree, type LayoutNode } from 'd3-flextree';
 import { hierarchy } from 'd3-hierarchy';
 import { format } from 'd3-format';
+import colors from '@/util/colors';
 
 import {
     expandHeight,
@@ -543,8 +544,10 @@ function createHorizonChartLayers(): (
             ];
         },
         getFillColor: [255, 0, 255, 0],
-        getLineColor: [128, 128, 128, 255],
-        getLineWidth: 0,
+        getLineColor: colors.selected.rgb,
+        getLineWidth: (d: any) =>
+            d.trackId === dataPointSelection.selectedTrackId ? 3 : 0,
+        lineWidthUnits: 'pixels',
         onHover: (info: PickingInfo) => {
             if (!cellMetaData.trackMap) return;
             const { selectedSnippet, time } = processHorizonPickingInfo(info);
