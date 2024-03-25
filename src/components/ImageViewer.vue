@@ -587,10 +587,37 @@ function resetView() {
     });
 }
 
-const { hoveredTrackId } = storeToRefs(dataPointSelectionUntrracked);
+const { hoveredTrackId, triggerRecenter } = storeToRefs(
+    dataPointSelectionUntrracked
+);
+watch(hoveredTrackId, renderDeckGL);
+watch(triggerRecenter, () => {
+    const trackId = dataPointSelection.selectedTrackId;
+    if (trackId == null) return;
+    const track = cellMetaData.trackMap?.get(trackId);
+    if (track == null) return;
+    const cell = track.cells.find(
+        (cell) =>
+            cellMetaData.getFrame(cell) === dataPointSelection.currentFrameIndex
+    );
+    if (cell == null) return;
+    const position = cellMetaData.getPosition(cell);
+    position[1] += Math.random() * 0.001; // see https://github.com/visgl/deck.gl/issues/8198
+    const zoom = deckgl?.viewState?.ortho?.zoom ?? deckgl?.viewState?.zoom ?? 1;
+    deckgl.setProps({
+        initialViewState: {
+            zoom,
+            target: position,
+            minZoom: -8,
+            maxZoom: 8,
+        },
+    });
+
+    renderDeckGL();
+});
+
 watch(darkMode, renderDeckGL);
 watch(currentTrackArray, renderDeckGL);
-watch(hoveredTrackId, renderDeckGL);
 watch(dataPointSelection.$state, renderDeckGL);
 watch(imageViewerStore.$state, renderDeckGL);
 watch(contrastLimitSlider, renderDeckGL);

@@ -619,6 +619,7 @@ function createHorizonChartLayers(): (
             }
             if (!selectedSnippet) return;
             dataPointSelection.selectedTrackId = selectedSnippet.trackId;
+            dataPointSelectionUntrracked.setTriggerRecenter();
             if (!controlDown.value) return;
             if (shiftDown.value) {
                 selectedSnippet =
