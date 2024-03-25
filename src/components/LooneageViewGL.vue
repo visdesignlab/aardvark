@@ -1370,6 +1370,7 @@ function getSnippetBBox(
     const cell = track.cells[index];
     if (cell == null) {
         console.error('cell is null, can not get bbox');
+        console.error({ index, track });
         return [0, 0, 0, 0];
     }
     const t = cellMetaData.getTime(cell);

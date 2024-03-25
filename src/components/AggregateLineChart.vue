@@ -150,6 +150,28 @@ function onClick(trackId: string | null) {
 }
 function onHover(trackId: string | null) {
     dataPointSelectionUntrracked.hoveredTrackId = trackId;
+    if (trackId === null) {
+        dataPointSelectionUntrracked.hoveredCellIndex = null;
+    } else {
+        dataPointSelectionUntrracked.setHoveredCellIndex();
+    }
+}
+
+function onSvgClick() {
+    if (dataPointSelectionUntrracked.hoveredTime === null) return;
+    dataPointSelection.setCurrentFrameIndex(
+        dataPointSelectionUntrracked.hoveredTime
+    );
+}
+function onMouseMove(event: MouseEvent) {
+    const xPos = event.offsetX - margin.value.left;
+
+    let time = scaleX.value.invert(xPos);
+    time = cellMetaData.getClosestTime(time);
+    // if time is outside the range of time values do nothing
+    const timeExtent = scaleX.value.domain();
+    if (time < timeExtent[0] || time > timeExtent[1]) return;
+    dataPointSelectionUntrracked.hoveredTime = time;
 }
 </script>
 
@@ -157,7 +179,13 @@ function onHover(trackId: string | null) {
     <NoDataSplash></NoDataSplash>
     <div v-if="cellMetaData.dataInitialized" class="d-flex flex-column h-100">
         <div ref="aggLineChartContainer" class="h-100">
-            <svg :width="containerWidth" :height="containerHeight">
+            <svg
+                :width="containerWidth"
+                :height="containerHeight"
+                @mousemove="onMouseMove"
+                @mouseleave="dataPointSelectionUntrracked.hoveredTime = null"
+                @click="onSvgClick"
+            >
                 <g
                     ref="yAxisContainer"
                     class="no-select"
@@ -273,8 +301,8 @@ function onHover(trackId: string | null) {
                         ) in aggregateLineChartStore.aggLineDataList"
                         :key="index"
                         :d="areaGen(aggLine.data) ?? ''"
-                        @mouseenter="onHover(aggLine.trackId)"
-                        @mouseleave="onHover(null)"
+                        @mousemove="onHover(aggLine.trackId)"
+                        @mouseout="onHover(null)"
                         @click="onClick(aggLine.trackId)"
                     ></path>
                 </g>
