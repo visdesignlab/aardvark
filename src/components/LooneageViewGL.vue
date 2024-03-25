@@ -460,7 +460,9 @@ function createConnectingLinesLayer(): PathLayer | null {
         data: lines,
         getPath: (d: any) => d.path,
         getColor: (d: any) =>
-            d.selected ? globalSettings.normalizedSelectedRgb : [180, 180, 180],
+            d.selected
+                ? globalSettings.normalizedSelectedRgb
+                : colors.unselectedBoundary.rgb,
         getWidth: looneageViewStore.connectingLineWidth,
         widthUnits: 'pixels',
         jointRounded: true,

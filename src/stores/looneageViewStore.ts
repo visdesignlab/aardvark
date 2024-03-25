@@ -117,7 +117,7 @@ export const useLooneageViewStore = defineStore(storeId, () => {
     const maxDepth = ref<number>(2);
     const showSnippetImage = ref<boolean>(true);
     const showSnippetOutline = ref<boolean>(true);
-    const connectingLineWidth = ref<number>(1);
+    const connectingLineWidth = ref<number>(4);
     const spaceKeyframesEvenly = ref<boolean>(false);
 
     function getReasonableModHeight(key: string): number | null {
