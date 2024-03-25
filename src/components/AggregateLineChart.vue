@@ -46,9 +46,9 @@ const scaleX = computed(() => {
     ) {
         const frameMin = min(
             aggregateLineChartStore.aggLineDataList,
-            (agglineData: AggLineData) => {
+            (agglineData) => {
                 return min(
-                    agglineData,
+                    agglineData.data,
                     (aggPoint: AggDataPoint) => aggPoint.frame
                 );
             }
@@ -56,9 +56,9 @@ const scaleX = computed(() => {
 
         const frameMax = max(
             aggregateLineChartStore.aggLineDataList,
-            (agglineData: AggLineData) => {
+            (agglineData) => {
                 return max(
-                    agglineData,
+                    agglineData.data,
                     (aggPoint: AggDataPoint) => aggPoint.frame
                 );
             }
@@ -159,7 +159,19 @@ watch(yAxisGen, () => {
                             aggLine, index
                         ) in aggregateLineChartStore.aggLineDataList"
                         :key="index"
-                        :d="varianceAreaGen(aggLine) ?? ''"
+                        :d="varianceAreaGen(aggLine.data) ?? ''"
+                    ></path>
+                </g>
+                <g :transform="`translate(${margin.left},${margin.top})`">
+                    <path
+                        :class="`muted agg-line ${globalSettings.normalizedDark}`"
+                        v-for="(
+                            aggLine, index
+                        ) in aggregateLineChartStore.aggLineDataList.filter(
+                            (d) => d.muted
+                        )"
+                        :key="index"
+                        :d="areaGen(aggLine.data) ?? ''"
                     ></path>
                 </g>
                 <g :transform="`translate(${margin.left},${margin.top})`">
@@ -167,9 +179,11 @@ watch(yAxisGen, () => {
                         :class="`agg-line ${globalSettings.normalizedDark}`"
                         v-for="(
                             aggLine, index
-                        ) in aggregateLineChartStore.aggLineDataList"
+                        ) in aggregateLineChartStore.aggLineDataList.filter(
+                            (d) => !d.muted
+                        )"
                         :key="index"
-                        :d="areaGen(aggLine) ?? ''"
+                        :d="areaGen(aggLine.data) ?? ''"
                     ></path>
                 </g>
                 <g :transform="`translate(${margin.left},${margin.top})`">
@@ -205,13 +219,16 @@ watch(yAxisGen, () => {
     opacity: 0.25;
 }
 .agg-line {
-    stroke-width: 1px;
+    stroke-width: 3px;
     stroke-linejoin: round;
-    // opacity: 0.25;
+    opacity: 0.95;
 }
-
+.muted.agg-line {
+    stroke-width: 1px;
+    opacity: 0.6;
+}
 .selected.agg-line {
-    stroke-width: 2px;
+    stroke-width: 4px;
 }
 
 .selected.connection.agg-line {

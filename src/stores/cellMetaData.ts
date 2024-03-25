@@ -115,6 +115,22 @@ export const useCellMetaData = defineStore('cellMetaData', () => {
         return parent ?? null;
     }
 
+    function isDirectRelation(a: Track, b: Track): boolean {
+        // returns true if a is a direct descendant of b, or vice versa.
+        // this excludes siblings/aunt/uncle/cousin relationships
+        let aParent = a;
+        while (hasParent(aParent)) {
+            aParent = getParent(aParent)!;
+            if (aParent.trackId === b.trackId) return true;
+        }
+        let bParent = b;
+        while (hasParent(bParent)) {
+            bParent = getParent(bParent)!;
+            if (bParent.trackId === a.trackId) return true;
+        }
+        return false;
+    }
+
     function getLineageId(track: Track): string {
         let founderCell = track;
         while (hasParent(founderCell)) {
@@ -660,6 +676,7 @@ export const useCellMetaData = defineStore('cellMetaData', () => {
         getTime,
         getFrame,
         getParent,
+        isDirectRelation,
         getPosition,
         getNumAttr,
         createFrameMap,

@@ -1183,7 +1183,7 @@ function createKeyFrameSnippets(): KeyFrameSnippetsResult | null {
                 hoveredSnippet.value?.trackId === d.trackId &&
                 hoveredSnippet.value?.index === d.index
             ) {
-                return 1;
+                return 4;
             }
             return 0;
         },
