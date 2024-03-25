@@ -118,10 +118,12 @@ onMounted(() => {
         // onLoad: () => console.log('onLoad'),
 
         getTooltip: ({ object }) => {
+            console.log(object);
             if (!object) return null;
-            const { id, frame } = object.properties;
+            let { id, frame } = object.properties;
             if (id == null) return null;
             if (frame == null) return null;
+            id = id.toString();
             const track = cellMetaData.trackMap?.get(id);
             if (!track) return null;
             const index = cellMetaData.getCellIndexWithFrame(track, frame);
