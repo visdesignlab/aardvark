@@ -280,161 +280,182 @@ function storeSetup() {
         };
     }
 
-    const hoveredLineData = computed<AggLineData>(() => {
-        // if (targetKey.value !== 'selected lineage') {
-        //     return [];
-        // }
-        const trackId = dataPointSelectionUntrracked.hoveredTrackId;
-        if (trackId === null) {
-            return [];
-        }
-        const selectedTrack = cellMetaData.trackMap?.get(trackId);
-        if (!selectedTrack) {
-            return [];
-        }
-        const aggLineData: AggLineData = [];
-        for (const cell of selectedTrack.cells) {
-            const time = cellMetaData.getTime(cell);
-            const value = accessor.value(cell);
-            const count = 1;
-            aggLineData.push({ time, value, count });
-        }
-        return medianFilterSmooth(aggLineData);
-    });
-
-    const selectedLineData = computed<AggLineData>(() => {
-        if (targetKey.value !== 'selected lineage') {
-            return [];
-        }
-        const trackId = dataPointSelection.selectedTrackId;
-        if (trackId === null) {
-            return [];
-        }
-        const selectedTrack = cellMetaData.trackMap?.get(trackId);
-        if (!selectedTrack) {
-            return [];
-        }
-        const aggLineData: AggLineData = [];
-        for (const cell of selectedTrack.cells) {
-            const time = cellMetaData.getTime(cell);
-            const value = accessor.value(cell);
-            const count = 1;
-            aggLineData.push({ time, value, count });
-        }
-        return medianFilterSmooth(aggLineData);
-    });
-
-    const aggLineDataList = computed<{ data: AggLineData; muted: boolean }[]>(
+    const hoveredLineData = computed<{ data: AggLineData; trackId: string }>(
         () => {
-            switch (targetKey.value) {
-                case 'selected lineage': {
-                    const lineageId = dataPointSelection.selectedLineageId;
-                    if (!lineageId) return [];
-                    const lineage = cellMetaData.lineageMap?.get(lineageId);
-                    if (!lineage) return [];
+            // if (targetKey.value !== 'selected lineage') {
+            //     return [];
+            // }
+            const trackId = dataPointSelectionUntrracked.hoveredTrackId;
+            if (trackId === null) {
+                return { data: [], trackId: '' };
+            }
+            const selectedTrack = cellMetaData.trackMap?.get(trackId);
+            if (!selectedTrack) {
+                return { data: [], trackId: '' };
+            }
+            const aggLineData: AggLineData = [];
+            for (const cell of selectedTrack.cells) {
+                const time = cellMetaData.getTime(cell);
+                const value = accessor.value(cell);
+                const count = 1;
+                aggLineData.push({ time, value, count });
+            }
 
-                    const trackId = dataPointSelection.selectedTrackId;
-                    const selectedTrack =
-                        trackId === null
-                            ? null
-                            : cellMetaData.trackMap?.get(trackId);
+            const data: AggLineData = medianFilterSmooth(aggLineData);
+            return { data, trackId };
+        }
+    );
 
-                    const result: { data: AggLineData; muted: boolean }[] = [];
-                    for (const track of cellMetaData.makeLineageTrackIterator(
-                        lineage.founder,
-                        looneageViewStore.maxDepth
-                    )) {
-                        const aggLineData: AggLineData = [];
-                        for (const cell of track.cells) {
-                            const time = cellMetaData.getTime(cell);
-                            const value = accessor.value(cell);
-                            const count = 1;
-                            aggLineData.push({ time, value, count });
-                        }
-                        const muted = selectedTrack
-                            ? !cellMetaData.isDirectRelation(
-                                  track,
-                                  selectedTrack
-                              )
-                            : false;
-                        result.push({
-                            data: medianFilterSmooth(aggLineData),
-                            muted,
-                        });
+    const selectedLineData = computed<{ data: AggLineData; trackId: string }>(
+        () => {
+            if (targetKey.value !== 'selected lineage') {
+                return { data: [], trackId: '' };
+            }
+            const trackId = dataPointSelection.selectedTrackId;
+            if (trackId === null) {
+                return { data: [], trackId: '' };
+            }
+            const selectedTrack = cellMetaData.trackMap?.get(trackId);
+            if (!selectedTrack) {
+                return { data: [], trackId: '' };
+            }
+            const aggLineData: AggLineData = [];
+            for (const cell of selectedTrack.cells) {
+                const time = cellMetaData.getTime(cell);
+                const value = accessor.value(cell);
+                const count = 1;
+                aggLineData.push({ time, value, count });
+            }
+            const data: AggLineData = medianFilterSmooth(aggLineData);
+            return { data, trackId };
+        }
+    );
+
+    const aggLineDataList = computed<
+        { data: AggLineData; muted: boolean; trackId: string }[]
+    >(() => {
+        switch (targetKey.value) {
+            case 'selected lineage': {
+                const lineageId = dataPointSelection.selectedLineageId;
+                if (!lineageId) return [];
+                const lineage = cellMetaData.lineageMap?.get(lineageId);
+                if (!lineage) return [];
+
+                const trackId = dataPointSelection.selectedTrackId;
+                const selectedTrack =
+                    trackId === null
+                        ? null
+                        : cellMetaData.trackMap?.get(trackId);
+
+                const result: {
+                    data: AggLineData;
+                    muted: boolean;
+                    trackId: string;
+                }[] = [];
+                for (const track of cellMetaData.makeLineageTrackIterator(
+                    lineage.founder,
+                    looneageViewStore.maxDepth
+                )) {
+                    const aggLineData: AggLineData = [];
+                    for (const cell of track.cells) {
+                        const time = cellMetaData.getTime(cell);
+                        const value = accessor.value(cell);
+                        const count = 1;
+                        aggLineData.push({ time, value, count });
                     }
-                    return result;
+                    const muted = selectedTrack
+                        ? !cellMetaData.isDirectRelation(track, selectedTrack)
+                        : false;
+                    result.push({
+                        data: medianFilterSmooth(aggLineData),
+                        muted,
+                        trackId: track.trackId,
+                    });
                 }
-                case 'entire location combined': {
-                    const singleLine: AggLineData = [];
-                    for (const time of cellMetaData?.timeList ?? []) {
-                        const cellsAtTime = cellMetaData.timeMap.get(time);
+                return result;
+            }
+            case 'entire location combined': {
+                const singleLine: AggLineData = [];
+                for (const time of cellMetaData?.timeList ?? []) {
+                    const cellsAtTime = cellMetaData.timeMap.get(time);
+                    if (!cellsAtTime) continue;
+                    const count = cellsAtTime.length;
+                    if (!aggregator.value) continue;
+                    const value = aggregator.value(cellsAtTime);
+                    if (!value) continue;
+                    const variance = varianceCalculator.value(
+                        cellsAtTime,
+                        value
+                    ) as [number, number] | undefined;
+                    singleLine.push({ time, value, count, variance });
+                }
+                return [
+                    {
+                        data: medianFilterSmooth(singleLine),
+                        muted: false,
+                        trackId: '',
+                    },
+                ];
+            }
+            case 'cell lineages combined': {
+                if (!cellMetaData?.lineageArray) return [];
+
+                const result: {
+                    data: AggLineData;
+                    muted: boolean;
+                    trackId: string;
+                }[] = [];
+
+                for (const lineage of cellMetaData.lineageArray) {
+                    const aggLineData: AggLineData = [];
+                    const cells = cellMetaData.makeLineageCellIterator(
+                        lineage.founder
+                    );
+                    const lineageTimeMap = cellMetaData.createTimeMap(cells);
+                    const timeList = cellMetaData.getSortedKeys(lineageTimeMap);
+                    for (const time of timeList) {
+                        const cellsAtTime = lineageTimeMap.get(time);
                         if (!cellsAtTime) continue;
                         const count = cellsAtTime.length;
                         if (!aggregator.value) continue;
                         const value = aggregator.value(cellsAtTime);
                         if (!value) continue;
-                        const variance = varianceCalculator.value(
-                            cellsAtTime,
-                            value
-                        ) as [number, number] | undefined;
-                        singleLine.push({ time, value, count, variance });
+                        aggLineData.push({ time, value, count });
                     }
-                    return [
-                        { data: medianFilterSmooth(singleLine), muted: false },
-                    ];
+                    result.push({
+                        data: medianFilterSmooth(aggLineData),
+                        muted: false,
+                        trackId: lineage.lineageId,
+                    });
                 }
-                case 'cell lineages combined': {
-                    if (!cellMetaData?.lineageArray) return [];
-
-                    const result: { data: AggLineData; muted: boolean }[] = [];
-
-                    for (const lineage of cellMetaData.lineageArray) {
-                        const aggLineData: AggLineData = [];
-                        const cells = cellMetaData.makeLineageCellIterator(
-                            lineage.founder
-                        );
-                        const lineageTimeMap =
-                            cellMetaData.createTimeMap(cells);
-                        const timeList =
-                            cellMetaData.getSortedKeys(lineageTimeMap);
-                        for (const time of timeList) {
-                            const cellsAtTime = lineageTimeMap.get(time);
-                            if (!cellsAtTime) continue;
-                            const count = cellsAtTime.length;
-                            if (!aggregator.value) continue;
-                            const value = aggregator.value(cellsAtTime);
-                            if (!value) continue;
-                            aggLineData.push({ time, value, count });
-                        }
-                        result.push({
-                            data: medianFilterSmooth(aggLineData),
-                            muted: false,
-                        });
-                    }
-                    return result;
-                }
-                case 'individual cell tracks': {
-                    if (!cellMetaData?.trackArray) return [];
-                    const result: { data: AggLineData; muted: boolean }[] = [];
-                    for (const track of cellMetaData.trackArray) {
-                        const aggLineData: AggLineData = [];
-                        for (const cell of track.cells) {
-                            const time = cellMetaData.getTime(cell);
-                            const value = accessor.value(cell);
-                            const count = 1;
-                            aggLineData.push({ time, value, count });
-                        }
-                        result.push({
-                            data: medianFilterSmooth(aggLineData),
-                            muted: true,
-                        });
-                    }
-                    return result;
-                }
+                return result;
             }
-            return [];
+            case 'individual cell tracks': {
+                if (!cellMetaData?.trackArray) return [];
+                const result: {
+                    data: AggLineData;
+                    muted: boolean;
+                    trackId: string;
+                }[] = [];
+                for (const track of cellMetaData.trackArray) {
+                    const aggLineData: AggLineData = [];
+                    for (const cell of track.cells) {
+                        const time = cellMetaData.getTime(cell);
+                        const value = accessor.value(cell);
+                        const count = 1;
+                        aggLineData.push({ time, value, count });
+                    }
+                    result.push({
+                        data: medianFilterSmooth(aggLineData),
+                        muted: true,
+                        trackId: track.trackId,
+                    });
+                }
+                return result;
+            }
         }
-    );
+        return [];
+    });
 
     const aggLineDataListExtent = computed(() => {
         const minVal = min(aggLineDataList.value, (aggLineData) => {

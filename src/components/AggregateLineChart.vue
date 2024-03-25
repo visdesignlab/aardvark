@@ -144,6 +144,13 @@ watch(yAxisGen, () => {
     if (!yAxisContainer.value) return;
     select(yAxisContainer.value).call(yAxisGen.value);
 });
+
+function onClick(trackId: string | null) {
+    dataPointSelection.selectedTrackId = trackId;
+}
+function onHover(trackId: string | null) {
+    dataPointSelectionUntrracked.hoveredTrackId = trackId;
+}
 </script>
 
 <template>
@@ -220,8 +227,9 @@ watch(yAxisGen, () => {
                         :class="`selected agg-line ${globalSettings.normalizedDark}`"
                         v-if="aggregateLineChartStore.selectedLineData"
                         :d="
-                            areaGen(aggregateLineChartStore.selectedLineData) ??
-                            ''
+                            areaGen(
+                                aggregateLineChartStore.selectedLineData.data
+                            ) ?? ''
                         "
                     ></path>
                 </g>
@@ -250,9 +258,24 @@ watch(yAxisGen, () => {
                         :class="`hovered agg-line ${globalSettings.normalizedDark}`"
                         v-if="aggregateLineChartStore.hoveredLineData"
                         :d="
-                            areaGen(aggregateLineChartStore.hoveredLineData) ??
-                            ''
+                            areaGen(
+                                aggregateLineChartStore.hoveredLineData.data
+                            ) ?? ''
                         "
+                    ></path>
+                </g>
+
+                <g :transform="`translate(${margin.left},${margin.top})`">
+                    <path
+                        :class="`picking agg-line ${globalSettings.normalizedDark}`"
+                        v-for="(
+                            aggLine, index
+                        ) in aggregateLineChartStore.aggLineDataList"
+                        :key="index"
+                        :d="areaGen(aggLine.data) ?? ''"
+                        @mouseenter="onHover(aggLine.trackId)"
+                        @mouseleave="onHover(null)"
+                        @click="onClick(aggLine.trackId)"
                     ></path>
                 </g>
             </svg>
@@ -297,6 +320,11 @@ watch(yAxisGen, () => {
     stroke-width: 1.5px;
     stroke: rgb(130, 130, 130);
     fill: rgb(130, 130, 130);
+}
+
+.picking.agg-line {
+    stroke-width: 6;
+    opacity: 0;
 }
 
 .dark {
