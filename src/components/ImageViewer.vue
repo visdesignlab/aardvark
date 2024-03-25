@@ -13,6 +13,7 @@ import { useDataPointSelection } from '@/stores/dataPointSelection';
 import { useImageViewerStore } from '@/stores/imageViewerStore';
 import { useImageViewerStoreUntrracked } from '@/stores/imageViewerStoreUntrracked';
 import { useDatasetSelectionStore } from '@/stores/datasetSelectionStore';
+import { useDataPointSelectionUntrracked } from '@/stores/dataPointSelectionUntrracked';
 import { useSegmentationStore } from '@/stores/segmentationStore';
 import { useEventBusStore } from '@/stores/eventBusStore';
 import { clamp } from 'lodash-es';
@@ -48,6 +49,7 @@ const dataPointSelection = useDataPointSelection();
 const imageViewerStore = useImageViewerStore();
 const imageViewerStoreUntrracked = useImageViewerStoreUntrracked();
 const datasetSelectionStore = useDatasetSelectionStore();
+const dataPointSelectionUntrracked = useDataPointSelectionUntrracked();
 const { currentLocationMetadata } = storeToRefs(datasetSelectionStore);
 const { contrastLimitSlider } = storeToRefs(imageViewerStoreUntrracked);
 const eventBusStore = useEventBusStore();
@@ -209,7 +211,8 @@ function createSegmentationsLayer(): typeof GeoJsonLayer {
         filled: true,
         getFillColor: (info) => {
             if (
-                info.properties?.id?.toString() === cellMetaData.hoveredTrackId
+                info.properties?.id?.toString() ===
+                dataPointSelectionUntrracked.hoveredTrackId
             ) {
                 return hoverColorWithAlpha;
             }
@@ -222,7 +225,8 @@ function createSegmentationsLayer(): typeof GeoJsonLayer {
             ) {
                 return globalSettings.normalizedSelectedRgb;
             } else if (
-                info.properties?.id?.toString() === cellMetaData.hoveredTrackId
+                info.properties?.id?.toString() ===
+                dataPointSelectionUntrracked.hoveredTrackId
             ) {
                 return colors.hovered.rgb;
             }
@@ -241,7 +245,7 @@ function createSegmentationsLayer(): typeof GeoJsonLayer {
         onHover: onHover,
         onClick: onClick,
         updateTriggers: {
-            getFillColor: cellMetaData.hoveredTrackId,
+            getFillColor: dataPointSelectionUntrracked.hoveredTrackId,
             getLineColor: dataPointSelection.selectedTrackId,
             getLineWidth: dataPointSelection.selectedTrackId,
         },
@@ -256,12 +260,13 @@ interface GeoJsonFeature {
 
 function onHover(info: PickingInfo): void {
     if (!info.object) {
-        cellMetaData.hoveredTrackId = null;
+        dataPointSelectionUntrracked.hoveredTrackId = null;
         return;
     }
     const geoJsonFeature = info.object as GeoJsonFeature;
     // console.log(geoJsonFeature);
-    cellMetaData.hoveredTrackId = geoJsonFeature.properties.id?.toString();
+    dataPointSelectionUntrracked.hoveredTrackId =
+        geoJsonFeature.properties.id?.toString();
 }
 
 function onClick(info: PickingInfo): void {
@@ -578,7 +583,7 @@ function resetView() {
     });
 }
 
-const { hoveredTrackId } = storeToRefs(cellMetaData);
+const { hoveredTrackId } = storeToRefs(dataPointSelectionUntrracked);
 watch(darkMode, renderDeckGL);
 watch(currentTrackArray, renderDeckGL);
 watch(hoveredTrackId, renderDeckGL);
@@ -592,7 +597,9 @@ watch(contrastLimitSlider, renderDeckGL);
         id="super-cool-unique-id"
         ref="deckGlContainer"
         :class="
-            cellMetaData.hoveredTrackId !== null ? 'force-default-cursor' : ''
+            dataPointSelectionUntrracked.hoveredTrackId !== null
+                ? 'force-default-cursor'
+                : ''
         "
         @reset-image-view="resetView"
     ></canvas>

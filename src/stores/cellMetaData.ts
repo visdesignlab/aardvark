@@ -156,10 +156,6 @@ export const useCellMetaData = defineStore('cellMetaData', () => {
         }
         dataPointSelection.selectedTrackId = track.trackId;
     }
-
-    const hoveredTrackId = ref<string | null>(null);
-    // this is not in dataPointSelection because I don't want to trrrrack it.
-
     const frameMap = computed<Map<number, Cell[]>>(() => {
         const map = new Map<number, Cell[]>();
         if (!dataInitialized.value) return map;
@@ -653,7 +649,6 @@ export const useCellMetaData = defineStore('cellMetaData', () => {
         headerKeys,
         headers,
         dataInitialized,
-        hoveredTrackId,
         cellArray, // TODO: expand to handle multiple locations
         trackArray, // TODO: expand to handle multiple locations
         trackMap, // TODO: expand to handle multiple locations
