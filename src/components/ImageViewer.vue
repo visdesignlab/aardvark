@@ -196,6 +196,8 @@ function createSegmentationsLayer(): typeof GeoJsonLayer {
     );
     // console.log(folderUrl);
     // @ts-ignore
+    const hoverColorWithAlpha = colors.hovered.rgba;
+    hoverColorWithAlpha[3] = 128;
     return new GeoJsonLayer({
         data: segmentationStore.getFrameSegmentations(
             imageViewerStore.frameNumber
@@ -209,7 +211,7 @@ function createSegmentationsLayer(): typeof GeoJsonLayer {
             if (
                 info.properties?.id?.toString() === cellMetaData.hoveredTrackId
             ) {
-                return [255, 255, 255, 128];
+                return hoverColorWithAlpha;
             }
             return [0, 0, 0, 0];
         },
@@ -219,6 +221,10 @@ function createSegmentationsLayer(): typeof GeoJsonLayer {
                 dataPointSelection.selectedTrackId
             ) {
                 return globalSettings.normalizedSelectedRgb;
+            } else if (
+                info.properties?.id?.toString() === cellMetaData.hoveredTrackId
+            ) {
+                return colors.hovered.rgb;
             }
             return colors.unselectedBoundary.rgb;
         },

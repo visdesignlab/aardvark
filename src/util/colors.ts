@@ -11,21 +11,21 @@ const colors: {
     //     rgb: [255, 207, 118],
     //     rgba: [255, 207, 118, 255],
     // },
-    selected: {
-        hex: '#E29609',
-        rgb: [226, 150, 9],
-        rgba: [226, 150, 9, 255],
-    },
+    // selected: {
+    //     hex: '#E29609',
+    //     rgb: [226, 150, 9],
+    //     rgba: [226, 150, 9, 255],
+    // },
     hovered: {
         hex: '#FFCF76',
         rgb: [255, 207, 118],
         rgba: [255, 207, 118, 255],
     },
-    selectedDarkTheme: {
-        hex: '#fde309',
-        rgb: [253, 227, 9],
-        rgba: [253, 227, 9, 255],
-    },
+    // selectedDarkTheme: {
+    //     hex: '#fde309',
+    //     rgb: [253, 227, 9],
+    //     rgba: [253, 227, 9, 255],
+    // },
 
     // selected: {
     //     hex: '#fde309',
