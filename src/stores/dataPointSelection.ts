@@ -12,10 +12,18 @@ export const useDataPointSelection = defineStore('dataPointSelection', () => {
         return cellMetaData.timeList[currentFrameIndex.value];
     });
 
+    function setCurrentFrameIndex(time: number) {
+        const index = cellMetaData.timeList.findIndex((t) => t === time);
+        if (index !== -1) {
+            currentFrameIndex.value = index;
+        }
+    }
+
     return {
         selectedTrackId,
         selectedLineageId,
         currentFrameIndex,
         currentTime,
+        setCurrentFrameIndex,
     };
 });

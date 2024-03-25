@@ -287,14 +287,14 @@ watch(yAxisGen, () => {
     opacity: 0.7;
 }
 .hovered.time.agg-line {
-    stroke-width: 1px;
-    stroke-dasharray: 3;
+    stroke-width: 0.5px;
+    // stroke-dasharray: 1 2;
     stroke: rgb(130, 130, 130);
     fill: rgb(130, 130, 130);
 }
 
 .current.time.agg-line {
-    stroke-width: 1px;
+    stroke-width: 1.5px;
     stroke: rgb(130, 130, 130);
     fill: rgb(130, 130, 130);
 }

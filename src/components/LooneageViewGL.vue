@@ -114,13 +114,41 @@ useKeypress({
     },
     keyBinds: [],
 });
-
 function onShiftDown() {
     shiftDown.value = true;
 }
 
 function onShiftUp() {
     shiftDown.value = false;
+}
+
+const controlDown = ref(false);
+useKeypress({
+    keyEvent: 'keydown',
+    onAnyKey: (e: any) => {
+        const event = e.event as KeyboardEvent;
+        if (event.code === 'ControlLeft' || event.code === 'ControlRight') {
+            onControlDown();
+        }
+    },
+    keyBinds: [],
+});
+useKeypress({
+    keyEvent: 'keyup',
+    onAnyKey: (e: any) => {
+        const event = e.event as KeyboardEvent;
+        if (event.code === 'ControlLeft' || event.code === 'ControlRight') {
+            onControlUp();
+        }
+    },
+    keyBinds: [],
+});
+function onControlDown() {
+    controlDown.value = true;
+}
+
+function onControlUp() {
+    controlDown.value = false;
 }
 
 const deckGlContainer = ref(null);
@@ -585,8 +613,13 @@ function createHorizonChartLayers(): (
         },
         onClick: (info: PickingInfo) => {
             if (!cellMetaData.trackMap) return;
-            let { selectedSnippet } = processHorizonPickingInfo(info);
+            let { selectedSnippet, time } = processHorizonPickingInfo(info);
+            if (time !== null) {
+                dataPointSelection.setCurrentFrameIndex(time);
+            }
             if (!selectedSnippet) return;
+            dataPointSelection.selectedTrackId = selectedSnippet.trackId;
+            if (!controlDown.value) return;
             if (shiftDown.value) {
                 selectedSnippet =
                     looneageViewStore.concealPinnedSnippet(selectedSnippet);
@@ -1774,9 +1807,9 @@ function viewportBBox(includeBuffer = true): BBox {
 }
 
 function createCurrentTimeLayer(): PathLayer | null {
-    if (dataPointSelectionUntrracked.hoveredTime === null) return null;
+    if (dataPointSelection.currentTime === null) return null;
     // we place the start time at x=0, so we need to subtract the start time
-    const x = dataPointSelectionUntrracked.hoveredTime - lineageMinTime.value;
+    const x = dataPointSelection.currentTime - lineageMinTime.value;
     const a = [x, 1000];
     const b = [x, -1000];
     return new PathLayer({
@@ -1938,6 +1971,7 @@ function renderDeckGL(): void {
     if (cellMetaData.selectedLineage == null) return;
     const layers = [];
 
+    layers.push(createCurrentTimeLayer());
     layers.push(createConnectingLinesLayer());
     layers.push(createTickMarksLayer());
     layers.push(createHorizonChartLayers());
@@ -1986,7 +2020,6 @@ function renderDeckGL(): void {
             layers.push(pickingLayer);
         }
     }
-    // layers.push(createCurrentTimeLayer());
 
     // layers.push(createViewportRectangleLayer());
     deckgl.setProps({
