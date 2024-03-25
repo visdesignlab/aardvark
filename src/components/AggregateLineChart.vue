@@ -6,17 +6,20 @@ import { useGlobalSettings } from '@/stores/globalSettings';
 import {
     useAggregateLineChartStore,
     type AggDataPoint,
+    type AggLineData,
 } from '@/stores/aggregateLineChartStore';
 import { scaleLinear } from 'd3-scale';
-import { extent } from 'd3-array';
+import { extent, max, min } from 'd3-array';
 import { area, line } from 'd3-shape';
 import { axisBottom, axisLeft } from 'd3-axis';
 import { select } from 'd3-selection';
 import { format } from 'd3-format';
+import { useDataPointSelection } from '@/stores/dataPointSelection';
 
 const cellMetaData = useCellMetaData();
 const globalSettings = useGlobalSettings();
 const aggregateLineChartStore = useAggregateLineChartStore();
+const dataPointSelection = useDataPointSelection();
 
 const aggLineChartContainer = ref(null);
 const { width: containerWidth, height: outerContainerHeight } = useElementSize(
@@ -38,9 +41,35 @@ const chartHeight = computed(
 );
 
 const scaleX = computed(() => {
-    return scaleLinear()
-        .domain(extent(cellMetaData.frameList) as [number, number])
-        .range([0, chartWidth.value]);
+    let domain = extent(cellMetaData.frameList) as [number, number];
+    if (
+        aggregateLineChartStore.aggLineDataList &&
+        aggregateLineChartStore.aggLineDataList.length > 0
+    ) {
+        const frameMin = min(
+            aggregateLineChartStore.aggLineDataList,
+            (agglineData: AggLineData) => {
+                return min(
+                    agglineData,
+                    (aggPoint: AggDataPoint) => aggPoint.frame
+                );
+            }
+        );
+
+        const frameMax = max(
+            aggregateLineChartStore.aggLineDataList,
+            (agglineData: AggLineData) => {
+                return max(
+                    agglineData,
+                    (aggPoint: AggDataPoint) => aggPoint.frame
+                );
+            }
+        );
+        if (frameMin != null && frameMax != null) {
+            domain = [frameMin, frameMax];
+        }
+    }
+    return scaleLinear().domain(domain).range([0, chartWidth.value]);
 });
 
 const scaleY = computed(() => {
