@@ -558,9 +558,21 @@ function createHorizonChartLayers(): (
             ];
         },
         getFillColor: [255, 0, 255, 0],
-        getLineColor: globalSettings.normalizedSelectedRgb,
-        getLineWidth: (d: any) =>
-            d.trackId === dataPointSelection.selectedTrackId ? 3 : 0,
+        getLineColor: (d) =>
+            d.trackId === dataPointSelectionUntrracked.hoveredTrackId
+                ? colors.hovered.rgb
+                : globalSettings.normalizedSelectedRgb,
+        getLineWidth: (d: any) => {
+            if (d.trackId === dataPointSelection.selectedTrackId) {
+                return 3;
+            } else if (
+                d.trackId === dataPointSelectionUntrracked.hoveredTrackId
+            ) {
+                return 5;
+            } else {
+                return 0;
+            }
+        },
         lineWidthUnits: 'pixels',
         onHover: (info: PickingInfo) => {
             if (!cellMetaData.trackMap) return;
@@ -568,6 +580,8 @@ function createHorizonChartLayers(): (
             if (isEqual(selectedSnippet, hoveredSnippet.value)) return;
             dataPointSelectionUntrracked.hoveredTime = time;
             hoveredSnippet.value = selectedSnippet;
+            dataPointSelectionUntrracked.hoveredTrackId =
+                selectedSnippet?.trackId ?? null;
             renderDeckGL();
         },
         onClick: (info: PickingInfo) => {
@@ -1959,7 +1973,7 @@ function renderDeckGL(): void {
             layers.push(pickingLayer);
         }
     }
-    layers.push(createCurrentTimeLayer());
+    // layers.push(createCurrentTimeLayer());
 
     // layers.push(createViewportRectangleLayer());
     deckgl.setProps({
@@ -1969,6 +1983,7 @@ function renderDeckGL(): void {
 }
 watch(darkMode, renderDeckGL);
 watch(dataPointSelection.$state, renderDeckGL);
+watch(dataPointSelectionUntrracked.$state, renderDeckGL);
 watch(imageViewerStore.$state, renderDeckGL);
 watch(looneageViewStore.$state, renderDeckGL);
 watch(contrastLimitSlider, renderDeckGL);
