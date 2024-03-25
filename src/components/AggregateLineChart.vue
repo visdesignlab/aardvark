@@ -196,7 +196,16 @@ watch(yAxisGen, () => {
                         "
                     ></path>
                 </g>
-
+                <g :transform="`translate(${margin.left},${margin.top})`">
+                    <path
+                        :class="`connection agg-line ${globalSettings.normalizedDark}`"
+                        v-for="(
+                            aggLine, index
+                        ) in aggregateLineChartStore.extendedSelectedLineLineageConnections"
+                        :key="index"
+                        :d="lineGen(aggLine) ?? ''"
+                    ></path>
+                </g>
                 <g :transform="`translate(${margin.left},${margin.top})`">
                     <path
                         :class="`connection selected agg-line ${globalSettings.normalizedDark}`"
@@ -231,7 +240,7 @@ watch(yAxisGen, () => {
     stroke-width: 4px;
 }
 
-.selected.connection.agg-line {
+.connection.agg-line {
     stroke-dasharray: 4.5 6;
     stroke-width: 1.5px;
     opacity: 0.7;

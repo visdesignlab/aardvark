@@ -180,6 +180,51 @@ function storeSetup() {
         return (cell: Cell) => cell.attrNum[attributeKey.value];
     });
 
+    const extendedSelectedLineLineageConnections = computed<AggLineData[]>(
+        () => {
+            if (targetKey.value !== 'selected lineage') {
+                return [];
+            }
+            const trackId = dataPointSelection.selectedTrackId;
+            if (trackId === null) {
+                return [];
+            }
+            const selectedTrack = cellMetaData.trackMap?.get(trackId);
+            if (!selectedTrack) {
+                return [];
+            }
+            const result: AggLineData[] = [];
+
+            let child = cellMetaData.getParent(selectedTrack);
+            let parent: Track | null = null;
+
+            // start with parent/grandparent connection and move up since this is the extended connections
+            if (child) {
+                parent = cellMetaData.getParent(child);
+            }
+            while (parent && child) {
+                const parentSelectedLine: AggLineData = [];
+                parentSelectedLine.push(getLastPoint(parent));
+                parentSelectedLine.push(getFirstPoint(child));
+                result.push(parentSelectedLine);
+                child = parent;
+                parent = cellMetaData.getParent(child);
+            }
+
+            // next add lines between the children of selected and grandchildren
+            for (const child of selectedTrack.children) {
+                for (const grandchild of child.children) {
+                    const childSelectedLine: AggLineData = [];
+                    childSelectedLine.push(getLastPoint(child));
+                    childSelectedLine.push(getFirstPoint(grandchild));
+                    result.push(childSelectedLine);
+                }
+            }
+
+            return result;
+        }
+    );
+
     const selectedLineLineageConnections = computed<AggLineData[]>(() => {
         if (targetKey.value !== 'selected lineage') {
             return [];
@@ -416,6 +461,7 @@ function storeSetup() {
         aggLineDataListExtent,
         selectedLineData,
         selectedLineLineageConnections,
+        extendedSelectedLineLineageConnections,
         showVarianceBand,
     };
 }
