@@ -254,7 +254,7 @@ watch(yAxisGen, () => {
 }
 
 .dark.selected {
-    stroke: #b6a402;
+    stroke: #e29609;
 }
 
 .light {

@@ -57,12 +57,12 @@ export const useLooneageViewStore = defineStore(storeId, () => {
             {
                 attrKey,
                 positiveColorScheme: {
-                    label: 'Red',
-                    value: schemeReds,
-                },
-                negativeColorScheme: {
                     label: 'Blue',
                     value: schemeBlues,
+                },
+                negativeColorScheme: {
+                    label: 'Red',
+                    value: schemeReds,
                 },
                 modHeight,
                 baseline: 0,

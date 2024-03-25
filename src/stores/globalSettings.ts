@@ -123,6 +123,20 @@ export const useGlobalSettings = defineStore('globalSettings', () => {
         return navigator.userAgent.toLowerCase().includes('mac');
     });
 
+    const normalizedSelectedHex = computed<string>(() => {
+        return darkMode.value ? '#fde309' : '#E29609';
+    });
+
+    const normalizedSelectedRgb = computed<[number, number, number]>(() => {
+        return darkMode.value ? [253, 227, 9] : [226, 150, 9];
+    });
+
+    const normalizedSelectedRgba = computed<[number, number, number, number]>(
+        () => {
+            return darkMode.value ? [253, 227, 9, 255] : [226, 150, 9, 255];
+        }
+    );
+
     // settings open/close state
     const settingsAccordion = ref({
         general: true,
@@ -153,6 +167,9 @@ export const useGlobalSettings = defineStore('globalSettings', () => {
         normalizedBlack,
         normalizedDark,
         normalizedLight,
+        normalizedSelectedHex,
+        normalizedSelectedRgb,
+        normalizedSelectedRgba,
         usingMac,
         settingsAccordion,
         openComponentSetting,

@@ -18,6 +18,7 @@ import { useEventBusStore } from '@/stores/eventBusStore';
 import { clamp } from 'lodash-es';
 import { Pool } from 'geotiff';
 import { useLooneageViewStore } from '@/stores/looneageViewStore';
+import { useGlobalSettings } from '@/stores/globalSettings';
 
 import {
     loadOmeTiff,
@@ -40,6 +41,8 @@ import { format } from 'd3-format';
 import colors from '@/util/colors';
 
 const cellMetaData = useCellMetaData();
+const globalSettings = useGlobalSettings();
+const { darkMode } = storeToRefs(globalSettings);
 const segmentationStore = useSegmentationStore();
 const dataPointSelection = useDataPointSelection();
 const imageViewerStore = useImageViewerStore();
@@ -49,7 +52,6 @@ const { currentLocationMetadata } = storeToRefs(datasetSelectionStore);
 const { contrastLimitSlider } = storeToRefs(imageViewerStoreUntrracked);
 const eventBusStore = useEventBusStore();
 const looneageViewStore = useLooneageViewStore();
-
 const deckGlContainer = ref(null);
 const { width: containerWidth, height: containerHeight } =
     useElementSize(deckGlContainer);
@@ -216,7 +218,7 @@ function createSegmentationsLayer(): typeof GeoJsonLayer {
                 info.properties?.id?.toString() ===
                 dataPointSelection.selectedTrackId
             ) {
-                return colors.selected.rgb;
+                return globalSettings.normalizedSelectedRgb;
             }
             return colors.unselectedBoundary.rgb;
         },
@@ -377,7 +379,7 @@ function createLineageLayer(): LineLayer {
                 d.toId === dataPointSelection.selectedTrackId
             ) {
                 const c: [number, number, number, number] = [
-                    ...colors.selected.rgba,
+                    ...globalSettings.normalizedSelectedRgba,
                 ];
                 c[3] = 125;
                 return c;
@@ -405,7 +407,7 @@ function createCenterPointLayer(): ScatterplotLayer {
         getFillColor: (d) => {
             if (d.trackId === dataPointSelection.selectedTrackId) {
                 const c: [number, number, number, number] = [
-                    ...colors.selected.rgba,
+                    ...globalSettings.normalizedSelectedRgba,
                 ];
                 c[3] = 120;
                 return c;
@@ -414,7 +416,7 @@ function createCenterPointLayer(): ScatterplotLayer {
         },
         getLineColor: (d) => {
             if (d.trackId === dataPointSelection.selectedTrackId) {
-                return colors.selectedDarker.rgb;
+                return globalSettings.normalizedSelectedRgb;
             }
             return [228, 26, 28];
         },
@@ -571,6 +573,7 @@ function resetView() {
 }
 
 const { hoveredTrackId } = storeToRefs(cellMetaData);
+watch(darkMode, renderDeckGL);
 watch(currentTrackArray, renderDeckGL);
 watch(hoveredTrackId, renderDeckGL);
 watch(dataPointSelection.$state, renderDeckGL);

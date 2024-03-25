@@ -431,7 +431,7 @@ function createConnectingLinesLayer(): PathLayer | null {
         data: lines,
         getPath: (d: any) => d.path,
         getColor: (d: any) =>
-            d.selected ? colors.selectedDarker.rgb : [180, 180, 180],
+            d.selected ? globalSettings.normalizedSelectedRgb : [180, 180, 180],
         getWidth: looneageViewStore.connectingLineWidth,
         widthUnits: 'pixels',
         jointRounded: true,
@@ -558,7 +558,7 @@ function createHorizonChartLayers(): (
             ];
         },
         getFillColor: [255, 0, 255, 0],
-        getLineColor: colors.selectedDarker.rgb,
+        getLineColor: globalSettings.normalizedSelectedRgb,
         getLineWidth: (d: any) =>
             d.trackId === dataPointSelection.selectedTrackId ? 3 : 0,
         lineWidthUnits: 'pixels',
@@ -1187,13 +1187,15 @@ function createKeyFrameSnippets(): KeyFrameSnippetsResult | null {
             ];
         },
         getFillColor: [255, 0, 255, 0],
-        getLineColor: [20, 230, 20, 200],
+        getLineColor: colors.hovered.rgb,
         getLineWidth: (d: any) => {
             if (
+                !looneageViewStore.showSnippetOutline &&
                 hoveredSnippet.value?.trackId === d.trackId &&
                 hoveredSnippet.value?.index === d.index
             ) {
-                return 4;
+                // only show hover outline if not showing snippet outline
+                return 3;
             }
             return 0;
         },
@@ -1810,6 +1812,11 @@ function createCellBoundaryLayer(
         .filter((d) => d.polygon !== undefined);
 
     const mainLayers = [];
+    const unselectedColorWithAlpha = colors.unselectedBoundary.rgba;
+    unselectedColorWithAlpha[3] = 185;
+    const selectedColorWithAlpha = globalSettings.normalizedSelectedRgba;
+    selectedColorWithAlpha[3] = 185;
+
     mainLayers.push(
         new SnippetSegmentationLayer({
             id: 'cell-boundary-layer',
@@ -1818,7 +1825,12 @@ function createCellBoundaryLayer(
             getCenter: (d: any) => d.center,
             getTranslateOffset: (d: any) => d.offset,
             // getFillColor: [0, 55, 190, 100],
-            getFillColor: [253, 227, 9, 185],
+            getFillColor: (d) => {
+                if (d.selected) {
+                    return selectedColorWithAlpha;
+                }
+                return unselectedColorWithAlpha;
+            },
             // extruded: false,
             // material: false,
             // filled: true,
@@ -1838,10 +1850,9 @@ function createCellBoundaryLayer(
             getPath: (d: any) => d.polygon[0],
             getColor: (d: any) => {
                 if (d.selected) {
-                    return colors.selected.rgb;
+                    return globalSettings.normalizedSelectedRgb;
                 }
                 return colors.unselectedBoundary.rgb;
-                // [253, 227, 9, 255]
             },
             getWidth: 1,
             widthUnits: 'pixels',
@@ -1856,6 +1867,8 @@ function createCellBoundaryLayer(
     );
 
     const hoveredLayers = [];
+    const hoveredWithAlpha = colors.hovered.rgba;
+    hoveredWithAlpha[3] = 185;
     hoveredLayers.push(
         new SnippetSegmentationLayer({
             id: 'hovered-cell-boundary-layer',
@@ -1863,7 +1876,7 @@ function createCellBoundaryLayer(
             getPolygon: (d: any) => d.polygon,
             getCenter: (d: any) => d.center,
             getTranslateOffset: (d: any) => d.offset,
-            getFillColor: [253, 227, 9, 185],
+            getFillColor: hoveredWithAlpha,
             zoomX: viewStateMirror.value.zoom[0],
             scale: looneageViewStore.snippetZoom,
             clipSize: looneageViewStore.snippetDestSize,
@@ -1877,7 +1890,7 @@ function createCellBoundaryLayer(
             id: 'hovered-cell-boundary-outline-layer',
             data: data.filter((d) => d.hovered),
             getPath: (d: any) => d.polygon[0],
-            getColor: [253, 227, 9, 255],
+            getColor: colors.hovered.rgb,
             getWidth: 2,
             widthUnits: 'pixels',
             jointRounded: true,
