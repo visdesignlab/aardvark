@@ -156,6 +156,26 @@ export const useCellMetaData = defineStore('cellMetaData', () => {
         }
         dataPointSelection.selectedTrackId = track.trackId;
     }
+
+    const timeMap = computed<Map<number, Cell[]>>(() => {
+        const map = new Map<number, Cell[]>();
+        if (!dataInitialized.value) return map;
+        if (!cellArray.value) return map;
+        return createTimeMap(cellArray.value);
+    });
+
+    function createTimeMap(cells: Iterable<Cell>): Map<number, Cell[]> {
+        const map = new Map<number, Cell[]>();
+        for (const cell of cells) {
+            const key = getTime(cell);
+            if (!map.has(key)) {
+                map.set(key, []);
+            }
+            map.get(key)?.push(cell);
+        }
+        return map;
+    }
+
     const frameMap = computed<Map<number, Cell[]>>(() => {
         const map = new Map<number, Cell[]>();
         if (!dataInitialized.value) return map;
@@ -180,7 +200,7 @@ export const useCellMetaData = defineStore('cellMetaData', () => {
     });
 
     function getSortedKeys(map: Map<number, any>): number[] {
-        return sortBy([...frameMap.value.keys()]);
+        return sortBy([...map.keys()]);
     }
 
     function* makeLineageCellIterator(founder: Track) {
@@ -656,6 +676,8 @@ export const useCellMetaData = defineStore('cellMetaData', () => {
         lineageMap, // TODO: expand to handle multiple locations
         frameList, // TODO: expand to handle multiple locations
         frameMap, // TODO: expand to handle multiple locations
+        timeList,
+        timeMap,
         cellAttributeHeaders,
         cellNumAttributeHeaderNames,
         trackAttributeHeaders,
@@ -675,12 +697,12 @@ export const useCellMetaData = defineStore('cellMetaData', () => {
         getPosition,
         getNumAttr,
         createFrameMap,
+        createTimeMap,
         makeLineageTrackIterator,
         makeLineageCellIterator,
         getSortedKeys,
         timestep,
         startTime,
-        timeList,
         getClosestTime,
         getCellIndexWithTime,
         getCellIndexWithFrame,

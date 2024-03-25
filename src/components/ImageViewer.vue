@@ -149,7 +149,7 @@ watch(currentLocationMetadata, async () => {
     if (deckgl == null) return;
     // if (contrastLimitSlider == null) return;
     renderLoadingDeckGL();
-    imageViewerStore.frameIndex = 0;
+    // imageViewerStore.frameIndex = 0;
     pixelSource.value = null;
 
     const fullImageUrl = datasetSelectionStore.getServerUrl(

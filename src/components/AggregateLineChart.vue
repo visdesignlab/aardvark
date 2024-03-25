@@ -14,10 +14,14 @@ import { area, line } from 'd3-shape';
 import { axisBottom, axisLeft } from 'd3-axis';
 import { select } from 'd3-selection';
 import { format } from 'd3-format';
+import { useDataPointSelectionUntrracked } from '@/stores/dataPointSelectionUntrracked';
+import { useDataPointSelection } from '@/stores/dataPointSelection';
 
 const cellMetaData = useCellMetaData();
 const globalSettings = useGlobalSettings();
 const aggregateLineChartStore = useAggregateLineChartStore();
+const dataPointSelectionUntrracked = useDataPointSelectionUntrracked();
+const dataPointSelection = useDataPointSelection();
 
 const aggLineChartContainer = ref(null);
 const { width: containerWidth, height: outerContainerHeight } = useElementSize(
@@ -39,32 +43,32 @@ const chartHeight = computed(
 );
 
 const scaleX = computed(() => {
-    let domain = extent(cellMetaData.frameList) as [number, number];
+    let domain = extent(cellMetaData.timeList) as [number, number];
     if (
         aggregateLineChartStore.aggLineDataList &&
         aggregateLineChartStore.aggLineDataList.length > 0
     ) {
-        const frameMin = min(
+        const timeMin = min(
             aggregateLineChartStore.aggLineDataList,
             (agglineData) => {
                 return min(
                     agglineData.data,
-                    (aggPoint: AggDataPoint) => aggPoint.frame
+                    (aggPoint: AggDataPoint) => aggPoint.time
                 );
             }
         );
 
-        const frameMax = max(
+        const timeMax = max(
             aggregateLineChartStore.aggLineDataList,
             (agglineData) => {
                 return max(
                     agglineData.data,
-                    (aggPoint: AggDataPoint) => aggPoint.frame
+                    (aggPoint: AggDataPoint) => aggPoint.time
                 );
             }
         );
-        if (frameMin != null && frameMax != null) {
-            domain = [frameMin, frameMax];
+        if (timeMin != null && timeMax != null) {
+            domain = [timeMin, timeMax];
         }
     }
     return scaleLinear().domain(domain).range([0, chartWidth.value]);
@@ -82,7 +86,7 @@ const temp = ref(0);
 
 const areaGen = computed(() => {
     return area<AggDataPoint>()
-        .x((aggPoint) => scaleX.value(aggPoint.frame))
+        .x((aggPoint) => scaleX.value(aggPoint.time))
         .y0((aggPoint) =>
             scaleY.value(aggPoint.value + temp.value * aggPoint.count)
         )
@@ -93,15 +97,27 @@ const areaGen = computed(() => {
 
 const lineGen = computed(() => {
     return line<AggDataPoint>()
-        .x((aggPoint) => scaleX.value(aggPoint.frame))
+        .x((aggPoint) => scaleX.value(aggPoint.time))
         .y((aggPoint) =>
             scaleY.value(aggPoint.value + temp.value * aggPoint.count)
         );
 });
 
+const hoveredTimeLineGen = computed(() => {
+    return line<number>()
+        .x(() => scaleX.value(dataPointSelectionUntrracked.hoveredTime ?? 0))
+        .y((val) => scaleY.value(val));
+});
+
+const currentTimeLineGen = computed(() => {
+    return line<number>()
+        .x(() => scaleX.value(dataPointSelection.currentTime))
+        .y((val) => scaleY.value(val));
+});
+
 const varianceAreaGen = computed(() => {
     return area<AggDataPoint>()
-        .x((aggPoint) => scaleX.value(aggPoint.frame))
+        .x((aggPoint) => scaleX.value(aggPoint.time))
         .y0((aggPoint) => scaleY.value(aggPoint.variance?.[0] ?? 0))
         .y1((aggPoint) => scaleY.value(aggPoint?.variance?.[1] ?? 0));
 });
@@ -149,6 +165,19 @@ watch(yAxisGen, () => {
                         margin.top + chartHeight + axisPading
                     })`"
                 ></g>
+                <g :transform="`translate(${margin.left},${margin.top})`">
+                    <path
+                        :class="`current time agg-line ${globalSettings.normalizedDark}`"
+                        :d="currentTimeLineGen(scaleY.domain()) ?? ''"
+                    ></path>
+                </g>
+                <g :transform="`translate(${margin.left},${margin.top})`">
+                    <path
+                        :class="`hovered time agg-line ${globalSettings.normalizedDark}`"
+                        v-if="dataPointSelectionUntrracked.hoveredTime !== null"
+                        :d="hoveredTimeLineGen(scaleY.domain()) ?? ''"
+                    ></path>
+                </g>
                 <g
                     v-if="aggregateLineChartStore.showVarianceBand"
                     :transform="`translate(${margin.left},${margin.top})`"
@@ -216,7 +245,6 @@ watch(yAxisGen, () => {
                         :d="lineGen(aggLine) ?? ''"
                     ></path>
                 </g>
-
                 <g :transform="`translate(${margin.left},${margin.top})`">
                     <path
                         :class="`hovered agg-line ${globalSettings.normalizedDark}`"
@@ -258,10 +286,20 @@ watch(yAxisGen, () => {
     stroke-width: 1.5px;
     opacity: 0.7;
 }
+.hovered.time.agg-line {
+    stroke-width: 1px;
+    stroke-dasharray: 3;
+    stroke: rgb(130, 130, 130);
+    fill: rgb(130, 130, 130);
+}
+
+.current.time.agg-line {
+    stroke-width: 1px;
+    stroke: rgb(130, 130, 130);
+    fill: rgb(130, 130, 130);
+}
 
 .dark {
-    // stroke: hsl(0, 0%, 10%);
-    // fill: hsl(0, 0%, 10%);
     stroke: #377eb8;
     fill: #377eb8;
 }
@@ -278,8 +316,6 @@ watch(yAxisGen, () => {
 }
 
 .light {
-    // stroke: hsl(0, 0%, 90%);
-    // fill: hsl(0, 0%, 90%);
     stroke: #377eb8;
     fill: #377eb8;
 }

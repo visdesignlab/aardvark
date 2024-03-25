@@ -563,12 +563,10 @@ function createHorizonChartLayers(): (
                 ? colors.hovered.rgb
                 : globalSettings.normalizedSelectedRgb,
         getLineWidth: (d: any) => {
-            if (d.trackId === dataPointSelection.selectedTrackId) {
-                return 3;
-            } else if (
-                d.trackId === dataPointSelectionUntrracked.hoveredTrackId
-            ) {
+            if (d.trackId === dataPointSelectionUntrracked.hoveredTrackId) {
                 return 5;
+            } else if (d.trackId === dataPointSelection.selectedTrackId) {
+                return 3;
             } else {
                 return 0;
             }

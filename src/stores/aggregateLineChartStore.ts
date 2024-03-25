@@ -10,7 +10,7 @@ import { useDataPointSelectionUntrracked } from './dataPointSelectionUntrracked'
 
 export interface AggLineData extends Array<AggDataPoint> {}
 export interface AggDataPoint {
-    frame: number;
+    time: number;
     value: number; // avg or total or median or ...
     count: number;
     variance?: [number, number];
@@ -260,10 +260,10 @@ function storeSetup() {
 
     function getFirstPoint(track: Track, count = 1): AggDataPoint {
         const firstCell = track.cells[0];
-        const frame = cellMetaData.getFrame(firstCell);
+        const time = cellMetaData.getTime(firstCell);
         const value = accessor.value(firstCell);
         return {
-            frame,
+            time,
             value,
             count,
         };
@@ -271,19 +271,19 @@ function storeSetup() {
 
     function getLastPoint(track: Track, count = 1): AggDataPoint {
         const lastCell = track.cells[track.cells.length - 1];
-        const frame = cellMetaData.getFrame(lastCell);
+        const time = cellMetaData.getTime(lastCell);
         const value = accessor.value(lastCell);
         return {
-            frame,
+            time,
             value,
             count,
         };
     }
 
     const hoveredLineData = computed<AggLineData>(() => {
-        if (targetKey.value !== 'selected lineage') {
-            return [];
-        }
+        // if (targetKey.value !== 'selected lineage') {
+        //     return [];
+        // }
         const trackId = dataPointSelectionUntrracked.hoveredTrackId;
         if (trackId === null) {
             return [];
@@ -294,10 +294,10 @@ function storeSetup() {
         }
         const aggLineData: AggLineData = [];
         for (const cell of selectedTrack.cells) {
-            const frame = cellMetaData.getFrame(cell);
+            const time = cellMetaData.getTime(cell);
             const value = accessor.value(cell);
             const count = 1;
-            aggLineData.push({ frame, value, count });
+            aggLineData.push({ time, value, count });
         }
         return medianFilterSmooth(aggLineData);
     });
@@ -316,10 +316,10 @@ function storeSetup() {
         }
         const aggLineData: AggLineData = [];
         for (const cell of selectedTrack.cells) {
-            const frame = cellMetaData.getFrame(cell);
+            const time = cellMetaData.getTime(cell);
             const value = accessor.value(cell);
             const count = 1;
-            aggLineData.push({ frame, value, count });
+            aggLineData.push({ time, value, count });
         }
         return medianFilterSmooth(aggLineData);
     });
@@ -346,10 +346,10 @@ function storeSetup() {
                     )) {
                         const aggLineData: AggLineData = [];
                         for (const cell of track.cells) {
-                            const frame = cellMetaData.getFrame(cell);
+                            const time = cellMetaData.getTime(cell);
                             const value = accessor.value(cell);
                             const count = 1;
-                            aggLineData.push({ frame, value, count });
+                            aggLineData.push({ time, value, count });
                         }
                         const muted = selectedTrack
                             ? !cellMetaData.isDirectRelation(
@@ -366,18 +366,18 @@ function storeSetup() {
                 }
                 case 'entire location combined': {
                     const singleLine: AggLineData = [];
-                    for (const frame of cellMetaData?.frameList ?? []) {
-                        const cellsAtFrame = cellMetaData.frameMap.get(frame);
-                        if (!cellsAtFrame) continue;
-                        const count = cellsAtFrame.length;
+                    for (const time of cellMetaData?.timeList ?? []) {
+                        const cellsAtTime = cellMetaData.timeMap.get(time);
+                        if (!cellsAtTime) continue;
+                        const count = cellsAtTime.length;
                         if (!aggregator.value) continue;
-                        const value = aggregator.value(cellsAtFrame);
+                        const value = aggregator.value(cellsAtTime);
                         if (!value) continue;
                         const variance = varianceCalculator.value(
-                            cellsAtFrame,
+                            cellsAtTime,
                             value
                         ) as [number, number] | undefined;
-                        singleLine.push({ frame, value, count, variance });
+                        singleLine.push({ time, value, count, variance });
                     }
                     return [
                         { data: medianFilterSmooth(singleLine), muted: false },
@@ -393,18 +393,18 @@ function storeSetup() {
                         const cells = cellMetaData.makeLineageCellIterator(
                             lineage.founder
                         );
-                        const lineageFrameMap =
-                            cellMetaData.createFrameMap(cells);
-                        const frameList =
-                            cellMetaData.getSortedKeys(lineageFrameMap);
-                        for (const frame of frameList) {
-                            const cellsAtFrame = lineageFrameMap.get(frame);
-                            if (!cellsAtFrame) continue;
-                            const count = cellsAtFrame.length;
+                        const lineageTimeMap =
+                            cellMetaData.createTimeMap(cells);
+                        const timeList =
+                            cellMetaData.getSortedKeys(lineageTimeMap);
+                        for (const time of timeList) {
+                            const cellsAtTime = lineageTimeMap.get(time);
+                            if (!cellsAtTime) continue;
+                            const count = cellsAtTime.length;
                             if (!aggregator.value) continue;
-                            const value = aggregator.value(cellsAtFrame);
+                            const value = aggregator.value(cellsAtTime);
                             if (!value) continue;
-                            aggLineData.push({ frame, value, count });
+                            aggLineData.push({ time, value, count });
                         }
                         result.push({
                             data: medianFilterSmooth(aggLineData),
@@ -419,10 +419,10 @@ function storeSetup() {
                     for (const track of cellMetaData.trackArray) {
                         const aggLineData: AggLineData = [];
                         for (const cell of track.cells) {
-                            const frame = cellMetaData.getFrame(cell);
+                            const time = cellMetaData.getTime(cell);
                             const value = accessor.value(cell);
                             const count = 1;
-                            aggLineData.push({ frame, value, count });
+                            aggLineData.push({ time, value, count });
                         }
                         result.push({
                             data: medianFilterSmooth(aggLineData),

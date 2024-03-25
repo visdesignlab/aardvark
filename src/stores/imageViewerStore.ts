@@ -1,5 +1,6 @@
 import { ref, computed } from 'vue';
 import { defineStore } from 'pinia';
+import { useDataPointSelection } from './dataPointSelection';
 
 export interface SelectionIndex {
     c: number;
@@ -8,6 +9,7 @@ export interface SelectionIndex {
 }
 
 export const useImageViewerStore = defineStore('imageViewerStore', () => {
+    const dataPointSelection = useDataPointSelection();
     const colormap = ref<string>('bone');
     const colormapOptions = [
         'jet',
@@ -41,23 +43,28 @@ export const useImageViewerStore = defineStore('imageViewerStore', () => {
         max: 0,
     });
 
-    const frameIndex = ref(0);
     const frameNumber = computed({
         get() {
-            return frameIndex.value + 1;
+            return dataPointSelection.currentFrameIndex + 1;
         },
         set(val) {
-            frameIndex.value = val - 1;
+            dataPointSelection.currentFrameIndex = val - 1;
         },
     });
     function stepBackwards() {
-        frameIndex.value = Math.max(frameIndex.value - 1, 0);
+        dataPointSelection.currentFrameIndex = Math.max(
+            dataPointSelection.currentFrameIndex - 1,
+            0
+        );
     }
     function stepForwards(maxValue: number) {
-        frameIndex.value = Math.min(frameIndex.value + 1, maxValue);
+        dataPointSelection.currentFrameIndex = Math.min(
+            dataPointSelection.currentFrameIndex + 1,
+            maxValue
+        );
     }
     const selections = computed(() => {
-        return [{ c: 0, t: frameIndex.value, z: 0 }];
+        return [{ c: 0, t: dataPointSelection.currentFrameIndex, z: 0 }];
     });
 
     const trailLength = ref(10);
@@ -65,7 +72,10 @@ export const useImageViewerStore = defineStore('imageViewerStore', () => {
         // if the current index is less than than the trail length
         // then the effective trail length should be shorter to
         // prevent rendering artifacts
-        return Math.min(frameIndex.value, trailLength.value);
+        return Math.min(
+            dataPointSelection.currentFrameIndex,
+            trailLength.value
+        );
     });
 
     const showImageLayer = ref(true);
@@ -78,7 +88,6 @@ export const useImageViewerStore = defineStore('imageViewerStore', () => {
         colormapOptions,
         contrastLimitSliderDebounced,
         contrastLimitExtentSlider,
-        frameIndex,
         frameNumber,
         stepBackwards,
         stepForwards,
