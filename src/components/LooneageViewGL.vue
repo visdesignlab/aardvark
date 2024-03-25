@@ -127,7 +127,7 @@ useKeypress({
     keyEvent: 'keydown',
     onAnyKey: (e: any) => {
         const event = e.event as KeyboardEvent;
-        if (event.code === 'ControlLeft' || event.code === 'ControlRight') {
+        if (event.metaKey) {
             onControlDown();
         }
     },
@@ -137,7 +137,7 @@ useKeypress({
     keyEvent: 'keyup',
     onAnyKey: (e: any) => {
         const event = e.event as KeyboardEvent;
-        if (event.code === 'ControlLeft' || event.code === 'ControlRight') {
+        if (event.metaKey) {
             onControlUp();
         }
     },
@@ -385,6 +385,12 @@ onMounted(() => {
             return {
                 html,
             };
+        },
+        onClick(info, _event) {
+            if (!info.object) {
+                // canvas was clicked, but no cell object was picked
+                dataPointSelection.selectedTrackId = null;
+            }
         },
         // onInteractionStateChange: () => console.log('onInteractionStateChange'),
         // onLoad: () => console.log('onLoad'),

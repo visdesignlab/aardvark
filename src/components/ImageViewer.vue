@@ -94,6 +94,12 @@ onMounted(() => {
             return viewState;
         },
         debug: false,
+        onClick(info, _event) {
+            if (!info.object) {
+                // canvas was clicked, but no cell object was picked
+                clearSelection();
+            }
+        },
         // onBeforeRender: (gl: any) => {
         //     console.count('before');
         //     console.log(gl);
@@ -113,7 +119,6 @@ onMounted(() => {
 
         getTooltip: ({ object }) => {
             if (!object) return null;
-            console.log(object);
             const { id, frame } = object.properties;
             if (id == null) return null;
             if (frame == null) return null;
@@ -273,9 +278,8 @@ function onHover(info: PickingInfo): void {
     );
 }
 
-function onClick(info: PickingInfo): void {
+function onClick(info: PickingInfo, event: Event): void {
     if (!info.object) {
-        dataPointSelection.selectedTrackId = null;
         return;
     }
     const geoJsonFeature = info.object as GeoJsonFeature;
@@ -636,6 +640,10 @@ watch(currentTrackArray, renderDeckGL);
 watch(dataPointSelection.$state, renderDeckGL);
 watch(imageViewerStore.$state, renderDeckGL);
 watch(contrastLimitSlider, renderDeckGL);
+
+function clearSelection() {
+    dataPointSelection.selectedTrackId = null;
+}
 </script>
 
 <template>
