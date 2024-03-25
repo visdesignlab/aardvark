@@ -153,7 +153,7 @@ watch(currentLocationMetadata, async () => {
     if (currentLocationMetadata.value?.imageDataFilename == null) return;
     if (deckgl == null) return;
     // if (contrastLimitSlider == null) return;
-    renderLoadingDeckGL();
+    // renderLoadingDeckGL();
     // imageViewerStore.frameIndex = 0;
     pixelSource.value = null;
 
@@ -177,8 +177,10 @@ watch(currentLocationMetadata, async () => {
     //     channelStats.contrastLimits as [number, number],
     // ];
     pixelSource.value = loader.value.data[0] as PixelSource<any>;
-    resetView();
     renderDeckGL();
+    // TODO: this is causing a minor visual bug, the loading is offset before the image is loaded.
+    // but this is better than the image being offset for now.
+    resetView();
 });
 function createBaseImageLayer(): typeof ImageLayer {
     // console.log('create base image layer');
@@ -526,6 +528,10 @@ function createTrajectoryGhostLayer(): TripsLayer {
 const imageLayer = ref();
 function renderDeckGL(): void {
     if (deckgl == null) return;
+    if (!cellMetaData.dataInitialized || cellMetaData.selectedLineage == null) {
+        renderLoadingDeckGL();
+        return;
+    }
     const layers = [];
     if (imageViewerStore.showImageLayer) {
         if (pixelSource.value == null) return;
@@ -611,6 +617,7 @@ const { hoveredTrackId, triggerRecenter } = storeToRefs(
 );
 watch(hoveredTrackId, renderDeckGL);
 watch(triggerRecenter, () => {
+    if (!cellMetaData.dataInitialized) return;
     const trackId = dataPointSelection.selectedTrackId;
     if (trackId == null) return;
     const track = cellMetaData.trackMap?.get(trackId);

@@ -1977,7 +1977,10 @@ function createCellBoundaryLayer(
 
 function renderDeckGL(): void {
     if (deckgl == null) return;
-    if (cellMetaData.selectedLineage == null) return;
+    if (!cellMetaData.dataInitialized || cellMetaData.selectedLineage == null) {
+        renderLoadingDeckGL();
+        return;
+    }
     const layers = [];
 
     layers.push(createCurrentTimeLayer());
@@ -2042,6 +2045,41 @@ watch(dataPointSelectionUntrracked.$state, renderDeckGL);
 watch(imageViewerStore.$state, renderDeckGL);
 watch(looneageViewStore.$state, renderDeckGL);
 watch(contrastLimitSlider, renderDeckGL);
+
+// Duplicate code from imageViewer.vue
+function renderLoadingDeckGL(): void {
+    if (deckgl == null) return;
+    deckgl.setProps({
+        layers: [
+            new TextLayer({
+                id: 'loading-screen-layer',
+                data: ['Loading...'], // one hardcoded item
+                pickable: false,
+                getPosition: [0, 0],
+                getText: (d) => d,
+                getSize: 32,
+                getAngle: 0,
+                getTextAnchor: 'middle',
+                getAlignmentBaseline: 'center',
+            }),
+        ],
+        initialViewState: {
+            zoom: 0,
+            target: [0, 0, 0],
+            minZoom: 0,
+            maxZoom: 0,
+        },
+        controller: {
+            scrollZoom: false,
+            dragPan: false,
+            dragRotate: false,
+            doubleClickZoom: false,
+            touchZoom: false,
+            touchRotate: false,
+            keyboard: false,
+        }, // controller: false didn't seem to work..
+    });
+}
 </script>
 
 <template>
