@@ -420,7 +420,13 @@ function createCenterPointLayer(): ScatterplotLayer {
         getPosition: (d) => d.position,
         getRadius: (d) => (d.internal ? 6 : 4),
         getFillColor: (d) => {
-            if (d.trackId === dataPointSelection.selectedTrackId) {
+            if (d.trackId === dataPointSelectionUntrracked.hoveredTrackId) {
+                const c: [number, number, number, number] = [
+                    ...colors.hovered.rgba,
+                ];
+                c[3] = 120;
+                return c;
+            } else if (d.trackId === dataPointSelection.selectedTrackId) {
                 const c: [number, number, number, number] = [
                     ...globalSettings.normalizedSelectedRgba,
                 ];
@@ -430,6 +436,9 @@ function createCenterPointLayer(): ScatterplotLayer {
             return d.internal ? [228, 26, 28, 125] : [228, 26, 28, 0];
         },
         getLineColor: (d) => {
+            if (d.trackId === dataPointSelectionUntrracked.hoveredTrackId) {
+                return colors.hovered.rgb;
+            }
             if (d.trackId === dataPointSelection.selectedTrackId) {
                 return globalSettings.normalizedSelectedRgb;
             }
@@ -437,8 +446,14 @@ function createCenterPointLayer(): ScatterplotLayer {
         },
         getStrokeWidth: 1,
         updateTriggers: {
-            getFillColor: dataPointSelection.selectedTrackId,
-            getLineColor: dataPointSelection.selectedTrackId,
+            getFillColor: {
+                selected: dataPointSelection.selectedTrackId,
+                hovered: dataPointSelectionUntrracked.hoveredTrackId,
+            },
+            getLineColor: {
+                selected: dataPointSelection.selectedTrackId,
+                hovered: dataPointSelectionUntrracked.hoveredTrackId,
+            },
         },
     });
 }

@@ -1817,7 +1817,7 @@ function createCurrentTimeLayer(): PathLayer | null {
         id: 'current-time-layer',
         data: [[a, b]],
         getPath: (d: any) => d,
-        getColor: [85, 77, 135],
+        getColor: [130, 130, 130],
         getWidth: 1,
         widthUnits: 'pixels',
     });
