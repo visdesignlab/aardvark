@@ -94,6 +94,7 @@ export const useCellMetaData = defineStore('cellMetaData', () => {
         return lineage ?? null;
     });
     function selectLineage(lineage: Lineage | null) {
+        dataPointSelection.selectedTrackId = null;
         if (lineage == null) {
             dataPointSelection.selectedLineageId = null;
             return;
