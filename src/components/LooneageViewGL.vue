@@ -78,6 +78,7 @@ const globalSettings = useGlobalSettings();
 
 const dataPointSelection = useDataPointSelection();
 const dataPointSelectionUntrracked = useDataPointSelectionUntrracked();
+const { hoveredCellIndex } = storeToRefs(dataPointSelectionUntrracked);
 const imageViewerStore = useImageViewerStore();
 const imageViewerStoreUntrracked = useImageViewerStoreUntrracked();
 const datasetSelectionStore = useDatasetSelectionStore();
@@ -643,6 +644,20 @@ function processHorizonPickingInfo(info: PickingInfo): HorizonPickingResult {
 }
 
 const hoveredSnippet = ref<SelectedSnippet | null>(null);
+watch(hoveredCellIndex, () => {
+    if (
+        dataPointSelectionUntrracked.hoveredTrackId === null ||
+        hoveredCellIndex.value === null
+    ) {
+        hoveredSnippet.value = null;
+        return;
+    }
+    hoveredSnippet.value = {
+        trackId: dataPointSelectionUntrracked.hoveredTrackId,
+        index: hoveredCellIndex.value,
+        extraFrames: 0,
+    };
+});
 
 function hexListToRgba(hexList: readonly string[]): number[] {
     const rgbaList: number[] = [];

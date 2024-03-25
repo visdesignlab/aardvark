@@ -261,12 +261,16 @@ interface GeoJsonFeature {
 function onHover(info: PickingInfo): void {
     if (!info.object) {
         dataPointSelectionUntrracked.hoveredTrackId = null;
+        dataPointSelectionUntrracked.hoveredCellIndex = null;
         return;
     }
     const geoJsonFeature = info.object as GeoJsonFeature;
     // console.log(geoJsonFeature);
     dataPointSelectionUntrracked.hoveredTrackId =
         geoJsonFeature.properties.id?.toString();
+    dataPointSelectionUntrracked.setHoveredCellIndex(
+        dataPointSelection.currentTime
+    );
 }
 
 function onClick(info: PickingInfo): void {
