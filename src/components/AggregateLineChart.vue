@@ -14,12 +14,10 @@ import { area, line } from 'd3-shape';
 import { axisBottom, axisLeft } from 'd3-axis';
 import { select } from 'd3-selection';
 import { format } from 'd3-format';
-import { useDataPointSelection } from '@/stores/dataPointSelection';
 
 const cellMetaData = useCellMetaData();
 const globalSettings = useGlobalSettings();
 const aggregateLineChartStore = useAggregateLineChartStore();
-const dataPointSelection = useDataPointSelection();
 
 const aggLineChartContainer = ref(null);
 const { width: containerWidth, height: outerContainerHeight } = useElementSize(
