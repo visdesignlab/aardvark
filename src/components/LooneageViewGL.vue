@@ -481,6 +481,7 @@ function createHorizonChartLayers(): (
     | ScatterplotLayer
     | HorizonChartLayer
     | PolygonLayer
+    | TextLayer
     | null
 )[] {
     if (!cellMetaData.selectedLineage) return [];
@@ -490,12 +491,14 @@ function createHorizonChartLayers(): (
         | ScatterplotLayer
         | HorizonChartLayer
         | PolygonLayer
+        | TextLayer
         | null
     )[] = [];
     const pickingLayer: {
         destination: [number, number, number, number];
         trackId: string;
     }[] = [];
+    let labelsPlaced = false;
     for (let node of layoutRoot.value.descendants()) {
         if (node.data === null) continue;
         const nodeWithData = node as LayoutNode<Track>;
@@ -514,6 +517,13 @@ function createHorizonChartLayers(): (
                     looneageViewStore.horizonChartSettingList.length
                 )
             );
+        }
+        if (!labelsPlaced) {
+            const labelLayer = createHorizonChartLabelLayer(nodeWithData);
+            if (labelLayer) {
+                layers.push(labelLayer);
+                labelsPlaced = true;
+            }
         }
 
         const track = node.data;
@@ -1560,7 +1570,16 @@ const viewportBuffer = computed<number>(() => {
     return looneageViewStore.snippetDestSize;
 });
 
-function horizonInViewport(node: LayoutNode<Track>): boolean {
+function pointInViewport(x: number, y: number, includeBuffer = true): boolean {
+    const viewport: BBox = viewportBBox(includeBuffer);
+    const singularBBox: BBox = [x, y, x, y];
+    return overlaps(singularBBox, viewport);
+}
+
+function horizonInViewport(
+    node: LayoutNode<Track>,
+    includeBuffer = true
+): boolean {
     const chartBBox: BBox = [
         getLeftPosition(node),
         node.x,
@@ -1569,10 +1588,74 @@ function horizonInViewport(node: LayoutNode<Track>): boolean {
     ];
     return overlaps(
         chartBBox,
-        viewportBBox(),
+        viewportBBox(includeBuffer),
         getBetweenSnippetPaddingX(),
         getBetweenSnippetPaddingY()
     );
+}
+
+function createHorizonChartLabelLayer(
+    node: LayoutNode<Track>
+): TextLayer | null {
+    if (!cellMetaData.selectedLineage) return null;
+    const dimCount = looneageViewStore.horizonChartSettingList.length;
+    const innerHeight = looneageViewStore.rowHeight / dimCount;
+    const fontSize = 12;
+    if (innerHeight < fontSize + 2) return null;
+    const track = node.data;
+    const viewportLeft = viewportBBox(false)[0];
+    let nodeLeft = getLeftPosition(node);
+    let left =
+        Math.max(nodeLeft, viewportLeft) + scaleForConstantVisualSize(5, 'x');
+
+    let width = getTimeDuration(track);
+    if (nodeLeft < viewportLeft) {
+        // horizon is partially offscreen, width should be only the width on screen
+        width -= viewportLeft - nodeLeft;
+    }
+    const maxCharacters = looneageViewStore.horizonChartSettingList
+        .map((x) => x.attrKey.length)
+        .reduce((a, b) => Math.max(a, b), 0);
+    const fakeTextWidth = scaleForConstantVisualSize(10 * maxCharacters, 'x');
+    // this is just an estimate, not the measured width
+    if (width < fakeTextWidth) {
+        return null;
+    }
+    if (!horizonInViewport(node, false)) {
+        return null;
+    }
+
+    const labelData = [];
+    for (let i = 0; i < looneageViewStore.horizonChartSettingList.length; i++) {
+        const settings = looneageViewStore.horizonChartSettingList[i];
+        const bottom = node.x - innerHeight * (dimCount - i - 1);
+        labelData.push({ text: settings.attrKey, position: [left, bottom] });
+        if (!pointInViewport(left, bottom, false)) {
+            return null;
+        }
+        if (!pointInViewport(left, bottom - fontSize, false)) {
+            return null;
+        }
+    }
+    const textLayer = new TextLayer({
+        id: `horizon-chart-label-layer`,
+        data: labelData,
+        getPosition: (d: any) => d.position,
+        getText: (d: any) => d.text,
+        getSize: fontSize,
+        getAngle: 0,
+        getTextAnchor: 'start',
+        getAlignmentBaseline: 'bottom',
+        getColor: [0, 0, 0, 255],
+        fontSettings: { sdf: true },
+        outlineColor: [255, 255, 255, 255],
+        outlineWidth: 4,
+        backgroundPadding: [5, 2],
+        background: true,
+        backgroundColor: [255, 255, 255, 60],
+    });
+
+    return textLayer;
 }
 
 function createHorizonChartLayer(
@@ -1645,17 +1728,11 @@ function scaleForConstantVisualSize(
     return size * 2 ** -z;
 }
 
-function viewportBBox(): BBox {
+function viewportBBox(includeBuffer = true): BBox {
     const { target } = viewStateMirror.value;
-    // const buffer = -300; // add buffer so data is fetched a bit before it is panned into view.
-    const width = scaleForConstantVisualSize(
-        deckGlWidth.value + viewportBuffer.value,
-        'x'
-    );
-    const height = scaleForConstantVisualSize(
-        deckGlHeight.value + viewportBuffer.value,
-        'y'
-    );
+    const buffer = includeBuffer ? viewportBuffer.value : 0;
+    const width = scaleForConstantVisualSize(deckGlWidth.value + buffer, 'x');
+    const height = scaleForConstantVisualSize(deckGlHeight.value + buffer, 'y');
     const halfWidth = width / 2;
     const halfHeight = height / 2;
 
