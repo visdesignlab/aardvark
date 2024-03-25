@@ -6,6 +6,7 @@ import { useDataPointSelection } from '@/stores/dataPointSelection';
 import { useLooneageViewStore } from './looneageViewStore';
 
 import { min, max, mean, sum, median, quantile, deviation } from 'd3-array';
+import { useDataPointSelectionUntrracked } from './dataPointSelectionUntrracked';
 
 export interface AggLineData extends Array<AggDataPoint> {}
 export interface AggDataPoint {
@@ -21,6 +22,7 @@ function storeSetup() {
     const skipTrackingMap = useSkipTrackingMap();
     const dataPointSelection = useDataPointSelection();
     const looneageViewStore = useLooneageViewStore();
+    const dataPointSelectionUntrracked = useDataPointSelectionUntrracked();
 
     const aggregatorKey = ref<string>('average');
     const aggregatorOptions = ['average', 'total', 'min', 'median', 'max'];
@@ -278,6 +280,28 @@ function storeSetup() {
         };
     }
 
+    const hoveredLineData = computed<AggLineData>(() => {
+        if (targetKey.value !== 'selected lineage') {
+            return [];
+        }
+        const trackId = dataPointSelectionUntrracked.hoveredTrackId;
+        if (trackId === null) {
+            return [];
+        }
+        const selectedTrack = cellMetaData.trackMap?.get(trackId);
+        if (!selectedTrack) {
+            return [];
+        }
+        const aggLineData: AggLineData = [];
+        for (const cell of selectedTrack.cells) {
+            const frame = cellMetaData.getFrame(cell);
+            const value = accessor.value(cell);
+            const count = 1;
+            aggLineData.push({ frame, value, count });
+        }
+        return medianFilterSmooth(aggLineData);
+    });
+
     const selectedLineData = computed<AggLineData>(() => {
         if (targetKey.value !== 'selected lineage') {
             return [];
@@ -459,6 +483,7 @@ function storeSetup() {
         onSmoothWindowChange,
         aggLineDataList,
         aggLineDataListExtent,
+        hoveredLineData,
         selectedLineData,
         selectedLineLineageConnections,
         extendedSelectedLineLineageConnections,

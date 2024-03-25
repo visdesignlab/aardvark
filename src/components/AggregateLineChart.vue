@@ -216,6 +216,17 @@ watch(yAxisGen, () => {
                         :d="lineGen(aggLine) ?? ''"
                     ></path>
                 </g>
+
+                <g :transform="`translate(${margin.left},${margin.top})`">
+                    <path
+                        :class="`hovered agg-line ${globalSettings.normalizedDark}`"
+                        v-if="aggregateLineChartStore.hoveredLineData"
+                        :d="
+                            areaGen(aggregateLineChartStore.hoveredLineData) ??
+                            ''
+                        "
+                    ></path>
+                </g>
             </svg>
         </div>
     </div>
@@ -239,7 +250,9 @@ watch(yAxisGen, () => {
 .selected.agg-line {
     stroke-width: 4px;
 }
-
+.hovered.agg-line {
+    stroke-width: 6px;
+}
 .connection.agg-line {
     stroke-dasharray: 4.5 6;
     stroke-width: 1.5px;
@@ -255,6 +268,13 @@ watch(yAxisGen, () => {
 
 .dark.selected {
     stroke: #e29609;
+    fill: #e29609;
+}
+
+.dark.hovered,
+.light.hovered {
+    stroke: #ffcf76;
+    fill: #ffcf76;
 }
 
 .light {
@@ -265,6 +285,7 @@ watch(yAxisGen, () => {
 }
 
 .light.selected {
+    fill: #fde309;
     stroke: #fde309;
 }
 
