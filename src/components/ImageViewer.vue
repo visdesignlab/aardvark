@@ -205,10 +205,10 @@ function createSegmentationsLayer(): typeof GeoJsonLayer {
         datasetSelectionStore.currentLocationMetadata?.segmentationsFolder ??
             'UNKNOWN'
     );
-    // console.log(folderUrl);
-    // @ts-ignore
+
     const hoverColorWithAlpha = colors.hovered.rgba;
     hoverColorWithAlpha[3] = 128;
+    // @ts-ignore
     return new GeoJsonLayer({
         data: segmentationStore.getFrameSegmentations(
             imageViewerStore.frameNumber
@@ -282,7 +282,7 @@ function onHover(info: PickingInfo): void {
     );
 }
 
-function onClick(info: PickingInfo, event: Event): void {
+function onClick(info: PickingInfo): void {
     if (!info.object) {
         return;
     }
