@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, watch } from 'vue';
+import { ref, computed, watch, onMounted } from 'vue';
 import { useElementSize } from '@vueuse/core';
 import { useCellMetaData } from '@/stores/cellMetaData';
 import { useGlobalSettings } from '@/stores/globalSettings';
@@ -16,12 +16,44 @@ import { select } from 'd3-selection';
 import { format } from 'd3-format';
 import { useDataPointSelectionUntrracked } from '@/stores/dataPointSelectionUntrracked';
 import { useDataPointSelection } from '@/stores/dataPointSelection';
+import { useImageViewerStore } from '@/stores/imageViewerStore';
+import CellSnippetsLayer from './layers/CellSnippetsLayer';
+import type { Selection } from './layers/CellSnippetsLayer';
+import { useImageViewerStoreUntrracked } from '@/stores/imageViewerStoreUntrracked';
+import { useDatasetSelectionStore } from '@/stores/datasetSelectionStore';
+import { useLooneageViewStore } from '@/stores/looneageViewStore';
+import { Deck, OrthographicView } from '@deck.gl/core/typed';
+import {
+    GeoJsonLayer,
+    LineLayer,
+    PathLayer,
+    PolygonLayer,
+    ScatterplotLayer,
+    TextLayer,
+} from '@deck.gl/layers/typed';
+import type { PixelData, PixelSource } from '@vivjs/types';
+import { Pool } from 'geotiff';
+import {
+    loadOmeTiff,
+    getChannelStats,
+    AdditiveColormapExtension,
+} from '@hms-dbmi/viv';
+import { storeToRefs } from 'pinia';
+import { LRUCache } from 'lru-cache';
+import { getBBoxAroundPoint } from '@/util/imageSnippets';
+import colors from '@/util/colors';
 
 const cellMetaData = useCellMetaData();
 const globalSettings = useGlobalSettings();
 const aggregateLineChartStore = useAggregateLineChartStore();
 const dataPointSelectionUntrracked = useDataPointSelectionUntrracked();
 const dataPointSelection = useDataPointSelection();
+const imageViewerStore = useImageViewerStore();
+const imageViewerStoreUntrracked = useImageViewerStoreUntrracked();
+const datasetSelectionStore = useDatasetSelectionStore();
+const looneageViewStore = useLooneageViewStore();
+const { currentLocationMetadata } = storeToRefs(datasetSelectionStore);
+const { contrastLimitSlider } = storeToRefs(imageViewerStoreUntrracked);
 
 const aggLineChartContainer = ref(null);
 const { width: containerWidth, height: outerContainerHeight } = useElementSize(
@@ -173,6 +205,249 @@ function onMouseMove(event: MouseEvent) {
     if (time < timeExtent[0] || time > timeExtent[1]) return;
     dataPointSelectionUntrracked.hoveredTime = time;
 }
+
+const deckGlContainer = ref(null);
+
+// TODO: share cache with looneage view?
+const lruCache = new LRUCache({
+    max: 250,
+});
+let deckgl: any | null = null;
+onMounted(() => {
+    console.log('deckglContainer', deckGlContainer.value?.id);
+    deckgl = new Deck({
+        initialViewState: {
+            zoom: [0, 0],
+            target: [0, 0],
+            minZoom: -8,
+            maxZoom: 8,
+        },
+        views: new OrthographicView({
+            id: 'lineChartController',
+            controller: false,
+        }),
+        controller: false,
+        // @ts-ignore
+        canvas: deckGlContainer.value?.id,
+        layers: [],
+        debug: true,
+        onError: (error: any, _layer: any) => {
+            console.error('ERROR');
+            console.log(error);
+        },
+        width: chartWidth.value,
+        height: chartHeight.value,
+        style: {
+            left: `${margin.value.left}px`,
+            top: `${margin.value.top}px`,
+            position: 'absolute',
+            // background: 'firebrick',
+            // opacity: '0.4',
+            outline: 'solid 2px forestgreen',
+            pointerEvents: 'none',
+        },
+    });
+});
+
+const colormapExtension = new AdditiveColormapExtension();
+
+const contrastLimit = computed<[number, number][]>(() => {
+    return [[contrastLimitSlider.value.min, contrastLimitSlider.value.max]];
+});
+const loader = ref<any | null>(null);
+const pixelSource = ref<any | null>(null);
+const testRaster = ref<PixelData | null>(null);
+watch(currentLocationMetadata, async () => {
+    if (currentLocationMetadata.value?.imageDataFilename == null) return;
+    if (deckgl == null) return;
+
+    pixelSource.value = null;
+
+    const fullImageUrl = datasetSelectionStore.getServerUrl(
+        currentLocationMetadata.value.imageDataFilename
+    );
+    loader.value = await loadOmeTiff(fullImageUrl, { pool: new Pool() });
+    imageViewerStoreUntrracked.sizeX = loader.value.metadata.Pixels.SizeX;
+    imageViewerStoreUntrracked.sizeY = loader.value.metadata.Pixels.SizeY;
+    imageViewerStoreUntrracked.sizeT = loader.value.metadata.Pixels.SizeT;
+
+    testRaster.value = await loader.value.data[0].getRaster({
+        selection: { c: 0, t: 0, z: 0 },
+    });
+    if (testRaster.value == null) return;
+    const copy = testRaster.value.data.slice();
+    const channelStats = getChannelStats(copy);
+    contrastLimitSlider.value.min = channelStats.contrastLimits[0];
+    contrastLimitSlider.value.max = channelStats.contrastLimits[1];
+    imageViewerStore.contrastLimitExtentSlider.min = channelStats.domain[0];
+    imageViewerStore.contrastLimitExtentSlider.max = channelStats.domain[1];
+
+    pixelSource.value = loader.value.data[0] as PixelSource<any>;
+    renderDeckGL();
+});
+
+function createCellSnippetLayer() {
+    if (dataPointSelectionUntrracked.hoveredTime === null) return null;
+    const trackId = dataPointSelectionUntrracked.hoveredTrackId;
+    if (trackId === null) return null;
+    const track = cellMetaData.trackMap?.get(trackId);
+    if (track == null) return null;
+    const index = dataPointSelectionUntrracked.hoveredCellIndex;
+    if (index === null) return null;
+
+    const cell = track.cells[index];
+    const [x, y] = cellMetaData.getPosition(cell);
+    const source = getBBoxAroundPoint(
+        x,
+        y,
+        looneageViewStore.snippetSourceSize,
+        looneageViewStore.snippetSourceSize
+    );
+
+    const chartX =
+        scaleX.value(dataPointSelectionUntrracked.hoveredTime) -
+        chartWidth.value / 2;
+    const chartY =
+        scaleY.value(aggregateLineChartStore.accessor(cell)) -
+        chartHeight.value / 2;
+
+    const padding = 10;
+    const halfSize = looneageViewStore.snippetDestSize / 2;
+    const destination = [
+        chartX - halfSize,
+        chartY - padding,
+        chartX + halfSize,
+        chartY - padding - looneageViewStore.snippetDestSize,
+    ];
+    console.log({
+        source,
+        destination,
+    });
+
+    const layers = [];
+    layers.push(
+        new CellSnippetsLayer({
+            loader: pixelSource.value,
+            id: `key-frames-snippets-in-line-chart-layer`,
+            contrastLimits: contrastLimit.value,
+            selections: [
+                {
+                    c: 0,
+                    t: dataPointSelectionUntrracked.hoveredFrameIndex,
+                    z: 0,
+                    snippets: [
+                        {
+                            source,
+                            destination: destination,
+                        },
+                    ],
+                },
+            ],
+            channelsVisible: [true],
+            extensions: [colormapExtension],
+            colormap: imageViewerStore.colormap,
+            cache: lruCache,
+            onClick: () => {},
+        })
+    );
+
+    layers.push(
+        new ScatterplotLayer({
+            id: 'test-scatterplot-in-line-chart-layer',
+            data: [
+                {
+                    position: [chartX, chartY],
+                    size: 1,
+                    color: [200, 200, 0],
+                },
+            ],
+            pickable: false,
+            opacity: 0.8,
+            stroked: true,
+            filled: true,
+            radiusScale: 6,
+            radiusMinPixels: 1,
+            radiusMaxPixels: 100,
+            lineWidthMinPixels: 1,
+            getPosition: (d) => d.position,
+            getRadius: (d) => d.size,
+            getFillColor: colors.hovered.rgb,
+            getLineColor: (d) => [0, 0, 0],
+        })
+    );
+
+    return layers;
+}
+
+function renderDeckGL() {
+    if (deckgl == null) return;
+    const layers = [];
+
+    // layers.push(
+    //     new ScatterplotLayer({
+    //         id: 'test-scatterplot-in-line-chart-layer',
+    //         data: [
+    //             {
+    //                 position: [0, 0],
+    //                 size: 100,
+    //                 color: [200, 200, 0],
+    //             },
+    //             {
+    //                 position: [10, 10],
+    //                 size: 80,
+    //                 color: [0, 200, 200],
+    //             },
+    //             {
+    //                 position: [20, 20],
+    //                 size: 60,
+    //                 color: [200, 0, 200],
+    //             },
+    //             {
+    //                 position: [-10, -10],
+    //                 size: 80,
+    //                 color: [0, 200, 200],
+    //             },
+    //             {
+    //                 position: [-20, -20],
+    //                 size: 60,
+    //                 color: [200, 0, 200],
+    //             },
+    //         ],
+    //         pickable: false,
+    //         opacity: 0.8,
+    //         stroked: true,
+    //         filled: true,
+    //         radiusScale: 6,
+    //         radiusMinPixels: 1,
+    //         radiusMaxPixels: 100,
+    //         lineWidthMinPixels: 1,
+    //         getPosition: (d) => d.position,
+    //         getRadius: (d) => d.size,
+    //         getFillColor: (d) => d.color,
+    //         getLineColor: (d) => [0, 0, 0],
+    //     })
+    // );
+
+    layers.push(createCellSnippetLayer());
+
+    deckgl.setProps({
+        layers,
+        // controller: true,
+        width: chartWidth.value,
+        height: chartHeight.value,
+        style: {
+            left: `${margin.value.left}px`,
+            top: `${margin.value.top}px`,
+            position: 'absolute',
+            // background-color: 'rgba(255, 255, 255, 0.4)'
+            // opacity: 0.4,
+            outline: 'solid 2px forestgreen',
+            pointerEvents: 'none',
+        },
+    });
+}
+
+watch(dataPointSelectionUntrracked.$state, renderDeckGL);
 </script>
 
 <template>
@@ -309,6 +584,7 @@ function onMouseMove(event: MouseEvent) {
             </svg>
         </div>
     </div>
+    <canvas id="linechart-deckgl-canvas" ref="deckGlContainer"></canvas>
 </template>
 
 <style scoped lang="scss">
@@ -384,4 +660,27 @@ function onMouseMove(event: MouseEvent) {
 .mw-250 {
     max-width: 250px;
 }
+
+.deck-container-outer {
+    background: bisque;
+    outline: solid green 3px;
+    width: 400px;
+    height: 400px;
+
+    // position: absolute;
+    // top: 0;
+    // left: 0;
+    // width: 100%;
+    // height: 100%;
+    // background-color: white;
+    // opacity: 0.2;
+    // pointer-events: none;
+}
+// canvas {
+//     // // background-color: white;
+//     outline: solid 2px forestgreen;
+//     position: absolute;
+//     // // opacity: 0.2;
+//     // pointer-events: none;
+// }
 </style>

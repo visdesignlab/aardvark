@@ -700,6 +700,9 @@ watch(hoveredCellIndex, () => {
         extraFrames: 0,
     };
 });
+watch(hoveredSnippet, () => {
+    hoveredCellIndex.value = hoveredSnippet.value?.index ?? null;
+});
 
 function hexListToRgba(hexList: readonly string[]): number[] {
     const rgbaList: number[] = [];

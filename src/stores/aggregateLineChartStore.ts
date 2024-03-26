@@ -492,6 +492,7 @@ function storeSetup() {
     });
 
     return {
+        accessor,
         aggregatorKey,
         aggregatorOptions,
         attributeKey,

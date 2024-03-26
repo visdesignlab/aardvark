@@ -1,4 +1,4 @@
-import { ref } from 'vue';
+import { ref, computed } from 'vue';
 import { defineStore } from 'pinia';
 import { useCellMetaData } from '@/stores/cellMetaData';
 import { v4 as uuidv4 } from 'uuid';
@@ -18,6 +18,15 @@ export const useDataPointSelectionUntrracked = defineStore(
         }
         // slightly hacky way to retrigger an image recentering
 
+        const hoveredFrameIndex = computed<number | null>(() => {
+            if (hoveredTime.value === null) return null;
+            const index = cellMetaData.timeList.findIndex(
+                (t) => t === hoveredTime.value
+            );
+            if (index === -1) return null;
+            return index;
+        });
+
         function setHoveredCellIndex(time: number | null = null) {
             if (!cellMetaData.dataInitialized) return;
             const trackId = hoveredTrackId.value;
@@ -36,6 +45,7 @@ export const useDataPointSelectionUntrracked = defineStore(
         }
         return {
             hoveredTime,
+            hoveredFrameIndex,
             hoveredTrackId,
             hoveredCellIndex,
             triggerRecenter,
