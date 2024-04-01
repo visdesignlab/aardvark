@@ -214,7 +214,6 @@ const lruCache = new LRUCache({
 });
 let deckgl: any | null = null;
 onMounted(() => {
-    console.log('deckglContainer', deckGlContainer.value?.id);
     deckgl = new Deck({
         initialViewState: {
             zoom: [0, 0],
