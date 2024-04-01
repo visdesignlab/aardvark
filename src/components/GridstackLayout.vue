@@ -19,7 +19,7 @@ onMounted(() => {
     grid = GridStack.init({
         // DO NOT user grid.value = GridStack.init(), see above
         float: true,
-        cellHeight: '50px',
+        cellHeight: '40px',
         minRow: 1,
         resizable: {
             handles: 'e,se,s,w',

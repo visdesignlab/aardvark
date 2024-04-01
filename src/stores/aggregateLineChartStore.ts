@@ -8,6 +8,12 @@ import { useLooneageViewStore } from './looneageViewStore';
 import { min, max, mean, sum, median, quantile, deviation } from 'd3-array';
 import { useDataPointSelectionUntrracked } from './dataPointSelectionUntrracked';
 
+export interface AggLine {
+    data: AggLineData;
+    muted: boolean;
+    relation: 'ancestor' | 'left' | 'right' | 'other';
+    trackId: string;
+}
 export interface AggLineData extends Array<AggDataPoint> {}
 export interface AggDataPoint {
     time: number;
@@ -331,9 +337,7 @@ function storeSetup() {
         }
     );
 
-    const aggLineDataList = computed<
-        { data: AggLineData; muted: boolean; trackId: string }[]
-    >(() => {
+    const aggLineDataList = computed<AggLine[]>(() => {
         switch (targetKey.value) {
             case 'selected lineage': {
                 const lineageId = dataPointSelection.selectedLineageId;
@@ -347,11 +351,7 @@ function storeSetup() {
                         ? null
                         : cellMetaData.trackMap?.get(trackId);
 
-                const result: {
-                    data: AggLineData;
-                    muted: boolean;
-                    trackId: string;
-                }[] = [];
+                const result: AggLine[] = [];
                 for (const track of cellMetaData.makeLineageTrackIterator(
                     lineage.founder,
                     looneageViewStore.maxDepth
@@ -363,13 +363,23 @@ function storeSetup() {
                         const count = 1;
                         aggLineData.push({ time, value, count });
                     }
-                    const muted = selectedTrack
-                        ? !cellMetaData.isDirectRelation(track, selectedTrack)
-                        : false;
+                    let muted = false;
+                    let relation: 'ancestor' | 'left' | 'right' | 'other' =
+                        'other';
+                    if (selectedTrack) {
+                        const { direct, type } = cellMetaData.getRelation(
+                            selectedTrack,
+                            track
+                        );
+                        muted = !direct;
+                        relation = type;
+                    }
+
                     result.push({
                         data: medianFilterSmooth(aggLineData),
                         muted,
                         trackId: track.trackId,
+                        relation,
                     });
                 }
                 return result;
@@ -394,17 +404,14 @@ function storeSetup() {
                         data: medianFilterSmooth(singleLine),
                         muted: false,
                         trackId: '',
+                        relation: 'other',
                     },
                 ];
             }
             case 'cell lineages combined': {
                 if (!cellMetaData?.lineageArray) return [];
 
-                const result: {
-                    data: AggLineData;
-                    muted: boolean;
-                    trackId: string;
-                }[] = [];
+                const result: AggLine[] = [];
 
                 for (const lineage of cellMetaData.lineageArray) {
                     const aggLineData: AggLineData = [];
@@ -426,17 +433,14 @@ function storeSetup() {
                         data: medianFilterSmooth(aggLineData),
                         muted: false,
                         trackId: lineage.lineageId,
+                        relation: 'other',
                     });
                 }
                 return result;
             }
             case 'individual cell tracks': {
                 if (!cellMetaData?.trackArray) return [];
-                const result: {
-                    data: AggLineData;
-                    muted: boolean;
-                    trackId: string;
-                }[] = [];
+                const result: AggLine[] = [];
                 for (const track of cellMetaData.trackArray) {
                     const aggLineData: AggLineData = [];
                     for (const cell of track.cells) {
@@ -449,6 +453,7 @@ function storeSetup() {
                         data: medianFilterSmooth(aggLineData),
                         muted: true,
                         trackId: track.trackId,
+                        relation: 'other',
                     });
                 }
                 return result;

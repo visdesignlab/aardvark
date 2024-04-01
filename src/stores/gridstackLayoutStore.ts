@@ -262,17 +262,23 @@ export const useGridstackLayoutStore = defineStore(
 
         function setEqualItems(items: Item[]): LayoutItem[] {
             const layoutItems: LayoutItem[] = [];
-            const h = 10;
+            const height = 10;
             const w = 6;
             let x = 0;
             let y = 0;
+            let first = true; // the first item should be double height.
+            let i = 0;
             for (const item of items) {
-                const layoutItem: LayoutItem = { ...item, x, y, w, h };
+                const h = first ? 2 * height : height;
+                const thisY = i % 2 === 1 || first ? y : y + 10;
+                const layoutItem: LayoutItem = { ...item, x, y: thisY, w, h };
                 x = (x + 6) % 12;
                 if (x === 0) {
                     y += 10;
                 }
                 layoutItems.push(layoutItem);
+                first = false;
+                i++;
             }
 
             return layoutItems;
@@ -286,6 +292,15 @@ export const useGridstackLayoutStore = defineStore(
                 noPadding: true,
                 sidebar: 'LooneageViewSettingsSidebar',
                 toolbar: 'LooneageViewSettingsToolbar',
+            },
+            {
+                component: 'AggregateLineChart',
+                displayName: 'Line Chart',
+                id: 'AggregateLineChart',
+                icon: 'timeline',
+                sidebar: 'AggregateLineChartSettingsSidebar',
+                toolbar: 'AggregateLineChartSettingsToolbar',
+                noPadding: true,
             },
             {
                 component: 'SimpleTable',
@@ -324,15 +339,6 @@ export const useGridstackLayoutStore = defineStore(
                     attributeLevel: 'cell',
                 },
                 icon: 'table_chart',
-                noPadding: true,
-            },
-            {
-                component: 'AggregateLineChart',
-                displayName: 'Line Chart',
-                id: 'AggregateLineChart',
-                icon: 'timeline',
-                sidebar: 'AggregateLineChartSettingsSidebar',
-                toolbar: 'AggregateLineChartSettingsToolbar',
                 noPadding: true,
             },
             {

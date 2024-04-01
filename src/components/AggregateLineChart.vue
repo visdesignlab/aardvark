@@ -448,6 +448,24 @@ function renderDeckGL() {
 }
 
 watch(dataPointSelectionUntrracked.$state, renderDeckGL);
+
+const relatedToSelection = computed(() => {
+    return aggregateLineChartStore.aggLineDataList.filter((d) => !d.muted);
+});
+
+const relatedToSelectionLeft = computed(() => {
+    return relatedToSelection.value.filter((d) => d.relation === 'left');
+});
+
+const relatedToSelectionRight = computed(() => {
+    return relatedToSelection.value.filter((d) => d.relation === 'right');
+});
+
+const otherUnmuted = computed(() => {
+    return relatedToSelection.value.filter(
+        (d) => d.relation !== 'left' && d.relation !== 'right'
+    );
+});
 </script>
 
 <template>
@@ -516,15 +534,30 @@ watch(dataPointSelectionUntrracked.$state, renderDeckGL);
                 <g :transform="`translate(${margin.left},${margin.top})`">
                     <path
                         :class="`agg-line ${globalSettings.normalizedDark}`"
-                        v-for="(
-                            aggLine, index
-                        ) in aggregateLineChartStore.aggLineDataList.filter(
-                            (d) => !d.muted
-                        )"
+                        v-for="(aggLine, index) in otherUnmuted"
                         :key="index"
                         :d="areaGen(aggLine.data) ?? ''"
                     ></path>
                 </g>
+
+                <g :transform="`translate(${margin.left},${margin.top})`">
+                    <path
+                        :class="`left agg-line ${globalSettings.normalizedDark}`"
+                        v-for="(aggLine, index) in relatedToSelectionLeft"
+                        :key="index"
+                        :d="areaGen(aggLine.data) ?? ''"
+                    ></path>
+                </g>
+
+                <g :transform="`translate(${margin.left},${margin.top})`">
+                    <path
+                        :class="`right agg-line ${globalSettings.normalizedDark}`"
+                        v-for="(aggLine, index) in relatedToSelectionRight"
+                        :key="index"
+                        :d="areaGen(aggLine.data) ?? ''"
+                    ></path>
+                </g>
+
                 <g :transform="`translate(${margin.left},${margin.top})`">
                     <path
                         :class="`selected agg-line ${globalSettings.normalizedDark}`"
@@ -597,6 +630,16 @@ watch(dataPointSelectionUntrracked.$state, renderDeckGL);
     stroke-width: 3px;
     stroke-linejoin: round;
     opacity: 0.95;
+}
+
+.left.agg-line {
+    stroke: #1b9e77;
+    fill: #1b9e77;
+}
+
+.right.agg-line {
+    stroke: #7570b3;
+    fill: #7570b3;
 }
 .muted.agg-line {
     stroke-width: 1px;

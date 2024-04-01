@@ -116,20 +116,41 @@ export const useCellMetaData = defineStore('cellMetaData', () => {
         return parent ?? null;
     }
 
-    function isDirectRelation(a: Track, b: Track): boolean {
-        // returns true if a is a direct descendant of b, or vice versa.
-        // this excludes siblings/aunt/uncle/cousin relationships
+    function getRelation(
+        a: Track,
+        b: Track
+    ): { direct: boolean; type: 'ancestor' | 'left' | 'right' | 'other' } {
+        // returns the relationship status between a and b.
+        // if b is an ancestor of a, then the type is 'ancestor'
+        // if b is in the left subtree of a the type is 'left'
+        // if b is in the right subtree of a the type is 'right'
+        // if the relationship is not direct (cousin, aunt, etc), or not in the same lineage the relationship is 'other'
         let aParent = a;
         while (hasParent(aParent)) {
             aParent = getParent(aParent)!;
-            if (aParent.trackId === b.trackId) return true;
+            if (aParent.trackId === b.trackId) {
+                return { direct: true, type: 'ancestor' };
+            }
         }
+
         let bParent = b;
+        let bPrev: Track; // used to determine left/right
         while (hasParent(bParent)) {
+            bPrev = bParent;
             bParent = getParent(bParent)!;
-            if (bParent.trackId === a.trackId) return true;
+            if (bParent.trackId === a.trackId) {
+                const subTreeIndex = a.children.findIndex((child) => {
+                    return child.trackId === bPrev.trackId;
+                });
+                if (subTreeIndex === -1) {
+                    throw new Error('unable to get relation');
+                }
+                const type = subTreeIndex === 0 ? 'left' : 'right';
+                return { direct: true, type };
+            }
         }
-        return false;
+
+        return { direct: false, type: 'other' };
     }
 
     function getLineageId(track: Track): string {
@@ -694,7 +715,7 @@ export const useCellMetaData = defineStore('cellMetaData', () => {
         getTime,
         getFrame,
         getParent,
-        isDirectRelation,
+        getRelation,
         getPosition,
         getNumAttr,
         createFrameMap,

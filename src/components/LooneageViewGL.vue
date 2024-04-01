@@ -123,33 +123,33 @@ function onShiftUp() {
 }
 
 const controlDown = ref(false);
-useKeypress({
-    keyEvent: 'keydown',
-    onAnyKey: (e: any) => {
-        const event = e.event as KeyboardEvent;
-        if (event.metaKey) {
-            onControlDown();
-        }
-    },
-    keyBinds: [],
-});
-useKeypress({
-    keyEvent: 'keyup',
-    onAnyKey: (e: any) => {
-        const event = e.event as KeyboardEvent;
-        if (event.metaKey) {
-            onControlUp();
-        }
-    },
-    keyBinds: [],
-});
-function onControlDown() {
-    controlDown.value = true;
-}
+// useKeypress({
+//     keyEvent: 'keydown',
+//     onAnyKey: (e: any) => {
+//         const event = e.event as KeyboardEvent;
+//         if (event.metaKey) {
+//             onControlDown();
+//         }
+//     },
+//     keyBinds: [],
+// });
+// useKeypress({
+//     keyEvent: 'keyup',
+//     onAnyKey: (e: any) => {
+//         const event = e.event as KeyboardEvent;
+//         if (event.metaKey) {
+//             onControlUp();
+//         }
+//     },
+//     keyBinds: [],
+// });
+// function onControlDown() {
+//     controlDown.value = true;
+// }
 
-function onControlUp() {
-    controlDown.value = false;
-}
+// function onControlUp() {
+//     controlDown.value = false;
+// }
 
 const deckGlContainer = ref(null);
 const { width: deckGlWidth, height: deckGlHeight } =
@@ -700,9 +700,10 @@ watch(hoveredCellIndex, () => {
         extraFrames: 0,
     };
 });
-watch(hoveredSnippet, () => {
-    hoveredCellIndex.value = hoveredSnippet.value?.index ?? null;
-});
+// watch(hoveredSnippet, () => {
+//     hoveredCellIndex.value = hoveredSnippet.value?.index ?? null;
+// });
+// Circular watch
 
 function hexListToRgba(hexList: readonly string[]): number[] {
     const rgbaList: number[] = [];
@@ -1722,12 +1723,12 @@ function createHorizonChartLabelLayer(
         getTextAnchor: 'start',
         getAlignmentBaseline: 'bottom',
         getColor: [0, 0, 0, 255],
-        fontSettings: { sdf: true },
-        outlineColor: [255, 255, 255, 255],
-        outlineWidth: 4,
+        // fontSettings: { sdf: true },
+        // outlineColor: [255, 255, 255, 255],
+        // outlineWidth: 4,
         backgroundPadding: [5, 2],
         background: true,
-        backgroundColor: [255, 255, 255, 60],
+        backgroundColor: [255, 255, 255, 160],
     });
 
     return textLayer;
@@ -1927,7 +1928,7 @@ function createCellBoundaryLayer(
                 }
                 return colors.unselectedBoundary.rgb;
             },
-            getWidth: 1,
+            getWidth: 1.5,
             widthUnits: 'pixels',
             jointRounded: true,
             getCenter: (d: any) => d.center,
