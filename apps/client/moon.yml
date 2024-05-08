@@ -1,0 +1,21 @@
+language: typescript
+
+tasks:
+  build:
+    command: 'yarn run build'
+    inputs:
+      - 'src/**/*'
+    outputs:
+      - 'dist'
+  run:
+    command: 'yarn run dev'
+    inputs:
+      - 'src/**/*'
+  lint:
+    command: 'yarn run lint'
+
+project:
+  name: 'Loon'
+  owner: 'University of Utah'
+  maintainers: ['Dev-Lan','bbollen23']
+  description: 'Front end data visualization platform for cell microscopy data.'

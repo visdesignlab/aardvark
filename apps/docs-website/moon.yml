@@ -1,0 +1,19 @@
+language: typescript
+
+tasks:
+  build:
+    command: 'yarn build'
+    inputs:
+      - 'src/**/*'
+    outputs:
+      - 'dist'
+  run:
+    command: 'yarn run start'
+    inputs:
+      - 'src/**/*'
+
+project:
+  name: 'Loon Website'
+  owner: 'University of Utah'
+  maintainers: ['Dev-Lan','bbollen23']
+  description: 'Documentation website for Loon Project'

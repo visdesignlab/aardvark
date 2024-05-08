@@ -28,3 +28,7 @@ certs
 *.njsproj
 *.sln
 *.sw?
+
+# moon
+.moon/cache
+.moon/docker
