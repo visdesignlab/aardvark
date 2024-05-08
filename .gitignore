@@ -32,3 +32,9 @@ certs
 # moon
 .moon/cache
 .moon/docker
+
+# venv
+.venv
+
+# PYC files
+*.pyc
