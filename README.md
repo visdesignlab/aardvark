@@ -4,7 +4,9 @@
 
 ### Installing Moon
 
-We use Moon as the monorepo package for managing this repository. You can install Moon with the following:
+We use [Moon](https://moonrepo.dev/) as the monorepo package for managing this repository.
+
+For Linux/Mac you can install Moon with the following:
 
 ```bash
 curl -fsSL https://moonrepo.dev/install/moon.sh | bash
