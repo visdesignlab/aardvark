@@ -23,11 +23,22 @@ The basics usage of moon in our mono repo is to have central commands which run 
 
 ### Installing Repository Dependencies
 
+#### Requirements
+
+The following are required for each repository to work effectively:
+
+```
+Node>=20.11.1
+Python>=3.11.6
+```
+
 Once moon is set up, you can install all necessary packages for each of the repositories by calling this function:
 
 ```bash
 moon :install
 ```
+
+Note: If you run the install function, this will set up a Python virtual environment for your server. If you accidentally end up running the install function without upgrading Python, you may run into issues even after you upgrade Python because the virtual environment will be on the old version. To alleviate this, please remove the `apps/server/.venv` directory, then run the install function again.
 
 ### Running the Application
 
