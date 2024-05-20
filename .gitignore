@@ -38,3 +38,7 @@ certs
 
 # PYC files
 *.pyc
+
+#Random
+apps/server/api/*.jpg
+apps/server/api/secrets.json

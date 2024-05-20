@@ -16,10 +16,13 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path
-from api.views import HelloWorldView
+from api.views import UploadDataView, ListBucketsView, AuthorizationKeys
 
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('', HelloWorldView.as_view(), name='hello-world'),
+    path('upload/', UploadDataView.as_view(), name='upload'),
+    path('upload/<str:filename>', UploadDataView.as_view(), name='upload-status'),
+    path('list/', ListBucketsView.as_view(), name='list'),
+    path('authorization/',AuthorizationKeys.as_view(), name='authorization')
 ]

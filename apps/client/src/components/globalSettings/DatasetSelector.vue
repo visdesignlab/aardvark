@@ -114,6 +114,18 @@ function openExampleDataset() {
             >
         </q-list>
     </div>
+    <q-uploader
+        url="http://localhost:8000/upload/"
+        method="POST"
+        style="width: 100%; margin-top:50px"
+        color="white"
+        label="Upload Data"
+        flat
+        multiple
+        bordered
+        no-thumbnails
+        auto-uplaod
+      />
 </template>
 
 <style scoped lange="scss"></style>
