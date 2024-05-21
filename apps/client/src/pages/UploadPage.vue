@@ -1,7 +1,8 @@
-<script lang="ts">
+<script lang="ts" setup>
 import { ref, computed, watch, onMounted } from 'vue';
 import GlobalSettingsView from '@/components/globalSettings/GlobalSettingsView.vue';
-import LoadingProgress from './LoadingProgress.vue';
+import LoadingProgress, { type ProgressRecord } from './LoadingProgress.vue';
+import type { QStepper } from 'quasar';
 
 interface FileOptions {
     file: File | null;
@@ -10,138 +11,287 @@ interface FileOptions {
     processing: 0 | 1 | 2;
 }
 
-export default {
-    setup() {
-        const step = ref(1);
-        const fileModel = ref<Record<string, FileOptions>>({
-            metadata: {
-                file: null,
-                uploading: 0,
-                processing: 0,
-            },
-            cellImages: {
-                file: null,
-                checkForUpdates: true,
-                uploading: 0,
-                processing: 0,
-            },
-            segmentations: {
-                file: null,
-                checkForUpdates: true,
-                uploading: 0,
-                processing: 0,
-            },
-        });
-        const stepProcessing = ref(1);
-        const uploadAll = async () => {
-            console.log('called here');
-            const fileEntries = Object.entries(fileModel.value);
-            console.log(fileModel.value);
-            for (let i = 0; i < fileEntries.length; i++) {
-                const fileLabel = fileEntries[i][0];
-                const fileOptions = fileEntries[i][1];
-                // Upload file
-                if (fileOptions && fileOptions.file) {
-                    await uploadFile(fileOptions.file, fileLabel);
-                    if (fileOptions.checkForUpdates) {
-                        await checkForUpdates(fileOptions.file.name, fileLabel);
-                    }
-                }
-            }
+const step = ref(1);
+const experimentName = ref<string | null>(null);
+const numberOfLocations = ref<number | null>(null);
+const createRange = (n: number | null, label: string) => {
+    if (n) {
+        let result: string[] = [];
+        for (let i = 0; i < n; i++) {
+            let curr = `location_${i + 1}_${label}`;
+            result.push(curr);
+        }
+        return result;
+    }
+    return [];
+};
+const updateFile = (file: File, item: string, checkForUpdates: boolean) => {
+    if (fileModel.value[item]) {
+        fileModel.value[item].file = file;
+    } else {
+        fileModel.value[item] = {
+            file: file,
+            uploading: 0,
+            processing: 0,
+            checkForUpdates,
         };
-        const uploadFile = async (file: File | null, label: string) => {
-            if (file) {
-                fileModel.value[label].uploading = 1;
-                fileModel.value[label].processing = 0;
-
-                const formData = new FormData();
-                formData.append(file.name, file);
-                fetch('http://localhost:8000/upload/', {
-                    method: 'POST',
-                    body: formData,
-                })
-                    .then((response) => {
-                        if (response.ok) {
-                            return response.json();
-                        } else {
-                            throw new Error('Failed to upload file.');
-                        }
-                    })
-                    .then((responseData) => {
-                        console.log(responseData);
-                        fileModel.value[label].uploading = 2;
-                        fileModel.value[label].processing = 1;
-                    })
-                    .catch((error) => {
-                        console.error('Error uploading file: ', error);
-                    });
-            }
-        };
-        const checkForUpdates = async (fileName: string, fileLabel: string) => {
-            try {
-                let updatesAvailable = false;
-                while (!updatesAvailable) {
-                    console.log(fileLabel);
-                    console.log(fileName);
-                    // Make a request to your server to check for updates
-                    const response = await fetch(
-                        'http://localhost:8000/upload/' + fileName
-                    );
-
-                    if (!response.ok) {
-                        throw new Error('Failed to fetch updates');
-                    }
-
-                    const data = await response.json();
-                    if (data.status) {
-                        updatesAvailable = true;
-                    } else {
-                        await new Promise((resolve) =>
-                            setTimeout(resolve, 5000)
-                        );
-                    }
-                }
-                fileModel.value[fileLabel].processing = 2;
-
-            } catch (error) {
-                console.error('Error checking for updates:', error);
-            }
-        };
-        const disableUpload = () => {
-            return !(stepDone(1) && stepDone(2) && stepDone(3) && stepDone(4));
-        };
-        const stepDone = (inputStep: number) => {
-            switch (inputStep) {
-                case 1:
-                    return step.value > 1;
-                case 2:
-                    return (
-                        fileModel.value?.metadata.file !== null &&
-                        fileModel.value.metadata.file !== undefined
-                    );
-                case 3:
-                    return (
-                        fileModel?.value.cellImages.file !== null &&
-                        fileModel.value.cellImages.file !== undefined
-                    );
-                case 4:
-                    return (
-                        fileModel?.value.segmentations.file !== null &&
-                        fileModel.value.segmentations.file !== undefined
-                    );
-            }
-        };
-        return {
-            step,
-            fileModel,
-            stepProcessing,
-            uploadFile,
-            uploadAll,
-            disableUpload,
-            stepDone,
-        };
+    }
+};
+const fileModel = ref<Record<string, FileOptions>>({
+    location_1_metadata: {
+        file: null,
+        uploading: 0,
+        processing: 0,
     },
-    components: { LoadingProgress },
+    location_1_cell_images: {
+        file: null,
+        checkForUpdates: true,
+        uploading: 0,
+        processing: 0,
+    },
+    location_1_segmentations: {
+        file: null,
+        checkForUpdates: true,
+        uploading: 0,
+        processing: 0,
+    },
+});
+const handleUpdateFileModel = (s:QStepper) => {
+    let currLength = (Object.keys(fileModel.value).length/3);
+    console.log(currLength);
+    console.log(numberOfLocations.value)
+    if(numberOfLocations?.value && currLength < numberOfLocations.value){
+        let newLength = numberOfLocations.value;
+        for(let i = currLength; i <= newLength; i++ ){
+            fileModel.value[`location_${i}_metadata`] = {
+                file:null,
+                uploading:0,
+                processing:0
+
+            }
+            fileModel.value[`location_${i}_cell_images`] = {
+                file:null,
+                checkForUpdates:true,
+                uploading:0,
+                processing:0
+
+            }            
+            fileModel.value[`location_${i}_segmentations`] = {
+                file:null,
+                checkForUpdates:true,
+                uploading:0,
+                processing:0
+
+            }
+        }
+    } else if (numberOfLocations?.value && currLength > numberOfLocations.value){
+        let newLength = numberOfLocations.value;
+        for(let i = newLength; i < currLength; i++){
+            delete fileModel.value[`location_${i+1}_metadata`]
+            delete fileModel.value[`location_${i+1}_cell_images`]
+            delete fileModel.value[`location_${i+1}_segmentations`]
+            
+        }
+    }
+    s.next();
+}
+const uploadAll = async () => {
+    const fileKeys = Object.keys(fileModel.value);
+
+    const orderMap: { [key: string]: number } = {
+        metadata: 1,
+        cell: 2,
+        segmentations: 3,
+    };
+
+    fileKeys.sort((a: string, b: string) => {
+        const labelA = a.split('_')[2];
+        const labelB = b.split('_')[2];
+
+        return orderMap[labelA] - orderMap[labelB];
+    });
+
+    for (let i = 0; i < fileKeys.length; i++) {
+        const fileLabel = fileKeys[i];
+        const fileOptions = fileModel.value[fileKeys[i]];
+        // Upload file
+        if (fileOptions && fileOptions.file) {
+            await uploadFile(fileOptions.file, fileLabel);
+            if (fileOptions.checkForUpdates) {
+                await checkForUpdates(fileOptions.file.name, fileLabel);
+            }
+        }
+    }
+};
+
+const uploadFile = async (file: File | null, label: string) => {
+    if (file) {
+        fileModel.value[label].uploading = 1;
+        fileModel.value[label].processing = 0;
+
+        const formData = new FormData();
+        formData.append(file.name, file);
+        fetch('http://localhost:8000/upload/', {
+            method: 'POST',
+            body: formData,
+        })
+            .then((response) => {
+                if (response.ok) {
+                    return response.json();
+                } else {
+                    throw new Error('Failed to upload file.');
+                }
+            })
+            .then((responseData) => {
+                console.log(responseData);
+                fileModel.value[label].uploading = 2;
+                fileModel.value[label].processing = 1;
+            })
+            .catch((error) => {
+                console.error('Error uploading file: ', error);
+            });
+    }
+};
+const checkForUpdates = async (fileName: string, fileLabel: string) => {
+    try {
+        let updatesAvailable = false;
+        while (!updatesAvailable) {
+            console.log(fileLabel);
+            console.log(fileName);
+            // Make a request to your server to check for updates
+            const response = await fetch(
+                'http://localhost:8000/upload/' + fileName
+            );
+
+            if (!response.ok) {
+                throw new Error('Failed to fetch updates');
+            }
+
+            const data = await response.json();
+            if (data.status) {
+                updatesAvailable = true;
+            } else {
+                await new Promise((resolve) => setTimeout(resolve, 5000));
+            }
+        }
+        fileModel.value[fileLabel].processing = 2;
+    } catch (error) {
+        console.error('Error checking for updates:', error);
+    }
+};
+const disableUpload = () => {
+    return !(stepDone(1) && stepDone(2) && stepDone(3) && stepDone(4));
+};
+const stepDone = (inputStep: number) => {
+    switch (inputStep) {
+        case 1:
+            return step.value > 1;
+        case 2:
+            if (numberOfLocations.value) {
+                console.log('here');
+                for (let i = 0; i < numberOfLocations.value; i++) {
+                    if (
+                        !(
+                            fileModel.value[`location_${i + 1}_metadata`] &&
+                            fileModel.value[`location_${i + 1}_metadata`].file
+                        )
+                    ) {
+                        return false;
+                    }
+                }
+                return true;
+            }
+            return false;
+        case 3:
+            if (numberOfLocations.value) {
+                for (let i = 0; i < numberOfLocations.value; i++) {
+                    if (
+                        !(
+                            fileModel.value[`location_${i + 1}_cell_images`] &&
+                            fileModel.value[`location_${i + 1}_cell_images`]
+                                .file
+                        )
+                    ) {
+                        return false;
+                    }
+                }
+                return true;
+            }
+            return false;
+        case 4:
+            if (numberOfLocations.value) {
+                for (let i = 0; i < numberOfLocations.value; i++) {
+                    if (
+                        !(
+                            fileModel.value[
+                                `location_${i + 1}_segmentations`
+                            ] &&
+                            fileModel.value[`location_${i + 1}_segmentations`]
+                                .file
+                        )
+                    ) {
+                        return false;
+                    }
+                }
+                return true;
+            }
+            return false;
+        default:
+            return true;
+    }
+};
+
+const getProgressStatusList = () => {
+    let progressResult: ProgressRecord[] = [];
+
+    let key_list = ['metadata', 'cell_images', 'segmentations'];
+    if (numberOfLocations.value) {
+        for (let i = 0; i < key_list.length; i++) {
+            let currItems = Object.keys(fileModel.value).filter(
+                (entry: string) => {
+                    return entry.includes(key_list[i]);
+                }
+            );
+            let currSubProgress: ProgressRecord[] = [];
+            for (let j = 0; j < numberOfLocations.value; j++) {
+                let currKey = `location_${j + 1}_${key_list[i]}`;
+                if (currItems.includes(currKey)) {
+                    currSubProgress.push({
+                        label:
+                            'Uploading ' +
+                            currKey
+                                .replace(/_/g, ' ')
+                                .replace(/\b\w/g, (char: string) =>
+                                    char.toUpperCase()
+                                ),
+                        progress:
+                            fileModel.value[currKey] &&
+                            fileModel.value[currKey].uploading,
+                    });
+                    if (fileModel.value[currKey].checkForUpdates) {
+                        currSubProgress.push({
+                            label:
+                                'Processing ' +
+                                currKey
+                                    .replace(/_/g, ' ')
+                                    .replace(/\b\w/g, (char: string) =>
+                                        char.toUpperCase()
+                                    ),
+                            progress:
+                                fileModel.value[currKey] &&
+                                fileModel.value[currKey].processing,
+                        });
+                    }
+                }
+            }
+            progressResult.push({
+                label: `Uploading and Processing ${key_list[i]}`,
+                progress: 0,
+                subProgress: currSubProgress,
+            });
+        }
+    }
+    return progressResult;
 };
 </script>
 <template>
@@ -162,7 +312,39 @@ export default {
                 done-color="green"
                 ref="step1"
             >
-                Start by creating an experiment
+                <span class="step-title"> Create Your Experiment </span>
+                <div class="column" style="row-gap: 20px; margin-top: 30px">
+                    <q-input
+                        v-model="experimentName"
+                        outlined
+                        style="width: 500px"
+                        label-slot
+                        :rules="[(val) => !!val || 'Field is required']"
+                    >
+                        <template v-slot:label>
+                            <span class="upload-label">Experiment Name</span>
+                        </template>
+                    </q-input>
+                    <q-input
+                        v-model="numberOfLocations"
+                        outlined
+                        style="width: 500px"
+                        label-slot
+                        :rules="[
+                            (val) => !!val || 'Field is required',
+                            (val) =>
+                                !isNaN(parseInt(val)) ||
+                                'Please enter in a valid number.',
+                        ]"
+                        hint="Number of locations to add."
+                    >
+                        <template v-slot:label>
+                            <span class="upload-label"
+                                >Number of Locations</span
+                            >
+                        </template>
+                    </q-input>
+                </div>
             </q-step>
 
             <q-step
@@ -174,28 +356,44 @@ export default {
                 ref="step3"
             >
                 <div class="column" style="margin-bottom: 50px">
-                    <span class="text-weight-bold"
+                    <span class="step-title"
                         >Upload one CSV file for all CSV metadata.</span
                     >
-                    <q-file
-                        v-model="fileModel.metadata.file"
-                        label="File"
-                        style="
-                            width: 500px;
-                            margin-top: 30px;
-                            margin-bottom: 30px;
-                        "
+
+                    <template
+                        v-for="(item, n) in createRange(
+                            numberOfLocations,
+                            'metadata'
+                        )"
                     >
-                        <template v-slot:prepend>
-                            <q-icon
-                                name="close"
-                                @click.stop.prevent="
-                                    fileModel.metadata.file = null
-                                "
-                                class="cursor-pointer"
-                            />
-                        </template>
-                    </q-file>
+                        <q-file
+                            :model-value="fileModel[item]?.file"
+                            @input="
+                                updateFile($event.target.files[0], item, false)
+                            "
+                            label-slot
+                            style="
+                                width: 500px;
+                                margin-top: 30px;
+                                margin-bottom: 30px;
+                            "
+                        >
+                            <template v-slot:label>
+                                <span class="upload-label"
+                                    >Location {{ n + 1 }} metadata</span
+                                >
+                            </template>
+                            <template v-slot:prepend>
+                                <q-icon
+                                    name="close"
+                                    @click.stop.prevent="
+                                        fileModel[item].file = null
+                                    "
+                                    class="cursor-pointer"
+                                />
+                            </template>
+                        </q-file>
+                    </template>
                 </div>
             </q-step>
 
@@ -208,28 +406,43 @@ export default {
                 ref="step3"
             >
                 <div class="column" style="margin-bottom: 50px">
-                    <span class="text-weight-bold"
+                    <span class="step-title"
                         >Upload one zipped file of all cell images.</span
                     >
-                    <q-file
-                        v-model="fileModel.cellImages.file"
-                        label="File"
-                        style="
-                            width: 500px;
-                            margin-top: 30px;
-                            margin-bottom: 30px;
-                        "
+                    <template
+                        v-for="(item, n) in createRange(
+                            numberOfLocations,
+                            'cell_images'
+                        )"
                     >
-                        <template v-slot:prepend>
-                            <q-icon
-                                name="close"
-                                @click.stop.prevent="
-                                    fileModel.cellImages.file = null
-                                "
-                                class="cursor-pointer"
-                            />
-                        </template>
-                    </q-file>
+                        <q-file
+                            :model-value="fileModel[item]?.file"
+                            @input="
+                                updateFile($event.target.files[0], item, true)
+                            "
+                            label="File"
+                            style="
+                                width: 500px;
+                                margin-top: 30px;
+                                margin-bottom: 30px;
+                            "
+                        >
+                            <template v-slot:label>
+                                <span class="upload-label"
+                                    >Location {{ n + 1 }} Cell Images</span
+                                >
+                            </template>
+                            <template v-slot:prepend>
+                                <q-icon
+                                    name="close"
+                                    @click.stop.prevent="
+                                        fileModel[item].file = null
+                                    "
+                                    class="cursor-pointer"
+                                />
+                            </template>
+                        </q-file>
+                    </template>
                 </div>
             </q-step>
 
@@ -242,71 +455,50 @@ export default {
                 ref="step4"
             >
                 <div class="column" style="margin-bottom: 50px">
-                    <span class="text-weight-bold"
+                    <span class="step-title"
                         >Upload one zipped file of all segmentations.</span
                     >
-                    <q-file
-                        v-model="fileModel.segmentations.file"
-                        label="File"
-                        style="
-                            width: 500px;
-                            margin-top: 30px;
-                            margin-bottom: 30px;
-                        "
+                    <template
+                        v-for="(item, n) in createRange(
+                            numberOfLocations,
+                            'segmentations'
+                        )"
                     >
-                        <template v-slot:prepend>
-                            <q-icon
-                                name="close"
-                                @click.stop.prevent="
-                                    fileModel.segmentations.file = null
-                                "
-                                class="cursor-pointer"
-                            />
-                        </template>
-                    </q-file>
+                        <q-file
+                            :model-value="fileModel[item]?.file"
+                            @input="
+                                updateFile($event.target.files[0], item, true)
+                            "
+                            label="File"
+                            style="
+                                width: 500px;
+                                margin-top: 30px;
+                                margin-bottom: 30px;
+                            "
+                        >
+                            <template v-slot:label>
+                                <span class="upload-label"
+                                    >Location {{ n + 1 }} Cell Images</span
+                                >
+                            </template>
+                            <template v-slot:prepend>
+                                <q-icon
+                                    name="close"
+                                    @click.stop.prevent="
+                                        fileModel.segmentations.file = null
+                                    "
+                                    class="cursor-pointer"
+                                />
+                            </template>
+                        </q-file>
+                    </template>
                 </div>
             </q-step>
             <q-step title="Review and Finish" :name="5" icon="settings">
                 <div class="row q-pa-md" style="justify-content: space-between">
                     <div style="width: 400px; flex: 1">
                         <LoadingProgress
-                            :progress-status="[
-                                {
-                                    label: 'Uploading Metadata',
-                                    progress:
-                                        fileModel && fileModel.metadata
-                                            ? fileModel.metadata.uploading
-                                            : 0,
-                                },
-                                {
-                                    label: 'Uploading Cell Images',
-                                    progress:
-                                        fileModel && fileModel.cellImages
-                                            ? fileModel.cellImages.uploading
-                                            : 0,
-                                },
-                                {
-                                    label: 'Processing Cell Images',
-                                    progress:
-                                        fileModel && fileModel.cellImages
-                                            ? fileModel.cellImages.processing
-                                            : 0,
-                                },
-                                {
-                                    label: 'Uploading Segmentations',
-                                    progress:
-                                        fileModel && fileModel.segmentations
-                                            ? fileModel.segmentations.uploading
-                                            : 0,
-                                },
-                                {
-                                    label: 'Processing Segmentations',
-                                    progress:
-                                        fileModel && fileModel.segmentations
-                                            ? fileModel.segmentations.processing
-                                            : 0,
-                                },
-                            ]"
+                            :progress-status="getProgressStatusList()"
                         />
                     </div>
                     <div
@@ -317,13 +509,13 @@ export default {
                             justify-content: center;
                         "
                     >
-                        <span class="text-weight-bold"> Review and Finish</span>
+                        <span class="step-title"> Review and Finish</span>
                         <!-- <q-btn
                             no-caps
                             color="primary"
                             label="Begin Upload"
                             ref="upload-button"
-                            @click.stop.prevent="uploadFile(model.cellImages)"
+                            @click.stop.prevent="uploadFile(model.cell_images)"
                             style="width: 150px"
                         /> -->
                     </div>
@@ -350,7 +542,7 @@ export default {
                         @click="
                             step === 5
                                 ? uploadAll()
-                                : ($refs.stepper as any).next()
+                                : step === 1 ? handleUpdateFileModel($refs.stepper as QStepper) : ($refs.stepper as any).next()
                         "
                         color="primary"
                         :label="step === 5 ? 'Create Experiment' : 'Continue'"
@@ -361,3 +553,14 @@ export default {
         </q-stepper>
     </q-page>
 </template>
+
+<style scoped>
+.upload-label {
+    font-weight: bold;
+}
+
+.step-title {
+    font-weight: bold;
+    font-size: 1.2em;
+}
+</style>
