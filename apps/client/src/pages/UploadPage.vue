@@ -11,7 +11,7 @@ interface FileOptions {
     file_type: string;
 }
 
-interface FileSettings {
+interface LocationSettings {
     id: string;
     dataFrameFileName: string;
     imageDataFileName: string;
@@ -36,7 +36,7 @@ const step = ref(1);
 const experimentName = ref<string | null>(null);
 const numberOfLocations = ref<number | null>(null);
 const experimentCreated = ref<boolean>(false);
-const experimentSettings = ref<Record<string, FileSettings>>({
+const experimentSettings = ref<Record<string, LocationSettings>>({
     location_1: {
         id: '',
         dataFrameFileName: '',
