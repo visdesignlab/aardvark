@@ -3,12 +3,14 @@ import { ref, computed, watch, onMounted } from 'vue';
 import GlobalSettingsView from '@/components/globalSettings/GlobalSettingsView.vue';
 import LoadingProgress, { type ProgressRecord } from './LoadingProgress.vue';
 import type { QStepper } from 'quasar';
+import { add } from 'lodash-es';
 
 interface FileOptions {
     file: File | null;
     checkForUpdates?: boolean;
     uploading: 0 | 1 | 2;
     processing: 0 | 1 | 2;
+    file_type:string;
 }
 
 const step = ref(1);
@@ -25,7 +27,7 @@ const createRange = (n: number | null, label: string) => {
     }
     return [];
 };
-const updateFile = (file: File, item: string, checkForUpdates: boolean) => {
+const updateFile = (file: File, item: string, checkForUpdates: boolean,file_type:string) => {
     if (fileModel.value[item]) {
         fileModel.value[item].file = file;
     } else {
@@ -34,6 +36,7 @@ const updateFile = (file: File, item: string, checkForUpdates: boolean) => {
             uploading: 0,
             processing: 0,
             checkForUpdates,
+            file_type
         };
     }
 };
@@ -42,18 +45,21 @@ const fileModel = ref<Record<string, FileOptions>>({
         file: null,
         uploading: 0,
         processing: 0,
+        file_type:'metadata'
     },
     location_1_cell_images: {
         file: null,
         checkForUpdates: true,
         uploading: 0,
         processing: 0,
+        file_type:'cell_images'
     },
     location_1_segmentations: {
         file: null,
         checkForUpdates: true,
         uploading: 0,
         processing: 0,
+        file_type:'segmentations'
     },
 });
 const handleUpdateFileModel = (s:QStepper) => {
@@ -66,21 +72,26 @@ const handleUpdateFileModel = (s:QStepper) => {
             fileModel.value[`location_${i}_metadata`] = {
                 file:null,
                 uploading:0,
-                processing:0
+                processing:0,
+                file_type:'metadata'
 
             }
             fileModel.value[`location_${i}_cell_images`] = {
                 file:null,
                 checkForUpdates:true,
                 uploading:0,
-                processing:0
+                processing:0,
+                file_type:'cell_images'
+
 
             }            
             fileModel.value[`location_${i}_segmentations`] = {
                 file:null,
                 checkForUpdates:true,
                 uploading:0,
-                processing:0
+                processing:0,
+                file_type:'segmentations'
+
 
             }
         }
@@ -116,51 +127,67 @@ const uploadAll = async () => {
         const fileOptions = fileModel.value[fileKeys[i]];
         // Upload file
         if (fileOptions && fileOptions.file) {
-            await uploadFile(fileOptions.file, fileLabel);
-            if (fileOptions.checkForUpdates) {
-                await checkForUpdates(fileOptions.file.name, fileLabel);
+            interface UploadResponeData {
+                status:string,
+                unique_file_name:string
+            }
+            const data: UploadResponeData | null = await uploadFile(fileOptions, fileLabel);
+            if (fileOptions.checkForUpdates && data) {
+                await checkForUpdates(data.unique_file_name, fileLabel);
             }
         }
     }
 };
 
-const uploadFile = async (file: File | null, label: string) => {
-    if (file) {
-        fileModel.value[label].uploading = 1;
-        fileModel.value[label].processing = 0;
+const uploadFile = async (fileOptions: FileOptions, label: string) => {
+    if (fileOptions.file) {
+        fileOptions.uploading = 1;
+        fileOptions.processing = 0;
 
         const formData = new FormData();
-        formData.append(file.name, file);
-        fetch('http://localhost:8000/upload/', {
-            method: 'POST',
-            body: formData,
-        })
-            .then((response) => {
-                if (response.ok) {
-                    return response.json();
-                } else {
-                    throw new Error('Failed to upload file.');
-                }
+        formData.append('file', fileOptions.file);
+
+        const additionalData = {
+            "file_name":fileOptions.file.name,
+            "label":label,
+            "location":label.split("_")[1],
+            "experiment_name":experimentName.value,
+            "workflow_code":"live_cyte",
+            "file_type":fileOptions.file_type
+        }
+
+        const jsonString = JSON.stringify(additionalData);
+
+        formData.append('metadata',jsonString);
+        
+        try {
+            const response = await fetch('http://localhost:8000/upload/', {
+                method: 'POST',
+                body: formData,
             })
-            .then((responseData) => {
+            if(response.ok){
+                const responseData = await response.json()
                 console.log(responseData);
-                fileModel.value[label].uploading = 2;
-                fileModel.value[label].processing = 1;
-            })
-            .catch((error) => {
-                console.error('Error uploading file: ', error);
-            });
+                fileOptions.uploading = 2;
+                fileOptions.processing = 1;
+                return responseData
+            } else {
+                throw new Error('Failed to upload file.');
+            }
+        } catch (error) {
+            console.error('Error uploading file: ', error);
+        }
     }
 };
-const checkForUpdates = async (fileName: string, fileLabel: string) => {
+const checkForUpdates = async (uniqueFileName: string, fileLabel: string) => {
     try {
         let updatesAvailable = false;
         while (!updatesAvailable) {
             console.log(fileLabel);
-            console.log(fileName);
+            console.log(uniqueFileName)
             // Make a request to your server to check for updates
             const response = await fetch(
-                'http://localhost:8000/upload/' + fileName
+                'http://localhost:8000/upload/' + uniqueFileName
             );
 
             if (!response.ok) {
@@ -369,7 +396,7 @@ const getProgressStatusList = () => {
                         <q-file
                             :model-value="fileModel[item]?.file"
                             @input="
-                                updateFile($event.target.files[0], item, false)
+                                updateFile($event.target.files[0], item, false,'metadata')
                             "
                             label-slot
                             style="
@@ -418,7 +445,7 @@ const getProgressStatusList = () => {
                         <q-file
                             :model-value="fileModel[item]?.file"
                             @input="
-                                updateFile($event.target.files[0], item, true)
+                                updateFile($event.target.files[0], item, true,'cell_images')
                             "
                             label="File"
                             style="
@@ -467,7 +494,7 @@ const getProgressStatusList = () => {
                         <q-file
                             :model-value="fileModel[item]?.file"
                             @input="
-                                updateFile($event.target.files[0], item, true)
+                                updateFile($event.target.files[0], item, true,'segmentations')
                             "
                             label="File"
                             style="
@@ -478,7 +505,7 @@ const getProgressStatusList = () => {
                         >
                             <template v-slot:label>
                                 <span class="upload-label"
-                                    >Location {{ n + 1 }} Cell Images</span
+                                    >Location {{ n + 1 }} Segmentations</span
                                 >
                             </template>
                             <template v-slot:prepend>
