@@ -31,9 +31,6 @@ def _badFileChecker(file_name:str):
     return False
 
 def _processZipFile(zip_file_name,zip_file_path,experiment_name,unique_file_name,location_prefix):
-    print("Started processing: " + unique_file_name, flush=True)
-    print(f'Key: {experiment_name}/{location_prefix}',flush=True)
-    print(zip_file_path,flush=True)
     s3 = boto3.resource(service_name='s3',endpoint_url=ENDPOINT_URL)
     prefix_name = zip_file_name.split(".")[0]
     with zipfile.ZipFile(zip_file_path, 'r') as zip_ref:
@@ -68,10 +65,6 @@ class UploadDataView(APIView):
         unique_file_name = f'{str(uuid.uuid4())[:6]}_{experiment_name}_{location_based_file_name}'
         location_prefix = f'location_{location}'
 
-        print(file_name, flush=True)
-        print(file, flush=True)
-        print(unique_file_name,flush=True)
-        print(location_based_file_name,flush=True)
 
         if(workflow_code == 'live_cyte'):
             if(file_type == 'cell_images' or file_type == 'segmentations'):
