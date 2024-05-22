@@ -7,7 +7,7 @@ import time
 import tempfile
 import shutil
 import uuid
-from .tasks import task_queue, task_queue_lock, task_status, task_status_lock
+from .tasks import task_queue, task_status, task_status_lock, FailedToCreateTaskException, Task
 
 # Single File Upload View
 class UploadDataView(APIView):
@@ -25,7 +25,6 @@ class UploadDataView(APIView):
 
         # Generate unique file name for status and saving.
         unique_file_name = f'{str(uuid.uuid4())[:6]}_{experiment_name}_{location_based_file_name}'
-        
         # Make temp directory to store value
         temp_dir = tempfile.mkdtemp()
         # Create a new file path for this zip file
@@ -39,11 +38,10 @@ class UploadDataView(APIView):
             # Create task
             curr_task = Task.create_task(
                 workflow_code,
-                label,
+                file_type,
                 file_name=file_name,
                 location=location,
                 experiment_name=experiment_name,
-                file_type=file_type,
                 unique_file_name=unique_file_name,
                 temp_file_path=temp_file_path
             )
@@ -53,15 +51,14 @@ class UploadDataView(APIView):
                 task_status[unique_file_name] = {"status":"queued"}
                 
             # Add task to queue
-            with task_queue_lock:
-                task_queue.put(curr_task)
+            task_queue.put(curr_task)
                 
             
             # Return success
-            return Response({'status':"SUCCESS",message:'task has been dispatched'})
+            return Response({'status':"SUCCESS","message":'task has been dispatched'})
         except FailedToCreateTaskException as e:
             # If failed to create task, return failure message.
-            return Response({'status':"FAILED",message:e.message})
+            return Response({'status':"FAILED","message":e.message})
         
         
         
