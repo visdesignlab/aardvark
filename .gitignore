@@ -38,3 +38,5 @@ certs
 
 # PYC files
 *.pyc
+
+apps/server/api/secrets.json
