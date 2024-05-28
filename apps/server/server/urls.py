@@ -14,15 +14,16 @@ Including another URLconf
     1. Import the include() function: from django.urls import include, path
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
+
 from django.contrib import admin
 from django.urls import path
 from api.views import UploadDataView, ListBucketsView, AuthorizationKeys
 
 
 urlpatterns = [
-    path('admin/', admin.site.urls),
-    path('upload/', UploadDataView.as_view(), name='upload'),
-    path('upload/<str:filename>', UploadDataView.as_view(), name='upload-status'),
-    path('list/', ListBucketsView.as_view(), name='list'),
-    path('authorization/',AuthorizationKeys.as_view(), name='authorization')
+    path("admin/", admin.site.urls),
+    path("upload/", UploadDataView.as_view(), name="upload"),
+    path("upload/<str:filename>", UploadDataView.as_view(), name="upload-status"),
+    path("list/", ListBucketsView.as_view(), name="list"),
+    path("authorization/", AuthorizationKeys.as_view(), name="authorization"),
 ]
