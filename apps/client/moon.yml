@@ -15,6 +15,12 @@ tasks:
     command: 'yarn run lint'
   install:
     command: 'yarn'
+  install-windows:
+    command: 'yarn'
+  run-windows:
+    command: 'yarn run dev'
+    inputs:
+      - 'src/**/*'
 
 project:
   name: 'Loon'
