@@ -35,13 +35,13 @@ export const useGlobalSettings = defineStore('globalSettings', () => {
             show: false,
             component: 'GeneralSettings',
         },
-        // {
-        //     name: 'Filter Data',
-        //     faKey: 'fa-filter',
-        //     id: uuidv4(),
-        //     show: false,
-        //     component: 'StubView',
-        // },
+        {
+            name: 'Filter Data',
+            faKey: 'fa-filter',
+            id: uuidv4(),
+            show: false,
+            component: 'FilterSelector',
+        },
         // {
         //     name: 'Search',
         //     faKey: 'fa-magnifying-glass',
