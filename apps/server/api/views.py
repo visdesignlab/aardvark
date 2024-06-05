@@ -80,6 +80,26 @@ class UploadDataView(APIView):
         return Response(status)
 
 
+class FinishExperimentView(APIView):
+    def post(self, request):
+        # Needs to append experiment
+        # Needs to create experiment metadata file
+        # Process the CSV file and grab the headers
+        # Allow for UI to set values....???????
+        data = request.data
+        experiment_settings = json.loads(data.get('experimentSettings'))
+        json_string = json.dumps(experiment_settings, indent=2)
+
+        s3 = boto3.resource(service_name="s3", endpoint_url=ENDPOINT_URL)
+        s3.Bucket(BUCKET).put_object(
+            Body=json_string.encode(),
+            Key=data.get('experimentName') + '.json',
+            ContentType='application/json'
+        )
+
+        return Response({'status': 'fake_response'})
+
+
 """
 -------------------------------------------
 -------------------------------------------

@@ -17,13 +17,14 @@ Including another URLconf
 
 from django.contrib import admin
 from django.urls import path
-from api.views import UploadDataView, ListBucketsView, AuthorizationKeys
+from api.views import UploadDataView, ListBucketsView, AuthorizationKeys, FinishExperimentView
 
 
 urlpatterns = [
     path("admin/", admin.site.urls),
     path("upload/", UploadDataView.as_view(), name="upload"),
     path("upload/<str:filename>", UploadDataView.as_view(), name="upload-status"),
+    path("createExperiment/", FinishExperimentView.as_view(), name="finish-experiment"),
     path("list/", ListBucketsView.as_view(), name="list"),
     path("authorization/", AuthorizationKeys.as_view(), name="authorization"),
 ]

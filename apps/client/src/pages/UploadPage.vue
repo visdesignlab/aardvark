@@ -1,7 +1,7 @@
 <script lang="ts" setup>
 import { ref, computed, watch, onMounted } from 'vue';
 import LoadingProgress, { type ProgressRecord } from './LoadingProgress.vue';
-import type { QStepper } from 'quasar';
+import type { QForm, QStepper } from 'quasar';
 
 // Processing codes: not submitted, queued, running, finished
 interface FileOptions {
@@ -20,13 +20,13 @@ interface LocationSettings {
 }
 
 interface UploadResponseData {
-    status: "SUCCEEDED" | "FAILED";
+    status: 'SUCCEEDED' | 'FAILED';
     unique_file_name: string;
     message: string;
 }
 
 interface StatusResponseData {
-    status: "QUEUED" | "RUNNING" | "SUCCEEDED" | "FAILED" | "ERROR";
+    status: 'QUEUED' | 'RUNNING' | 'SUCCEEDED' | 'FAILED' | 'ERROR';
     message: string;
 }
 
@@ -56,7 +56,39 @@ const experimentSettings = ref<Record<string, LocationSettings>>({
         segmentationsFolder: '',
     },
 });
-// Creates a range to iterate over in the
+
+
+const onSubmitExperiment = async () => {
+
+
+    const formData = new FormData();
+    
+    // Create Form
+    if(experimentName && experimentName.value){
+        formData.append('experimentName',experimentName.value);
+        formData.append('experimentSettings',JSON.stringify(experimentSettings.value))
+    }
+
+    try {
+        const response = await fetch(
+            'http://localhost:8000/createExperiment/',
+            {
+                method: 'POST',
+                body: formData,
+            }
+        );
+        if (response.ok) {
+            const responseData = await response.json();
+            return responseData;
+        } else {
+            throw new Error('Failed to finish experiment');
+        }
+    } catch (error) {
+        console.error('Error finishing experiment: ', error);
+    }
+};
+
+// Creates a range to iterate over
 const createRange = (n: number | null, label: string) => {
     if (n) {
         let result: string[] = [];
@@ -250,13 +282,13 @@ const checkForUpdates = async (uniqueFileName: string, fileLabel: string) => {
             }
 
             const data: StatusResponseData = await response.json();
-            console.log(data)
-            if (data.status === "SUCCEEDED") {
+            console.log(data);
+            if (data.status === 'SUCCEEDED') {
                 updatesAvailable = true;
-            } else if (data.status === "FAILED" || data.status === "ERROR"){
+            } else if (data.status === 'FAILED' || data.status === 'ERROR') {
                 // show error/failure message
                 updatesAvailable = true;
-            } else if (data.status === "RUNNING") {
+            } else if (data.status === 'RUNNING') {
                 // show running symbol like it normally does
                 fileModel.value[fileLabel].processing = 2;
                 await new Promise((resolve) => setTimeout(resolve, 5000));
@@ -608,17 +640,24 @@ const getProgressStatusList = () => {
                 </q-step>
                 <q-step title="Review" :name="5" icon="settings">
                     <div class="column" style="margin-bottom: 50px">
-                        <span class="step-title q-pa-sm" style="border-bottom: 1px solid #dcdcdc"
+                        <span
+                            class="step-title q-pa-sm"
+                            style="border-bottom: 1px solid #dcdcdc"
                             >Review Experiment</span
                         >
-                        <span class="q-pa-sm" style="padding-top:20px"
+                        <span class="q-pa-sm" style="padding-top: 20px"
                             ><span class="text-weight-bold"
                                 >Experiment Name: </span
                             ><span style="font-style: italic">{{
                                 experimentName
                             }}</span></span
                         >
-                        <span class="q-pa-sm" style="padding-bottom:20px;border-bottom: 1px solid #dcdcdc"
+                        <span
+                            class="q-pa-sm"
+                            style="
+                                padding-bottom: 20px;
+                                border-bottom: 1px solid #dcdcdc;
+                            "
                             ><span class="text-weight-bold"
                                 >Number of Locations: </span
                             ><span style="font-style: italic">{{
@@ -631,7 +670,13 @@ const getProgressStatusList = () => {
                                 'segmentations'
                             )"
                         >
-                            <div class="column" style="padding-bottom:20px;border-bottom: 1px solid #dcdcdc">
+                            <div
+                                class="column"
+                                style="
+                                    padding-bottom: 20px;
+                                    border-bottom: 1px solid #dcdcdc;
+                                "
+                            >
                                 <span
                                     class="step-title q-pa-sm"
                                     style="font-size: 1.3em; margin-top: 20px"
@@ -710,10 +755,6 @@ const getProgressStatusList = () => {
                     <span class="text-h4" style="font-weight: bold">
                         Finish Creating Your Experiment</span
                     >
-                    <div class="row">
-                        <q-btn color="danger" flat label="Cancel" no-caps />
-                        <q-btn color="primary" label="Finish" no-caps />
-                    </div>
                 </div>
             </div>
             <div class="row q-pa-md" style="justify-content: space-between">
@@ -733,13 +774,24 @@ const getProgressStatusList = () => {
                     </div>
                 </div>
                 <div class="column" style="flex: 1; margin-left: 30px">
-                    <span
-                        class="step-title q-pa-sm"
-                        style="font-size: 1.5em; margin-bottom: 20px"
-                    >
-                        Experiment Settings</span
-                    >
-                    <q-form>
+                    <q-form @submit="onSubmitExperiment">
+                        <div class="row" style="justify-content:space-between;margin-bottom:20px;align-items:center;">
+                            <span
+                                class="step-title q-pa-sm"
+                                style="font-size: 1.5em;"
+                            >
+                                Experiment Settings</span
+                            >
+                            <div class="row" style="display:block;">
+                            <q-btn color="danger" flat label="Cancel" no-caps />
+                            <q-btn
+                                color="primary"
+                                label="Finish"
+                                no-caps
+                                type="submit"
+                            />
+                            </div>
+                        </div>
                         <span class="step-title q-pa-sm">General</span>
                         <div class="row">
                             <q-input
@@ -787,9 +839,12 @@ const getProgressStatusList = () => {
                                     "
                                     outlined
                                     label-slot
-                                    class="col-4 col-md-6 q-pa-sm"
+                                    class="col-4 col-md-6 q-pa-md"
                                     bottom-slots
                                     style="padding-bottom: 30px"
+                                    :rules="[
+                                        (val) => !!val || 'Field is required',
+                                    ]"
                                 >
                                     <template v-slot:label>
                                         <span class="upload-label">ID</span>
@@ -819,7 +874,10 @@ const getProgressStatusList = () => {
                                     "
                                     outlined
                                     label-slot
-                                    class="col-4 col-md-6 q-pa-sm"
+                                    class="col-4 col-md-6 q-pa-md"
+                                    :rules="[
+                                        (val) => !!val || 'Field is required',
+                                    ]"
                                 >
                                     <template v-slot:label>
                                         <span class="upload-label"
@@ -835,7 +893,10 @@ const getProgressStatusList = () => {
                                     "
                                     outlined
                                     label-slot
-                                    class="col-4 col-md-6 q-pa-sm"
+                                    class="col-4 col-md-6 q-pa-md"
+                                    :rules="[
+                                        (val) => !!val || 'Field is required',
+                                    ]"
                                 >
                                     <template v-slot:label>
                                         <span class="upload-label"
@@ -851,7 +912,10 @@ const getProgressStatusList = () => {
                                     "
                                     outlined
                                     label-slot
-                                    class="col-4 col-md-6 q-pa-sm"
+                                    class="col-4 col-md-6 q-pa-md"
+                                    :rules="[
+                                        (val) => !!val || 'Field is required',
+                                    ]"
                                 >
                                     <template v-slot:label>
                                         <span class="upload-label"

@@ -211,7 +211,7 @@ class LiveCyteMetadataTask(Task):
                     Key=f"{self.experiment_name}/{self.location_prefix}/{self.file_name}",
                     Body=file,
                 )
-            self.set_status("completed")
+            self.set_status("SUCCEEDED")
         except FileNotFoundError:
             self.set_status("FAILED")
 
