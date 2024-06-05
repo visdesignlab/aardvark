@@ -55,13 +55,16 @@ class UploadDataView(APIView):
 
             # Add task to status list
             with task_status_lock:
-                task_status[unique_file_name] = {"status": "queued"}
+                task_status[unique_file_name] = {"status": "QUEUED"}
 
             # Add task to queue
             task_queue.put(curr_task)
 
             # Return success
-            return Response({"status": "SUCCESS", "message": "task has been dispatched"})
+            return Response({"status": "SUCCESS",
+                             "message": "task has been dispatched",
+                             "unique_file_name": unique_file_name
+                             })
         except FailedToCreateTaskException as e:
             # If failed to create task, return failure message.
             return Response({"status": "FAILED", "message": e.message})
@@ -71,8 +74,10 @@ class UploadDataView(APIView):
             try:
                 status = task_status[filename]
             except KeyError:
-                return Response({"status": False})
-        return Response({"status": status})
+                return Response({"status": "ERROR",
+                                 "message": "Unable to retrieve status of file upload."
+                                 })
+        return Response(status)
 
 
 """

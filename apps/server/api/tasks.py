@@ -7,6 +7,7 @@ import threading
 import logging
 import os
 
+
 # Task Status
 task_status = {}
 task_status_lock = threading.Lock()
@@ -74,11 +75,11 @@ class CallbackException(Exception):
 
 class Task(ABC):
     def __str__(self):
-        return f"\nFile name: {self.file_name}\nLocation: {self.location}\n \
-                Experiment Name: {self.experiment_name}\n \
-                Unique File Name: {self.unique_file_name}\n \
-                Temp File Path: {self.temp_file_path}\n \
-                Location Prefix: {self.location_prefix}"
+        return f"\nFile name: {self.file_name}\nLocation: {self.location}\n" \
+                f"Experiment Name: {self.experiment_name}\n" \
+                f"Unique File Name: {self.unique_file_name}\n" \
+                f"Temp File Path: {self.temp_file_path}\n" \
+                f"Location Prefix: {self.location_prefix}"
 
     def __init__(self, **kwargs):
         try:
@@ -131,20 +132,20 @@ class Task(ABC):
                                     )
                                 except CallbackException as e:
                                     return {
-                                        "process_zip_file_status": "failed",
+                                        "process_zip_file_status": "FAILED",
                                         "message": f"Failed at callback: {e.message}",
                                     }
                             # Upload the file contents to S3
                             s3.Bucket(BUCKET).put_object(
-                                Key=f"{self.experiment_name}/ \
-                                    {self.location_prefix}/ \
-                                    {curr_file_name}",
+                                Key=(f"{self.experiment_name}/"
+                                     f"{self.location_prefix}/"
+                                     f"{curr_file_name}"),
                                 Body=file_contents,
                             )
-            return {"process_zip_file_status": "succeeded"}
+            return {"process_zip_file_status": "SUCCEEDED"}
 
         except FileNotFoundError:
-            return {"process_zip_file_status": "failed", "message": "Could not find file"}
+            return {"process_zip_file_status": "FAILED", "message": "Could not find file"}
 
     # Declare abstract execute method
     @abstractmethod
@@ -178,7 +179,7 @@ class Task(ABC):
 class LiveCyteSegmentationsTask(Task):
     def execute(self):
         logger.info(f"Executing task: {self.unique_file_name}")
-        self.set_status("running")
+        self.set_status("RUNNING")
         status = self.process_zip_file(callback=None)
         self.set_status(status["process_zip_file_status"])
 
@@ -190,7 +191,7 @@ class LiveCyteSegmentationsTask(Task):
 class LiveCyteCellImagesTask(Task):
     def execute(self):
         logger.info(f"Executing task: {self.unique_file_name}")
-        self.set_status("running")
+        self.set_status("RUNNING")
         status = self.process_zip_file(callback=None)
         self.set_status(status["process_zip_file_status"])
 
@@ -202,7 +203,7 @@ class LiveCyteCellImagesTask(Task):
 class LiveCyteMetadataTask(Task):
     def execute(self):
         logger.info(f"Executing task: {self.unique_file_name}")
-        self.set_status("running")
+        self.set_status("RUNNING")
         try:
             with open(self.temp_file_path, "rb") as file:
                 s3 = boto3.resource(service_name="s3", endpoint_url=ENDPOINT_URL)
@@ -212,7 +213,7 @@ class LiveCyteMetadataTask(Task):
                 )
             self.set_status("completed")
         except FileNotFoundError:
-            self.set_status("failed")
+            self.set_status("FAILED")
 
     def cleanup(self):
         logger.info(f"Cleaning up task: {self.unique_file_name}")
@@ -220,14 +221,20 @@ class LiveCyteMetadataTask(Task):
 
 
 def processing_monitor():
-    logger.info("Started monitor...")
-    while True:
-        if task_queue.qsize() > 0:
-            logger.info("We have an entry!")
-            curr_task = task_queue.get()
-            logger.info(curr_task)
+    from concurrent.futures import ThreadPoolExecutor
+
+    def worker(curr_task):
+        logger.info(curr_task)
+        try:
             curr_task.execute()
             logger.info("Reached here")
+        finally:
             curr_task.cleanup()
-        else:
-            time.sleep(5)
+    with ThreadPoolExecutor(max_workers=4) as executor:
+        while True:
+            if task_queue.qsize() > 0:
+                logger.info("We have an entry!")
+                curr_task = task_queue.get()
+                executor.submit(worker, curr_task)
+            else:
+                time.sleep(5)

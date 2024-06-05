@@ -3,11 +3,12 @@ import { ref, computed, watch, onMounted } from 'vue';
 import LoadingProgress, { type ProgressRecord } from './LoadingProgress.vue';
 import type { QStepper } from 'quasar';
 
+// Processing codes: not submitted, queued, running, finished
 interface FileOptions {
     file: File | null;
     checkForUpdates?: boolean;
-    uploading: 0 | 1 | 2;
-    processing: 0 | 1 | 2;
+    uploading: 0 | 1 | 2 | 3;
+    processing: 0 | 1 | 2 | 3;
     file_type: string;
 }
 
@@ -16,6 +17,17 @@ interface LocationSettings {
     dataFrameFileName: string;
     imageDataFileName: string;
     segmentationsFolder: string;
+}
+
+interface UploadResponseData {
+    status: "SUCCEEDED" | "FAILED";
+    unique_file_name: string;
+    message: string;
+}
+
+interface StatusResponseData {
+    status: "QUEUED" | "RUNNING" | "SUCCEEDED" | "FAILED" | "ERROR";
+    message: string;
 }
 
 const handleSuggestedClick = (
@@ -172,16 +184,12 @@ const uploadAll = async () => {
         const fileOptions = fileModel.value[fileKeys[i]];
         // Upload file
         if (fileOptions && fileOptions.file) {
-            interface UploadResponeData {
-                status: string;
-                unique_file_name: string;
-            }
-            const data: UploadResponeData | null = await uploadFile(
+            const data: UploadResponseData | null = await uploadFile(
                 fileOptions,
                 fileLabel
             );
             if (fileOptions.checkForUpdates && data) {
-                await checkForUpdates(data.unique_file_name, fileLabel);
+                checkForUpdates(data.unique_file_name, fileLabel);
             }
         }
     }
@@ -190,7 +198,7 @@ const uploadAll = async () => {
 // Function to being upload
 const uploadFile = async (fileOptions: FileOptions, label: string) => {
     if (fileOptions.file) {
-        fileOptions.uploading = 1;
+        fileOptions.uploading = 2;
         fileOptions.processing = 0;
 
         const formData = new FormData();
@@ -216,7 +224,7 @@ const uploadFile = async (fileOptions: FileOptions, label: string) => {
             });
             if (response.ok) {
                 const responseData = await response.json();
-                fileOptions.uploading = 2;
+                fileOptions.uploading = 3;
                 fileOptions.processing = 1;
                 return responseData;
             } else {
@@ -241,14 +249,23 @@ const checkForUpdates = async (uniqueFileName: string, fileLabel: string) => {
                 throw new Error('Failed to fetch updates');
             }
 
-            const data = await response.json();
-            if (data.status) {
+            const data: StatusResponseData = await response.json();
+            console.log(data)
+            if (data.status === "SUCCEEDED") {
                 updatesAvailable = true;
+            } else if (data.status === "FAILED" || data.status === "ERROR"){
+                // show error/failure message
+                updatesAvailable = true;
+            } else if (data.status === "RUNNING") {
+                // show running symbol like it normally does
+                fileModel.value[fileLabel].processing = 2;
+                await new Promise((resolve) => setTimeout(resolve, 5000));
             } else {
+                // show queued symbol
                 await new Promise((resolve) => setTimeout(resolve, 5000));
             }
         }
-        fileModel.value[fileLabel].processing = 2;
+        fileModel.value[fileLabel].processing = 3;
     } catch (error) {
         console.error('Error checking for updates:', error);
     }
