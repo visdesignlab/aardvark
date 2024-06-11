@@ -1,22 +1,10 @@
-import time
-from queue import Queue
 from abc import abstractmethod, ABC
 import zipfile
-import boto3  # type: ignore
-import threading
 import logging
-import os
-
-
-# Task Status
-task_status = {}
-task_status_lock = threading.Lock()
-
-# Task Queue
-task_queue = Queue()
-
-ENDPOINT_URL = "http://127.0.0.1:9000"
-BUCKET = "data"
+from celery import shared_task  # type: ignore
+from .models import LoonUpload
+from django.core.files.storage import default_storage  # type: ignore
+from django.core.files.base import ContentFile  # type: ignore
 
 BAD_FILES = [".DS_Store"]
 
@@ -77,8 +65,6 @@ class Task(ABC):
     def __str__(self):
         return f"\nFile name: {self.file_name}\nLocation: {self.location}\n" \
                 f"Experiment Name: {self.experiment_name}\n" \
-                f"Unique File Name: {self.unique_file_name}\n" \
-                f"Temp File Path: {self.temp_file_path}\n" \
                 f"Location Prefix: {self.location_prefix}"
 
     def __init__(self, **kwargs):
@@ -86,45 +72,28 @@ class Task(ABC):
             self.file_name = kwargs["file_name"]
             self.location = kwargs["location"]
             self.experiment_name = kwargs["experiment_name"]
-            self.unique_file_name = kwargs["unique_file_name"]
-            self.temp_file_path = kwargs["temp_file_path"]
+            self.blob = kwargs["blob"]
+            self.record_id = kwargs["record_id"]
             self.location_prefix = f"location_{self.location}"
         except KeyError as e:
             raise FailedToCreateTaskException(f"Failed to create task:{e.message}")
 
-    # Setter for status
-    def set_status(self, status):
-        with task_status_lock:
-            task_status[self.unique_file_name]["status"] = status
-
-    # Returns the status of the task
-    def get_status(self):
-        with task_status_lock:
-            return task_status[self.unique_file_name]
-
     def cleanup_temp_files(self):
-        os.remove(self.temp_file_path)
+        # os.remove(self.temp_file_path)
+        logger.info('Fake Cleaning')
 
     # Generic unpacking of a zip file with callback for additional processing.
     def process_zip_file(self, callback=None):
         try:
-            s3 = boto3.resource(service_name="s3", endpoint_url=ENDPOINT_URL)
-
-            # If "images.zip" is uploaded, then all files should begin with "images/",
-            # regardless of the contents. This helps get rid of unnecessary hidden files.
             prefix_name = self.file_name.split(".")[0]
-            with zipfile.ZipFile(self.temp_file_path, "r") as zip_ref:
+            with zipfile.ZipFile(self.blob, 'r') as zip_ref:
                 zip_contents = zip_ref.namelist()
-                for curr_file_name in zip_contents:
+                for i, curr_file_name in enumerate(zip_contents):
                     if curr_file_name.startswith(prefix_name) and not _badFileChecker(
                         curr_file_name
                     ):
-                        # Read the file contents from the zip
                         file_contents = zip_ref.read(curr_file_name)
-
                         if file_contents:
-                            # If callback passed, use the callback to modify
-                            # file_contents and the file_name.
                             if callback:
                                 try:
                                     file_contents, curr_file_name = callback(
@@ -135,13 +104,21 @@ class Task(ABC):
                                         "process_zip_file_status": "FAILED",
                                         "message": f"Failed at callback: {e.message}",
                                     }
-                            # Upload the file contents to S3
-                            s3.Bucket(BUCKET).put_object(
-                                Key=(f"{self.experiment_name}/"
-                                     f"{self.location_prefix}/"
-                                     f"{curr_file_name}"),
-                                Body=file_contents,
-                            )
+                            file_location = f"{self.experiment_name}/" \
+                                            f"location_{self.location}/" \
+                                            f"{curr_file_name}"
+                            # Create a ContentFile object with the file contents
+                            content_file = ContentFile(file_contents)
+
+                            # Set the size attribute explicitly (if possible)
+                            try:
+                                content_file.size = len(file_contents)
+                            except AttributeError:
+                                logger.info('Could not set file manually')
+                                pass  # If setting size manually is not possible
+
+                            default_storage.save(file_location, content_file)
+
             return {"process_zip_file_status": "SUCCEEDED"}
 
         except FileNotFoundError:
@@ -178,63 +155,53 @@ class Task(ABC):
 
 class LiveCyteSegmentationsTask(Task):
     def execute(self):
-        logger.info(f"Executing task: {self.unique_file_name}")
-        self.set_status("RUNNING")
-        status = self.process_zip_file(callback=None)
-        self.set_status(status["process_zip_file_status"])
+        logger.info(f"Executing task: {self.record_id}")
+        self.process_zip_file(callback=None)
 
     def cleanup(self):
-        logger.info(f"Cleaning up task: {self.unique_file_name}")
+        logger.info(f"Cleaning up task: {self.record_id}")
         self.cleanup_temp_files()
 
 
 class LiveCyteCellImagesTask(Task):
     def execute(self):
-        logger.info(f"Executing task: {self.unique_file_name}")
-        self.set_status("RUNNING")
-        status = self.process_zip_file(callback=None)
-        self.set_status(status["process_zip_file_status"])
+        logger.info(f"Executing task: {self.record_id}")
+        self.process_zip_file(callback=None)
 
     def cleanup(self):
-        logger.info(f"Cleaning up task: {self.unique_file_name}")
+        logger.info(f"Cleaning up task: {self.record_id}")
         self.cleanup_temp_files()
 
 
 class LiveCyteMetadataTask(Task):
     def execute(self):
-        logger.info(f"Executing task: {self.unique_file_name}")
-        self.set_status("RUNNING")
-        try:
-            with open(self.temp_file_path, "rb") as file:
-                s3 = boto3.resource(service_name="s3", endpoint_url=ENDPOINT_URL)
-                s3.Bucket(BUCKET).put_object(
-                    Key=f"{self.experiment_name}/{self.location_prefix}/{self.file_name}",
-                    Body=file,
-                )
-            self.set_status("SUCCEEDED")
-        except FileNotFoundError:
-            self.set_status("FAILED")
+        logger.info(f"Executing task: {self.record_id}")
+        with self.blob.open('rb') as file:
+            file_location = f"{self.experiment_name}/" \
+                            f"location_{self.location}/" \
+                            f"{self.file_name}"
+            default_storage.save(file_location, file)
 
     def cleanup(self):
-        logger.info(f"Cleaning up task: {self.unique_file_name}")
+        logger.info(f"Cleaning up task: {self.record_id}")
         self.cleanup_temp_files()
 
 
-def processing_monitor():
-    from concurrent.futures import ThreadPoolExecutor
-
-    def worker(curr_task):
-        logger.info(curr_task)
-        try:
-            curr_task.execute()
-            logger.info("Reached here")
-        finally:
-            curr_task.cleanup()
-    with ThreadPoolExecutor(max_workers=4) as executor:
-        while True:
-            if task_queue.qsize() > 0:
-                logger.info("We have an entry!")
-                curr_task = task_queue.get()
-                executor.submit(worker, curr_task)
-            else:
-                time.sleep(5)
+@shared_task
+def execute_task(record_id):
+    # Get entry from our SQL Table
+    loonUpload: LoonUpload = LoonUpload.objects.get(id=record_id)
+    # Create a task for this entry
+    curr_task = Task.create_task(
+        loonUpload.workflow_code,
+        loonUpload.file_type,
+        file_name=loonUpload.file_name,
+        location=loonUpload.location,
+        experiment_name=loonUpload.experiment_name,
+        blob=loonUpload.blob,
+        record_id=record_id
+    )
+    # Execute the task
+    curr_task.execute()
+    # Perform cleanup
+    curr_task.cleanup()

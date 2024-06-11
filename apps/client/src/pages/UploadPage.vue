@@ -2,6 +2,11 @@
 import { ref, computed, watch, onMounted } from 'vue';
 import LoadingProgress, { type ProgressRecord } from './LoadingProgress.vue';
 import type { QForm, QStepper } from 'quasar';
+import {
+    createLoonAxiosInstance,
+    type ProcessResponseData,
+    type StatusResponseData,
+} from '@/util/axios';
 
 // Processing codes: not submitted, queued, running, finished
 interface FileOptions {
@@ -17,17 +22,6 @@ interface LocationSettings {
     dataFrameFileName: string;
     imageDataFileName: string;
     segmentationsFolder: string;
-}
-
-interface UploadResponseData {
-    status: 'SUCCEEDED' | 'FAILED';
-    unique_file_name: string;
-    message: string;
-}
-
-interface StatusResponseData {
-    status: 'QUEUED' | 'RUNNING' | 'SUCCEEDED' | 'FAILED' | 'ERROR';
-    message: string;
 }
 
 const handleSuggestedClick = (
@@ -57,21 +51,21 @@ const experimentSettings = ref<Record<string, LocationSettings>>({
     },
 });
 
-
 const onSubmitExperiment = async () => {
-
-
     const formData = new FormData();
-    
+
     // Create Form
-    if(experimentName && experimentName.value){
-        formData.append('experimentName',experimentName.value);
-        formData.append('experimentSettings',JSON.stringify(experimentSettings.value))
+    if (experimentName && experimentName.value) {
+        formData.append('experimentName', experimentName.value);
+        formData.append(
+            'experimentSettings',
+            JSON.stringify(experimentSettings.value)
+        );
     }
 
     try {
         const response = await fetch(
-            'http://localhost:8000/createExperiment/',
+            'http://localhost:8000/api/createExperiment/',
             {
                 method: 'POST',
                 body: formData,
@@ -191,117 +185,6 @@ const handleUpdateNumLocations = (s: QStepper) => {
     s.next();
 };
 
-// Function to upload all necessary files in experiment.
-const uploadAll = async () => {
-    // Set experiment created vue.
-    experimentCreated.value = true;
-    // Sorting Files in desired order.
-    const fileKeys = Object.keys(fileModel.value);
-
-    const orderMap: { [key: string]: number } = {
-        metadata: 1,
-        cell: 2,
-        segmentations: 3,
-    };
-
-    fileKeys.sort((a: string, b: string) => {
-        const labelA = a.split('_')[2];
-        const labelB = b.split('_')[2];
-
-        return orderMap[labelA] - orderMap[labelB];
-    });
-
-    for (let i = 0; i < fileKeys.length; i++) {
-        const fileLabel = fileKeys[i];
-        const fileOptions = fileModel.value[fileKeys[i]];
-        // Upload file
-        if (fileOptions && fileOptions.file) {
-            const data: UploadResponseData | null = await uploadFile(
-                fileOptions,
-                fileLabel
-            );
-            if (fileOptions.checkForUpdates && data) {
-                checkForUpdates(data.unique_file_name, fileLabel);
-            }
-        }
-    }
-};
-
-// Function to being upload
-const uploadFile = async (fileOptions: FileOptions, label: string) => {
-    if (fileOptions.file) {
-        fileOptions.uploading = 2;
-        fileOptions.processing = 0;
-
-        const formData = new FormData();
-        formData.append('file', fileOptions.file);
-
-        const additionalData = {
-            file_name: fileOptions.file.name,
-            label: label,
-            location: label.split('_')[1],
-            experiment_name: experimentName.value,
-            workflow_code: 'live_cyte',
-            file_type: fileOptions.file_type,
-        };
-
-        const jsonString = JSON.stringify(additionalData);
-
-        formData.append('metadata', jsonString);
-
-        try {
-            const response = await fetch('http://localhost:8000/upload/', {
-                method: 'POST',
-                body: formData,
-            });
-            if (response.ok) {
-                const responseData = await response.json();
-                fileOptions.uploading = 3;
-                fileOptions.processing = 1;
-                return responseData;
-            } else {
-                throw new Error('Failed to upload file.');
-            }
-        } catch (error) {
-            console.error('Error uploading file: ', error);
-        }
-    }
-};
-// Asynchronous function to continuously check for processing status
-const checkForUpdates = async (uniqueFileName: string, fileLabel: string) => {
-    try {
-        let updatesAvailable = false;
-        while (!updatesAvailable) {
-            // Make a request to your server to check for updates
-            const response = await fetch(
-                'http://localhost:8000/upload/' + uniqueFileName
-            );
-
-            if (!response.ok) {
-                throw new Error('Failed to fetch updates');
-            }
-
-            const data: StatusResponseData = await response.json();
-            console.log(data);
-            if (data.status === 'SUCCEEDED') {
-                updatesAvailable = true;
-            } else if (data.status === 'FAILED' || data.status === 'ERROR') {
-                // show error/failure message
-                updatesAvailable = true;
-            } else if (data.status === 'RUNNING') {
-                // show running symbol like it normally does
-                fileModel.value[fileLabel].processing = 2;
-                await new Promise((resolve) => setTimeout(resolve, 5000));
-            } else {
-                // show queued symbol
-                await new Promise((resolve) => setTimeout(resolve, 5000));
-            }
-        }
-        fileModel.value[fileLabel].processing = 3;
-    } catch (error) {
-        console.error('Error checking for updates:', error);
-    }
-};
 // Function to determine if the create experiment button should be enabled.
 const disableUpload = () => {
     return !(stepDone(1) && stepDone(2) && stepDone(3) && stepDone(4));
@@ -418,6 +301,84 @@ const getProgressStatusList = () => {
     }
     return progressResult;
 };
+
+
+const loonAxios = createLoonAxiosInstance({
+    baseURL: 'http://localhost:8000/api',
+});
+
+// Function to upload all necessary files in experiment.
+const uploadAll = async () => {
+    // Set experiment created vue.
+    experimentCreated.value = true;
+    // Sorting Files in desired order.
+    const fileKeys = Object.keys(fileModel.value);
+
+    for (let i = 0; i < fileKeys.length; i++) {
+        const fileKey = fileKeys[i];
+        const fileOptions = fileModel.value[fileKey];
+
+        if (fileOptions && fileOptions.file && experimentName.value) {
+            fileOptions.uploading = 2;
+            fileOptions.processing = 0;
+
+            const fieldValue = await loonAxios.upload(fileOptions.file);
+
+            fileOptions.uploading = 3;
+            fileOptions.processing = 1;
+
+            const location = fileKey.split('_')[1];
+
+            const processResponse = await loonAxios.process(
+                fieldValue,
+                'live_cyte',
+                fileOptions.file_type,
+                fileOptions.file.name,
+                location,
+                experimentName.value
+            );
+
+            const processResponseData: ProcessResponseData =
+                processResponse.data;
+            if (processResponseData.task_id) {
+                checkForUpdates(processResponseData.task_id, fileKey);
+            }
+        }
+    }
+};
+
+// Asynchronous function to continuously check for processing status
+const checkForUpdates = async (task_id: string, fileKey: string) => {
+    try {
+        let updatesAvailable = false;
+        while (!updatesAvailable) {
+            // Make a request to your server to check for updates
+            const response = await loonAxios.checkForUpdates(task_id);
+            const responseData = response.data as StatusResponseData;
+
+            if (responseData.status === 'SUCCEEDED') {
+                updatesAvailable = true;
+            } else if (
+                responseData.status === 'FAILED' ||
+                responseData.status === 'ERROR'
+            ) {
+                // show error/failure message
+                updatesAvailable = true;
+            } else if (responseData.status === 'RUNNING') {
+                // show running symbol like it normally does
+                fileModel.value[fileKey].processing = 2;
+                await new Promise((resolve) => setTimeout(resolve, 5000));
+            } else {
+                // show queued symbol
+                await new Promise((resolve) => setTimeout(resolve, 5000));
+            }
+        }
+        fileModel.value[fileKey].processing = 3;
+    } catch (error) {
+        console.error('Error checking for updates:', error);
+    }
+};
+
 </script>
 <template>
     <q-page class="q-pa-lg q-gutter-md" style="max-width: 1200px; margin: auto">
@@ -775,21 +736,33 @@ const getProgressStatusList = () => {
                 </div>
                 <div class="column" style="flex: 1; margin-left: 30px">
                     <q-form @submit="onSubmitExperiment">
-                        <div class="row" style="justify-content:space-between;margin-bottom:20px;align-items:center;">
+                        <div
+                            class="row"
+                            style="
+                                justify-content: space-between;
+                                margin-bottom: 20px;
+                                align-items: center;
+                            "
+                        >
                             <span
                                 class="step-title q-pa-sm"
-                                style="font-size: 1.5em;"
+                                style="font-size: 1.5em"
                             >
                                 Experiment Settings</span
                             >
-                            <div class="row" style="display:block;">
-                            <q-btn color="danger" flat label="Cancel" no-caps />
-                            <q-btn
-                                color="primary"
-                                label="Finish"
-                                no-caps
-                                type="submit"
-                            />
+                            <div class="row" style="display: block">
+                                <q-btn
+                                    color="danger"
+                                    flat
+                                    label="Cancel"
+                                    no-caps
+                                />
+                                <q-btn
+                                    color="primary"
+                                    label="Finish"
+                                    no-caps
+                                    type="submit"
+                                />
                             </div>
                         </div>
                         <span class="step-title q-pa-sm">General</span>

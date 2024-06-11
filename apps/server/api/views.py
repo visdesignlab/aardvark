@@ -1,83 +1,94 @@
 from rest_framework.views import APIView  # type: ignore
 from rest_framework.response import Response  # type: ignore
-import boto3  # type: ignore
-import os
+from rest_framework import serializers, status  # type: ignore
+from typing import Dict, Optional
 import json
-import tempfile
-import shutil
-import uuid
+from django.core.files.storage import default_storage  # type: ignore
 from .tasks import (
-    task_queue,
-    task_status,
-    task_status_lock,
     FailedToCreateTaskException,
-    Task,
+    execute_task
+)
+from celery.result import AsyncResult  # type: ignore
+from django.core import signing  # type: ignore
+from .serializers import (
+    LoonUploadCreateSerializer,
+    ExperimentCreateSerializer,
+    LocationCreateSerializer
+)
+from .models import LoonUpload, Location
+from django.core.files.base import ContentFile  # type: ignore
+
+
+def field_value_object_key(serializer: serializers.Serializer) -> Optional[str]:
+    try:
+        field_value = serializer.validated_data['field_value']
+        field_value_dict: Dict = signing.loads(field_value)
+        object_key = field_value_dict['object_key']
+    except signing.BadSignature:
+        return None
+
+    return object_key
+
+
+InvalidFieldValueResponse = Response(
+    {'field_value': ['field_value is not a valid signed string.']},
+    status=status.HTTP_400_BAD_REQUEST,
 )
 
 
-# Single File Upload View
-class UploadDataView(APIView):
+class ProcessDataView(APIView):
     def post(self, request):
-        # Get data
-        data = request.data
-        # Get File
-        file = data["file"]
-        metadata = json.loads(data.get("metadata"))
+        serializer = LoonUploadCreateSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
 
-        # Unpack rest
-        file_name, label, location, experiment_name, workflow_code, file_type = {
-            **metadata
-        }.values()
+        # This gets the reference to the file in Minio
+        object_key = field_value_object_key(serializer)
+        if object_key is None:
+            return InvalidFieldValueResponse
 
-        location_based_file_name = label + "_" + file_name
-
-        # Generate unique file name for status and saving.
-        unique_file_name = f"{str(uuid.uuid4())[:6]}_{experiment_name}_{location_based_file_name}"
-        # Make temp directory to store value
-        temp_dir = tempfile.mkdtemp()
-        # Create a new file path for this zip file
-        temp_file_path = os.path.join(temp_dir, unique_file_name)
-        # Save the uploaded file to the temporary location
-        with open(temp_file_path, "wb") as f:
-            shutil.copyfileobj(file, f)
+        loonUpload: LoonUpload = LoonUpload.objects.create(
+            workflow_code=serializer.validated_data['workflow_code'],
+            file_type=serializer.validated_data['file_type'],
+            file_name=serializer.validated_data['file_name'],
+            location=serializer.validated_data['location'],
+            experiment_name=serializer.validated_data['experiment_name'],
+            blob=object_key,
+        )
 
         try:
-            # Create task
-            curr_task = Task.create_task(
-                workflow_code,
-                file_type,
-                file_name=file_name,
-                location=location,
-                experiment_name=experiment_name,
-                unique_file_name=unique_file_name,
-                temp_file_path=temp_file_path,
-            )
+            # Send task to celery worker
+            task_result = execute_task.delay(loonUpload.pk)
 
-            # Add task to status list
-            with task_status_lock:
-                task_status[unique_file_name] = {"status": "QUEUED"}
-
-            # Add task to queue
-            task_queue.put(curr_task)
+            task_id = task_result.id
 
             # Return success
             return Response({"status": "SUCCESS",
                              "message": "task has been dispatched",
-                             "unique_file_name": unique_file_name
+                             "task_id": task_id
                              })
         except FailedToCreateTaskException as e:
             # If failed to create task, return failure message.
             return Response({"status": "FAILED", "message": e.message})
 
-    def get(self, request, filename):
-        with task_status_lock:
-            try:
-                status = task_status[filename]
-            except KeyError:
-                return Response({"status": "ERROR",
-                                 "message": "Unable to retrieve status of file upload."
-                                 })
-        return Response(status)
+    def get(self, request, task_id):
+        result = AsyncResult(task_id)
+        response_data = {
+            "task_id": task_id
+        }
+        print(result.state, flush=True)
+        if result.state == 'PENDING':
+            response_data['status'] = 'QUEUED'
+        elif result.state == 'STARTED':
+            response_data['status'] = 'RUNNING'
+        elif result.state == 'FAILURE':
+            response_data['status'] = 'FAILED'
+        elif result.state == 'SUCCESS':
+            response_data['status'] = 'SUCCEEDED'
+        else:
+            response_data['status'] = 'ERROR'
+            response_data['message'] = 'Unable to retrieve status'
+
+        return Response(response_data)
 
 
 class FinishExperimentView(APIView):
@@ -88,46 +99,46 @@ class FinishExperimentView(APIView):
         # Allow for UI to set values....???????
         data = request.data
         experiment_settings = json.loads(data.get('experimentSettings'))
-        json_string = json.dumps(experiment_settings, indent=2)
+        experiment_name = data.get('experimentName')
+        experiment_data = {
+            "name": experiment_name,
+            "number_of_locations": len(experiment_settings),
+            "header_time": "fake",
+            "header_frame": "fake",
+            "header_id": "fake",
+            "header_parent": "fake",
+            "header_mass": "fake",
+            "header_x": "fake",
+            "header_y": "fake"
+        }
+        experiment_serializer = ExperimentCreateSerializer(data=experiment_data)
+        if not experiment_serializer.is_valid():
+            print(experiment_serializer.errors, flush=True)
+        experiment_serializer.is_valid(raise_exception=True)
 
-        s3 = boto3.resource(service_name="s3", endpoint_url=ENDPOINT_URL)
-        s3.Bucket(BUCKET).put_object(
-            Body=json_string.encode(),
-            Key=data.get('experimentName') + '.json',
-            ContentType='application/json'
-        )
+        experiment_instance = experiment_serializer.save()
+
+        for key in experiment_settings:
+            location_data = {
+                "name": experiment_settings[key]['id'],
+                "tabular_data_filename": experiment_settings[key]['dataFrameFileName'],
+                "images_data_filename": experiment_settings[key]['imageDataFileName'],
+                "segmentations_folder": experiment_settings[key]['segmentationsFolder'],
+            }
+            location_serializer = LocationCreateSerializer(data=location_data)
+            if not location_serializer.is_valid():
+                print(location_serializer.errors, flush=True)
+
+            location_serializer.is_valid(raise_exception=True)
+
+            Location.objects.create(
+                experiment=experiment_instance,
+                **location_data
+            )
+
+        json_data = experiment_instance.to_json()
+        json_string = json.dumps(json_data, indent=4)
+        json_bytes = json_string.encode('utf-8')
+        default_storage.save(f'{experiment_instance.name}.json', ContentFile(json_bytes))
 
         return Response({'status': 'fake_response'})
-
-
-"""
--------------------------------------------
--------------------------------------------
--------------------------------------------
-OLDER STUFF
--------------------------------------------
--------------------------------------------
--------------------------------------------
-"""
-
-ENDPOINT_URL = "http://127.0.0.1:9000"
-BUCKET = "data"
-
-BAD_FILES = [".DS_Store"]
-
-
-class ListBucketsView(APIView):
-    def get(self):
-        session = boto3.session.Session()
-        s3_client = session.client(service_name="s3", endpoint_url=ENDPOINT_URL)
-        buckets = s3_client.list_buckets()
-        return Response(buckets)
-
-
-class AuthorizationKeys(APIView):
-    def get(self):
-        with open("api/secrets.json", "r") as secrets_json:
-            secrets = json.load(secrets_json)
-            print(secrets, flush=True)
-
-        return Response(secrets)

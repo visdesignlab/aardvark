@@ -42,3 +42,4 @@ certs
 #Random
 apps/server/api/*.jpg
 apps/server/api/secrets.json
+.env
