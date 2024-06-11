@@ -1,14 +1,61 @@
 <template>
   <div ref="vgPlotContainer"></div>
+  <div ref="selectedRangeText">{{ selectedRangeText }}</div>
 </template>
 
 <script lang="ts">
-import { defineComponent, onMounted, ref } from 'vue';
+import { defineComponent, onMounted, ref, computed } from 'vue';
 import * as vg from '@uwdata/vgplot';
 
 export default defineComponent({
   setup() {
     const vgPlotContainer = ref<HTMLDivElement | null>(null);
+    const selectedRangeText = ref<HTMLDivElement | null>(null);
+
+      const makePlot = (column: string) => {
+      // Create a new brush instance for this plot
+      const plotBrush = vg.Selection.intersect();
+
+      const plot = vg.plot(
+        vg.name("ploted"),
+        vg.rectY(
+          vg.from("dummy_data", { filterBy: plotBrush }), // Use plot-specific brush for filtering
+          { x: vg.bin(column), y: vg.count(), fill: "steelblue", inset: 1 }
+        ),
+        vg.intervalX({ as: plotBrush }), // Add plot-specific brush selection
+        vg.xDomain(vg.Fixed),
+        vg.marginBottom(170),
+        vg.marginTop(30),
+        vg.width(600),
+        vg.height(300),
+        vg.style({ "font-size": "30px" }),
+        vg.xLabelAnchor("center"),
+        vg.xTickPadding(10),
+        vg.xLabelOffset(80),
+        vg.xAxis("bottom"),
+        vg.xLine(true),
+        vg.xAlign(0),
+        vg.yLabelAnchor("top"),
+        vg.yAxis(null),
+        vg.yTicks(0),
+        vg.text({x: plotBrush, text: plotBrush, frameAnchor: "top", lineAnchor: "bottom", dy: -7 })
+      );
+      const minX = ref(0);
+      const maxX = ref(0);
+      // Update the text content when the brush selection changes (optional)
+      plotBrush.addEventListener('value', () => {
+        const selectedRange = plotBrush.active.value;
+        
+        minX.value = selectedRange[0];
+        maxX.value = selectedRange[1];
+        console.log(`Selected X Range: [${minX.value}, ${maxX.value}]`);
+
+        selectedRangeText.value.innerText = `Selected X Range: [${Math.round(minX.value * 1000) / 1000}, ${Math.round(maxX.value * 1000) / 1000}]`;
+        vg.text({x: maxX.value, text: maxX.value, frameAnchor: "top", lineAnchor: "bottom", dy: -7 })
+      });
+
+      return plot;
+    };
 
     onMounted(async () => {
       if (vgPlotContainer.value) {
@@ -40,38 +87,11 @@ export default defineComponent({
         // await vg.coordinator().exec([
         //   vg.loadParquet("dummy_data", "./testData.parquet")]);
 
-        const brush = vg.Selection.intersect();
-        
-        
-        const makePlot = (column: string) => vg.plot(
-        vg.rectY(
-          vg.from("dummy_data", { filterBy: brush }), // data set and filter selection
-          { x: vg.bin(column), y: vg.count(), fill: "steelblue", inset: 1}
-        ),
-        vg.intervalX({ as: brush }), // create an interval selection brush
-        vg.xDomain(vg.Fixed), // don't change the x-axis domain across updates
-        vg.marginBottom(130),
-        vg.width(600),
-        vg.height(300),
-        vg.style({ "font-size": "30px" }),
-        vg.xLabelAnchor("center"),
-        vg.xTickPadding(10),
-        vg.xLabelOffset(80),
-        vg.xAxis("bottom"),
-        vg.xLine(true),
-        vg.xAlign(0),
-        vg.yLabelAnchor("top"),
-        vg.yAxis(null),
-        vg.yTicks(0),
-        );
-        // function updateSelectionText(){
-
-        // }
 
         const chart = vg.vconcat(
             makePlot("Mass (pg)"),
             makePlot("Time (h)"),
-            makePlot("Mass_norm")
+            makePlot("Mass_norm"),
         );
 
         vgPlotContainer.value.appendChild(chart);
@@ -79,7 +99,8 @@ export default defineComponent({
     });
 
     return {
-      vgPlotContainer,
+      vgPlotContainer, selectedRangeText
+
     };
   },
 });
