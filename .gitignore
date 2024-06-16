@@ -43,3 +43,6 @@ certs
 apps/server/api/*.jpg
 apps/server/api/secrets.json
 .env
+
+#Docker
+docker/mysql-data

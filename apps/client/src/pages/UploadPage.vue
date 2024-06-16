@@ -302,7 +302,6 @@ const getProgressStatusList = () => {
     return progressResult;
 };
 
-
 const loonAxios = createLoonAxiosInstance({
     baseURL: 'http://localhost:8000/api',
 });
@@ -378,7 +377,6 @@ const checkForUpdates = async (task_id: string, fileKey: string) => {
         console.error('Error checking for updates:', error);
     }
 };
-
 </script>
 <template>
     <q-page class="q-pa-lg q-gutter-md" style="max-width: 1200px; margin: auto">

@@ -15,13 +15,20 @@ import environ  # type: ignore
 import os
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
-BASE_DIR = Path(__file__).resolve().parent.parent
+BASE_DIR = Path(__file__).resolve().parent.parent.parent.parent
 env = environ.Env(
     # Set default values and casting
     DEBUG=(bool, False)
 )
-environ.Env.read_env(os.path.join(BASE_DIR, '.env'))
+DJANGO_ENV = os.getenv('DJANGO_ENV', 'production')
 
+# Load environment variables from appropriate .env file based on DJANGO_ENV
+if DJANGO_ENV == 'development':
+    dotenv_path = os.path.join(BASE_DIR, 'apps/server/.env')  # Path to Docker environment variables
+else:
+    dotenv_path = os.path.join(BASE_DIR, 'docker/.env')
+
+environ.Env.read_env(dotenv_path)
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.0/howto/deployment/checklist/
@@ -142,14 +149,14 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 
 # Celery
-CELERY_BROKER_URL = "redis://localhost:6379/0"
-CELERY_RESULT_BACKEND = 'redis://localhost:6379/0'
+CELERY_BROKER_URL = "redis://redis:6379/0"
+CELERY_RESULT_BACKEND = 'redis://redis:6379/0'
 CELERY_TASK_TRACK_STARTED = True
 
 # Minio Storage
 DEFAULT_FILE_STORAGE = "minio_storage.storage.MinioMediaStorage"
 STATICFILES_STORAGE = "minio_storage.storage.MinioStaticStorage"
-MINIO_STORAGE_ENDPOINT = "127.0.0.1:9000"
+MINIO_STORAGE_ENDPOINT = "192.168.1.100:9000"
 MINIO_STORAGE_USE_HTTPS = False
 MINIO_STORAGE_ACCESS_KEY = env('MINIO_STORAGE_ACCESS_KEY')
 MINIO_STORAGE_SECRET_KEY = env('MINIO_STORAGE_SECRET_KEY')
