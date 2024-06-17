@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import {ref} from 'vue';
+import { ref } from 'vue';
 import { useGlobalSettings } from '@/stores/globalSettings';
 import UnivariateCellPlot from './UnivariateCellPlot.vue';
 import type { Vue } from 'vue-demi';
@@ -8,83 +8,152 @@ const globalSettings = useGlobalSettings();
 const showingMass = ref(true);
 const showingTime = ref(true);
 function hideMass() {
-  showingMass.value = false;
+    showingMass.value = false;
 }
 function hideTime() {
-  showingTime.value = false;
+    showingTime.value = false;
 }
 </script>
 
 <template>
     <q-list>
         <div class="q-pa-md q-gutter-md">
-        <q-list id="currentSelectionsItem">
-            <q-item-label lines="1">Current Selections</q-item-label>
+            <q-list id="currentSelectionsItem">
+                <q-item-label lines="1">Current Selections</q-item-label>
 
-          <q-item id='currentSelectionsItem' clickable v-ripple v-if="showingMass">
-            <q-item-section avatar top left>
-              <q-avatar icon="scatter_plot" style="width: 18px"/>
-            </q-item-section>
+                <q-item
+                    id="currentSelectionsItem"
+                    clickable
+                    v-ripple
+                    v-if="showingMass"
+                >
+                    <q-item-section avatar top left>
+                        <q-avatar icon="scatter_plot" style="width: 18px" />
+                    </q-item-section>
 
-            <q-item-section>
-              <q-item-label style="font-size: 14px; margin-left: -20px;">Mass (pg)</q-item-label>
-              <q-item-label id = "currSel" false caption style="margin-left: -20px; white-space: nowrap">[500-1000]</q-item-label>
-            </q-item-section>
+                    <q-item-section>
+                        <q-item-label
+                            style="font-size: 14px; margin-left: -20px"
+                            >Mass (pg)</q-item-label
+                        >
+                        <q-item-label
+                            id="currSel"
+                            false
+                            caption
+                            style="margin-left: -20px; white-space: nowrap"
+                            >[500-1000]</q-item-label
+                        >
+                    </q-item-section>
 
-            <q-item-section side>
-                <q-btn class="gt-xs" size="12px" flat dense round icon="filter_alt" />
-                <q-btn class="gt-xs" @click="hideMass" size="12px" flat dense round icon="delete" />
-            </q-item-section>
-          </q-item>
-          <q-item id='currentSelectionsItem' clickable v-ripple v-if="showingTime">
-            <q-item-section avatar top left>
-              <q-avatar icon="scatter_plot" style="width: 18px"/>
-            </q-item-section>
+                    <q-item-section side>
+                        <q-btn
+                            class="gt-xs"
+                            size="12px"
+                            flat
+                            dense
+                            round
+                            icon="filter_alt"
+                        />
+                        <q-btn
+                            class="gt-xs"
+                            @click="hideMass"
+                            size="12px"
+                            flat
+                            dense
+                            round
+                            icon="delete"
+                        />
+                    </q-item-section>
+                </q-item>
+                <q-item
+                    id="currentSelectionsItem"
+                    clickable
+                    v-ripple
+                    v-if="showingTime"
+                >
+                    <q-item-section avatar top left>
+                        <q-avatar icon="scatter_plot" style="width: 18px" />
+                    </q-item-section>
 
-            <q-item-section>
-              <q-item-label style="font-size: 14px; margin-left: -20px;">Time (h)</q-item-label>
-              <q-item-label id = "currSel" false caption style="margin-left: -20px; white-space: nowrap">[30-50]</q-item-label>
-            </q-item-section>
+                    <q-item-section>
+                        <q-item-label
+                            style="font-size: 14px; margin-left: -20px"
+                            >Time (h)</q-item-label
+                        >
+                        <q-item-label
+                            id="currSel"
+                            false
+                            caption
+                            style="margin-left: -20px; white-space: nowrap"
+                            >[30-50]</q-item-label
+                        >
+                    </q-item-section>
 
-            <q-item-section side>
-                <q-btn class="gt-xs" size="12px" flat dense round icon="filter_alt" />
-                <q-btn class="gt-xs" @click="hideTime" size="12px" flat dense round icon="delete" />
-            </q-item-section>
-          </q-item>
+                    <q-item-section side>
+                        <q-btn
+                            class="gt-xs"
+                            size="12px"
+                            flat
+                            dense
+                            round
+                            icon="filter_alt"
+                        />
+                        <q-btn
+                            class="gt-xs"
+                            @click="hideTime"
+                            size="12px"
+                            flat
+                            dense
+                            round
+                            icon="delete"
+                        />
+                    </q-item-section>
+                </q-item>
+            </q-list>
+            <q-list>
+                <q-separator spaced />
+                <q-item-label lines="1">Current Filters</q-item-label>
 
-          
+                <q-item clickable v-ripple>
+                    <q-item-section avatar top left>
+                        <q-avatar icon="linear_scale" style="width: 18px" />
+                    </q-item-section>
 
-        </q-list>
-        <q-list>
+                    <q-item-section>
+                        <q-item-label
+                            style="font-size: 14px; margin-left: -20px"
+                            >Track Length</q-item-label
+                        >
+                        <q-item-label
+                            caption
+                            style="margin-left: -20px; white-space: nowrap"
+                            >[10-20]</q-item-label
+                        >
+                    </q-item-section>
 
-          <q-separator spaced />
-          <q-item-label lines="1">Current Filters</q-item-label>
-
-          <q-item clickable v-ripple>
-            <q-item-section avatar top left>
-              <q-avatar icon="linear_scale" style="width: 18px"/>
-            </q-item-section>
-
-            <q-item-section>
-              <q-item-label style="font-size: 14px; margin-left: -20px;">Track Length</q-item-label>
-              <q-item-label caption style="margin-left: -20px; white-space: nowrap">[10-20]</q-item-label>
-            </q-item-section>
-
-            <q-item-section side>
-                <q-btn class="gt-xs" size="12px" flat dense round icon="delete" />
-            </q-item-section>
-          </q-item>
-        </q-list>
-      </div>
+                    <q-item-section side>
+                        <q-btn
+                            class="gt-xs"
+                            size="12px"
+                            flat
+                            dense
+                            round
+                            icon="delete"
+                        />
+                    </q-item-section>
+                </q-item>
+            </q-list>
+        </div>
         <q-separator />
         <q-expansion-item
             group="settings"
-            icon = "scatter_plot"
+            icon="scatter_plot"
             label="Cell Attributes"
-            v-model="globalSettings.settingsAccordion['general']">
+            v-model="globalSettings.settingsAccordion['general']"
+        >
             <q-card :dark="globalSettings.darkMode">
                 <q-card-section id="cellPlots">
-                  <UnivariateCellPlot></UnivariateCellPlot>
+                    <UnivariateCellPlot></UnivariateCellPlot>
                 </q-card-section>
             </q-card>
         </q-expansion-item>
@@ -101,7 +170,7 @@ function hideTime() {
         >
             <q-card :dark="globalSettings.darkMode">
                 <q-card-section>
-                  <UnivariateCellPlot></UnivariateCellPlot>
+                    <UnivariateCellPlot></UnivariateCellPlot>
                 </q-card-section>
             </q-card>
         </q-expansion-item>
@@ -117,7 +186,7 @@ function hideTime() {
         >
             <q-card :dark="globalSettings.darkMode">
                 <q-card-section>
-                  <UnivariateCellPlot></UnivariateCellPlot>
+                    <UnivariateCellPlot></UnivariateCellPlot>
                 </q-card-section>
             </q-card>
         </q-expansion-item>
