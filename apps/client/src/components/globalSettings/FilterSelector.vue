@@ -170,7 +170,7 @@ function hideTime() {
         >
             <q-card :dark="globalSettings.darkMode">
                 <q-card-section>
-                    <UnivariateCellPlot></UnivariateCellPlot>
+                    <!-- <UnivariateCellPlot></UnivariateCellPlot> -->
                 </q-card-section>
             </q-card>
         </q-expansion-item>
@@ -186,7 +186,7 @@ function hideTime() {
         >
             <q-card :dark="globalSettings.darkMode">
                 <q-card-section>
-                    <UnivariateCellPlot></UnivariateCellPlot>
+                    <!-- <UnivariateCellPlot></UnivariateCellPlot> -->
                 </q-card-section>
             </q-card>
         </q-expansion-item>
