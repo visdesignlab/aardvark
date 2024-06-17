@@ -1,20 +1,71 @@
 <template>
-  <div ref="vgPlotContainer"></div>
-  <div ref="selectedRangeText">{{ selectedRangeText }}</div>
+  <div>
+
+    <q-item-section>
+      <div class="q-item-section__right">
+        <q-btn class="gt-xs" size="12px" flat dense round icon="filter_alt" color="grey-7" />
+      </div>
+      <div ref="vgPlotContainer1"></div>
+    </q-item-section>
+
+    <q-item-section>
+      <div class="q-item-section__right">
+        <q-btn class="gt-xs" size="12px" flat dense round icon="filter_alt" color="grey-7" />
+      </div>
+      <div ref="vgPlotContainer2"></div>
+    </q-item-section>
+
+    <q-item-section>
+      <div class="q-item-section__right">
+        <q-btn class="gt-xs" size="12px" flat dense round icon="filter_alt" color="grey-7" />
+      </div>
+      <div ref="vgPlotContainer3"></div>
+    </q-item-section>
+    
+  </div>
 </template>
 
+
 <script lang="ts">
-import { defineComponent, onMounted, ref, computed } from 'vue';
+import { defineComponent, onMounted, ref, h, render} from 'vue';
+import { QBtn } from 'quasar';
 import * as vg from '@uwdata/vgplot';
 
 export default defineComponent({
   setup() {
-    const vgPlotContainer = ref<HTMLDivElement | null>(null);
-    const selectedRangeText = ref<HTMLDivElement | null>(null);
+    const vgPlotContainer1 = ref<HTMLDivElement | null>(null);
+    const vgPlotContainer2 = ref<HTMLDivElement | null>(null);
+    const vgPlotContainer3 = ref<HTMLDivElement | null>(null);
 
-      const makePlot = (column: string) => {
-      // Create a new brush instance for this plot
-      const plotBrush = vg.Selection.intersect();
+    // Current Selection HTML
+    const currSel = document.getElementById("currSel");
+
+    // Brush selection
+    const plotBrush = vg.Selection.intersect();
+    vg.Selection.crossfilter();
+
+    const makePlot = (column: string) => {
+      
+      // Optional Text Underneath Plots
+      //const rangeText = document.createElement('div');
+      //rangeText.classList.add('vgPlotContainer');
+     
+      // Tracking brush range
+      const minX = ref(0);
+      const maxX = ref(0);
+      // Event for the brush.
+      plotBrush.addEventListener('value', () => {
+        const selectedRange = plotBrush.active.value;
+        if (selectedRange){
+        minX.value = selectedRange[0];
+        maxX.value = selectedRange[1];
+        }
+        // Optional Text Underneath Plots, must return rangeText in function.
+        //rangeText.textContent = `[${Math.round(minX.value * 1000) / 1000}, ${Math.round(maxX.value * 1000) / 1000}]`;
+        
+        // Set text content
+        currSel.textContent = `[${Math.round(minX.value * 1000) / 1000}, ${Math.round(maxX.value * 1000) / 1000}]`;
+      }); 
 
       const plot = vg.plot(
         vg.name("ploted"),
@@ -38,27 +89,15 @@ export default defineComponent({
         vg.yLabelAnchor("top"),
         vg.yAxis(null),
         vg.yTicks(0),
-        vg.text({x: plotBrush, text: plotBrush, frameAnchor: "top", lineAnchor: "bottom", dy: -7 })
+        vg.text({ x: plotBrush, text: plotBrush, frameAnchor: "top", lineAnchor: "bottom", dy: -7 })
       );
-      const minX = ref(0);
-      const maxX = ref(0);
-      // Update the text content when the brush selection changes (optional)
-      plotBrush.addEventListener('value', () => {
-        const selectedRange = plotBrush.active.value;
-        
-        minX.value = selectedRange[0];
-        maxX.value = selectedRange[1];
-        console.log(`Selected X Range: [${minX.value}, ${maxX.value}]`);
-
-        selectedRangeText.value.innerText = `Selected X Range: [${Math.round(minX.value * 1000) / 1000}, ${Math.round(maxX.value * 1000) / 1000}]`;
-        vg.text({x: maxX.value, text: maxX.value, frameAnchor: "top", lineAnchor: "bottom", dy: -7 })
-      });
 
       return plot;
     };
 
     onMounted(async () => {
-      if (vgPlotContainer.value) {
+      if (vgPlotContainer1.value && vgPlotContainer2.value && vgPlotContainer3.value) {
+
         // Configure the coordinator to use DuckDB-WASM
         vg.coordinator().databaseConnector(vg.wasmConnector());
 
@@ -83,25 +122,38 @@ export default defineComponent({
             { "Mass (pg)": 0, "Time (h)": 7, "Mass_norm": 0 },
           ]),
         ]);
-        // // // Load data into the database
-        // await vg.coordinator().exec([
-        //   vg.loadParquet("dummy_data", "./testData.parquet")]);
-
-
+        
         const chart = vg.vconcat(
+
             makePlot("Mass (pg)"),
             makePlot("Time (h)"),
-            makePlot("Mass_norm"),
+            makePlot("Mass_norm")
         );
 
-        vgPlotContainer.value.appendChild(chart);
+        vgPlotContainer1.value.appendChild(vg.vconcat(makePlot("Mass (pg)")));
+        vgPlotContainer2.value.appendChild(vg.vconcat(makePlot("Time (h)")));
+        vgPlotContainer3.value.appendChild(vg.vconcat(makePlot("Mass_norm")));
       }
     });
 
     return {
-      vgPlotContainer, selectedRangeText
+      vgPlotContainer1,
+      vgPlotContainer2,
+      vgPlotContainer3
 
     };
   },
 });
 </script>
+
+<style scoped>
+.plot-container {
+  display: flex;
+  align-items: center;
+  text-align: center;
+}
+.q-item-section__right {
+  display: flex;
+  justify-content: flex-end; 
+}
+</style>
