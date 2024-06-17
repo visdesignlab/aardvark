@@ -5,9 +5,13 @@ import UnivariateCellPlot from './UnivariateCellPlot.vue';
 import type { Vue } from 'vue-demi';
 const globalSettings = useGlobalSettings();
 
-const showing = ref(true);
-function hideSelection() {
-  showing.value = false;
+const showingMass = ref(true);
+const showingTime = ref(true);
+function hideMass() {
+  showingMass.value = false;
+}
+function hideTime() {
+  showingTime.value = false;
 }
 </script>
 
@@ -17,7 +21,7 @@ function hideSelection() {
         <q-list id="currentSelectionsItem">
             <q-item-label lines="1">Current Selections</q-item-label>
 
-          <q-item id='currentSelectionsItem' clickable v-ripple v-if="showing">
+          <q-item id='currentSelectionsItem' clickable v-ripple v-if="showingMass">
             <q-item-section avatar top left>
               <q-avatar icon="scatter_plot" style="width: 18px"/>
             </q-item-section>
@@ -29,7 +33,22 @@ function hideSelection() {
 
             <q-item-section side>
                 <q-btn class="gt-xs" size="12px" flat dense round icon="filter_alt" />
-                <q-btn class="gt-xs" @click="hideSelection" size="12px" flat dense round icon="delete" />
+                <q-btn class="gt-xs" @click="hideMass" size="12px" flat dense round icon="delete" />
+            </q-item-section>
+          </q-item>
+          <q-item id='currentSelectionsItem' clickable v-ripple v-if="showingTime">
+            <q-item-section avatar top left>
+              <q-avatar icon="scatter_plot" style="width: 18px"/>
+            </q-item-section>
+
+            <q-item-section>
+              <q-item-label style="font-size: 14px; margin-left: -20px;">Time (h)</q-item-label>
+              <q-item-label id = "currSel" false caption style="margin-left: -20px; white-space: nowrap">[30-50]</q-item-label>
+            </q-item-section>
+
+            <q-item-section side>
+                <q-btn class="gt-xs" size="12px" flat dense round icon="filter_alt" />
+                <q-btn class="gt-xs" @click="hideTime" size="12px" flat dense round icon="delete" />
             </q-item-section>
           </q-item>
 

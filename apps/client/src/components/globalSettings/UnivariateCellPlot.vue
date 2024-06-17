@@ -20,7 +20,7 @@
         <q-btn class="gt-xs" size="12px" flat dense round icon="filter_alt" color="grey-7" />
       </div>
       <div ref="vgPlotContainer3"></div>
-    </q-item-section>
+    </q-item-section> 
     
   </div>
 </template>
@@ -65,7 +65,7 @@ export default defineComponent({
         
         // Set text content
         currSel.textContent = `[${Math.round(minX.value * 1000) / 1000}, ${Math.round(maxX.value * 1000) / 1000}]`;
-      }); 
+      });   
 
       const plot = vg.plot(
         vg.name("ploted"),
