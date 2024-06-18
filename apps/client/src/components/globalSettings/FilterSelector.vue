@@ -2,6 +2,7 @@
 import { ref } from 'vue';
 import { useGlobalSettings } from '@/stores/globalSettings';
 import UnivariateCellPlot from './UnivariateCellPlot.vue';
+import PlotSelector from './PlotSelector.vue';
 import type { Vue } from 'vue-demi';
 const globalSettings = useGlobalSettings();
 
@@ -153,7 +154,7 @@ function hideTime() {
         >
             <q-card :dark="globalSettings.darkMode">
                 <q-card-section id="cellPlots">
-                    <UnivariateCellPlot></UnivariateCellPlot>
+                    <PlotSelector></PlotSelector>
                 </q-card-section>
             </q-card>
         </q-expansion-item>
