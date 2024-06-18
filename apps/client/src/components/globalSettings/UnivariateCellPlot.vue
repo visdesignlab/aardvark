@@ -61,12 +61,14 @@ import {
 import { QBtn } from 'quasar';
 import * as vg from '@uwdata/vgplot';
 import { useCellMetaData } from '@/stores/cellMetaData';
+import { useDatasetSelectionStore } from '@/stores/datasetSelectionStore';
 import { storeToRefs } from 'pinia';
 
 const vgPlotContainer1 = ref<HTMLDivElement | null>(null);
 const vgPlotContainer2 = ref<HTMLDivElement | null>(null);
 const vgPlotContainer3 = ref<HTMLDivElement | null>(null);
 const cellMetaData = useCellMetaData();
+const datasetSelectionStore = useDatasetSelectionStore();
 const { dataInitialized } = storeToRefs(cellMetaData);
 
 // Current Selection HTML
@@ -194,7 +196,16 @@ async function createCharts() {
 
     //console.log('data: ', dummyCellData.value);
 
-    await vg.coordinator().exec([vg.loadObjects('dummy_data', realData)]);
+    // await vg.coordinator().exec([vg.loadObjects('dummy_data', realData)]);
+
+    if (!datasetSelectionStore.currentLocationMetadata) {
+        return;
+    }
+    const url = datasetSelectionStore.getServerUrl(
+        datasetSelectionStore.currentLocationMetadata.tabularDataFilename
+    );
+
+    await vg.coordinator().exec([vg.loadCSV('dummy_data', url)]);
 
     // const chart = vg.vconcat(
     //     makePlot('attrNum.Mass (pg)'),
