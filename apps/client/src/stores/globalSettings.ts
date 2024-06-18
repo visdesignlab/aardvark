@@ -42,7 +42,7 @@ export const useGlobalSettings = defineStore('globalSettings', () => {
             faKey: 'fa-upload',
             id: uuidv4(),
             show: false,
-            url:'/upload'
+            url: '/upload',
         },
         // {
         //     name: 'Filter Data',
@@ -70,26 +70,26 @@ export const useGlobalSettings = defineStore('globalSettings', () => {
         return settingsPages.value[lastActivePageIndex.value];
     });
     function toggleShown(setting: SettingsPage): void {
-        if(setting.url){
-          router.push('/upload')
-            
-          activePageIndex.value = null;
+        if (setting.url) {
+            router.push('/upload');
+
+            activePageIndex.value = null;
+            return;
+        }
+        if (setting.show) {
+            setting.show = false;
+
+            activePageIndex.value = null;
         } else {
-          if (setting.show) {
-              setting.show = false;
-  
-              activePageIndex.value = null;
-          } else {
-              for (const s of settingsPages.value) {
-                  s.show = false;
-              }
-              setting.show = true;
-              activePageIndex.value = settingsPages.value.findIndex(
-                  (page) => page.id === setting.id
-              );
-              lastActivePageIndex.value = activePageIndex.value;
-          }    
-      }
+            for (const s of settingsPages.value) {
+                s.show = false;
+            }
+            setting.show = true;
+            activePageIndex.value = settingsPages.value.findIndex(
+                (page) => page.id === setting.id
+            );
+            lastActivePageIndex.value = activePageIndex.value;
+        }
     }
 
     function showSetting(name: string): void {
