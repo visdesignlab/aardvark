@@ -1,6 +1,8 @@
 <script lang="ts" setup>
 import { ref, computed, watch, onMounted } from 'vue';
-import LoadingProgress, { type ProgressRecord } from './LoadingProgress.vue';
+import LoadingProgress, {
+    type ProgressRecord,
+} from '@/components/upload/LoadingProgress.vue';
 import type { QForm, QStepper } from 'quasar';
 import {
     createLoonAxiosInstance,
