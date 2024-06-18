@@ -12,11 +12,7 @@
                     color="grey-7"
                 />
             </div>
-            <div
-                ref="vgPlotContainer1"
-                v-if="charts"
-                v-html="charts.outerHTML"
-            ></div>
+            <div id="plotContainer" ref="vgPlotContainer1"></div>
         </q-item-section>
         <!-- 
         <q-item-section>
@@ -81,6 +77,7 @@ const plotBrush = vg.Selection.intersect();
 vg.Selection.crossfilter();
 
 const makePlot = (column: string) => {
+    console.log('makePlot Start');
     // Optional Text Underneath Plots
     //const rangeText = document.createElement('div');
     //rangeText.classList.add('vgPlotContainer');
@@ -151,7 +148,7 @@ const dummyCellData = computed(() => {
     });
 });
 
-const charts = ref(null);
+const charts = ref<null | HTMLElement>(null);
 
 watch(dataInitialized, createCharts);
 //createCharts();
@@ -190,11 +187,14 @@ async function createCharts() {
     ];
 
     console.log(dummy);
-    console.log(JSON.parse(JSON.stringify(dummyCellData.value?.slice(0, 10))));
+    const realData = JSON.parse(
+        JSON.stringify(dummyCellData.value?.slice(50, 110))
+    );
+    console.log(realData);
 
     //console.log('data: ', dummyCellData.value);
 
-    await vg.coordinator().exec([vg.loadObjects('dummy_data', dummy)]);
+    await vg.coordinator().exec([vg.loadObjects('dummy_data', realData)]);
 
     // const chart = vg.vconcat(
     //     makePlot('attrNum.Mass (pg)'),
@@ -214,6 +214,9 @@ async function createCharts() {
     //return makePlot(makePlot('mass'));
 
     charts.value = makePlot('mass');
+    if (vgPlotContainer1.value) {
+        vgPlotContainer1.value.appendChild(charts.value!);
+    }
 }
 
 //onMounted(async () => {
