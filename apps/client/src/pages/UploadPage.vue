@@ -64,7 +64,7 @@ async function onSubmitExperiment() {
     }
 
     try {
-        const response = await fetch('http://localhost/api/createExperiment/', {
+        const response = await fetch(`${currBaseUrl}/api/createExperiment/`, {
             method: 'POST',
             body: formData,
         });
