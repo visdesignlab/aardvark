@@ -4,6 +4,7 @@ import LoadingProgress, {
     type ProgressRecord,
 } from '@/components/upload/LoadingProgress.vue';
 import StepExperimentMetadata from '@/components/upload/StepExperimentMetadata.vue';
+// import StepFileSelection from '@/components/upload/StepFileSelection.vue';
 import type { QForm, QStepper } from 'quasar';
 import {
     createLoonAxiosInstance,
@@ -43,7 +44,7 @@ const handleSuggestedClick = (
 };
 const step = ref(1);
 const experimentName = ref<string>('');
-const numberOfLocations = ref<number>();
+const numberOfLocations = ref<number>(1);
 const experimentCreated = ref<boolean>(false);
 const experimentSettings = ref<Record<string, LocationSettings>>({
     location_1: {
@@ -67,13 +68,10 @@ const onSubmitExperiment = async () => {
     }
 
     try {
-        const response = await fetch(
-            'http://localhost/api/createExperiment/',
-            {
-                method: 'POST',
-                body: formData,
-            }
-        );
+        const response = await fetch('http://localhost/api/createExperiment/', {
+            method: 'POST',
+            body: formData,
+        });
         if (response.ok) {
             const responseData = await response.json();
             return responseData;
@@ -406,6 +404,16 @@ const checkForUpdates = async (task_id: string, fileKey: string) => {
                         v-model:numberOfLocations="numberOfLocations"
                     />
                 </q-step>
+                <!-- <q-step
+                    :name="42"
+                    title="Select Files"
+                    icon="settings"
+                    :done="stepDone(2)"
+                    done-color="green"
+                    ref="step2"
+                >
+                    <StepFileSelection />
+                </q-step> -->
 
                 <q-step
                     :name="2"
