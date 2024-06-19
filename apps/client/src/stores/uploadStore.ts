@@ -23,8 +23,10 @@ export interface FileToUpload {
 }
 
 export const useUploadStore = defineStore('uploadStore', () => {
+    // const currBaseUrl = window.location.origin;
+
     const loonAxios = createLoonAxiosInstance({
-        baseURL: 'http://localhost/api',
+        baseURL: `${window.location.origin}/api`,
     });
 
     const experimentName = ref<string>('');

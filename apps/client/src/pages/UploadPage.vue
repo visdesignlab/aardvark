@@ -64,10 +64,13 @@ async function onSubmitExperiment() {
     }
 
     try {
-        const response = await fetch(`${currBaseUrl}/api/createExperiment/`, {
-            method: 'POST',
-            body: formData,
-        });
+        const response = await fetch(
+            `${window.location.origin}/api/createExperiment/`,
+            {
+                method: 'POST',
+                body: formData,
+            }
+        );
         if (response.ok) {
             const responseData = await response.json();
             return responseData;
