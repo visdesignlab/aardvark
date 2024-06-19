@@ -1,35 +1,36 @@
 <script setup lang="ts">
 import { ref, computed, watch, onMounted } from 'vue';
+import { useUploadStore } from '@/stores/uploadStore';
+const uploadStore = useUploadStore();
 
-import { defineProps, defineEmits } from 'vue';
+// import { defineProps, defineEmits } from 'vue';
 
-const props = defineProps<{
-    experimentName: string;
-    numberOfLocations: number;
-}>();
+// const props = defineProps<{
+//     experimentName: string;
+//     numberOfLocations: number;
+// }>();
 
-const emits = defineEmits<{
-    (event: 'update:experimentName', value: string): void;
-    (event: 'update:numberOfLocations', value: string): void;
-}>();
+// const emits = defineEmits<{
+//     (event: 'update:experimentName', value: string): void;
+//     (event: 'update:numberOfLocations', value: string): void;
+// }>();
 
-const updateExperimentNameValue = (value: string | number | null) => {
-    console.log('update Exp value is called');
-    emits('update:experimentName', value?.toString() ?? '');
-};
+// const updateExperimentNameValue = (value: string | number | null) => {
+//     console.log('update Exp value is called');
+//     emits('update:experimentName', value?.toString() ?? '');
+// };
 
-const updateNumberOfLocationsValue = (value: string | number | null) => {
-    console.log('update location value is called');
-    emits('update:numberOfLocations', value?.toString() ?? '');
-};
+// const updateNumberOfLocationsValue = (value: string | number | null) => {
+//     console.log('update location value is called');
+//     emits('update:numberOfLocations', value?.toString() ?? '');
+// };
 </script>
 
 <template>
     <!-- <span class="step-title"> Create Your Experiment </span> -->
     <div class="column q-mt-sm q-gutter-lg">
         <q-input
-            :model-value="experimentName"
-            @update:model-value="updateExperimentNameValue"
+            v-model="uploadStore.experimentName"
             outlined
             style="width: 500px"
             label-slot
@@ -37,7 +38,7 @@ const updateNumberOfLocationsValue = (value: string | number | null) => {
             label="Experiment Name"
         >
         </q-input>
-        <q-input
+        <!-- <q-input
             :model-value="numberOfLocations"
             @update:model-value="updateNumberOfLocationsValue"
             outlined
@@ -50,8 +51,8 @@ const updateNumberOfLocationsValue = (value: string | number | null) => {
             ]"
             hint="Number of imaging locations that will be added."
             label="Number of Locations"
-        >
-        </q-input>
+        > -->
+        <!-- </q-input> -->
     </div>
 </template>
 
