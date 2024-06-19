@@ -25,8 +25,8 @@ const updateNumberOfLocationsValue = (value: string | number | null) => {
 </script>
 
 <template>
-    <span class="step-title"> Create Your Experiment </span>
-    <div class="column" style="row-gap: 20px; margin-top: 30px">
+    <!-- <span class="step-title"> Create Your Experiment </span> -->
+    <div class="column q-mt-sm q-gutter-lg">
         <q-input
             :model-value="experimentName"
             @update:model-value="updateExperimentNameValue"
@@ -48,16 +48,11 @@ const updateNumberOfLocationsValue = (value: string | number | null) => {
                 (val) =>
                     !isNaN(parseInt(val)) || 'Please enter in a valid number.',
             ]"
-            hint="Number of locations to add."
+            hint="Number of imaging locations that will be added."
             label="Number of Locations"
         >
         </q-input>
     </div>
 </template>
 
-<style scoped lang="scss">
-.step-title {
-    font-weight: bold;
-    font-size: 1.2em;
-}
-</style>
+<style scoped lang="scss"></style>
