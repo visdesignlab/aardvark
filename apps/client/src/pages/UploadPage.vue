@@ -68,7 +68,7 @@ const onSubmitExperiment = async () => {
     }
 
     try {
-        const response = await fetch('http://localhost/api/createExperiment/', {
+        const response = await fetch(`http://${currBaseUrl}/api/createExperiment/`, {
             method: 'POST',
             body: formData,
         });
@@ -303,8 +303,10 @@ const getProgressStatusList = () => {
     return progressResult;
 };
 
+const currBaseUrl = window.location.origin;
+
 const loonAxios = createLoonAxiosInstance({
-    baseURL: 'http://localhost/api',
+    baseURL: `http://${currBaseUrl}/api`,
 });
 console.log('loonAxios', loonAxios);
 
