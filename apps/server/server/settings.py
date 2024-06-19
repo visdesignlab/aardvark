@@ -34,7 +34,7 @@ SECRET_KEY = env('SECRET_KEY')
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = env.bool('DEBUG', default=True)
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = [env('ALLOWED_HOST', default='')]
 
 
 # Application definition
@@ -157,5 +157,5 @@ MINIO_STORAGE_SECRET_KEY = env('MINIO_STORAGE_SECRET_KEY')
 MINIO_STORAGE_MEDIA_BUCKET_NAME = 'data'
 MINIO_STORAGE_STATIC_BUCKET_NAME = 'static'
 MINIO_STORAGE_MEDIA_USE_PRESIGNED = True
-MINIO_STORAGE_MEDIA_URL = "http://localhost/data"
-MINIO_STORAGE_STATIC_URL = "http://localhost/data"
+MINIO_STORAGE_MEDIA_URL = env('MINIO_STORAGE_MEDIA_URL')
+MINIO_STORAGE_STATIC_URL = env('MINIO_STORAGE_STATIC_URL')
