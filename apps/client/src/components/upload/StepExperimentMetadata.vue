@@ -34,10 +34,8 @@ const updateNumberOfLocationsValue = (value: string | number | null) => {
             style="width: 500px"
             label-slot
             :rules="[(val) => !!val || 'Field is required']"
+            label="Experiment Name"
         >
-            <template v-slot:label>
-                <span class="upload-label">Experiment Name</span>
-            </template>
         </q-input>
         <q-input
             :model-value="numberOfLocations"
@@ -51,19 +49,13 @@ const updateNumberOfLocationsValue = (value: string | number | null) => {
                     !isNaN(parseInt(val)) || 'Please enter in a valid number.',
             ]"
             hint="Number of locations to add."
+            label="Number of Locations"
         >
-            <template v-slot:label>
-                <span class="upload-label">Number of Locations</span>
-            </template>
         </q-input>
     </div>
 </template>
 
 <style scoped lang="scss">
-.upload-label {
-    font-weight: bold;
-}
-
 .step-title {
     font-weight: bold;
     font-size: 1.2em;
