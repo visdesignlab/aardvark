@@ -3,6 +3,7 @@ import { ref, computed, watch, onMounted } from 'vue';
 import LoadingProgress, {
     type ProgressRecord,
 } from '@/components/upload/LoadingProgress.vue';
+import StepExperimentMetadata from '@/components/upload/StepExperimentMetadata.vue';
 import type { QForm, QStepper } from 'quasar';
 import {
     createLoonAxiosInstance,
@@ -41,8 +42,8 @@ const handleSuggestedClick = (
     }
 };
 const step = ref(1);
-const experimentName = ref<string | null>(null);
-const numberOfLocations = ref<number | null>(null);
+const experimentName = ref<string>('');
+const numberOfLocations = ref<number>();
 const experimentCreated = ref<boolean>(false);
 const experimentSettings = ref<Record<string, LocationSettings>>({
     location_1: {
@@ -399,41 +400,10 @@ const checkForUpdates = async (task_id: string, fileKey: string) => {
                     done-color="green"
                     ref="step1"
                 >
-                    <span class="step-title"> Create Your Experiment </span>
-                    <div class="column" style="row-gap: 20px; margin-top: 30px">
-                        <q-input
-                            v-model="experimentName"
-                            outlined
-                            style="width: 500px"
-                            label-slot
-                            :rules="[(val) => !!val || 'Field is required']"
-                        >
-                            <template v-slot:label>
-                                <span class="upload-label"
-                                    >Experiment Name</span
-                                >
-                            </template>
-                        </q-input>
-                        <q-input
-                            v-model="numberOfLocations"
-                            outlined
-                            style="width: 500px"
-                            label-slot
-                            :rules="[
-                                (val) => !!val || 'Field is required',
-                                (val) =>
-                                    !isNaN(parseInt(val)) ||
-                                    'Please enter in a valid number.',
-                            ]"
-                            hint="Number of locations to add."
-                        >
-                            <template v-slot:label>
-                                <span class="upload-label"
-                                    >Number of Locations</span
-                                >
-                            </template>
-                        </q-input>
-                    </div>
+                    <StepExperimentMetadata
+                        v-model:experimentName="experimentName"
+                        v-model:numberOfLocations="numberOfLocations"
+                    />
                 </q-step>
 
                 <q-step
