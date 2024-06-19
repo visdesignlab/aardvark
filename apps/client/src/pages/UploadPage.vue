@@ -68,7 +68,7 @@ const onSubmitExperiment = async () => {
 
     try {
         const response = await fetch(
-            'http://localhost:8000/api/createExperiment/',
+            'http://localhost/api/createExperiment/',
             {
                 method: 'POST',
                 body: formData,
@@ -306,8 +306,9 @@ const getProgressStatusList = () => {
 };
 
 const loonAxios = createLoonAxiosInstance({
-    baseURL: 'http://localhost:8000/api',
+    baseURL: 'http://localhost/api',
 });
+console.log('loonAxios', loonAxios);
 
 // Function to upload all necessary files in experiment.
 const uploadAll = async () => {

@@ -20,16 +20,11 @@ env = environ.Env(
     # Set default values and casting
     DEBUG=(bool, False)
 )
-DJANGO_ENV = os.getenv('DJANGO_ENV', 'production')
+DJANGO_ENV_FILE = os.getenv('DJANGO_ENV_FILE', '~/loonar/apps/server/.env')
 
 # Load environment variables from appropriate .env file based on DJANGO_ENV
-if DJANGO_ENV == 'development':
-    dotenv_path = os.path.join(BASE_DIR, 'apps/server/.env')  # Path to Docker environment variables
-else:
-    dotenv_path = os.path.join(BASE_DIR, 'docker/.env')
-
-environ.Env.read_env(dotenv_path)
-
+print(DJANGO_ENV_FILE, flush=True)
+environ.Env.read_env(DJANGO_ENV_FILE)
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.0/howto/deployment/checklist/
 
@@ -104,7 +99,6 @@ DATABASES = {
     }
 }
 
-
 # Password validation
 # https://docs.djangoproject.com/en/5.0/ref/settings/#auth-password-validators
 
@@ -156,9 +150,12 @@ CELERY_TASK_TRACK_STARTED = True
 # Minio Storage
 DEFAULT_FILE_STORAGE = "minio_storage.storage.MinioMediaStorage"
 STATICFILES_STORAGE = "minio_storage.storage.MinioStaticStorage"
-MINIO_STORAGE_ENDPOINT = "192.168.1.100:9000"
+MINIO_STORAGE_ENDPOINT = env('MINIO_STORAGE_ENDPOINT', default='localhost:9000')
 MINIO_STORAGE_USE_HTTPS = False
 MINIO_STORAGE_ACCESS_KEY = env('MINIO_STORAGE_ACCESS_KEY')
 MINIO_STORAGE_SECRET_KEY = env('MINIO_STORAGE_SECRET_KEY')
 MINIO_STORAGE_MEDIA_BUCKET_NAME = 'data'
 MINIO_STORAGE_STATIC_BUCKET_NAME = 'static'
+MINIO_STORAGE_MEDIA_USE_PRESIGNED = True
+MINIO_STORAGE_MEDIA_URL = "http://localhost:9000/data"
+MINIO_STORAGE_STATIC_URL = "http://localhost:9000/data"

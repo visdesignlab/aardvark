@@ -5,7 +5,7 @@ tasks:
     command: '. .venv/bin/activate && python manage.py runserver'
     description: Start Django server
     env:
-      DJANGO_ENV: development
+      DJANGO_ENV_FILE: "~/loonar/apps/server/.env"
   run-noreload:
     command: '. .venv/bin/activate && python manage.py runserver --noreload'
     description: Start Django server but prevent reload.

@@ -25,6 +25,7 @@ export function createLoonAxiosInstance(config:AxiosRequestConfig):LoonAxiosInst
     // Upload function
     Proto.upload = async function(file: File): Promise<string>{
         // Create new S3FileField Client
+        console.log(this.defaults.baseURL)
         const s3ffClient = new S3FileFieldClient({
             baseUrl: `${this.defaults.baseURL}/s3-upload/`,
             apiConfig: this.defaults
