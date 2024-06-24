@@ -6,7 +6,7 @@ from .models import LoonUpload
 from django.core.files.storage import default_storage  # type: ignore
 from django.core.files.base import ContentFile  # type: ignore
 
-BAD_FILES = [".DS_Store"]
+BAD_FILES = [".DS_Store", "__MACOSX"]
 
 # Configure logging
 
@@ -83,13 +83,16 @@ class Task(ABC):
         logger.info('Fake Cleaning')
 
     # Generic unpacking of a zip file with callback for additional processing.
-    def process_zip_file(self, callback=None):
+    def process_zip_file(self, label="", callback=None):
         try:
             prefix_name = self.file_name.split(".")[0]
             with zipfile.ZipFile(self.blob, 'r') as zip_ref:
                 zip_contents = zip_ref.namelist()
                 for i, curr_file_name in enumerate(zip_contents):
-                    if curr_file_name.startswith(prefix_name) and not _badFileChecker(
+                    if i == 0 or i == 1 or i == 2:
+                        logger.info(prefix_name)
+                        logger.info(curr_file_name)
+                    if not _badFileChecker(
                         curr_file_name
                     ):
                         file_contents = zip_ref.read(curr_file_name)
@@ -104,9 +107,13 @@ class Task(ABC):
                                         "process_zip_file_status": "FAILED",
                                         "message": f"Failed at callback: {e.message}",
                                     }
+                            # Removes all prefixes to the file from the zip
+                            corrected_curr_file_name = curr_file_name.split("/")[-1]
+
                             file_location = f"{self.experiment_name}/" \
                                             f"location_{self.location}/" \
-                                            f"{curr_file_name}"
+                                            f"{label}/" \
+                                            f"{corrected_curr_file_name}"
                             # Create a ContentFile object with the file contents
                             content_file = ContentFile(file_contents)
 
@@ -156,7 +163,7 @@ class Task(ABC):
 class LiveCyteSegmentationsTask(Task):
     def execute(self):
         logger.info(f"Executing task: {self.record_id}")
-        self.process_zip_file(callback=None)
+        self.process_zip_file(label="segmentations", callback=None)
 
     def cleanup(self):
         logger.info(f"Cleaning up task: {self.record_id}")
@@ -166,7 +173,7 @@ class LiveCyteSegmentationsTask(Task):
 class LiveCyteCellImagesTask(Task):
     def execute(self):
         logger.info(f"Executing task: {self.record_id}")
-        self.process_zip_file(callback=None)
+        self.process_zip_file(label="images", callback=None)
 
     def cleanup(self):
         logger.info(f"Cleaning up task: {self.record_id}")
