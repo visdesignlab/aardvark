@@ -64,7 +64,7 @@ function openExampleDataset() {
         v-model="datasetSelectionTrrackedStore.serverUrl"
         filled
         type="url"
-        label="http://"
+        label="https://"
         :suffix="datasetSelectionTrrackedStore.entryPointFilename"
         debounce="1000"
         :loading="datasetSelectionStore.fetchingEntryFile"

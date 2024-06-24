@@ -174,7 +174,7 @@ export const useDatasetSelectionStore = defineStore(
         );
 
         function getServerUrl(path: string): string {
-            let base = 'http://' + datasetSelectionTrrackedStore.serverUrl;
+            let base = 'https://' + datasetSelectionTrrackedStore.serverUrl;
             if (!path.startsWith('/')) base = base + '/';
             return base + path;
         }
