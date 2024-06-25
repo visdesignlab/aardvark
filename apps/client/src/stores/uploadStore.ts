@@ -4,6 +4,7 @@ import {
     createLoonAxiosInstance,
     type ProcessResponseData,
     type StatusResponseData,
+    type CreateExperimentResponseData,
 } from '@/util/axios';
 
 import type { ProgressRecord } from '@/components/upload/LoadingProgress.vue';
@@ -18,8 +19,15 @@ export interface LocationFiles {
 export interface FileToUpload {
     file: File | null;
     checkForUpdates?: boolean;
-    uploading: 0 | 1 | 2 | 3;
-    processing: 0 | 1 | 2 | 3;
+    uploading: 0 | 1 | 2 | 3 | -1;
+    processing: 0 | 1 | 2 | 3 | -1;
+}
+
+export interface LocationConfig {
+    id: string;
+    tabularDataFilename: string;
+    imageDataFilename: string;
+    segmentationsFolder: string;
 }
 
 export const useUploadStore = defineStore('uploadStore', () => {
@@ -54,13 +62,6 @@ export const useUploadStore = defineStore('uploadStore', () => {
             },
         },
     ]);
-
-    interface LocationConfig {
-        id: string;
-        tabularDataFilename: string;
-        imageDataFilename: string;
-        segmentationsFolder: string;
-    }
 
     const experimentConfig = computed<LocationConfig[]>(() => {
         return locationFileList.value.map((locationFiles) => {
@@ -142,24 +143,40 @@ export const useUploadStore = defineStore('uploadStore', () => {
             fileToUpload.uploading = 2;
             fileToUpload.processing = 0;
 
-            const fieldValue = await loonAxios.upload(fileToUpload.file);
+            try {
+                const fieldValue = await loonAxios.upload(fileToUpload.file);
 
-            fileToUpload.uploading = 3;
-            fileToUpload.processing = 1;
+                fileToUpload.uploading = 3;
+                fileToUpload.processing = 1;
 
-            const processResponse = await loonAxios.process(
-                fieldValue,
-                'live_cyte',
-                fileType,
-                fileToUpload.file.name,
-                locationIndex.toString(),
-                experimentName.value
-            );
+                try {
+                    const processResponse = await loonAxios.process(
+                        fieldValue,
+                        'live_cyte',
+                        fileType,
+                        fileToUpload.file.name,
+                        locationIndex.toString(),
+                        experimentName.value
+                    );
 
-            const processResponseData: ProcessResponseData =
-                processResponse.data;
-            if (processResponseData.task_id) {
-                checkForUpdates(processResponseData.task_id, fileToUpload);
+                    const processResponseData: ProcessResponseData =
+                        processResponse.data;
+                    if (processResponseData.task_id) {
+                        checkForUpdates(
+                            processResponseData.task_id,
+                            fileToUpload
+                        );
+                    }
+                } catch (error) {
+                    console.warn(
+                        'There was an error with the processing endpoint'
+                    );
+                    fileToUpload.processing = -1;
+                }
+            } catch (error) {
+                console.warn('There was an error uploading the file.');
+                fileToUpload.uploading = -1;
+                fileToUpload.processing = 0;
             }
         }
     }
@@ -197,6 +214,7 @@ export const useUploadStore = defineStore('uploadStore', () => {
             uploadingFile.processing = 3;
         } catch (error) {
             console.error('Error checking for updates:', error);
+            uploadingFile.processing = -1;
         }
     }
 
@@ -252,35 +270,19 @@ export const useUploadStore = defineStore('uploadStore', () => {
         }
     }
 
-    async function onSubmitExperiment() {
-        const formData = new FormData();
-
-        // Create Form
+    async function onSubmitExperiment(): Promise<CreateExperimentResponseData> {
         if (experimentName && experimentName.value) {
-            formData.append('experimentName', experimentName.value);
-            formData.append(
-                'experimentSettings',
-                JSON.stringify(experimentConfig.value)
+            const submitExperimentResponse = await loonAxios.createExperiment(
+                experimentName.value,
+                experimentConfig.value
             );
-        }
 
-        try {
-            const response = await fetch(
-                'http://localhost/api/createExperiment/',
-                {
-                    method: 'POST',
-                    body: formData,
-                }
-            );
-            if (response.ok) {
-                const responseData = await response.json();
-                return responseData;
-            } else {
-                throw new Error('Failed to finish experiment');
-            }
-        } catch (error) {
-            console.error('Error finishing experiment: ', error);
+            const submitExperimentResponseData: CreateExperimentResponseData =
+                submitExperimentResponse.data;
+
+            return submitExperimentResponseData;
         }
+        return {"status":"failed","message":"No experiment name given."}
     }
 
     return {

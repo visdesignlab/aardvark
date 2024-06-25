@@ -6,6 +6,15 @@ export interface ProgressRecord {
     subProgress?: ProgressRecord[];
 }
 
+/*
+* Progress Codes
+*  0 - Not Started
+*  1 - Dispatched (Uploading is never 'dispatched' in our design)
+*  2 - Running
+*  3 - Finished Successfully
+* -1 - Failed
+*/
+
 export default {
     props: {
         progressStatus: {
@@ -17,16 +26,25 @@ export default {
 </script>
 <script setup lang="ts">
 const determineProgress = (subProgress: ProgressRecord[]) => {
-    let totalProgress = 0;
-    for (let i = 0; i < subProgress.length; i++) {
-        if (subProgress[i].progress === 2 || subProgress[i].progress === 1) {
+    const failed = subProgress.some((element) => element.progress === -1);
+    if(failed){
+        // If any failed, set total to failed
+        return -1
+    } else {
+        const running = subProgress.some((element) => element.progress === 2 || element.progress === 1);
+        if(running){
+            // If none failed but any are running/queued, set to running
             return 2;
-        }
-        if (subProgress[i].progress === 3) {
-            totalProgress = 3;
+        } else {
+            const succeeded = subProgress.every((element) => element.progress === 3);
+            if (succeeded){
+                // If none running, none failed, and all have succeeded, set to 3
+                return 3;
+            }
         }
     }
-    return totalProgress;
+    // If none running, none failed, and not all succeeded, then it's still starting. Return 0
+    return 0;
 };
 const getProgresses = (progressStatus: ProgressRecord[]) => {
     let tempProgressStatus: [ProgressRecord, number][] = progressStatus.map(
@@ -61,6 +79,12 @@ const getProgresses = (progressStatus: ProgressRecord[]) => {
                     size="20px"
                     color="grey"
                 />
+                <q-icon
+                    v-if="item[1] === -1"
+                    name="mdi-alert-circle-outline"
+                    size="20px"
+                    color="red"
+                />
                 <span
                     :class="{
                         'progress-2': item[1] === 2,
@@ -90,12 +114,19 @@ const getProgresses = (progressStatus: ProgressRecord[]) => {
                         size="20px"
                         color="grey"
                     />
+                    <q-icon
+                        v-if="subProgress.progress === -1"
+                        name="mdi-alert-circle-outline"
+                        size="20px"
+                        color="red"
+                    />
                     <span
                         :class="{
                             'progress-1': subProgress.progress === 1,
                             'progress-2': subProgress.progress === 2,
                             'progress-0': subProgress.progress === 0,
                             'progress-3': subProgress.progress === 3,
+                            'progress-minus-1': subProgress.progress === -1,
                         }"
                         >{{ subProgress.label }}</span
                     >
@@ -121,13 +152,20 @@ const getProgresses = (progressStatus: ProgressRecord[]) => {
     font-weight: normal;
     color: grey;
 }
-.progress-2 {
-    font-weight: bold;
-    color: black;
+
+.progress-2,
+.progress-3,
+.progress-minus-1 {
+    font-weight:bold;
 }
 
+.progress-2 {
+    color: black;
+}
 .progress-3 {
-    font-weight: bold;
     color: green;
+}
+.progress-minus-1 {
+    color:red;
 }
 </style>
