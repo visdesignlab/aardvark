@@ -46,7 +46,8 @@ function openExampleDataset() {
     datasetSelectionTrrackedStore.serverUrl =
         'apps.vdl.sci.utah.edu/aardvark-s3';
 
-    datasetSelectionTrrackedStore.currentExperimentFilename = 'Example_1.json';
+    datasetSelectionTrrackedStore.currentExperimentFilename =
+        'Data Discovery: Automated Cell Lineage Tracking.json';
     datasetSelectionTrrackedStore.selectedLocationIds['loc_4_well_23'] = true;
 }
 </script>
