@@ -1,22 +1,16 @@
 <script lang="ts" setup>
 import { ref, computed, watch, onMounted } from 'vue';
-import type { ProgressRecord } from '@/components/upload/LoadingProgress.vue';
 import StepExperimentMetadata from '@/components/upload/StepExperimentMetadata.vue';
 import StepFileSelection from '@/components/upload/StepFileSelection.vue';
 import StepReview from '@/components/upload/StepReview.vue';
 import StepUploadStatus from '@/components/upload/StepUploadStatus.vue';
-import type { QForm, QStepper } from 'quasar';
+import type { QStepper } from 'quasar';
 import { useUploadStore } from '@/stores/uploadStore';
+import { useConfigStore } from '@/stores/configStore';
+import { router } from '@/router';
 const uploadStore = useUploadStore();
+const configStore = useConfigStore();
 
-// Processing codes: not submitted, queued, running, finished
-interface FileOptions {
-    file: File | null;
-    checkForUpdates?: boolean;
-    uploading: 0 | 1 | 2 | 3;
-    processing: 0 | 1 | 2 | 3;
-    file_type: string;
-}
 
 interface LocationSettings {
     id: string;
@@ -25,62 +19,9 @@ interface LocationSettings {
     segmentationsFolder: string;
 }
 
-const handleSuggestedClick = (
-    locationNumber: number,
-    label: string,
-    input: string
-) => {
-    if (
-        label == 'id' ||
-        label == 'dataFrameFileName' ||
-        label === 'imageDataFileName' ||
-        label === 'segmentationsFolder'
-    ) {
-        experimentSettings.value[`location_${locationNumber}`][label] = input;
-    }
-};
 const step = ref(1);
 const experimentName = ref<string>('');
 const numberOfLocations = ref<number>(1);
-const experimentSettings = ref<Record<string, LocationSettings>>({
-    location_1: {
-        id: '',
-        dataFrameFileName: '',
-        imageDataFileName: '',
-        segmentationsFolder: '',
-    },
-});
-
-async function onSubmitExperiment() {
-    const formData = new FormData();
-
-    // Create Form
-    if (experimentName && experimentName.value) {
-        formData.append('experimentName', experimentName.value);
-        formData.append(
-            'experimentSettings',
-            JSON.stringify(experimentSettings.value)
-        );
-    }
-
-    try {
-        const response = await fetch(
-            `${window.location.origin}/api/createExperiment/`,
-            {
-                method: 'POST',
-                body: formData,
-            }
-        );
-        if (response.ok) {
-            const responseData = await response.json();
-            return responseData;
-        } else {
-            throw new Error('Failed to finish experiment');
-        }
-    } catch (error) {
-        console.error('Error finishing experiment: ', error);
-    }
-}
 
 // Function to determine if the create experiment button should be enabled.
 const disableUpload = () => {
@@ -97,10 +38,21 @@ const stepDone = (inputStep: number) => {
             return true;
     }
 };
+const returnHome = () =>{
+    router.push('/');
+}
 </script>
 <template>
     <q-page class="q-pa-lg q-gutter-md" style="max-width: 1200px; margin: auto">
-        <template v-if="!uploadStore.experimentCreated">
+        <template v-if="configStore.environment==='local'">
+            <q-banner inline-actions class="text-white bg-red">
+                The local version of the Loon application does not support data upload directly.
+                <template v-slot:action>
+                    <q-btn flat color="white" label="Return to Home" @click="returnHome()"/>
+                </template>
+            </q-banner>
+        </template>
+        <template v-else-if="!uploadStore.experimentCreated">
             <q-stepper
                 v-model="step"
                 ref="stepper"
