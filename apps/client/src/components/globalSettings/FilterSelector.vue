@@ -49,14 +49,6 @@ function hideTime() {
                     <q-item-section side>
                         <q-btn
                             class="gt-xs"
-                            size="12px"
-                            flat
-                            dense
-                            round
-                            icon="filter_alt"
-                        />
-                        <q-btn
-                            class="gt-xs"
                             @click="hideMass"
                             size="12px"
                             flat
@@ -91,14 +83,6 @@ function hideTime() {
                     </q-item-section>
 
                     <q-item-section side>
-                        <q-btn
-                            class="gt-xs"
-                            size="12px"
-                            flat
-                            dense
-                            round
-                            icon="filter_alt"
-                        />
                         <q-btn
                             class="gt-xs"
                             @click="hideTime"

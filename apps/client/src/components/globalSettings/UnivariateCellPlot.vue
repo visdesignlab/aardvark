@@ -1,17 +1,6 @@
 <template>
     <div v-if="cellMetaData.dataInitialized">
         <q-item-section>
-            <div class="q-item-section__right">
-                <q-btn
-                    class="gt-xs"
-                    size="12px"
-                    flat
-                    dense
-                    round
-                    icon="filter_alt"
-                    color="grey-7"
-                />
-            </div>
             <div id="plotContainer" ref="vgPlotContainer1"></div>
         </q-item-section>
     </div>
@@ -25,11 +14,14 @@ import * as vg from '@uwdata/vgplot';
 import { useCellMetaData } from '@/stores/cellMetaData';
 import { useDatasetSelectionStore } from '@/stores/datasetSelectionStore';
 import { storeToRefs } from 'pinia';
+import PlotSelector from './PlotSelector.vue';
 
 const vgPlotContainer1 = ref<HTMLDivElement | null>(null);
 const cellMetaData = useCellMetaData();
 const datasetSelectionStore = useDatasetSelectionStore();
 const { dataInitialized } = storeToRefs(cellMetaData);
+
+const emit = defineEmits(['selectionChange']);
 
 const props = defineProps({
     plotName: {
@@ -44,13 +36,13 @@ const props = defineProps({
 
 // Current Selection HTML
 const currSel = document.getElementById('currSel');
+const $currBrush = vg.Selection.intersect();
 
 // Brush selection
 // const plotBrush = vg.Selection.intersect();
 // vg.Selection.crossfilter();
 
 const makePlot = (column: string) => {
-    console.log('makePlot Start');
     // Optional Text Underneath Plots
     //const rangeText = document.createElement('div');
     //rangeText.classList.add('vgPlotContainer');
@@ -59,24 +51,56 @@ const makePlot = (column: string) => {
     const minX = ref(0);
     const maxX = ref(0);
     // Event for the brush.
-    props.plotBrush.addEventListener('value', () => {
-        const selectedRange = props.plotBrush.active.value;
+    $currBrush.addEventListener('value', () => {
+        const selectedRange = $currBrush.active.value;
         if (selectedRange) {
             minX.value = selectedRange[0];
             maxX.value = selectedRange[1];
-        }
-        // Optional Text Underneath Plots, must return rangeText in function.
-        //rangeText.textContent = `[${Math.round(minX.value * 1000) / 1000}, ${Math.round(maxX.value * 1000) / 1000}]`;
 
-        // Set text content
-        // currSel.textContent = `[${Math.round(minX.value * 1000) / 1000}, ${
-        //     Math.round(maxX.value * 1000) / 1000
-        // }]`;
+            emit('selectionChange', {
+                plotName: props.plotName,
+                range: [minX.value, maxX.value],
+            });
+        } else {
+            // Emit an event to clear the selection
+            emit('selectionChange', {
+                plotName: props.plotName,
+                range: null,
+            });
+        }
     });
+
+    // props.plotBrush.addEventListener('value', () => {
+    //     const selectedRange = props.plotBrush.active.value;
+    //     if (selectedRange) {
+    //         minX.value = selectedRange[0];
+    //         maxX.value = selectedRange[1];
+
+    //         emit('selectionChange', {
+    //             plotName: props.plotName,
+    //             range: [minX.value, maxX.value],
+    //         });
+    //     } else {
+    //         // Emit an event to clear the selection
+    //         emit('selectionChange', {
+    //             plotName: props.plotName,
+    //             range: null,
+    //         });
+    //     }
+
+    //     // Optional Text Underneath Plots, must return rangeText in function.
+    //     //rangeText.textContent = `[${Math.round(minX.value * 1000) / 1000}, ${Math.round(maxX.value * 1000) / 1000}]`;
+
+    //     // Set text content
+    //     // currSel.textContent = `[${Math.round(minX.value * 1000) / 1000}, ${
+    //     //     Math.round(maxX.value * 1000) / 1000
+    //     // }]`;
+    // });
 
     console.log('plot');
     const plot = vg.plot(
         vg.name('ploted'),
+
         vg.rectY(
             vg.from('dummy_data'), // Use plot-specific brush for filtering
             {
@@ -86,11 +110,26 @@ const makePlot = (column: string) => {
                 inset: 1,
             }
         ),
+        vg.rectY(
+            vg.from('dummy_data', { filterBy: props.plotBrush }), // Use plot-specific brush for filtering
+            {
+                x: vg.bin(column),
+                y: vg.count(),
+                fill: '#FFA500',
+                opacity: 1,
+                inset: 1,
+            }
+        ),
         vg.intervalX({
             as: props.plotBrush,
-            brush: { fill: 'red', stroke: '#888' },
-            peers: true,
-        }), // Add plot-specific brush selection
+            brush: { stroke: '#888' },
+            peers: false,
+        }),
+        // vg.intervalX({
+        //     as: $currBrush,
+        //     brush: { stroke: '#888' },
+        //     peers: true,
+        // }), // Add plot-specific brush selection
         vg.xDomain(vg.Fixed),
         vg.marginBottom(130),
         vg.marginTop(30),
@@ -107,14 +146,15 @@ const makePlot = (column: string) => {
         vg.xTickSpacing(100),
         vg.yLabelAnchor('top'),
         vg.yAxis(null),
-        vg.yTicks(0),
-        vg.text({
-            x: props.plotBrush,
-            text: props.plotBrush,
-            frameAnchor: 'top',
-            lineAnchor: 'bottom',
-            dy: -7,
-        })
+        vg.yTicks(0)
+        // vg.highlight({ by: props.plotBrush }),
+        // vg.text({
+        //     x: props.plotBrush,
+        //     text: props.plotBrush,
+        //     frameAnchor: 'top',
+        //     lineAnchor: 'bottom',
+        //     dy: -7,
+        // })
         //vg.highlight({ by: props.plotBrush, channels: { fill: 'red' }})
     );
     console.log('plotAfter');
@@ -205,9 +245,5 @@ async function createCharts() {
     display: flex;
     align-items: center;
     text-align: center;
-}
-.q-item-section__right {
-    display: flex;
-    justify-content: flex-end;
 }
 </style>
