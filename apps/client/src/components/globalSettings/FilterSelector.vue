@@ -4,7 +4,12 @@ import { useGlobalSettings } from '@/stores/globalSettings';
 import UnivariateCellPlot from './UnivariateCellPlot.vue';
 import PlotSelector from './PlotSelector.vue';
 import type { Vue } from 'vue-demi';
+import { useFilterStore } from '@/stores/filterStore';
+import { storeToRefs } from 'pinia';
+
 const globalSettings = useGlobalSettings();
+const filterStore = useFilterStore();
+const { filters } = storeToRefs(filterStore);
 
 const showingMass = ref(true);
 const showingTime = ref(true);
@@ -58,12 +63,7 @@ function hideTime() {
                         />
                     </q-item-section>
                 </q-item>
-                <q-item
-                    id="currentSelectionsItem"
-                    clickable
-                    v-ripple
-                    v-if="showingTime"
-                >
+                <q-item id="currentSelectionsItem" clickable v-ripple>
                     <q-item-section avatar top left>
                         <q-avatar icon="scatter_plot" style="width: 18px" />
                     </q-item-section>
@@ -98,22 +98,28 @@ function hideTime() {
             <q-list>
                 <q-separator spaced />
                 <q-item-label lines="1">Current Filters</q-item-label>
-
-                <q-item clickable v-ripple>
+                <q-item
+                    v-for="(filter, index) in filters"
+                    :key="index"
+                    clickable
+                    v-ripple
+                >
                     <q-item-section avatar top left>
-                        <q-avatar icon="linear_scale" style="width: 18px" />
+                        <q-avatar icon="scatter_plot" style="width: 18px" />
                     </q-item-section>
 
                     <q-item-section>
                         <q-item-label
                             style="font-size: 14px; margin-left: -20px"
-                            >Track Length</q-item-label
                         >
+                            {{ filter.plotName }}
+                        </q-item-label>
                         <q-item-label
                             caption
                             style="margin-left: -20px; white-space: nowrap"
-                            >[10-20]</q-item-label
                         >
+                            [{{ filter.range[0] }}-{{ filter.range[1] }}]
+                        </q-item-label>
                     </q-item-section>
 
                     <q-item-section side>

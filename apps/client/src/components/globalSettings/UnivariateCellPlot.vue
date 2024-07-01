@@ -121,7 +121,7 @@ const makePlot = (column: string) => {
             }
         ),
         vg.intervalX({
-            as: props.plotBrush,
+            as: $currBrush,
             brush: { stroke: '#888' },
             peers: false,
         }),

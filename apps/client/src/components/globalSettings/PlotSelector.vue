@@ -9,7 +9,7 @@
                 round
                 icon="filter_alt"
                 color="grey-7"
-                @click="showFilterDialog = true"
+                @click="addFilter"
             />
         </div>
         <UnivariateCellPlot
@@ -19,7 +19,7 @@
             :plot-brush="plotBrush"
             @selection-change="handleSelectionChange"
         ></UnivariateCellPlot>
-        <q-dialog v-model="showFilterDialog">
+        <!-- <q-dialog v-model="showFilterDialog">
             <q-card>
                 <q-card-section>
                     <div class="text-h6">Current Selections</div>
@@ -39,7 +39,7 @@
                     </div>
                 </q-card-section>
             </q-card>
-        </q-dialog>
+        </q-dialog> -->
     </div>
 </template>
 
@@ -51,6 +51,7 @@ import { useCellMetaData } from '@/stores/cellMetaData';
 import { useDatasetSelectionStore } from '@/stores/datasetSelectionStore';
 import { storeToRefs } from 'pinia';
 import UnivariateCellPlot from './UnivariateCellPlot.vue';
+import { useFilterStore } from '@/stores/filterStore';
 
 const plotNames = ref(['A', 'y', 'mass', 'time', 'x']);
 const plotBrush = vg.Selection.intersect();
@@ -65,6 +66,7 @@ interface SelectionChangeEvent {
 }
 
 const currentSelections = ref<Selections>({});
+const filterStore = useFilterStore();
 const showFilterDialog = ref(false);
 
 const handleSelectionChange = (event: SelectionChangeEvent) => {
@@ -74,6 +76,17 @@ const handleSelectionChange = (event: SelectionChangeEvent) => {
     } else {
         delete currentSelections.value[plotName];
     }
+};
+
+const addFilter = () => {
+    Object.entries(currentSelections.value).forEach(([plotName, range]) => {
+        if (range) {
+            filterStore.addFilter({
+                plotName,
+                range: [range[0].toFixed(2), range[1].toFixed(2)],
+            });
+        }
+    });
 };
 </script>
 
