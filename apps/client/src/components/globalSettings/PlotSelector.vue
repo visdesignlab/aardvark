@@ -32,6 +32,7 @@ import { storeToRefs } from 'pinia';
 import UnivariateCellPlot from './UnivariateCellPlot.vue';
 import { useFilterStore } from '@/stores/filterStore';
 import { useSelectionStore } from '@/stores/selectionStore';
+import { defineEmits } from 'vue';
 
 const plotNames = ref(['A', 'y', 'mass', 'time', 'x']);
 const plotBrush = vg.Selection.intersect();
@@ -53,25 +54,17 @@ const { selections } = storeToRefs(selectionStore);
 
 const handleSelectionChange = (event: SelectionChangeEvent) => {
     const { plotName, range } = event;
-    if (range) {
+    if (range && range[0] !== undefined && range[1] !== undefined) {
         currentSelections.value[plotName] = range;
         selectionStore.updateSelection(plotName, [
             range[0].toFixed(2),
             range[1].toFixed(2),
         ]);
     } else {
+        // Remove the selection if the range is null, undefined, or has undefined values
         delete currentSelections.value[plotName];
         selectionStore.removeSelectionByPlotName(plotName);
     }
-
-    // Object.entries(currentSelections.value).forEach(([plotName, range]) => {
-    //     if (range) {
-    //         selectionStore.addSelection({
-    //             plotName,
-    //             range: [range[0].toFixed(2), range[1].toFixed(2)],
-    //         });
-    //     }
-    // });
 };
 
 const addFilter = () => {

@@ -14,11 +14,18 @@ const selectionStore = useSelectionStore();
 const { filters } = storeToRefs(filterStore);
 const { Selections } = storeToRefs(selectionStore);
 
+const emit = defineEmits(['selectionChange', 'clear-brush-selection']);
+
 function removeFilter(index: number) {
     filterStore.removeFilter(index);
 }
 function removeSelection(index: number) {
     selectionStore.removeSelection(index);
+    const plotName = Selections.value[index]?.plotName;
+
+    selectionStore.removeSelectionByPlotName(plotName);
+    // Emit an event to the PlotSelector component to clear the brush selection
+    emit('clear-brush-selection', 'mass');
 }
 </script>
 
