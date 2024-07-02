@@ -19,27 +19,6 @@
             :plot-brush="plotBrush"
             @selection-change="handleSelectionChange"
         ></UnivariateCellPlot>
-        <!-- <q-dialog v-model="showFilterDialog">
-            <q-card>
-                <q-card-section>
-                    <div class="text-h6">Current Selections</div>
-                </q-card-section>
-                <q-card-section>
-                    <div
-                        v-for="(range, plotName) in currentSelections"
-                        :key="plotName"
-                    >
-                        <template v-if="range">
-                            {{ range[0].toFixed(2) }} to
-                            {{ range[1].toFixed(2) }} on plot '{{ plotName }}'
-                        </template>
-                    </div>
-                    <div v-if="Object.keys(currentSelections).length === 0">
-                        No selections made
-                    </div>
-                </q-card-section>
-            </q-card>
-        </q-dialog> -->
     </div>
 </template>
 
@@ -52,6 +31,7 @@ import { useDatasetSelectionStore } from '@/stores/datasetSelectionStore';
 import { storeToRefs } from 'pinia';
 import UnivariateCellPlot from './UnivariateCellPlot.vue';
 import { useFilterStore } from '@/stores/filterStore';
+import { useSelectionStore } from '@/stores/selectionStore';
 
 const plotNames = ref(['A', 'y', 'mass', 'time', 'x']);
 const plotBrush = vg.Selection.intersect();
@@ -67,15 +47,31 @@ interface SelectionChangeEvent {
 
 const currentSelections = ref<Selections>({});
 const filterStore = useFilterStore();
+const selectionStore = useSelectionStore();
 const showFilterDialog = ref(false);
+const { selections } = storeToRefs(selectionStore);
 
 const handleSelectionChange = (event: SelectionChangeEvent) => {
     const { plotName, range } = event;
     if (range) {
         currentSelections.value[plotName] = range;
+        selectionStore.updateSelection(plotName, [
+            range[0].toFixed(2),
+            range[1].toFixed(2),
+        ]);
     } else {
         delete currentSelections.value[plotName];
+        selectionStore.removeSelectionByPlotName(plotName);
     }
+
+    // Object.entries(currentSelections.value).forEach(([plotName, range]) => {
+    //     if (range) {
+    //         selectionStore.addSelection({
+    //             plotName,
+    //             range: [range[0].toFixed(2), range[1].toFixed(2)],
+    //         });
+    //     }
+    // });
 };
 
 const addFilter = () => {

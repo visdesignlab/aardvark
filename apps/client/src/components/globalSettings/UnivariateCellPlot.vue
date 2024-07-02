@@ -97,6 +97,21 @@ const makePlot = (column: string) => {
     //     // }]`;
     // });
 
+    // const handleClickOutside = (event: MouseEvent) => {
+    //     if (
+    //         vgPlotContainer1.value &&
+    //         !vgPlotContainer1.value.contains(event.target as Node)
+    //     ) {
+    //         // Clicked outside the plot, clear the selection
+    //         $currBrush.clear();
+    //         emit('selectionChange', {
+    //             plotName: props.plotName,
+    //             range: null,
+    //         });
+    //     }
+    // };
+    // document.addEventListener('click', handleClickOutside);
+
     console.log('plot');
     const plot = vg.plot(
         vg.name('ploted'),
