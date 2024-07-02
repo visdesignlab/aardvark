@@ -66,10 +66,6 @@ export const useGlobalSettings = defineStore('globalSettings', () => {
     ]);
 
     const activePageIndex = ref<number | null>(0);
-    const activePage = computed<SettingsPage | null>(() => {
-        if (activePageIndex.value == null) return null;
-        return settingsPages.value[activePageIndex.value];
-    });
     const lastActivePageIndex = ref<number>(0);
     const lastActivePage = computed<SettingsPage>(() => {
         return settingsPages.value[lastActivePageIndex.value];
@@ -179,9 +175,6 @@ export const useGlobalSettings = defineStore('globalSettings', () => {
 
     return {
         settingsPages,
-        activePage,
-        activePageIndex,
-        toggleShown,
         toggleLastActive,
         darkMode,
         btnLight,
@@ -195,6 +188,5 @@ export const useGlobalSettings = defineStore('globalSettings', () => {
         usingMac,
         settingsAccordion,
         openComponentSetting,
-        showSetting,
     };
 });

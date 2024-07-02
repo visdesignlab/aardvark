@@ -16,7 +16,7 @@ const handleIconClick = (setting:SettingsPage) => {
     if(setting.url){
         router.push(setting.url);
     }
-    isPanelVisible.value = true;
+    isPanelVisible.value = true && !setting.disableSidebar;
 }
 
 const isPanelVisible = ref(true);
@@ -56,7 +56,7 @@ const collapse = () => {
             >
                 <template v-for="setting in globalSettings.settingsPages" :key="setting.name">
                 <q-tab-panel :name="setting.name" style="border: 1px solid rgba(0,0,0,0.12);border-radius:4px;">
-                    <div v-if="globalSettings.activePage != null && !globalSettings.activePage.disableSidebar">
+                    <div>
                         <div class="d-flex row justify-space-between align-center" style="margin-bottom:5px;">
                             <h5 style="margin-bottom:0px;">{{ setting.name }}</h5>
                             <q-icon
