@@ -88,6 +88,10 @@ class ProcessDataView(APIView):
             response_data['status'] = 'ERROR'
             response_data['message'] = 'Unable to retrieve status'
 
+        if result.ready():
+            return_value = result.get()
+            response_data['data'] = return_value
+
         return Response(response_data)
 
 
@@ -118,12 +122,12 @@ class FinishExperimentView(APIView):
 
         experiment_instance = experiment_serializer.save()
 
-        for key in experiment_settings:
+        for i in range(len(experiment_settings)):
             location_data = {
-                "name": experiment_settings[key]['id'],
-                "tabular_data_filename": experiment_settings[key]['dataFrameFileName'],
-                "images_data_filename": experiment_settings[key]['imageDataFileName'],
-                "segmentations_folder": experiment_settings[key]['segmentationsFolder'],
+                "name": experiment_settings[i]['id'],
+                "tabular_data_filename": experiment_settings[i]['tabularDataFilename'],
+                "images_data_filename": experiment_settings[i]['imageDataFilename'],
+                "segmentations_folder": experiment_settings[i]['segmentationsFolder'],
             }
             location_serializer = LocationCreateSerializer(data=location_data)
             if not location_serializer.is_valid():

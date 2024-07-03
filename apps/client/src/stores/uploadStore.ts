@@ -21,6 +21,7 @@ export interface FileToUpload {
     checkForUpdates?: boolean;
     uploading: 0 | 1 | 2 | 3 | -1;
     processing: 0 | 1 | 2 | 3 | -1;
+    processedData? : Record<string,any>;
 }
 
 export interface LocationConfig {
@@ -29,6 +30,9 @@ export interface LocationConfig {
     imageDataFilename: string;
     segmentationsFolder: string;
 }
+
+type FileType =  'metadata' | 'cell_images' | 'segmentations';
+
 
 export const useUploadStore = defineStore('uploadStore', () => {
     // const currBaseUrl = window.location.origin;
@@ -63,16 +67,27 @@ export const useUploadStore = defineStore('uploadStore', () => {
         },
     ]);
 
-    const experimentConfig = computed<LocationConfig[]>(() => {
-        return locationFileList.value.map((locationFiles) => {
-            // TODO: probably want relative paths (expname / locationId / filename)
-            return {
-                id: locationFiles.locationId,
-                tabularDataFilename: locationFiles.table.file!.name,
-                imageDataFilename: locationFiles.images.file!.name,
-                segmentationsFolder: locationFiles.segmentations.file!.name,
-            };
-        });
+    const experimentConfig = computed<LocationConfig[] | null>(() => {
+        // Computes all values once all is processed. If any remain to be processed, return null instead.
+
+        const locationConfig : LocationConfig[] = [];
+        for(let i = 0; i < locationFileList.value.length; i++){
+            let locationFiles = locationFileList.value[i];
+            if(locationFiles.images.processedData && locationFiles.segmentations.processedData){
+                let imageDataFilename = `${locationFiles.images.processedData!.base_file_location}${locationFiles.images.processedData!.companion_ome}`
+                let segmentationsFolder = `${locationFiles.segmentations.processedData!.base_file_location}`
+                locationConfig.push({
+                    id: locationFiles.locationId,
+                    tabularDataFilename: locationFiles.table.file!.name,
+                    imageDataFilename,
+                    segmentationsFolder
+                })
+            } else {
+                console.log('returning null')
+                return null;
+            }
+        }
+        return locationConfig;
     });
 
     const numberOfLocations = computed<number>(() => {
@@ -137,7 +152,7 @@ export const useUploadStore = defineStore('uploadStore', () => {
     async function uploadFile(
         fileToUpload: FileToUpload,
         locationIndex: number,
-        fileType: 'metadata' | 'cell_images' | 'segmentations'
+        fileType: FileType
     ) {
         if (fileToUpload && fileToUpload.file && experimentName.value) {
             fileToUpload.uploading = 2;
@@ -164,7 +179,9 @@ export const useUploadStore = defineStore('uploadStore', () => {
                     if (processResponseData.task_id) {
                         checkForUpdates(
                             processResponseData.task_id,
-                            fileToUpload
+                            fileToUpload,
+                            locationIndex,
+                            fileType
                         );
                     }
                 } catch (error) {
@@ -185,7 +202,9 @@ export const useUploadStore = defineStore('uploadStore', () => {
     // async function checkForUpdates(task_id: string, fileKey: string) {
     async function checkForUpdates(
         task_id: string,
-        uploadingFile: FileToUpload
+        uploadingFile: FileToUpload,
+        locationIndex: number,
+        fileType: FileType
     ) {
         try {
             let updatesAvailable = false;
@@ -193,9 +212,12 @@ export const useUploadStore = defineStore('uploadStore', () => {
                 // Make a request to your server to check for updates
                 const response = await loonAxios.checkForUpdates(task_id);
                 const responseData = response.data as StatusResponseData;
-
+                console.log(responseData)
                 if (responseData.status === 'SUCCEEDED') {
                     updatesAvailable = true;
+                    if(responseData.data){
+                        uploadingFile.processedData = responseData.data
+                    }
                 } else if (
                     responseData.status === 'FAILED' ||
                     responseData.status === 'ERROR'
@@ -249,7 +271,6 @@ export const useUploadStore = defineStore('uploadStore', () => {
             );
         }
 
-        console.log('progressResult: ', progressResult);
         return progressResult;
     });
 
@@ -271,7 +292,7 @@ export const useUploadStore = defineStore('uploadStore', () => {
     }
 
     async function onSubmitExperiment(): Promise<CreateExperimentResponseData> {
-        if (experimentName && experimentName.value) {
+        if (experimentName.value && experimentConfig.value) {
             const submitExperimentResponse = await loonAxios.createExperiment(
                 experimentName.value,
                 experimentConfig.value
@@ -296,5 +317,6 @@ export const useUploadStore = defineStore('uploadStore', () => {
         uploadAll,
         progressStatusList,
         onSubmitExperiment,
+        experimentConfig
     };
 });

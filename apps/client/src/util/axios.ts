@@ -30,6 +30,7 @@ interface LoonAxiosInstance extends AxiosInstance {
 export interface StatusResponseData {
     status: 'QUEUED' | 'RUNNING' | 'SUCCEEDED' | 'FAILED' | 'ERROR';
     message: string;
+    data? : Record<string,any>;
 }
 
 export interface ProcessResponseData {
@@ -101,7 +102,7 @@ export function createLoonAxiosInstance(
             JSON.stringify(experiment_settings)
         );
 
-        return this.post(`${this.defaults.baseURL}/createExperiment`, formData);
+        return this.post(`${this.defaults.baseURL}/createExperiment/`, formData);
     };
 
     axiosInstance.interceptors.response.use(

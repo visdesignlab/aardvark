@@ -27,7 +27,7 @@ const uploadStore = useUploadStore();
             </div>
         </div>
         <div class="column" style="flex: 1; margin-left: 30px">
-            <q-btn @click="uploadStore.onSubmitExperiment"
+            <q-btn :disabled="!uploadStore.experimentConfig" @click="uploadStore.onSubmitExperiment"
                 >Submit Experiment</q-btn
             >
         </div>

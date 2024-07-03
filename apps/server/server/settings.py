@@ -63,7 +63,7 @@ INSTALLED_APPS = [
 ]
 
 if MINIO_ENABLED is True:
-    INSTALLED_APPS.push("minio_storage")
+    INSTALLED_APPS.append("minio_storage")
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",

@@ -22,10 +22,13 @@ jmespath==1.0.1
 kombu==5.3.7
 minio==7.2.7
 mysqlclient==2.2.4
+numpy==2.0.0
+pandas==2.2.2
 prompt_toolkit==3.0.46
 pycparser==2.22
 pycryptodome==3.20.0
 python-dateutil==2.9.0.post0
+pytz==2024.1
 redis==5.0.5
 s3transfer==0.10.1
 six==1.16.0

@@ -90,6 +90,7 @@ const getProgresses = (progressStatus: ProgressRecord[]) => {
                         'progress-2': item[1] === 2,
                         'progress-0': item[1] === 0,
                         'progress-3': item[1] === 3,
+                        'progress-minus-1': item[1] === -1,
                     }"
                     style="font-size: 1.1em"
                     >{{ item[0].label }}</span
