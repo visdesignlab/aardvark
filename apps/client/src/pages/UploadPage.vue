@@ -7,19 +7,10 @@ import StepUploadStatus from '@/components/upload/StepUploadStatus.vue';
 import type { QStepper } from 'quasar';
 import { useUploadStore } from '@/stores/uploadStore';
 import { useConfigStore } from '@/stores/configStore';
-import GlobalSettingsView from '@/components/globalSettings/GlobalSettingsView.vue';
 
 import { router } from '@/router';
 const uploadStore = useUploadStore();
 const configStore = useConfigStore();
-
-
-interface LocationSettings {
-    id: string;
-    dataFrameFileName: string;
-    imageDataFileName: string;
-    segmentationsFolder: string;
-}
 
 const step = ref(1);
 const experimentName = ref<string>('');
@@ -47,9 +38,6 @@ const returnHome = () =>{
 <template>
     <q-page class="q-pa-lg q-gutter-md" style="max-width: 1200px; margin: auto">
         <template v-if="configStore.environment==='local'">
-            <!-- <div class="vh-100 sticky-top">
-                <GlobalSettingsView></GlobalSettingsView>
-            </div> -->
             <q-banner inline-actions class="text-white bg-red">
                 The local version of the Loon application does not support data upload directly.
                 <template v-slot:action>

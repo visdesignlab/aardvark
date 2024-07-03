@@ -10,6 +10,7 @@ services:
       - "80:80"
     volumes:
       - ./nginx.conf:/etc/nginx/nginx.conf # relative to docker compose
+      - ./env:/app/.env
     depends_on:
       - server
       
