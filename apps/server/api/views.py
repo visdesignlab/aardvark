@@ -15,7 +15,7 @@ from .serializers import (
     ExperimentCreateSerializer,
     LocationCreateSerializer
 )
-from .models import LoonUpload, Location
+from .models import LoonUpload, Location, Experiment
 from django.core.files.base import ContentFile  # type: ignore
 
 
@@ -143,6 +143,21 @@ class FinishExperimentView(APIView):
         json_data = experiment_instance.to_json()
         json_string = json.dumps(json_data, indent=4)
         json_bytes = json_string.encode('utf-8')
+
         default_storage.save(f'{experiment_instance.name}.json', ContentFile(json_bytes))
+
+        experiment_names = [name + '.json' for name in
+                            Experiment.objects.values_list('name', flat=True)]
+
+        index_file = {"experiments": experiment_names}
+        json_index_file = json.dumps(index_file, indent=4)
+        json_index_file_bytes = json_index_file.encode('utf-8')
+
+        index_file_name = 'aa_index.json'
+
+        if default_storage.exists(index_file_name):
+            default_storage.delete(index_file_name)
+
+        default_storage.save(index_file_name, ContentFile(json_index_file_bytes))
 
         return Response({'status': 'fake_response'})

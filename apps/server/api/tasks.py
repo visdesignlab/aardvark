@@ -139,6 +139,10 @@ class Task(ABC):
             return {"process_zip_file_status": "FAILED", "message": "Could not find file"}
 
     def process_csv_file(self, label="", callback=None):
+
+        base_file_location = f"{self.experiment_name}/" \
+            f"location_{self.location}/"
+
         with self.blob.open('rb') as file:
             text_stream = io.TextIOWrapper(file, encoding='utf-8')
             csv_reader = csv.reader(text_stream, delimiter=',')
@@ -147,12 +151,15 @@ class Task(ABC):
                 column_names.append(row)
                 break
 
-            file_location = f"{self.experiment_name}/" \
-                f"location_{self.location}/" \
+            file_location = f"{base_file_location}/" \
                 f"{self.file_name}"
             default_storage.save(file_location, file)
 
-            return {"processed_zip_file": "SUCCESS", "headers": column_names[0]}
+            return {
+                "processed_zip_file": "SUCCESS",
+                "headers": column_names[0],
+                "base_file_location": base_file_location
+            }
 
     # Declare abstract execute method
     @abstractmethod

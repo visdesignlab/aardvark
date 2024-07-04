@@ -21,7 +21,7 @@ export interface FileToUpload {
     checkForUpdates?: boolean;
     uploading: 0 | 1 | 2 | 3 | -1;
     processing: 0 | 1 | 2 | 3 | -1;
-    processedData? : Record<string,any>;
+    processedData?: Record<string, any>;
 }
 
 export interface LocationConfig {
@@ -31,8 +31,7 @@ export interface LocationConfig {
     segmentationsFolder: string;
 }
 
-type FileType =  'metadata' | 'cell_images' | 'segmentations';
-
+type FileType = 'metadata' | 'cell_images' | 'segmentations';
 
 export const useUploadStore = defineStore('uploadStore', () => {
     // const currBaseUrl = window.location.origin;
@@ -70,20 +69,30 @@ export const useUploadStore = defineStore('uploadStore', () => {
     const experimentConfig = computed<LocationConfig[] | null>(() => {
         // Computes all values once all is processed. If any remain to be processed, return null instead.
 
-        const locationConfig : LocationConfig[] = [];
-        for(let i = 0; i < locationFileList.value.length; i++){
+        const locationConfig: LocationConfig[] = [];
+        for (let i = 0; i < locationFileList.value.length; i++) {
             let locationFiles = locationFileList.value[i];
-            if(locationFiles.images.processedData && locationFiles.segmentations.processedData){
-                let imageDataFilename = `${locationFiles.images.processedData!.base_file_location}${locationFiles.images.processedData!.companion_ome}`
-                let segmentationsFolder = `${locationFiles.segmentations.processedData!.base_file_location}`
+            if (
+                locationFiles.images.processedData &&
+                locationFiles.segmentations.processedData &&
+                locationFiles.table.processedData
+            ) {
+                let imageDataFilename = `${
+                    locationFiles.images.processedData.base_file_location
+                }${locationFiles.images.processedData.companion_ome}`;
+                let segmentationsFolder = `${
+                    locationFiles.segmentations.processedData
+                        .base_file_location
+                }`;
+                let tabularDataFilename = `${locationFiles.table.processedData.base_file_location}${locationFiles.table.file!.name}`
                 locationConfig.push({
                     id: locationFiles.locationId,
-                    tabularDataFilename: locationFiles.table.file!.name,
+                    tabularDataFilename,
                     imageDataFilename,
-                    segmentationsFolder
-                })
+                    segmentationsFolder,
+                });
             } else {
-                console.log('returning null')
+                console.log('returning null');
                 return null;
             }
         }
@@ -212,11 +221,11 @@ export const useUploadStore = defineStore('uploadStore', () => {
                 // Make a request to your server to check for updates
                 const response = await loonAxios.checkForUpdates(task_id);
                 const responseData = response.data as StatusResponseData;
-                console.log(responseData)
+                console.log(responseData);
                 if (responseData.status === 'SUCCEEDED') {
                     updatesAvailable = true;
-                    if(responseData.data){
-                        uploadingFile.processedData = responseData.data
+                    if (responseData.data) {
+                        uploadingFile.processedData = responseData.data;
                     }
                 } else if (
                     responseData.status === 'FAILED' ||
@@ -303,7 +312,7 @@ export const useUploadStore = defineStore('uploadStore', () => {
 
             return submitExperimentResponseData;
         }
-        return {"status":"failed","message":"No experiment name given."}
+        return { status: 'failed', message: 'No experiment name given.' };
     }
 
     return {
@@ -317,6 +326,6 @@ export const useUploadStore = defineStore('uploadStore', () => {
         uploadAll,
         progressStatusList,
         onSubmitExperiment,
-        experimentConfig
+        experimentConfig,
     };
 });
