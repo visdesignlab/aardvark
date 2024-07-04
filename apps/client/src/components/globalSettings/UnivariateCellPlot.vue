@@ -1,7 +1,79 @@
 <template>
     <div v-if="cellMetaData.dataInitialized">
-        <q-item-section>
-            <div id="plotContainer" ref="vgPlotContainer1"></div>
+        <q-item-section style="position: relative">
+            <div
+                id="plotContainer"
+                ref="vgPlotContainer1"
+                @clearSelection="clearBrushSelection"
+                style="position: relative"
+            ></div>
+            <div
+                class="selection-box left"
+                style="position: absolute; bottom: 12px"
+            >
+                <input
+                    type="text"
+                    :value="getMinValue()"
+                    @input="
+                        $emit('updateMinValue', parseFloat($event.target.value))
+                    "
+                    @focus="$event.target.select()"
+                    @blur="
+                        $event.target.value !== getMinValue() &&
+                            $emit(
+                                'updateMinValue',
+                                parseFloat($event.target.value)
+                            )
+                    "
+                    @keydown.enter.prevent="$event.target.blur()"
+                    style="
+                        width: 56px;
+                        padding: 2px 5px;
+                        border: 1px solid lightgrey;
+                        border-radius: 4px;
+                        font-size: 11px;
+                        line-height: 12px;
+                        color: gray;
+                        text-align: center;
+                    "
+                    class="hover-effect"
+                />
+            </div>
+            <div
+                class="selection-box right"
+                style="position: absolute; bottom: 12px; right: 0"
+            >
+                <input
+                    type="text"
+                    :value="getMaxValue()"
+                    @input="
+                        $emit('updateMaxValue', parseFloat($event.target.value))
+                    "
+                    @focus="$event.target.select()"
+                    @blur="
+                        $event.target.value !== getMinValue() &&
+                            $emit(
+                                'updateMinValue',
+                                parseFloat($event.target.value)
+                            )
+                    "
+                    @keydown.enter.prevent="$event.target.blur()"
+                    style="
+                        width: 56px;
+                        display: flex;
+                        align-items: center;
+                        box-sizing: border-box;
+                        padding: 2px 5px;
+                        border: 1px solid lightgrey;
+                        border-radius: 4px;
+                        font-size: 11px;
+                        line-height: 12px;
+                        color: gray;
+                        text-align: center;
+                    "
+                    class="hover-effect"
+                />
+            </div>
         </q-item-section>
     </div>
 </template>
@@ -13,6 +85,7 @@ import { QBtn } from 'quasar';
 import * as vg from '@uwdata/vgplot';
 import { useCellMetaData } from '@/stores/cellMetaData';
 import { useDatasetSelectionStore } from '@/stores/datasetSelectionStore';
+import { useSelectionStore } from '@/stores/selectionStore';
 import { storeToRefs } from 'pinia';
 import PlotSelector from './PlotSelector.vue';
 import { isNull } from 'lodash-es';
@@ -23,7 +96,17 @@ const cellMetaData = useCellMetaData();
 const datasetSelectionStore = useDatasetSelectionStore();
 const { dataInitialized } = storeToRefs(cellMetaData);
 
-const emit = defineEmits(['selectionChange']);
+const emit = defineEmits([
+    'selectionChange',
+    'updateMinValue',
+    'updateMaxValue',
+]);
+const selectionStore = useSelectionStore();
+const { Selections } = storeToRefs(selectionStore);
+
+interface clearSelectionEvent {
+    plotName: string;
+}
 
 const props = defineProps({
     plotName: {
@@ -40,7 +123,6 @@ const props = defineProps({
 const handleIntervalChange = () => {
     const clauses = props.plotBrush.clauses;
     const active = props.plotBrush.clauses.active;
-    console.log(clauses);
 
     if (active.value == undefined) {
         emit('selectionChange', {
@@ -67,47 +149,59 @@ const handleIntervalChange = () => {
         });
     }
 };
-const clearBrushSelection = (plotName: string) => {
-    console.log('reveived');
-    if (plotName === props.plotName) {
-        props.plotBrush.clear(); // Clear the brush selection for this plot
+
+const getMinValue = () => {
+    const selection = Selections.value.find(
+        (s) => s.plotName === props.plotName
+    );
+    if (selection && Array.isArray(selection.range)) {
+        return parseFloat(selection.range[0]).toFixed(3); // Access first element and truncate
+    } else {
+        return 'min'; // Or you can return any default value if no selection exists
     }
 };
-props.plotBrush.addEventListener('clear-brush-selection', clearBrushSelection);
+
+const getMaxValue = () => {
+    const selection = Selections.value.find(
+        (s) => s.plotName === props.plotName
+    );
+    if (selection && Array.isArray(selection.range)) {
+        return parseFloat(selection.range[1]).toFixed(3); // Access second element and truncate
+    } else {
+        return 'max'; // Or you can return any default value if no selection exists
+    }
+};
+
+const clearBrushSelection = () => {
+    // console.log('Clearing brush selection for:', props.plotName);
+    // if (props.plotBrush) {
+    //     props.plotBrush.update({
+    //         source: props.plotName,
+    //         value: null,
+    //         predicate: `${props.plotName} IS NOT NULL`, // This predicate is always true for non-null values
+    //     });
+    // }
+};
+
+defineExpose({ clearBrushSelection });
+
+watch(
+    () => Selections.value,
+    (newSelections) => {
+        const selectionExists = newSelections.some(
+            (s) => s.plotName === props.plotName
+        );
+        if (!selectionExists) {
+            clearBrushSelection();
+        }
+    },
+    { deep: true }
+);
+
+// props.plotBrush.addEventListener('clearSelection', clearBrushSelection);
 props.plotBrush.addEventListener('value', handleIntervalChange);
 
 const makePlot = (column: string) => {
-    // Optional Text Underneath Plots
-    //const rangeText = document.createElement('div');
-    //rangeText.classList.add('vgPlotContainer');
-
-    // props.plotBrush.addEventListener('value', () => {
-    //     const selectedRange = props.plotBrush.active.value;
-    //     if (selectedRange) {
-    //         minX.value = selectedRange[0];
-    //         maxX.value = selectedRange[1];
-
-    //         emit('selectionChange', {
-    //             plotName: props.plotName,
-    //             range: [minX.value, maxX.value],
-    //         });
-    //     } else {
-    //         // Emit an event to clear the selection
-    //         emit('selectionChange', {
-    //             plotName: props.plotName,
-    //             range: null,
-    //         });
-    //     }
-
-    //     // Optional Text Underneath Plots, must return rangeText in function.
-    //     //rangeText.textContent = `[${Math.round(minX.value * 1000) / 1000}, ${Math.round(maxX.value * 1000) / 1000}]`;
-
-    //     // Set text content
-    //     // currSel.textContent = `[${Math.round(minX.value * 1000) / 1000}, ${
-    //     //     Math.round(maxX.value * 1000) / 1000
-    //     // }]`;
-    // });
-
     console.log('plot');
     const plot = vg.plot(
         vg.name('ploted'),
@@ -153,15 +247,87 @@ const makePlot = (column: string) => {
         vg.yLabelAnchor('top'),
         vg.yAxis(null),
         vg.yTicks(0)
-        // vg.highlight({ by: props.plotBrush }),
         // vg.text({
-        //     x: props.plotBrush,
-        //     text: props.plotBrush,
+        //     x: () => {
+        //         if (props.plotBrush.clauses) {
+        //             const selection = selectionStore.Selections.find(
+        //                 (s) => s.plotName === column
+        //             );
+        //             if (selection) {
+        //                 const value = selection.range;
+        //                 if (Array.isArray(value)) {
+        //                     return parseFloat(value[0]).toFixed(3); // Access first element and truncate
+        //                 } else {
+        //                     return parseFloat(value).toFixed(3); // Handle string case (from previous code)
+        //                 }
+        //             }
+        //         } else {
+        //             return undefined; // Or you can return an empty string ""
+        //         }
+        //     },
+        //     text: () => {
+        //         if (props.plotBrush.clauses) {
+        //             const selection = selectionStore.Selections.find(
+        //                 (s) => s.plotName === column
+        //             );
+        //             if (selection) {
+        //                 const value = selection.range;
+        //                 if (Array.isArray(value)) {
+        //                     return parseFloat(value[0]).toFixed(3); // Access first element and truncate
+        //                 } else {
+        //                     return parseFloat(value).toFixed(3); // Handle string case (from previous code)
+        //                 }
+        //             }
+        //         } else {
+        //             return undefined; // Or you can return an empty string ""
+        //         }
+        //     },
         //     frameAnchor: 'top',
         //     lineAnchor: 'bottom',
         //     dy: -7,
+        //     // dx: -55,
+        //     textAnchor: 'end',
+        // }),
+        // vg.text({
+        //     x: () => {
+        //         if (props.plotBrush.clauses) {
+        //             const selection = selectionStore.Selections.find(
+        //                 (s) => s.plotName === column
+        //             );
+        //             if (selection) {
+        //                 const value = selection.range;
+        //                 if (Array.isArray(value)) {
+        //                     return parseFloat(value[1]).toFixed(3); // Access first element and truncate
+        //                 } else {
+        //                     return parseFloat(value).toFixed(3); // Handle string case (from previous code)
+        //                 }
+        //             }
+        //         } else {
+        //             return undefined; // Or you can return an empty string ""
+        //         }
+        //     },
+        //     text: () => {
+        //         if (props.plotBrush.clauses) {
+        //             const selection = selectionStore.Selections.find(
+        //                 (s) => s.plotName === column
+        //             );
+        //             if (selection) {
+        //                 const value = selection.range;
+        //                 if (Array.isArray(value)) {
+        //                     return parseFloat(value[1]).toFixed(3); // Access first element and truncate
+        //                 } else {
+        //                     return parseFloat(value).toFixed(3); // Handle string case (from previous code)
+        //                 }
+        //             }
+        //         } else {
+        //             return undefined; // Or you can return an empty string ""
+        //         }
+        //     },
+        //     frameAnchor: 'top',
+        //     lineAnchor: 'bottom',
+        //     dy: -7,
+        //     textAnchor: 'start',
         // })
-        //vg.highlight({ by: props.plotBrush, channels: { fill: 'red' }})
     );
     console.log('plotAfter');
 
@@ -206,5 +372,17 @@ async function createCharts() {
     display: flex;
     align-items: center;
     text-align: center;
+}
+.selection-box {
+    display: flex;
+    align-items: center;
+}
+.hover-effect {
+    background-color: white; /* Default background */
+    transition: background-color 0.2s ease-in-out; /* Smooth transition */
+}
+
+.hover-effect:hover {
+    background-color: #f0f0f0; /* Hover background color */
 }
 </style>

@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import { ref } from 'vue';
 import { useGlobalSettings } from '@/stores/globalSettings';
-import UnivariateCellPlot from './UnivariateCellPlot.vue';
 import PlotSelector from './PlotSelector.vue';
 import type { Vue } from 'vue-demi';
 import { useFilterStore } from '@/stores/filterStore';
@@ -14,7 +13,7 @@ const selectionStore = useSelectionStore();
 const { filters } = storeToRefs(filterStore);
 const { Selections } = storeToRefs(selectionStore);
 
-const emit = defineEmits(['selectionChange', 'clear-brush-selection']);
+const emit = defineEmits(['clearSelection']);
 
 function removeFilter(index: number) {
     filterStore.removeFilter(index);
@@ -24,8 +23,6 @@ function removeSelection(index: number) {
     const plotName = Selections.value[index]?.plotName;
 
     selectionStore.removeSelectionByPlotName(plotName);
-    // Emit an event to the PlotSelector component to clear the brush selection
-    emit('clear-brush-selection', 'mass');
 }
 </script>
 
@@ -142,9 +139,7 @@ function removeSelection(index: number) {
             "
         >
             <q-card :dark="globalSettings.darkMode">
-                <q-card-section>
-                    <!-- <UnivariateCellPlot></UnivariateCellPlot> -->
-                </q-card-section>
+                <q-card-section> </q-card-section>
             </q-card>
         </q-expansion-item>
         <q-separator />
@@ -158,9 +153,7 @@ function removeSelection(index: number) {
             "
         >
             <q-card :dark="globalSettings.darkMode">
-                <q-card-section>
-                    <!-- <UnivariateCellPlot></UnivariateCellPlot> -->
-                </q-card-section>
+                <q-card-section> </q-card-section>
             </q-card>
         </q-expansion-item>
         <q-separator />
