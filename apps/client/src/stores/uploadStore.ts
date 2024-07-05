@@ -31,6 +31,11 @@ export interface LocationConfig {
     segmentationsFolder: string;
 }
 
+export interface OverallProgress {
+    status: -1 | 0 | 1 | 2; // Failed, not started, running, succeeded
+    message?: string;
+}
+
 type FileType = 'metadata' | 'cell_images' | 'segmentations';
 
 export const useUploadStore = defineStore('uploadStore', () => {
@@ -65,6 +70,10 @@ export const useUploadStore = defineStore('uploadStore', () => {
             },
         },
     ]);
+
+    const overallProgress = ref<OverallProgress>({
+        status: 1,
+    });
 
     const experimentConfig = computed<LocationConfig[] | null>(() => {
         // Computes all values once all is processed. If any remain to be processed, return null instead.
@@ -213,9 +222,7 @@ export const useUploadStore = defineStore('uploadStore', () => {
                     if (processResponseData.task_id) {
                         checkForUpdates(
                             processResponseData.task_id,
-                            fileToUpload,
-                            locationIndex,
-                            fileType
+                            fileToUpload
                         );
                     }
                 } catch (error) {
@@ -236,9 +243,7 @@ export const useUploadStore = defineStore('uploadStore', () => {
     // async function checkForUpdates(task_id: string, fileKey: string) {
     async function checkForUpdates(
         task_id: string,
-        uploadingFile: FileToUpload,
-        locationIndex: number,
-        fileType: FileType
+        uploadingFile: FileToUpload
     ) {
         try {
             let updatesAvailable = false;
@@ -250,6 +255,18 @@ export const useUploadStore = defineStore('uploadStore', () => {
                     updatesAvailable = true;
                     if (responseData.data) {
                         uploadingFile.processedData = responseData.data;
+                    }
+                    if (experimentConfig && experimentHeaders) {
+                        const submitExperimentResponse: CreateExperimentResponseData =
+                            await onSubmitExperiment();
+                        if (submitExperimentResponse.status === 'SUCCESS') {
+                            overallProgress.value.status = 2;
+                            overallProgress.value.message = 'Succeeded.';
+                        } else {
+                            overallProgress.value.status = -1;
+                            overallProgress.value.message =
+                                'There was an error submitting this experiment.';
+                        }
                     }
                 } else if (
                     responseData.status === 'FAILED' ||
@@ -353,5 +370,6 @@ export const useUploadStore = defineStore('uploadStore', () => {
         onSubmitExperiment,
         experimentConfig,
         experimentHeaders,
+        overallProgress,
     };
 });
