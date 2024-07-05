@@ -97,15 +97,13 @@ class ProcessDataView(APIView):
 
 class FinishExperimentView(APIView):
     def post(self, request):
-        # Needs to append experiment
-        # Needs to create experiment metadata file
-        # Process the CSV file and grab the headers
-        # Allow for UI to set values....???????
         data = request.data
         experiment_settings = json.loads(data.get('experimentSettings'))
+        experiment_headers = json.loads(data.get('experimentHeaders'))
         experiment_name = data.get('experimentName')
         experiment_data = {
             "name": experiment_name,
+            "headers": "|".join(experiment_headers),
             "number_of_locations": len(experiment_settings),
             "header_time": "fake",
             "header_frame": "fake",

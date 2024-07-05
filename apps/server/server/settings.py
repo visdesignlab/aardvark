@@ -25,12 +25,7 @@ DJANGO_ENV_FILE = os.getenv('DJANGO_ENV_FILE', '~/loonar/apps/server/.env')
 DJANGO_ENV_FILE = os.path.expanduser(DJANGO_ENV_FILE)
 
 # Load environment variables from appropriate .env file based on DJANGO_ENV
-print(DJANGO_ENV_FILE, flush=True)
 environ.Env.read_env(DJANGO_ENV_FILE)
-
-print("Environment variables:")
-for k, v in os.environ.items():
-    print(f"{k}: {v}")
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.0/howto/deployment/checklist/
@@ -58,7 +53,7 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     "rest_framework",
     "corsheaders",
-    "api",
+    "api.apps.ApiConfig",
     "s3_file_field"
 ]
 

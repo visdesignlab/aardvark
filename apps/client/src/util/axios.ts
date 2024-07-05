@@ -23,14 +23,15 @@ interface LoonAxiosInstance extends AxiosInstance {
     checkForUpdates(task_id: string): AxiosPromise<StatusResponseData>;
     createExperiment(
         experiment_name: string,
-        experiment_settings: LocationConfig[]
+        experiment_settings: LocationConfig[],
+        experiment_headers: string[] | null
     ): AxiosPromise<CreateExperimentResponseData>;
 }
 
 export interface StatusResponseData {
     status: 'QUEUED' | 'RUNNING' | 'SUCCEEDED' | 'FAILED' | 'ERROR';
     message: string;
-    data? : Record<string,any>;
+    data?: Record<string, any>;
 }
 
 export interface ProcessResponseData {
@@ -92,7 +93,8 @@ export function createLoonAxiosInstance(
 
     Proto.createExperiment = async function (
         experiment_name: string,
-        experiment_settings: LocationConfig[]
+        experiment_settings: LocationConfig[],
+        experiment_headers: string[]
     ): AxiosPromise<CreateExperimentResponseData> {
         const formData = new FormData();
 
@@ -101,8 +103,15 @@ export function createLoonAxiosInstance(
             'experimentSettings',
             JSON.stringify(experiment_settings)
         );
+        formData.append(
+            'experimentHeaders',
+            JSON.stringify(experiment_headers)
+        );
 
-        return this.post(`${this.defaults.baseURL}/createExperiment/`, formData);
+        return this.post(
+            `${this.defaults.baseURL}/createExperiment/`,
+            formData
+        );
     };
 
     axiosInstance.interceptors.response.use(
@@ -112,12 +121,12 @@ export function createLoonAxiosInstance(
                 if (error.response.status === 401) {
                     console.error('Unauthorized');
                 } else if (error.response.status === 500) {
-                    console.error('There was an internal server error')
+                    console.error('There was an internal server error');
                 }
             } else if (error.request) {
-                console.error('Network Error: ', error.request)
+                console.error('Network Error: ', error.request);
             } else {
-                console.error('There was an unkown error: ', error.message)
+                console.error('There was an unkown error: ', error.message);
             }
             return Promise.reject(error);
         }

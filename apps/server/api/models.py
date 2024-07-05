@@ -32,20 +32,22 @@ class Experiment(models.Model):
         location_data = [location.to_json() for location in locations]
         data = {
             "name": self.name,
-            "headerTransforms": {
-                "time": self.header_time,
-                "frame": self.header_frame,
-                "id": self.header_id,
-                "parent": self.header_parent,
-                "mass": self.header_mass,
-                "x": self.header_x,
-                "y": self.header_y,
-            },
+            "headers": self.headers.split("|"),
+            # "headerTransforms": {
+            #     "time": self.header_time,
+            #     "frame": self.header_frame,
+            #     "id": self.header_id,
+            #     "parent": self.header_parent,
+            #     "mass": self.header_mass,
+            #     "x": self.header_x,
+            #     "y": self.header_y,
+            # },
             "locationMetadataList": location_data
         }
         return data
 
     name = models.CharField(max_length=255)
+    headers = models.TextField(default='')
     header_time = models.CharField(max_length=255)
     header_frame = models.CharField(max_length=255)
     header_id = models.CharField(max_length=255)

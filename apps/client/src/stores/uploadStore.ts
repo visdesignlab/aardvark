@@ -77,14 +77,15 @@ export const useUploadStore = defineStore('uploadStore', () => {
                 locationFiles.segmentations.processedData &&
                 locationFiles.table.processedData
             ) {
-                let imageDataFilename = `${
-                    locationFiles.images.processedData.base_file_location
-                }${locationFiles.images.processedData.companion_ome}`;
-                let segmentationsFolder = `${
-                    locationFiles.segmentations.processedData
-                        .base_file_location
-                }`;
-                let tabularDataFilename = `${locationFiles.table.processedData.base_file_location}${locationFiles.table.file!.name}`
+                let imageDataFilename = `${locationFiles.images.processedData.base_file_location}${locationFiles.images.processedData.companion_ome}`;
+                let segmentationsFolder =
+                    `${locationFiles.segmentations.processedData.base_file_location}`.replace(
+                        /\/$/,
+                        ''
+                    );
+                let tabularDataFilename = `${
+                    locationFiles.table.processedData.base_file_location
+                }${locationFiles.table.file!.name}`;
                 locationConfig.push({
                     id: locationFiles.locationId,
                     tabularDataFilename,
@@ -92,11 +93,36 @@ export const useUploadStore = defineStore('uploadStore', () => {
                     segmentationsFolder,
                 });
             } else {
-                console.log('returning null');
                 return null;
             }
         }
         return locationConfig;
+    });
+
+    const _listsAreIdentical = (arr1: string[], arr2: string[]): boolean => {
+        if (arr1.length !== arr2.length) return false;
+        for (let i = 0; i < arr1.length; i++) {
+            if (arr1[i] !== arr2[i]) return false;
+        }
+        return true;
+    };
+
+    const experimentHeaders = computed<string[] | null>(() => {
+        let prevHeaders: string[] | null = null;
+
+        locationFileList.value.forEach((locationFile: LocationFiles) => {
+            if (locationFile.table.processedData) {
+                let currHeaders = locationFile.table.processedData.headers;
+                if (prevHeaders) {
+                    if (!_listsAreIdentical(currHeaders, prevHeaders)) {
+                        return null;
+                    }
+                } else {
+                    prevHeaders = currHeaders;
+                }
+            }
+        });
+        return prevHeaders;
     });
 
     const numberOfLocations = computed<number>(() => {
@@ -304,7 +330,8 @@ export const useUploadStore = defineStore('uploadStore', () => {
         if (experimentName.value && experimentConfig.value) {
             const submitExperimentResponse = await loonAxios.createExperiment(
                 experimentName.value,
-                experimentConfig.value
+                experimentConfig.value,
+                experimentHeaders.value
             );
 
             const submitExperimentResponseData: CreateExperimentResponseData =
@@ -327,5 +354,6 @@ export const useUploadStore = defineStore('uploadStore', () => {
         progressStatusList,
         onSubmitExperiment,
         experimentConfig,
+        experimentHeaders
     };
 });
