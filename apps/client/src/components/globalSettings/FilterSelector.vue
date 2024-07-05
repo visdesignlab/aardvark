@@ -1,8 +1,6 @@
 <script setup lang="ts">
-import { ref } from 'vue';
 import { useGlobalSettings } from '@/stores/globalSettings';
 import PlotSelector from './PlotSelector.vue';
-import type { Vue } from 'vue-demi';
 import { useFilterStore } from '@/stores/filterStore';
 import { useSelectionStore } from '@/stores/selectionStore';
 import { storeToRefs } from 'pinia';
@@ -31,7 +29,6 @@ function removeSelection(index: number) {
         <div class="selections-filters-container">
             <q-expansion-item label="Current Selections">
                 <q-list>
-                    <!-- <q-item-label lines="1">Current Selections</q-item-label> -->
                     <q-item
                         v-for="(selection, index) in Selections"
                         :key="index"
@@ -75,7 +72,6 @@ function removeSelection(index: number) {
             <q-separator />
             <q-expansion-item label="Current Filters">
                 <q-list>
-                    <!-- <q-item-label lines="1">Current Filters</q-item-label> -->
                     <q-item
                         v-for="(filter, index) in filters"
                         :key="index"

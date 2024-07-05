@@ -23,20 +23,13 @@
 </template>
 
 <script lang="ts" setup>
-import { ref, computed, toRaw, watch } from 'vue';
-import { QBtn, QDialog, QCard, QCardSection } from 'quasar';
+import { ref } from 'vue';
+import { QBtn } from 'quasar';
 import * as vg from '@uwdata/vgplot';
-import { useCellMetaData } from '@/stores/cellMetaData';
-import { useDatasetSelectionStore } from '@/stores/datasetSelectionStore';
 import { storeToRefs } from 'pinia';
 import UnivariateCellPlot from './UnivariateCellPlot.vue';
 import { useFilterStore } from '@/stores/filterStore';
 import { useSelectionStore } from '@/stores/selectionStore';
-import { defineEmits } from 'vue';
-
-const plotNames = ref(['A', 'y', 'mass', 'time', 'x']);
-const plotBrush = vg.Selection.intersect();
-vg.Selection.crossfilter();
 
 interface Selections {
     [key: string]: [number, number] | undefined;
@@ -46,12 +39,16 @@ interface SelectionChangeEvent {
     range: [number, number] | null;
 }
 
+const plotNames = ref(['A', 'y', 'mass', 'time', 'x']);
+
+const plotBrush = vg.Selection.intersect();
+vg.Selection.crossfilter();
+
 const currentSelections = ref<Selections>({});
 const filterStore = useFilterStore();
 const selectionStore = useSelectionStore();
-const showFilterDialog = ref(false);
-const { selections } = storeToRefs(selectionStore);
 
+// Invoked by selectionChange event in UnivariateCellPlot
 const handleSelectionChange = (event: SelectionChangeEvent) => {
     const { plotName, range } = event;
     if (range && range[0] !== undefined && range[1] !== undefined) {
@@ -67,6 +64,7 @@ const handleSelectionChange = (event: SelectionChangeEvent) => {
     }
 };
 
+// When filter button is clicked.
 const addFilter = () => {
     Object.entries(currentSelections.value).forEach(([plotName, range]) => {
         if (range) {
