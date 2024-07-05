@@ -70,7 +70,7 @@ Note: If you run the install function, this will set up a Python virtual environ
 
 **If you are just planning to develop the front end Vue Application, the following steps may not be necessary.**
 
-To run the application locally, you must have MySQL, Redis, Minio, and Celery installed and running. **Note that celery is installed by default inside the server when running moon :install, so you should be able to get it started within the virtual environment with no additional installation**. After these two are running, you'll need to set up an ".env" file in the `apps/server" directory. The file will need to consist of the following:
+To run the application locally, you must have MySQL, Redis, Minio, and Celery installed and running. **Note that celery is installed by default inside the server when running moon :install, so you should be able to get it started within the virtual environment with no additional installation**. After these two are running, you'll need to set up an ".env" file in the `docker" directory. The file will need to consist of the following:
 
 ```
 DATABASE_NAME={your_database_name}
