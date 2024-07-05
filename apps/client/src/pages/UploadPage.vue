@@ -13,7 +13,7 @@ import { router } from '@/router';
 const uploadStore = useUploadStore();
 const configStore = useConfigStore();
 
-const step = ref(1);
+const step = ref('metadata');
 
 // Function to determine if the create experiment button should be enabled.
 function disableUpload(): boolean {
@@ -66,7 +66,7 @@ function returnHome(): void {
                 header-nav
             >
                 <q-step
-                    :name="1"
+                    name="metadata"
                     title="Create New Experiment"
                     icon="settings"
                     :done="experimentMetadataDone()"
@@ -75,7 +75,7 @@ function returnHome(): void {
                     <StepExperimentMetadata />
                 </q-step>
                 <q-step
-                    :name="2"
+                    name="selectFiles"
                     title="Select Files"
                     icon="settings"
                     :done="fileSelectionDone()"
@@ -84,7 +84,7 @@ function returnHome(): void {
                     <StepFileSelection />
                 </q-step>
                 <q-step
-                    :name="3"
+                    name="defineColumns"
                     title="Define Column Variables"
                     icon="settings"
                     :done="columnNameMappingDone()"
@@ -93,7 +93,7 @@ function returnHome(): void {
                     <StepColumnNameMapping />
                 </q-step>
 
-                <q-step title="Review" :name="5" icon="settings">
+                <q-step title="Review" name="finalReview" icon="settings">
                     <StepReview />
                 </q-step>
 
@@ -106,7 +106,7 @@ function returnHome(): void {
                         "
                     >
                         <q-btn
-                            v-if="step > 1"
+                            v-if="step !== 'metadata'"
                             flat
                             color="primary"
                             @click="($refs.stepper as any).previous()"
@@ -115,15 +115,19 @@ function returnHome(): void {
                         />
                         <q-btn
                             @click="
-                                step === 5
+                                step === 'final'
                                     ? uploadStore.uploadAll()
                                     : ($refs.stepper as any).next()
                             "
                             color="primary"
                             :label="
-                                step === 5 ? 'Begin Processing' : 'Continue'
+                                step === 'finalReview'
+                                    ? 'Begin Processing'
+                                    : 'Continue'
                             "
-                            :disabled="step === 5 ? disableUpload() : false"
+                            :disabled="
+                                step === 'finalReview' ? disableUpload() : false
+                            "
                         />
                     </q-stepper-navigation>
                 </template>
