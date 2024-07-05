@@ -136,23 +136,4 @@ const returnHome = () => {
     </q-page>
 </template>
 
-<style scoped>
-.upload-label {
-    font-weight: bold;
-}
-
-.step-title {
-    font-weight: bold;
-    font-size: 1.2em;
-}
-
-.suggested {
-    cursor: pointer;
-    font-style: italic;
-    font-weight: bold;
-}
-
-.suggested:hover {
-    text-decoration: underline;
-}
-</style>
+<style scoped></style>
