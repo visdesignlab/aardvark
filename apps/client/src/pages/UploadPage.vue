@@ -14,7 +14,6 @@ const uploadStore = useUploadStore();
 const configStore = useConfigStore();
 
 const step = ref(1);
-const experimentName = ref<string>('');
 
 // Function to determine if the create experiment button should be enabled.
 function disableUpload(): boolean {
@@ -26,7 +25,7 @@ function disableUpload(): boolean {
 }
 
 function experimentMetadataDone(): boolean {
-    return experimentName.value.length > 0;
+    return uploadStore.validExperimentName();
 }
 
 function fileSelectionDone(): boolean {
@@ -73,10 +72,7 @@ function returnHome(): void {
                     :done="experimentMetadataDone()"
                     done-color="green"
                 >
-                    <StepExperimentMetadata
-                        v-model:experimentName="experimentName"
-                        v-model:numberOfLocations="numberOfLocations"
-                    />
+                    <StepExperimentMetadata />
                 </q-step>
                 <q-step
                     :name="2"

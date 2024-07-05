@@ -46,6 +46,10 @@ export const useUploadStore = defineStore('uploadStore', () => {
     });
 
     const experimentName = ref<string>('');
+    function validExperimentName(): boolean {
+        // TODO: this should maybe check if the name is already used?
+        return experimentName.value.length > 0;
+    }
 
     const locationFileList = ref<LocationFiles[]>([
         {
@@ -358,7 +362,14 @@ export const useUploadStore = defineStore('uploadStore', () => {
     }
 
     function allColumnsMapped(): boolean {
-        // TODO: implement
+        if (!columnMappings.value) {
+            return false;
+        }
+        for (const key of specialHeaders) {
+            if (!columnMappings.value[key]) {
+                return false;
+            }
+        }
         return true;
     }
 
@@ -447,6 +458,7 @@ export const useUploadStore = defineStore('uploadStore', () => {
     return {
         experimentCreated,
         experimentName,
+        validExperimentName,
         numberOfLocations,
         locationFileList,
         allFilesPopulated,
