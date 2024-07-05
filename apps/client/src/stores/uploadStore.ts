@@ -342,6 +342,93 @@ export const useUploadStore = defineStore('uploadStore', () => {
         return { status: 'failed', message: 'No experiment name given.' };
     }
 
+    function allColumnsMapped(): boolean {
+        // TODO: implement
+        return true;
+    }
+
+    const columnMappings = ref<Record<string, string> | null>(null);
+    const columnNames = ref<string[]>([]);
+    const specialHeaders: string[] = [
+        'frame',
+        'time',
+        'id',
+        'parent',
+        'mass',
+        'x',
+        'y',
+    ];
+
+    async function populateDefaultColumnMappings() {
+        if (columnMappings.value) {
+            // if it's already populated don't set the defaults
+            return;
+        }
+        if (locationFileList.value.length == 0) {
+            // if there are no files are selectted don't populate
+            return;
+        }
+        const firstCsvFile = locationFileList.value[0].table.file;
+        if (!firstCsvFile) {
+            // if the first file dones't exist don't populate
+            return;
+        }
+        const reader = firstCsvFile.stream().getReader();
+        const decoder = new TextDecoder('utf-8');
+        let { value: chunk, done: readerDone } = await reader.read();
+        let text = '';
+        let firstLine = '';
+
+        while (!readerDone) {
+            text += decoder.decode(chunk, { stream: true });
+            const lines = text.split('\n');
+            if (lines.length > 1) {
+                firstLine = lines[0];
+                break;
+            }
+            ({ value: chunk, done: readerDone } = await reader.read());
+        }
+        columnNames.value = firstLine.split(',');
+        columnMappings.value = {};
+        for (const name of specialHeaders) {
+            columnMappings.value[name] = getReasonableDefault(
+                name,
+                columnNames.value
+            );
+        }
+    }
+
+    function getReasonableDefault(
+        header: string,
+        columnNames: string[]
+    ): string {
+        // First check for an exact match.
+        if (columnNames.includes(header)) {
+            return header;
+        }
+
+        // If no exact match, check for a case-insensitive match.
+        const lowerHeader = header.toLowerCase();
+        for (const name of columnNames) {
+            if (name.toLowerCase() === lowerHeader) {
+                return name;
+            }
+        }
+
+        // If no exact match, check if a word in the column name matches the header.
+        for (const name of columnNames) {
+            const columnWords = name.split(' ');
+            for (const word of columnWords) {
+                if (word.toLowerCase() === lowerHeader) {
+                    return name;
+                }
+            }
+        }
+
+        // Otherwise, return ''
+        return '';
+    }
+
     return {
         experimentCreated,
         experimentName,
@@ -355,5 +442,9 @@ export const useUploadStore = defineStore('uploadStore', () => {
         onSubmitExperiment,
         experimentConfig,
         experimentHeaders,
+        allColumnsMapped,
+        columnMappings,
+        populateDefaultColumnMappings,
+        columnNames,
     };
 });

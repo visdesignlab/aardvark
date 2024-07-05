@@ -4,6 +4,7 @@ import StepExperimentMetadata from '@/components/upload/StepExperimentMetadata.v
 import StepFileSelection from '@/components/upload/StepFileSelection.vue';
 import StepReview from '@/components/upload/StepReview.vue';
 import StepUploadStatus from '@/components/upload/StepUploadStatus.vue';
+import StepColumnNameMapping from '@/components/upload/StepColumnNameMapping.vue';
 import type { QStepper } from 'quasar';
 import { useUploadStore } from '@/stores/uploadStore';
 import { useConfigStore } from '@/stores/configStore';
@@ -27,6 +28,8 @@ const stepDone = (inputStep: number) => {
             return step.value > 1;
         case 2:
             return uploadStore.allFilesPopulated();
+        case 3:
+            return uploadStore.allColumnsMapped();
         default:
             return true;
     }
@@ -80,6 +83,15 @@ const returnHome = () => {
                     done-color="green"
                 >
                     <StepFileSelection />
+                </q-step>
+                <q-step
+                    :name="3"
+                    title="Define Column Variables"
+                    icon="settings"
+                    :done="stepDone(3)"
+                    done-color="green"
+                >
+                    <StepColumnNameMapping />
                 </q-step>
 
                 <q-step title="Review" :name="5" icon="settings">
