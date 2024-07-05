@@ -7,13 +7,13 @@ export interface ProgressRecord {
 }
 
 /*
-* Progress Codes
-*  0 - Not Started
-*  1 - Dispatched (Uploading is never 'dispatched' in our design)
-*  2 - Running
-*  3 - Finished Successfully
-* -1 - Failed
-*/
+ * Progress Codes
+ *  0 - Not Started
+ *  1 - Dispatched (Uploading is never 'dispatched' in our design)
+ *  2 - Running
+ *  3 - Finished Successfully
+ * -1 - Failed
+ */
 
 export default {
     props: {
@@ -27,17 +27,21 @@ export default {
 <script setup lang="ts">
 const determineProgress = (subProgress: ProgressRecord[]) => {
     const failed = subProgress.some((element) => element.progress === -1);
-    if(failed){
+    if (failed) {
         // If any failed, set total to failed
-        return -1
+        return -1;
     } else {
-        const running = subProgress.some((element) => element.progress === 2 || element.progress === 1);
-        if(running){
+        const running = subProgress.some(
+            (element) => element.progress === 2 || element.progress === 1
+        );
+        if (running) {
             // If none failed but any are running/queued, set to running
             return 2;
         } else {
-            const succeeded = subProgress.every((element) => element.progress === 3);
-            if (succeeded){
+            const succeeded = subProgress.every(
+                (element) => element.progress === 3
+            );
+            if (succeeded) {
                 // If none running, none failed, and all have succeeded, set to 3
                 return 3;
             }
@@ -157,7 +161,7 @@ const getProgresses = (progressStatus: ProgressRecord[]) => {
 .progress-2,
 .progress-3,
 .progress-minus-1 {
-    font-weight:bold;
+    font-weight: bold;
 }
 
 .progress-2 {
@@ -167,6 +171,6 @@ const getProgresses = (progressStatus: ProgressRecord[]) => {
     color: green;
 }
 .progress-minus-1 {
-    color:red;
+    color: red;
 }
 </style>

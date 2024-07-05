@@ -12,7 +12,7 @@ export interface SettingsPage {
     show: boolean;
     component?: string;
     url?: string;
-    disableSidebar?:boolean;
+    disableSidebar?: boolean;
 }
 
 export const useGlobalSettings = defineStore('globalSettings', () => {
@@ -47,7 +47,7 @@ export const useGlobalSettings = defineStore('globalSettings', () => {
             id: uuidv4(),
             show: false,
             url: '/upload',
-            disableSidebar:true
+            disableSidebar: true,
         },
         // {
         //     name: 'Filter Data',

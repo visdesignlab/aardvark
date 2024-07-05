@@ -354,6 +354,6 @@ export const useUploadStore = defineStore('uploadStore', () => {
         progressStatusList,
         onSubmitExperiment,
         experimentConfig,
-        experimentHeaders
+        experimentHeaders,
     };
 });

@@ -31,17 +31,23 @@ const stepDone = (inputStep: number) => {
             return true;
     }
 };
-const returnHome = () =>{
+const returnHome = () => {
     router.push('/');
-}
+};
 </script>
 <template>
     <q-page class="q-pa-lg q-gutter-md" style="max-width: 1200px; margin: auto">
-        <template v-if="configStore.environment==='local'">
+        <template v-if="configStore.environment === 'local'">
             <q-banner inline-actions class="text-white bg-red">
-                The local version of the Loon application does not support data upload directly.
+                The local version of the Loon application does not support data
+                upload directly.
                 <template v-slot:action>
-                    <q-btn flat color="white" label="Return to Home" @click="returnHome()"/>
+                    <q-btn
+                        flat
+                        color="white"
+                        label="Return to Home"
+                        @click="returnHome()"
+                    />
                 </template>
             </q-banner>
         </template>
