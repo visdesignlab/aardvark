@@ -1,8 +1,8 @@
-<script lang="ts">
+<script setup lang="ts">
 import type { PropType } from 'vue';
 export interface ProgressRecord {
     label: string;
-    progress: number;
+    progress: -1 | 0 | 1 | 2 | 3;
     subProgress?: ProgressRecord[];
 }
 
@@ -15,16 +15,12 @@ export interface ProgressRecord {
  * -1 - Failed
  */
 
-export default {
-    props: {
-        progressStatus: {
-            type: Array as PropType<ProgressRecord[]>,
-            required: true,
-        },
+const props = defineProps({
+    progressStatus: {
+        type: Array as PropType<ProgressRecord[]>,
+        required: true,
     },
-};
-</script>
-<script setup lang="ts">
+});
 const determineProgress = (subProgress: ProgressRecord[]) => {
     const failed = subProgress.some((element) => element.progress === -1);
     if (failed) {
