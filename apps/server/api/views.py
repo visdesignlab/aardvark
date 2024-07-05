@@ -101,6 +101,8 @@ class FinishExperimentView(APIView):
         experiment_settings = json.loads(data.get('experimentSettings'))
         experiment_headers = json.loads(data.get('experimentHeaders'))
         experiment_name = data.get('experimentName')
+        print(experiment_headers,flush=True)
+        print("|".join(experiment_headers))
         experiment_data = {
             "name": experiment_name,
             "headers": "|".join(experiment_headers),

@@ -99,17 +99,16 @@ export const useUploadStore = defineStore('uploadStore', () => {
         return locationConfig;
     });
 
-    const _listsAreIdentical = (arr1: string[], arr2: string[]): boolean => {
+    function _listsAreIdentical(arr1: string[], arr2: string[]): boolean {
         if (arr1.length !== arr2.length) return false;
         for (let i = 0; i < arr1.length; i++) {
             if (arr1[i] !== arr2[i]) return false;
         }
         return true;
-    };
+    }
 
     const experimentHeaders = computed<string[] | null>(() => {
         let prevHeaders: string[] | null = null;
-
         locationFileList.value.forEach((locationFile: LocationFiles) => {
             if (locationFile.table.processedData) {
                 const currHeaders = locationFile.table.processedData.headers;
@@ -247,7 +246,6 @@ export const useUploadStore = defineStore('uploadStore', () => {
                 // Make a request to your server to check for updates
                 const response = await loonAxios.checkForUpdates(task_id);
                 const responseData = response.data as StatusResponseData;
-                console.log(responseData);
                 if (responseData.status === 'SUCCEEDED') {
                     updatesAvailable = true;
                     if (responseData.data) {
