@@ -15,28 +15,31 @@ const configStore = useConfigStore();
 
 const step = ref(1);
 const experimentName = ref<string>('');
-const numberOfLocations = ref<number>(1);
 
 // Function to determine if the create experiment button should be enabled.
-const disableUpload = () => {
-    return !(stepDone(1) && stepDone(2));
-};
-// Function to determine if a step has been completed.
-const stepDone = (inputStep: number) => {
-    switch (inputStep) {
-        case 1:
-            return step.value > 1;
-        case 2:
-            return uploadStore.allFilesPopulated();
-        case 3:
-            return uploadStore.allColumnsMapped();
-        default:
-            return true;
-    }
-};
-const returnHome = () => {
+function disableUpload(): boolean {
+    return !(
+        experimentMetadataDone() &&
+        fileSelectionDone() &&
+        columnNameMappingDone()
+    );
+}
+
+function experimentMetadataDone(): boolean {
+    return experimentName.value.length > 0;
+}
+
+function fileSelectionDone(): boolean {
+    return uploadStore.allFilesPopulated();
+}
+
+function columnNameMappingDone(): boolean {
+    return uploadStore.allColumnsMapped();
+}
+
+function returnHome(): void {
     router.push('/');
-};
+}
 </script>
 <template>
     <q-page class="q-pa-lg q-gutter-md" style="max-width: 1200px; margin: auto">
@@ -67,7 +70,7 @@ const returnHome = () => {
                     :name="1"
                     title="Create New Experiment"
                     icon="settings"
-                    :done="stepDone(1)"
+                    :done="experimentMetadataDone()"
                     done-color="green"
                 >
                     <StepExperimentMetadata
@@ -79,7 +82,7 @@ const returnHome = () => {
                     :name="2"
                     title="Select Files"
                     icon="settings"
-                    :done="stepDone(2)"
+                    :done="fileSelectionDone()"
                     done-color="green"
                 >
                     <StepFileSelection />
@@ -88,7 +91,7 @@ const returnHome = () => {
                     :name="3"
                     title="Define Column Variables"
                     icon="settings"
-                    :done="stepDone(3)"
+                    :done="columnNameMappingDone()"
                     done-color="green"
                 >
                     <StepColumnNameMapping />
