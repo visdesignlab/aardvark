@@ -71,19 +71,19 @@ export const useUploadStore = defineStore('uploadStore', () => {
 
         const locationConfig: LocationConfig[] = [];
         for (let i = 0; i < locationFileList.value.length; i++) {
-            let locationFiles = locationFileList.value[i];
+            const locationFiles = locationFileList.value[i];
             if (
                 locationFiles.images.processedData &&
                 locationFiles.segmentations.processedData &&
                 locationFiles.table.processedData
             ) {
-                let imageDataFilename = `${locationFiles.images.processedData.base_file_location}${locationFiles.images.processedData.companion_ome}`;
-                let segmentationsFolder =
+                const imageDataFilename = `${locationFiles.images.processedData.base_file_location}${locationFiles.images.processedData.companion_ome}`;
+                const segmentationsFolder =
                     `${locationFiles.segmentations.processedData.base_file_location}`.replace(
                         /\/$/,
                         ''
                     );
-                let tabularDataFilename = `${
+                const tabularDataFilename = `${
                     locationFiles.table.processedData.base_file_location
                 }${locationFiles.table.file!.name}`;
                 locationConfig.push({
@@ -112,7 +112,7 @@ export const useUploadStore = defineStore('uploadStore', () => {
 
         locationFileList.value.forEach((locationFile: LocationFiles) => {
             if (locationFile.table.processedData) {
-                let currHeaders = locationFile.table.processedData.headers;
+                const currHeaders = locationFile.table.processedData.headers;
                 if (prevHeaders) {
                     if (!_listsAreIdentical(currHeaders, prevHeaders)) {
                         return null;
@@ -279,8 +279,8 @@ export const useUploadStore = defineStore('uploadStore', () => {
         const tableListIndex = 0;
         const imageListIndex = 1;
         const segmentationListIndex = 2;
-        let keyList = ['Table', 'Images', 'Segmentations'];
-        let progressResult: ProgressRecord[] = keyList.map((key) => {
+        const keyList = ['Table', 'Images', 'Segmentations'];
+        const progressResult: ProgressRecord[] = keyList.map((key) => {
             return {
                 label: 'Uploading and Processing ' + key,
                 progress: 0,
