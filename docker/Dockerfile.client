@@ -1,6 +1,15 @@
 # Use the official Node.js image.
 FROM node:20.11.1-alpine AS build-step
 
+# Define build arguments for environment variables
+ARG VITE_USE_HTTP
+ARG VITE_ENVIRONMENT
+
+# Set environment variables during the build process
+ENV VITE_USE_HTTP=$VITE_USE_HTTP
+ENV VITE_ENVIRONMENT=$VITE_ENVIRONMENT
+
+
 # Set the working directory.
 WORKDIR /app
 

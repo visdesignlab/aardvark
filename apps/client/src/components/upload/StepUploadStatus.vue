@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import { ref, computed, watch, onMounted } from 'vue';
 import { useUploadStore } from '@/stores/uploadStore';
 import LoadingProgress from '@/components/upload/LoadingProgress.vue';
 const uploadStore = useUploadStore();
@@ -26,154 +25,43 @@ const uploadStore = useUploadStore();
                 </div>
             </div>
         </div>
-        <div class="column" style="flex: 1; margin-left: 30px">
-            <q-btn :disabled="!uploadStore.experimentConfig || !uploadStore.experimentHeaders" @click="uploadStore.onSubmitExperiment"
-                >Submit Experiment</q-btn
-            >
-        </div>
-        <!-- <div class="column" style="flex: 1; margin-left: 30px">
-            <q-form @submit="uploadStore.onSubmitExperiment">
-                <div
-                    class="row"
-                    style="
-                        justify-content: space-between;
-                        margin-bottom: 20px;
-                        align-items: center;
-                    "
-                >
-                    <span class="step-title q-pa-sm" style="font-size: 1.5em">
-                        Experiment Settings</span
-                    >
-                    <div class="row" style="display: block">
-                        <q-btn color="danger" flat label="Cancel" no-caps />
+        <div
+            class="column"
+            style="
+                flex: 1;
+                margin-left: 30px;
+                justify-content: center;
+                align-items: center;
+            "
+        >
+            <template v-if="uploadStore.overallProgress.status !== 2">
+                <q-banner inline-actions class="text-white bg-blue">
+                    Your data is currently being processed. Please do not exit
+                    this page.
+                    <template v-slot:avatar>
+                        <q-icon name="mdi-alert" color="white" />
+                    </template>
+                </q-banner>
+            </template>
+            <template v-else>
+                <q-banner class="text-white bg-green">
+                    All your data has been processed and your experiment has
+                    been successfully added. You can now navigate away from this
+                    page.
+                    <template v-slot:avatar>
+                        <q-icon name="mdi-check-circle" color="white" />
+                    </template>
+                    <template v-slot:action>
+                        <q-btn flat color="white" label="Return to Home" />
                         <q-btn
-                            color="primary"
-                            label="Finish"
-                            no-caps
-                            type="submit"
+                            flat
+                            color="white"
+                            label="Add another experiment"
                         />
-                    </div>
-                </div>
-                <span class="step-title q-pa-sm">General</span>
-                <div class="row">
-                    <q-input
-                        v-model="experimentName"
-                        outlined
-                        label-slot
-                        disable
-                        class="col-4 col-md-6 q-pa-sm"
-                    >
-                        <template v-slot:label>
-                            <span class="upload-label">Experiment Name</span>
-                        </template>
-                    </q-input>
-                    <q-input
-                        v-model="numberOfLocations"
-                        outlined
-                        label-slot
-                        disable
-                        class="col-4 col-md-6 q-pa-sm"
-                    >
-                        <template v-slot:label>
-                            <span class="upload-label"
-                                >Number Of Locations</span
-                            >
-                        </template>
-                    </q-input>
-                </div>
-                <template
-                    v-for="(n, idx) in createRange(
-                        numberOfLocations,
-                        'metadata'
-                    )"
-                >
-                    <div class="column" style="margin-top: 30px">
-                        <span class="step-title q-pa-sm"
-                            >Location {{ idx + 1 }}</span
-                        >
-                        <q-input
-                            v-model="
-                                experimentSettings[`location_${idx + 1}`].id
-                            "
-                            outlined
-                            label-slot
-                            class="col-4 col-md-6 q-pa-md"
-                            bottom-slots
-                            style="padding-bottom: 30px"
-                            :rules="[(val) => !!val || 'Field is required']"
-                        >
-                            <template v-slot:label>
-                                <span class="upload-label">ID</span>
-                            </template>
-                            <template v-slot:hint>
-                                <div>
-                                    Suggested:
-                                    <span
-                                        class="suggested"
-                                        @click="
-                                            handleSuggestedClick(
-                                                idx + 1,
-                                                'id',
-                                                `location_${idx + 1}`
-                                            )
-                                        "
-                                        >location_{{ idx + 1 }}</span
-                                    >
-                                </div>
-                            </template>
-                        </q-input>
-                        <q-input
-                            v-model="
-                                experimentSettings[`location_${idx + 1}`]
-                                    .dataFrameFileName
-                            "
-                            outlined
-                            label-slot
-                            class="col-4 col-md-6 q-pa-md"
-                            :rules="[(val) => !!val || 'Field is required']"
-                        >
-                            <template v-slot:label>
-                                <span class="upload-label"
-                                    >Data Frame File Name</span
-                                >
-                            </template>
-                        </q-input>
-                        <q-input
-                            v-model="
-                                experimentSettings[`location_${idx + 1}`]
-                                    .imageDataFileName
-                            "
-                            outlined
-                            label-slot
-                            class="col-4 col-md-6 q-pa-md"
-                            :rules="[(val) => !!val || 'Field is required']"
-                        >
-                            <template v-slot:label>
-                                <span class="upload-label"
-                                    >Image Data File Name</span
-                                >
-                            </template>
-                        </q-input>
-                        <q-input
-                            v-model="
-                                experimentSettings[`location_${idx + 1}`]
-                                    .segmentationsFolder
-                            "
-                            outlined
-                            label-slot
-                            class="col-4 col-md-6 q-pa-md"
-                            :rules="[(val) => !!val || 'Field is required']"
-                        >
-                            <template v-slot:label>
-                                <span class="upload-label"
-                                    >Segmentations Folder</span
-                                >
-                            </template>
-                        </q-input>
-                    </div>
-                </template>
-            </q-form>
-        </div> -->
+                    </template>
+                </q-banner>
+            </template>
+        </div>
     </div>
 </template>
 

@@ -54,7 +54,6 @@ export function createLoonAxiosInstance(
     // Upload function
     Proto.upload = async function (file: File): Promise<string> {
         // Create new S3FileField Client
-        console.log(this.defaults.baseURL);
         const s3ffClient = new S3FileFieldClient({
             baseUrl: `${this.defaults.baseURL}/s3-upload/`,
             apiConfig: this.defaults,
@@ -97,7 +96,6 @@ export function createLoonAxiosInstance(
         experiment_headers: string[]
     ): AxiosPromise<CreateExperimentResponseData> {
         const formData = new FormData();
-
         formData.append('experimentName', experiment_name);
         formData.append(
             'experimentSettings',

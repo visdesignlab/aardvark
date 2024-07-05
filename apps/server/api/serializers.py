@@ -29,6 +29,7 @@ class ExperimentCreateSerializer(serializers.Serializer):
         return Experiment.objects.create(**validated_data)
 
     name = serializers.CharField()
+    headers = serializers.CharField()
     header_time = serializers.CharField()
     header_frame = serializers.CharField()
     header_id = serializers.CharField()

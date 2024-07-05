@@ -158,4 +158,4 @@ class FinishExperimentView(APIView):
 
         default_storage.save(index_file_name, ContentFile(json_index_file_bytes))
 
-        return Response({'status': 'fake_response'})
+        return Response({'status': 'SUCCESS'})

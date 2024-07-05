@@ -156,7 +156,7 @@ class Task(ABC):
             default_storage.save(file_location, file)
 
             return {
-                "processed_zip_file": "SUCCESS",
+                "processed_csv_file": "SUCCESS",
                 "headers": column_names[0],
                 "base_file_location": base_file_location
             }
