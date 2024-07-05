@@ -16,7 +16,7 @@ const handleIconClick = (setting:SettingsPage) => {
     if(setting.url){
         router.push(setting.url);
     }
-    isPanelVisible.value = true && !setting.disableSidebar;
+    isPanelVisible.value = !setting.disableSidebar;
 }
 
 const isPanelVisible = ref(true);
