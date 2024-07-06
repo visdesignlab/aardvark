@@ -182,6 +182,17 @@ export const useUploadStore = defineStore('uploadStore', () => {
         return true;
     }
 
+    function locationIdsUnique(): boolean {
+        const locationIds = new Set<string>();
+        for (const locationFiles of locationFileList.value) {
+            if (locationIds.has(locationFiles.locationId)) {
+                return false;
+            }
+            locationIds.add(locationFiles.locationId);
+        }
+        return true;
+    }
+
     const experimentCreated = ref(false);
 
     // Function to upload all necessary files in experiment.
@@ -462,6 +473,7 @@ export const useUploadStore = defineStore('uploadStore', () => {
         numberOfLocations,
         locationFileList,
         allFilesPopulated,
+        locationIdsUnique,
         addLocation,
         removeLocation,
         uploadAll,

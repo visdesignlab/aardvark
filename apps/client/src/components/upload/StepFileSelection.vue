@@ -42,21 +42,31 @@ const uploadStore = useUploadStore();
             v-model="locationFile.segmentations.file"
             label="Segmentations (zip)"
         />
-        <q-btn @click="uploadStore.removeLocation(index)">
-            Remove Location</q-btn
-        >
+        <q-btn
+            @click="uploadStore.removeLocation(index)"
+            icon="delete"
+            title="Remove Location"
+            outline
+        />
     </div>
 
     <q-btn
         class="q-mt-lg"
         @click="uploadStore.addLocation"
         label="Add Location"
+        outline
     />
+
+    <q-banner
+        v-if="!uploadStore.locationIdsUnique()"
+        class="q-mt-sm text-white bg-red"
+        >Location IDs must be Unique.</q-banner
+    >
 </template>
 
 <style scoped lang="scss">
-// TODO:
-// - verification
+// - ensure location ids are unique
 // - default location id is wrong if you remove a middle location
 // - what actually is the checkForUpdates for, probably later.
+// - dark theme
 </style>

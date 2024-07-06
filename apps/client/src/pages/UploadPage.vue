@@ -29,7 +29,7 @@ function experimentMetadataDone(): boolean {
 }
 
 function fileSelectionDone(): boolean {
-    return uploadStore.allFilesPopulated();
+    return uploadStore.allFilesPopulated() && uploadStore.locationIdsUnique();
 }
 
 function columnNameMappingDone(): boolean {
