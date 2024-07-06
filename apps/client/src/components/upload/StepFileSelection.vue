@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import { ref, computed, watch, onMounted } from 'vue';
 import { useUploadStore } from '@/stores/uploadStore';
 
 const uploadStore = useUploadStore();
@@ -64,9 +63,4 @@ const uploadStore = useUploadStore();
     >
 </template>
 
-<style scoped lang="scss">
-// - ensure location ids are unique
-// - default location id is wrong if you remove a middle location
-// - what actually is the checkForUpdates for, probably later.
-// - dark theme
-</style>
+<style scoped lang="scss"></style>
