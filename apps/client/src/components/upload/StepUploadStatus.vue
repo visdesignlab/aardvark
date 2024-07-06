@@ -14,7 +14,7 @@ const uploadStore = useUploadStore();
     </div>
     <div class="row q-pa-md" style="justify-content: space-between">
         <div class="column" style="flex: 0.65; border-right: 1px solid #dcdcdc">
-            <span class="step-title q-pa-sm" style="font-size: 1.5em"
+            <span class="q-pa-sm" style="font-size: 1.5em"
                 >Uploading and Processing Progress</span
             >
             <div class="q-pa-sm">
