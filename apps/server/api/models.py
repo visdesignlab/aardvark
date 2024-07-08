@@ -33,15 +33,15 @@ class Experiment(models.Model):
         data = {
             "name": self.name,
             "headers": self.headers.split("|"),
-            # "headerTransforms": {
-            #     "time": self.header_time,
-            #     "frame": self.header_frame,
-            #     "id": self.header_id,
-            #     "parent": self.header_parent,
-            #     "mass": self.header_mass,
-            #     "x": self.header_x,
-            #     "y": self.header_y,
-            # },
+            "headerTransforms": {
+                "time": self.header_time,
+                "frame": self.header_frame,
+                "id": self.header_id,
+                "parent": self.header_parent,
+                "mass": self.header_mass,
+                "x": self.header_x,
+                "y": self.header_y,
+            },
             "locationMetadataList": location_data
         }
         return data

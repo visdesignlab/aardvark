@@ -24,7 +24,8 @@ interface LoonAxiosInstance extends AxiosInstance {
     createExperiment(
         experiment_name: string,
         experiment_settings: LocationConfig[],
-        experiment_headers: string[] | null
+        experiment_headers: string[] | null,
+        experiment_transforms: Record<string, string> | null
     ): AxiosPromise<CreateExperimentResponseData>;
 }
 
@@ -93,7 +94,8 @@ export function createLoonAxiosInstance(
     Proto.createExperiment = async function (
         experiment_name: string,
         experiment_settings: LocationConfig[],
-        experiment_headers: string[]
+        experiment_headers: string[],
+        experiment_header_transforms: Record<string, string>
     ): AxiosPromise<CreateExperimentResponseData> {
         const formData = new FormData();
         formData.append('experimentName', experiment_name);
@@ -104,6 +106,10 @@ export function createLoonAxiosInstance(
         formData.append(
             'experimentHeaders',
             JSON.stringify(experiment_headers)
+        );
+        formData.append(
+            'experimentHeaderTransforms',
+            JSON.stringify(experiment_header_transforms)
         );
 
         return this.post(

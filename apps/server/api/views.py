@@ -100,18 +100,20 @@ class FinishExperimentView(APIView):
         data = request.data
         experiment_settings = json.loads(data.get('experimentSettings'))
         experiment_headers = json.loads(data.get('experimentHeaders'))
+        experiment_header_transforms = json.loads(data.get('experimentHeaderTransforms'))
+
         experiment_name = data.get('experimentName')
         experiment_data = {
             "name": experiment_name,
             "headers": "|".join(experiment_headers),
             "number_of_locations": len(experiment_settings),
-            "header_time": "fake",
-            "header_frame": "fake",
-            "header_id": "fake",
-            "header_parent": "fake",
-            "header_mass": "fake",
-            "header_x": "fake",
-            "header_y": "fake"
+            "header_time": experiment_header_transforms["time"],
+            "header_frame": experiment_header_transforms["frame"],
+            "header_id": experiment_header_transforms["id"],
+            "header_parent": experiment_header_transforms["parent"],
+            "header_mass": experiment_header_transforms["mass"],
+            "header_x": experiment_header_transforms["x"],
+            "header_y": experiment_header_transforms["y"]
         }
         experiment_serializer = ExperimentCreateSerializer(data=experiment_data)
         if not experiment_serializer.is_valid():

@@ -197,7 +197,6 @@ export const useUploadStore = defineStore('uploadStore', () => {
 
     // Function to upload all necessary files in experiment.
     async function uploadAll() {
-        console.log('upload all triggered');
         experimentCreated.value = true;
         for (let i = 0; i < locationFileList.value.length; i++) {
             const locationFiles = locationFileList.value[i];
@@ -361,7 +360,8 @@ export const useUploadStore = defineStore('uploadStore', () => {
             const submitExperimentResponse = await loonAxios.createExperiment(
                 experimentName.value,
                 experimentConfig.value,
-                experimentHeaders.value
+                experimentHeaders.value,
+                columnMappings.value
             );
 
             const submitExperimentResponseData: CreateExperimentResponseData =

@@ -115,7 +115,7 @@ function returnHome(): void {
                         />
                         <q-btn
                             @click="
-                                step === 'final'
+                                step === 'finalReview'
                                     ? uploadStore.uploadAll()
                                     : ($refs.stepper as any).next()
                             "
