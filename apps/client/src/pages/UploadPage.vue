@@ -8,10 +8,12 @@ import StepColumnNameMapping from '@/components/upload/StepColumnNameMapping.vue
 import type { QStepper } from 'quasar';
 import { useUploadStore } from '@/stores/uploadStore';
 import { useConfigStore } from '@/stores/configStore';
+import { useGlobalSettings } from '@/stores/globalSettings';
 
 import { router } from '@/router';
 const uploadStore = useUploadStore();
 const configStore = useConfigStore();
+const globalSettings = useGlobalSettings();
 
 const step = ref('metadata');
 
@@ -41,7 +43,11 @@ function returnHome(): void {
 }
 </script>
 <template>
-    <q-page class="q-pa-lg q-gutter-md" style="max-width: 1200px; margin: auto">
+    <q-page
+        class="q-pa-lg q-gutter-md"
+        :dark="globalSettings.darkMode"
+        style="max-width: 1200px; margin: auto"
+    >
         <template v-if="configStore.environment === 'local'">
             <q-banner inline-actions class="text-white bg-red">
                 The local version of the Loon application does not support data
@@ -64,6 +70,7 @@ function returnHome(): void {
                 animated
                 keep-alive
                 header-nav
+                :dark="globalSettings.darkMode"
             >
                 <q-step
                     name="metadata"

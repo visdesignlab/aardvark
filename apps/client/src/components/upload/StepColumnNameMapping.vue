@@ -1,7 +1,9 @@
 <script setup lang="ts">
 import { ref, onActivated } from 'vue';
 import { useUploadStore } from '@/stores/uploadStore';
+import { useGlobalSettings } from '@/stores/globalSettings';
 const uploadStore = useUploadStore();
+const globalSettings = useGlobalSettings();
 
 interface SpecialVariable {
     name: string;
@@ -68,6 +70,7 @@ onActivated(() => {
             :options="uploadStore.columnNames"
             :label="variable.name"
             :hint="variable.description"
+            :dark="globalSettings.darkMode"
         />
     </template>
     <template v-else>

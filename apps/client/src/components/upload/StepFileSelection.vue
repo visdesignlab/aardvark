@@ -1,7 +1,8 @@
 <script setup lang="ts">
 import { useUploadStore } from '@/stores/uploadStore';
-
+import { useGlobalSettings } from '@/stores/globalSettings';
 const uploadStore = useUploadStore();
+const globalSettings = useGlobalSettings();
 </script>
 
 <template>
@@ -21,12 +22,14 @@ const uploadStore = useUploadStore();
             outlined
             v-model="locationFile.locationId"
             label="Location ID"
+            :dark="globalSettings.darkMode"
         />
         <q-file
             class="flex-grow-1"
             outlined
             v-model="locationFile.table.file"
             label="Table (csv)"
+            :dark="globalSettings.darkMode"
         />
 
         <q-file
@@ -34,18 +37,21 @@ const uploadStore = useUploadStore();
             outlined
             v-model="locationFile.images.file"
             label="Images (zip)"
+            :dark="globalSettings.darkMode"
         />
         <q-file
             class="flex-grow-1"
             outlined
             v-model="locationFile.segmentations.file"
             label="Segmentations (zip)"
+            :dark="globalSettings.darkMode"
         />
         <q-btn
             @click="uploadStore.removeLocation(index)"
             icon="delete"
             title="Remove Location"
             outline
+            :dark="globalSettings.darkMode"
         />
     </div>
 

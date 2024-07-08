@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import { useUploadStore } from '@/stores/uploadStore';
+import { useGlobalSettings } from '@/stores/globalSettings';
 const uploadStore = useUploadStore();
+const globalSettings = useGlobalSettings();
 </script>
 
 <template>
@@ -17,6 +19,7 @@ const uploadStore = useUploadStore();
         label-slot
         :rules="[(val) => !!val || 'Field is required']"
         label="Experiment Name"
+        :dark="globalSettings.darkMode"
     >
     </q-input>
 </template>
