@@ -73,11 +73,6 @@ onKeyStroke(['b', 'B'], (e: KeyboardEvent) => {
                                             <h5 style="margin-bottom: 0px">
                                                 {{ setting.name }}
                                             </h5>
-                                            <q-icon
-                                                name="mdi-arrow-collapse-left"
-                                                size="15px"
-                                                @click=""
-                                            />
                                         </div>
                                         <hr />
                                         <component
