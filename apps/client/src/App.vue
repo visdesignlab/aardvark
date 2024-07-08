@@ -1,11 +1,12 @@
 <script setup lang="ts">
 import { useGlobalSettings } from '@/stores/globalSettings';
-import { watch, onBeforeMount } from 'vue';
+import { watch, onBeforeMount, ref } from 'vue';
 import { useQuasar } from 'quasar';
 import GridstackLayout from './components/GridstackLayout.vue';
 import GlobalSettingsView from './components/globalSettings/GlobalSettingsView.vue';
 import { useProvenanceStore } from '@/stores/provenanceStore';
 import { onKeyStroke } from '@vueuse/core';
+import { router } from '@/router';
 
 const $q = useQuasar();
 const provenanceStore = useProvenanceStore();
@@ -50,22 +51,32 @@ onBeforeMount(() => {
 </script>
 
 <template>
-    <q-layout>
+    <q-layout view="hHh LpR fFf">
+        <q-header
+            :dark="globalSettings.darkMode"
+            style="position: fixed"
+            bordered
+            :class="globalSettings.darkMode ? 'bg-grey-9' : 'bg-white'"
+        >
+            <q-toolbar>
+                <q-toolbar-title>Loon</q-toolbar-title>
+                <q-btn @click="router.push('/')" flat dense>Home</q-btn>
+                <q-btn @click="router.push('/upload')" flat dense>Upload</q-btn>
+            </q-toolbar>
+        </q-header>
+        <GlobalSettingsView></GlobalSettingsView>
         <q-page-container>
-                <q-page>
-                    <div class="d-flex flex-row">
-                        <div class="vh-100 sticky-top" style="margin-right:6px;">
-                            <GlobalSettingsView></GlobalSettingsView>
-                        </div>
-                        <div class="flex-grow-1">
-                            <router-view v-slot="{ Component }">
-                                <keep-alive>
-                                    <component :is="Component" />
-                                </keep-alive>
-                            </router-view>
-                        </div>
+            <q-page>
+                <div class="d-flex flex-row">
+                    <div class="flex-grow-1">
+                        <router-view v-slot="{ Component }">
+                            <keep-alive>
+                                <component :is="Component" />
+                            </keep-alive>
+                        </router-view>
                     </div>
-                </q-page>
+                </div>
+            </q-page>
         </q-page-container>
     </q-layout>
 </template>
