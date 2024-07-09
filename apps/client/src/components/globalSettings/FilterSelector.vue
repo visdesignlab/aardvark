@@ -4,6 +4,7 @@ import PlotSelector from './PlotSelector.vue';
 import { useFilterStore } from '@/stores/filterStore';
 import { useSelectionStore } from '@/stores/selectionStore';
 import { storeToRefs } from 'pinia';
+import { computed } from 'vue';
 
 const globalSettings = useGlobalSettings();
 const filterStore = useFilterStore();
@@ -12,6 +13,9 @@ const { filters } = storeToRefs(filterStore);
 const { Selections } = storeToRefs(selectionStore);
 
 const emit = defineEmits(['clearSelection']);
+
+const selectionsCount = computed(() => Selections.value.length);
+const filtersCount = computed(() => filters.value.length);
 
 function removeFilter(index: number) {
     filterStore.removeFilter(index);
@@ -27,7 +31,21 @@ function removeSelection(index: number) {
 <template>
     <q-list>
         <div class="selections-filters-container">
-            <q-expansion-item label="Current Selections">
+            <q-expansion-item>
+                <template v-slot:header>
+                    <q-item-section> Selections </q-item-section>
+                    <q-item-section side>
+                        <q-chip
+                            size="md"
+                            square
+                            dense
+                            color="grey-3"
+                            text-color="black"
+                        >
+                            {{ selectionsCount ? selectionsCount : 'None' }}
+                        </q-chip>
+                    </q-item-section>
+                </template>
                 <q-list>
                     <q-item
                         v-for="(selection, index) in Selections"
@@ -70,7 +88,21 @@ function removeSelection(index: number) {
                 </q-list>
             </q-expansion-item>
             <q-separator />
-            <q-expansion-item label="Current Filters">
+            <q-expansion-item>
+                <template v-slot:header>
+                    <q-item-section> Filters </q-item-section>
+                    <q-item-section side>
+                        <q-chip
+                            size="md"
+                            square
+                            dense
+                            color="grey-3"
+                            text-color="black"
+                        >
+                            {{ filtersCount ? filtersCount : 'None' }}
+                        </q-chip>
+                    </q-item-section>
+                </template>
                 <q-list>
                     <q-item
                         v-for="(filter, index) in filters"
