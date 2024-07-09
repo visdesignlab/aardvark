@@ -43,25 +43,20 @@ export interface WorkflowConfiguration {
 
 type FileType = 'metadata' | 'cell_images' | 'segmentations';
 
-export const useUploadStore = defineStore('uploadStore', () => {
-    // const currBaseUrl = window.location.origin;
-
-    const currentWorkflowConfig = ref<WorkflowConfiguration>({
+const initialState = () => ({
+    currentWorkflowConfig: ref<WorkflowConfiguration>({
         code: 'live_cyte',
         skip_lines: 1,
-    });
-
-    const loonAxios = createLoonAxiosInstance({
-        baseURL: `${window.location.origin}/api`,
-    });
-
-    const experimentName = ref<string>('');
-    function validExperimentName(): boolean {
-        // TODO: this should maybe check if the name is already used?
-        return experimentName.value.length > 0;
-    }
-
-    const locationFileList = ref<LocationFiles[]>([
+    }),
+    experimentName: ref<string>(''),
+    overallProgress: ref<OverallProgress>({
+        status: 1,
+    }),
+    experimentCreated: ref(false),
+    columnMappings: ref<Record<string, string> | null>(null),
+    columnNames: ref<string[]>([]),
+    step: ref<string>('metadata'),
+    locationFileList: ref<LocationFiles[]>([
         {
             locationId: '1',
             table: {
@@ -83,11 +78,43 @@ export const useUploadStore = defineStore('uploadStore', () => {
                 processing: 0,
             },
         },
-    ]);
+    ]),
+});
 
-    const overallProgress = ref<OverallProgress>({
-        status: 1,
+export const useUploadStore = defineStore('uploadStore', () => {
+    // const currBaseUrl = window.location.origin;
+    const loonAxios = createLoonAxiosInstance({
+        baseURL: `${window.location.origin}/api`,
     });
+
+    const {
+        currentWorkflowConfig,
+        experimentName,
+        locationFileList,
+        overallProgress,
+        experimentCreated,
+        columnMappings,
+        columnNames,
+        step,
+    } = initialState();
+
+    function resetState(): void {
+        const newState = initialState();
+        currentWorkflowConfig.value = newState.currentWorkflowConfig.value;
+        currentWorkflowConfig.value = newState.currentWorkflowConfig.value;
+        experimentName.value = newState.experimentName.value;
+        locationFileList.value = newState.locationFileList.value;
+        overallProgress.value = newState.overallProgress.value;
+        experimentCreated.value = newState.experimentCreated.value;
+        columnMappings.value = newState.columnMappings.value;
+        columnNames.value = newState.columnNames.value;
+        step.value = newState.step.value;
+    }
+
+    function validExperimentName(): boolean {
+        // TODO: this should maybe check if the name is already used?
+        return experimentName.value.length > 0;
+    }
 
     const experimentConfig = computed<LocationConfig[] | null>(() => {
         // Computes all values once all is processed. If any remain to be processed, return null instead.
@@ -202,8 +229,6 @@ export const useUploadStore = defineStore('uploadStore', () => {
         }
         return true;
     }
-
-    const experimentCreated = ref(false);
 
     // Function to upload all necessary files in experiment.
     async function uploadAll() {
@@ -394,8 +419,6 @@ export const useUploadStore = defineStore('uploadStore', () => {
         return true;
     }
 
-    const columnMappings = ref<Record<string, string> | null>(null);
-    const columnNames = ref<string[]>([]);
     const specialHeaders: string[] = [
         'frame',
         'time',
@@ -497,5 +520,7 @@ export const useUploadStore = defineStore('uploadStore', () => {
         columnMappings,
         populateDefaultColumnMappings,
         columnNames,
+        resetState,
+        step,
     };
 });

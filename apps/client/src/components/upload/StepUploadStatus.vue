@@ -1,7 +1,14 @@
 <script setup lang="ts">
 import { useUploadStore } from '@/stores/uploadStore';
 import LoadingProgress from '@/components/upload/LoadingProgress.vue';
+import { router } from '@/router';
 const uploadStore = useUploadStore();
+function returnHome(): void {
+    router.push('/');
+}
+function addNewExperiment(): void {
+    uploadStore.resetState();
+}
 </script>
 
 <template>
@@ -52,11 +59,17 @@ const uploadStore = useUploadStore();
                         <q-icon name="mdi-check-circle" color="white" />
                     </template>
                     <template v-slot:action>
-                        <q-btn flat color="white" label="Return to Home" />
+                        <q-btn
+                            flat
+                            color="white"
+                            label="Return to Home"
+                            @click="returnHome()"
+                        />
                         <q-btn
                             flat
                             color="white"
                             label="Add another experiment"
+                            @click="addNewExperiment()"
                         />
                     </template>
                 </q-banner>

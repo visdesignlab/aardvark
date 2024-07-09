@@ -15,8 +15,6 @@ const uploadStore = useUploadStore();
 const configStore = useConfigStore();
 const globalSettings = useGlobalSettings();
 
-const step = ref('metadata');
-
 // Function to determine if the create experiment button should be enabled.
 function disableUpload(): boolean {
     return !(
@@ -64,7 +62,7 @@ function returnHome(): void {
         </template>
         <template v-else-if="!uploadStore.experimentCreated">
             <q-stepper
-                v-model="step"
+                v-model="uploadStore.step"
                 ref="stepper"
                 color="primary"
                 animated
@@ -113,7 +111,7 @@ function returnHome(): void {
                         "
                     >
                         <q-btn
-                            v-if="step !== 'metadata'"
+                            v-if="uploadStore.step !== 'metadata'"
                             flat
                             color="primary"
                             @click="($refs.stepper as any).previous()"
@@ -122,18 +120,20 @@ function returnHome(): void {
                         />
                         <q-btn
                             @click="
-                                step === 'finalReview'
+                                uploadStore.step === 'finalReview'
                                     ? uploadStore.uploadAll()
                                     : ($refs.stepper as any).next()
                             "
                             color="primary"
                             :label="
-                                step === 'finalReview'
+                                uploadStore.step === 'finalReview'
                                     ? 'Begin Processing'
                                     : 'Continue'
                             "
                             :disabled="
-                                step === 'finalReview' ? disableUpload() : false
+                                uploadStore.step === 'finalReview'
+                                    ? disableUpload()
+                                    : false
                             "
                         />
                     </q-stepper-navigation>
