@@ -36,10 +36,20 @@ export interface OverallProgress {
     message?: string;
 }
 
+export interface WorkflowConfiguration {
+    code: string;
+    skip_lines: number;
+}
+
 type FileType = 'metadata' | 'cell_images' | 'segmentations';
 
 export const useUploadStore = defineStore('uploadStore', () => {
     // const currBaseUrl = window.location.origin;
+
+    const currentWorkflowConfig = ref<WorkflowConfiguration>({
+        code: 'live_cyte',
+        skip_lines: 1,
+    });
 
     const loonAxios = createLoonAxiosInstance({
         baseURL: `${window.location.origin}/api`,
@@ -420,7 +430,8 @@ export const useUploadStore = defineStore('uploadStore', () => {
             text += decoder.decode(chunk, { stream: true });
             const lines = text.split('\n');
             if (lines.length > 1) {
-                firstLine = lines[0];
+                let headerIndex = currentWorkflowConfig.value.skip_lines;
+                firstLine = lines[headerIndex];
                 break;
             }
             ({ value: chunk, done: readerDone } = await reader.read());

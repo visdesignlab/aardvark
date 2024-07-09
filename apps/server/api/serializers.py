@@ -18,25 +18,40 @@ class LoonUploadCreateSerializer(UploadCreateSerializer):
     experiment_name = serializers.CharField()
 
 
+class HeaderTransformSerializer(serializers.Serializer):
+    time = serializers.CharField()
+    frame = serializers.CharField()
+    id = serializers.CharField()
+    parent = serializers.CharField()
+    mass = serializers.CharField()
+    x = serializers.CharField()
+    y = serializers.CharField()
+
+
 class ExperimentCreateSerializer(serializers.Serializer):
     locations = serializers.StringRelatedField(many=True, required=False)
+    header_transforms = HeaderTransformSerializer()
 
     class Meta:
         model = Experiment
-        fields = "__all__"
+        fields = [
+            'name', 'headers', 'number_of_locations', 'header_transforms'
+        ]
 
     def create(self, validated_data):
+        header_transforms_data = validated_data.pop('header_transforms', {})
+
+        # Strip unwanted characters from each header transform field
+        cleaned_header_transforms = {
+            'header_' + key: value.strip('\"') for key, value in header_transforms_data.items()
+        }
+
+        validated_data.update(cleaned_header_transforms)
+
         return Experiment.objects.create(**validated_data)
 
     name = serializers.CharField()
     headers = serializers.CharField()
-    header_time = serializers.CharField()
-    header_frame = serializers.CharField()
-    header_id = serializers.CharField()
-    header_parent = serializers.CharField()
-    header_mass = serializers.CharField()
-    header_x = serializers.CharField()
-    header_y = serializers.CharField()
     number_of_locations = serializers.IntegerField()
 
 

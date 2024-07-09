@@ -7,6 +7,7 @@ from django.core.files.storage import default_storage  # type: ignore
 from django.core.files.base import ContentFile  # type: ignore
 import csv
 import io
+from .processing_callbacks.roi_to_geojson import roi_to_geojson
 
 BAD_FILES = [".DS_Store", "__MACOSX"]
 
@@ -101,20 +102,21 @@ class Task(ABC):
                             companion_ome = curr_file_name
                         file_contents = zip_ref.read(curr_file_name)
                         if file_contents:
+                            # Removes all prefixes to the file from the zip
+                            corrected_curr_file_name = curr_file_name.split("/")[-1]
+                            if corrected_curr_file_name.endswith('.companion.ome'):
+                                companion_ome = corrected_curr_file_name
+
                             if callback:
                                 try:
-                                    file_contents, curr_file_name = callback(
-                                        file_contents, curr_file_name
+                                    file_contents, corrected_curr_file_name = callback(
+                                        file_contents, corrected_curr_file_name
                                     )
                                 except CallbackException as e:
                                     return {
                                         "process_zip_file_status": "FAILED",
                                         "message": f"Failed at callback: {e.message}",
                                     }
-                            # Removes all prefixes to the file from the zip
-                            corrected_curr_file_name = curr_file_name.split("/")[-1]
-                            if corrected_curr_file_name.endswith('.companion.ome'):
-                                companion_ome = corrected_curr_file_name
 
                             file_location = f"{base_file_location}/" \
                                             f"{corrected_curr_file_name}"
@@ -138,22 +140,48 @@ class Task(ABC):
         except FileNotFoundError:
             return {"process_zip_file_status": "FAILED", "message": "Could not find file"}
 
-    def process_csv_file(self, label="", callback=None):
+    def process_csv_file(self, label="", skip_rows=0, delimiter=',', callback=None):
 
         base_file_location = f"{self.experiment_name}/" \
             f"location_{self.location}/"
 
         with self.blob.open('rb') as file:
             text_stream = io.TextIOWrapper(file, encoding='utf-8')
-            csv_reader = csv.reader(text_stream, delimiter=',')
+            csv_reader = csv.reader(text_stream, delimiter=delimiter)
             column_names = []
-            for row in csv_reader:
-                column_names.append(row)
-                break
+            remaining_rows = []
 
-            file_location = f"{base_file_location}/" \
+            # Skip first N rows
+            for idx, row in enumerate(csv_reader):
+                if idx < skip_rows:
+                    continue
+                if idx == skip_rows:
+                    column_names.append(row)
+                remaining_rows.append(row)
+
+            # Convert the remaining rows back to a CSV format
+            output_stream = io.StringIO()
+            csv_writer = csv.writer(output_stream, delimiter=delimiter)
+            csv_writer.writerows(remaining_rows)
+            output_content = output_stream.getvalue()
+            output_bytes = output_content.encode('utf-8')
+
+            file_name = f"{base_file_location}/" \
                 f"{self.file_name}"
-            default_storage.save(file_location, file)
+
+            # Callback
+            if callback:
+                try:
+                    output_bytes, file_name = callback(
+                        output_bytes, file_name
+                    )
+                except CallbackException as e:
+                    return {
+                        "process_zip_file_status": "FAILED",
+                        "message": f"Failed at callback: {e.message}",
+                    }
+
+            default_storage.save(file_name, io.BytesIO(output_bytes))
 
             return {
                 "processed_csv_file": "SUCCESS",
@@ -193,7 +221,7 @@ class Task(ABC):
 class LiveCyteSegmentationsTask(Task):
     def execute(self):
         logger.info(f"Executing task: {self.record_id}")
-        data = self.process_zip_file(label="segmentations", callback=None)
+        data = self.process_zip_file(label="segmentations", callback=roi_to_geojson)
         return data
 
     def cleanup(self):
@@ -215,7 +243,7 @@ class LiveCyteCellImagesTask(Task):
 class LiveCyteMetadataTask(Task):
     def execute(self):
         logger.info(f"Executing task: {self.record_id}")
-        data = self.process_csv_file(label="metadata", callback=None)
+        data = self.process_csv_file(label="metadata", skip_rows=1, callback=None)
         return data
 
     def cleanup(self):

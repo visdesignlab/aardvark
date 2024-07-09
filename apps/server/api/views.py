@@ -107,13 +107,7 @@ class FinishExperimentView(APIView):
             "name": experiment_name,
             "headers": "|".join(experiment_headers),
             "number_of_locations": len(experiment_settings),
-            "header_time": experiment_header_transforms["time"],
-            "header_frame": experiment_header_transforms["frame"],
-            "header_id": experiment_header_transforms["id"],
-            "header_parent": experiment_header_transforms["parent"],
-            "header_mass": experiment_header_transforms["mass"],
-            "header_x": experiment_header_transforms["x"],
-            "header_y": experiment_header_transforms["y"]
+            "header_transforms": experiment_header_transforms
         }
         experiment_serializer = ExperimentCreateSerializer(data=experiment_data)
         if not experiment_serializer.is_valid():
