@@ -2,6 +2,36 @@
     <div>
         <div class="q-item-section__right">
             <q-btn
+                class="gt-xs q-mr-sm"
+                size="12px"
+                flat
+                dense
+                round
+                icon="menu"
+                color="grey-7"
+            >
+                <q-menu fit persistent>
+                    <q-list
+                        style="min-width: 100px; max-height: 300px"
+                        class="scroll"
+                    >
+                        <q-item
+                            v-for="name in allPlotNames"
+                            :key="name"
+                            clickable
+                            :class="{
+                                'selected-item': selectedPlotSet.has(name),
+                            }"
+                            @click="togglePlotSelection(name)"
+                        >
+                            <q-item-section class="plot-name">{{
+                                name
+                            }}</q-item-section>
+                        </q-item>
+                    </q-list>
+                </q-menu>
+            </q-btn>
+            <q-btn
                 class="gt-xs"
                 size="12px"
                 flat
@@ -13,17 +43,18 @@
             />
         </div>
         <UnivariateCellPlot
-            v-for="plotName in plotNames"
+            v-for="plotName in allPlotNames"
             :key="plotName"
             :plot-name="plotName"
             :plot-brush="plotBrush"
+            :visible="selectedPlotSet.has(plotName)"
             @selection-change="handleSelectionChange"
-        ></UnivariateCellPlot>
+        />
     </div>
 </template>
 
 <script lang="ts" setup>
-import { ref } from 'vue';
+import { ref, reactive, computed } from 'vue';
 import { QBtn } from 'quasar';
 import * as vg from '@uwdata/vgplot';
 import { storeToRefs } from 'pinia';
@@ -39,7 +70,10 @@ interface SelectionChangeEvent {
     range: [number, number] | null;
 }
 
-const plotNames = ref(['A', 'y', 'mass', 'time', 'x']);
+const allPlotNames = ['A', 'y', 'mass', 'time', 'x'];
+const selectedPlotSet = reactive(new Set(['mass', 'time']));
+
+const computedSelectedPlots = computed(() => Array.from(selectedPlotSet));
 
 const plotBrush = vg.Selection.intersect();
 vg.Selection.crossfilter();
@@ -47,6 +81,17 @@ vg.Selection.crossfilter();
 const currentSelections = ref<Selections>({});
 const filterStore = useFilterStore();
 const selectionStore = useSelectionStore();
+
+const togglePlotSelection = (name: string) => {
+    if (selectedPlotSet.has(name)) {
+        selectedPlotSet.delete(name);
+        console.log(`Plot ${name} removed`);
+    } else {
+        selectedPlotSet.add(name);
+        console.log(`Plot ${name} added`);
+    }
+    console.log('Current selected plots:', Array.from(selectedPlotSet));
+};
 
 // Invoked by selectionChange event in UnivariateCellPlot
 const handleSelectionChange = (event: SelectionChangeEvent) => {
@@ -81,5 +126,15 @@ const addFilter = () => {
 .q-item-section__right {
     display: flex;
     justify-content: flex-end;
+}
+
+.plot-name {
+    font-size: 0.8em;
+}
+
+/* New style for selected items */
+.selected-item {
+    background-color: #e0e0e0; /* Light grey color */
+    color: black; /* Ensures text stays black */
 }
 </style>

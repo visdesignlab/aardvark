@@ -1,5 +1,5 @@
 <template>
-    <div v-if="cellMetaData.dataInitialized">
+    <div v-if="cellMetaData.dataInitialized && visible">
         <q-item-section style="position: relative">
             <div
                 id="plotContainer"
@@ -62,6 +62,10 @@ const props = defineProps({
     },
     plotBrush: {
         type: Object as PropType<vg.Selection>,
+        required: true,
+    },
+    visible: {
+        type: Boolean as PropType<boolean>,
         required: true,
     },
 });
@@ -199,6 +203,7 @@ watch(
 
 const charts = ref<null | HTMLElement>(null);
 async function createCharts() {
+    if (!props.visible) return;
     // Configure the coordinator to use DuckDB-WASM
     vg.coordinator().databaseConnector(vg.wasmConnector());
     if (!datasetSelectionStore.currentLocationMetadata) {
@@ -220,13 +225,13 @@ function makePlot(column: string) {
         vg.rectY(vg.from('dummy_data'), {
             x: vg.bin(column),
             y: vg.count(),
-            fill: 'steelblue',
+            fill: '#cccccc',
             inset: 1,
         }),
         vg.rectY(vg.from('dummy_data', { filterBy: props.plotBrush }), {
             x: vg.bin(column),
             y: vg.count(),
-            fill: '#FFA500',
+            fill: 'steelblue',
             opacity: 1,
             inset: 1,
         }),
@@ -257,6 +262,7 @@ function makePlot(column: string) {
 }
 
 props.plotBrush.addEventListener('value', handleIntervalChange);
+watch(() => props.visible, createCharts);
 watch(dataInitialized, createCharts);
 </script>
 
