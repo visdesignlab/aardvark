@@ -91,47 +91,69 @@ const handleEnter = (event: KeyboardEvent) => {
 const updateBrushSelection = (min: number, max: number) => {
     console.log(props.plotBrush);
     if (props.plotBrush) {
-        const clause = {
-            source: props.plotName,
-            value: [min, max],
-            predicate: `${props.plotName} BETWEEN ${min} AND ${max}`,
-        };
+        if (props.plotBrush.clauses && props.plotBrush.clauses.length > 0) {
+            const clauseIndex = props.plotBrush.clauses.findIndex(
+                (clause) => clause.source.field === props.plotName
+            );
 
-        props.plotBrush.activate(clause);
-        props.plotBrush.update(clause);
+            if (clauseIndex !== -1) {
+                const clause0 = props.plotBrush.clauses[clauseIndex];
+                clause0.source.value = [min, max];
+                const clause = {
+                    clients: clause0.clients,
+                    meta: clause0.meta,
+                    predicate: `${props.plotName} BETWEEN ${min} AND ${max}`,
+                    source: clause0.source,
+                    value: [min, max],
+                };
 
-        // Attempt to make the brush selection and manual entry the same clause.
-        // props.plotBrush.clauses[0].value = [min, max];
-        // props.plotBrush.clauses[0].source.value = [min, max];
-        // props.plotBrush.clauses[0].predicate._expr = `'${props.plotName}' BETWEEN ${min} AND ${max}`;
-        // props.plotBrush.clauses[0].predicate.range = [min, max];
+                //props.plotBrush.activate(clause);
+                props.plotBrush.update(clause);
+            } else {
+                console.log(min, max);
+                const clause = {
+                    source: props.plotName,
+                    value: [min, max],
+                    predicate: `${props.plotName} BETWEEN ${min} AND ${max}`,
+                };
 
-        // Update the store
-        selectionStore.updateSelection(props.plotName, [
-            min.toFixed(2),
-            max.toFixed(2),
-        ]);
+                //props.plotBrush.activate(clause);
+                props.plotBrush.update(clause);
+            }
+        } else {
+            console.log(min, max);
+            const clause = {
+                source: props.plotName,
+                value: [min, max],
+                predicate: `${props.plotName} BETWEEN ${min} AND ${max}`,
+            };
+
+            //props.plotBrush.activate(clause);
+            props.plotBrush.update(clause);
+        }
     }
+
+    // Update the store
+    selectionStore.updateSelection(props.plotName, [
+        min.toFixed(2),
+        max.toFixed(2),
+    ]);
+
+    handleIntervalChange();
 };
 
 // Called when textbox values are changed.
 const applyManualFilter = () => {
     const min = parseFloat(minValue.value);
     const max = parseFloat(maxValue.value);
-    if (!isNaN(min) && !isNaN(max) && min <= max) {
+    if (
+        typeof min === 'number' &&
+        typeof max === 'number' &&
+        !isNaN(min) &&
+        !isNaN(max) &&
+        min <= max
+    ) {
         updateBrushSelection(min, max);
-    } else {
-        // Reset to stored value if invalid
-        const storedSelection = Selections.value.find(
-            (s) => s.plotName === props.plotName
-        );
-        if (storedSelection) {
-            minValue.value = storedSelection.range[0];
-            maxValue.value = storedSelection.range[1];
-        } else {
-            // If no stored selection, still update the brush
-            updateBrushSelection(min, max);
-        }
     }
 };
 
@@ -221,7 +243,6 @@ async function createCharts() {
 
 function makePlot(column: string) {
     const plot = vg.plot(
-        vg.name('ploted'),
         vg.rectY(vg.from('dummy_data'), {
             x: vg.bin(column),
             y: vg.count(),
@@ -237,7 +258,6 @@ function makePlot(column: string) {
         }),
         vg.intervalX({
             as: props.plotBrush,
-            brush: { stroke: '#888' },
             peers: true,
         }),
         vg.marginBottom(130),
