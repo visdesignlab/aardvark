@@ -124,10 +124,10 @@ services:
       - path: ./.env # relative to docker compose (has to be in same directory)
         required: true
 
-  volumes:
-    vol_mysql:
-      driver: local
-      deriver_opts:
-        type: "nfs"
-        o: "addr=192.168.1.2,uid=1000,gid=1000,rw"
-        device: ":/usr/sci/loon"
+volumes:
+  vol_mysql:
+    driver: local
+    deriver_opts:
+      type: "nfs"
+      o: "addr=192.168.1.2,uid=1000,gid=1000,rw"
+      device: ":/usr/sci/loon"
