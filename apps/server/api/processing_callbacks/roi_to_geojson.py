@@ -45,9 +45,10 @@ def feature_to_json(feature: Feature) -> str:
 
 
 if __name__ == "__main__":
-    with open('/Users/bbollen23/aardvark_data/test_roi/99-718.roi', 'rb') as f:
+    # For testing purposes.
+    with open('INSERT_FILE_PATH_WITH_FILE_NAME', 'rb') as f:
         data = f.read()
-        data_bytes, new_file_name = roi_to_geojson(data, '99-718.roi')
+        data_bytes, new_file_name = roi_to_geojson(data, 'FILE_NAME')
         print(type(data_bytes))
         print(data_bytes.decode('utf-8'))
         print(new_file_name)
