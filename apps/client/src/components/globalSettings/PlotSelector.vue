@@ -10,7 +10,7 @@
                 icon="menu"
                 color="grey-7"
             >
-                <q-menu fit persistent>
+                <q-menu v-model="menuOpen" fit>
                     <q-list
                         style="min-width: 100px; max-height: 300px"
                         class="scroll"
@@ -22,7 +22,7 @@
                             :class="{
                                 'selected-item': selectedPlotSet.has(name),
                             }"
-                            @click="togglePlotSelection(name)"
+                            @click.stop="togglePlotSelection(name)"
                         >
                             <q-item-section class="plot-name">{{
                                 name
@@ -69,6 +69,7 @@ interface SelectionChangeEvent {
     plotName: string;
     range: [number, number] | null;
 }
+const menuOpen = ref(false);
 
 const allPlotNames = ['A', 'y', 'mass', 'time', 'x'];
 const selectedPlotSet = reactive(new Set(['mass', 'time']));
