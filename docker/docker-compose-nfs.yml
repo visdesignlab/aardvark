@@ -129,5 +129,5 @@ volumes:
     driver: local
     driver_opts:
       type: "nfs"
-      o: "addr=192.168.1.2,uid=1000,gid=1000,rw"
+      o: "addr=155.98.16.26,uid=1000,gid=1000,rw"
       device: ":/usr/sci/loon"
