@@ -43,6 +43,7 @@ certs
 apps/server/api/*.jpg
 apps/server/api/secrets.json
 .env
+.env.production
 .python-version
 
 #Docker

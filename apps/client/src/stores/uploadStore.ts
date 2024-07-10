@@ -9,6 +9,13 @@ import {
 
 import type { ProgressRecord } from '@/components/upload/LoadingProgress.vue';
 
+export type progress =
+    | 'failed'
+    | 'not_started'
+    | 'dispatched'
+    | 'running'
+    | 'succeeded';
+
 export interface LocationFiles {
     locationId: string;
     table: FileToUpload;
@@ -19,8 +26,8 @@ export interface LocationFiles {
 export interface FileToUpload {
     file: File | null;
     checkForUpdates?: boolean;
-    uploading: 0 | 1 | 2 | 3 | -1;
-    processing: 0 | 1 | 2 | 3 | -1;
+    uploading: progress;
+    processing: progress;
     processedData?: Record<string, any>;
 }
 
@@ -62,20 +69,20 @@ const initialState = () => ({
             table: {
                 file: null,
                 checkForUpdates: true,
-                uploading: 0,
-                processing: 0,
+                uploading: 'not_started',
+                processing: 'not_started',
             },
             images: {
                 file: null,
                 checkForUpdates: true,
-                uploading: 0,
-                processing: 0,
+                uploading: 'not_started',
+                processing: 'not_started',
             },
             segmentations: {
                 file: null,
                 checkForUpdates: true,
-                uploading: 0,
-                processing: 0,
+                uploading: 'not_started',
+                processing: 'not_started',
             },
         },
     ]),
@@ -184,20 +191,20 @@ export const useUploadStore = defineStore('uploadStore', () => {
             table: {
                 file: null,
                 checkForUpdates: true,
-                uploading: 0,
-                processing: 0,
+                uploading: 'not_started',
+                processing: 'not_started',
             },
             images: {
                 file: null,
                 checkForUpdates: true,
-                uploading: 0,
-                processing: 0,
+                uploading: 'not_started',
+                processing: 'not_started',
             },
             segmentations: {
                 file: null,
                 checkForUpdates: true,
-                uploading: 0,
-                processing: 0,
+                uploading: 'not_started',
+                processing: 'not_started',
             },
         });
     }
@@ -247,14 +254,14 @@ export const useUploadStore = defineStore('uploadStore', () => {
         fileType: FileType
     ) {
         if (fileToUpload && fileToUpload.file && experimentName.value) {
-            fileToUpload.uploading = 2;
-            fileToUpload.processing = 0;
+            fileToUpload.uploading = 'running';
+            fileToUpload.processing = 'not_started';
 
             try {
                 const fieldValue = await loonAxios.upload(fileToUpload.file);
 
-                fileToUpload.uploading = 3;
-                fileToUpload.processing = 1;
+                fileToUpload.uploading = 'succeeded';
+                fileToUpload.processing = 'dispatched';
 
                 try {
                     const processResponse = await loonAxios.process(
@@ -278,12 +285,12 @@ export const useUploadStore = defineStore('uploadStore', () => {
                     console.warn(
                         'There was an error with the processing endpoint'
                     );
-                    fileToUpload.processing = -1;
+                    fileToUpload.processing = 'failed';
                 }
             } catch (error) {
                 console.warn('There was an error uploading the file.');
-                fileToUpload.uploading = -1;
-                fileToUpload.processing = 0;
+                fileToUpload.uploading = 'failed';
+                fileToUpload.processing = 'not_started';
             }
         }
     }
@@ -325,17 +332,17 @@ export const useUploadStore = defineStore('uploadStore', () => {
                     updatesAvailable = true;
                 } else if (responseData.status === 'RUNNING') {
                     // show running symbol like it normally does
-                    uploadingFile.processing = 2;
+                    uploadingFile.processing = 'running';
                     await new Promise((resolve) => setTimeout(resolve, 5000));
                 } else {
                     // show queued symbol
                     await new Promise((resolve) => setTimeout(resolve, 5000));
                 }
             }
-            uploadingFile.processing = 3;
+            uploadingFile.processing = 'succeeded';
         } catch (error) {
             console.error('Error checking for updates:', error);
-            uploadingFile.processing = -1;
+            uploadingFile.processing = 'failed';
         }
     }
 
@@ -347,7 +354,7 @@ export const useUploadStore = defineStore('uploadStore', () => {
         const progressResult: ProgressRecord[] = keyList.map((key) => {
             return {
                 label: 'Uploading and Processing ' + key,
-                progress: 0,
+                progress: 'not_started',
                 subProgress: [],
             };
         });
