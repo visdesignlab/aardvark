@@ -11,6 +11,7 @@ import { useDataPointSelectionUntrracked } from './dataPointSelectionUntrracked'
 export interface AggLine {
     data: AggLineData;
     muted: boolean;
+    selected: boolean;
     relation: 'ancestor' | 'left' | 'right' | 'other';
     trackId: string;
 }
@@ -378,6 +379,7 @@ function storeSetup() {
                     result.push({
                         data: medianFilterSmooth(aggLineData),
                         muted,
+                        selected: false,
                         trackId: track.trackId,
                         relation,
                     });
@@ -403,6 +405,7 @@ function storeSetup() {
                     {
                         data: medianFilterSmooth(singleLine),
                         muted: false,
+                        selected: true,
                         trackId: '',
                         relation: 'other',
                     },
@@ -432,6 +435,7 @@ function storeSetup() {
                     result.push({
                         data: medianFilterSmooth(aggLineData),
                         muted: false,
+                        selected: false,
                         trackId: lineage.lineageId,
                         relation: 'other',
                     });
@@ -441,7 +445,7 @@ function storeSetup() {
             case 'individual cell tracks': {
                 if (!cellMetaData?.trackArray) return [];
                 const result: AggLine[] = [];
-                for (const track of cellMetaData.trackArray) {
+                for (const track of cellMetaData.selectedTrackArray) {
                     const aggLineData: AggLineData = [];
                     for (const cell of track.cells) {
                         const time = cellMetaData.getTime(cell);
@@ -452,10 +456,28 @@ function storeSetup() {
                     result.push({
                         data: medianFilterSmooth(aggLineData),
                         muted: true,
+                        selected: true,
                         trackId: track.trackId,
                         relation: 'other',
                     });
                 }
+                for (const track of cellMetaData.unselectedTrackArray) {
+                    const aggLineData: AggLineData = [];
+                    for (const cell of track.cells) {
+                        const time = cellMetaData.getTime(cell);
+                        const value = accessor.value(cell);
+                        const count = 1;
+                        aggLineData.push({ time, value, count });
+                    }
+                    result.push({
+                        data: medianFilterSmooth(aggLineData),
+                        muted: true,
+                        selected: false,
+                        trackId: track.trackId,
+                        relation: 'other',
+                    });
+                }
+
                 return result;
             }
         }
