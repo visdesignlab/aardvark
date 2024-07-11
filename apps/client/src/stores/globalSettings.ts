@@ -1,15 +1,17 @@
 import { ref, computed } from 'vue';
 import { defineStore } from 'pinia';
-import { v4 as uuidv4 } from 'uuid';
 import { useStorage } from '@vueuse/core';
+import { useRouter } from 'vue-router';
 
 export interface SettingsPage {
     // properties expected by a gridstack item
     name: string;
     faKey: string;
-    id: string;
+    id: number;
     show: boolean;
-    component: string;
+    component?: string;
+    url?: string;
+    disableSidebar?: boolean;
 }
 
 export const useGlobalSettings = defineStore('globalSettings', () => {
@@ -17,24 +19,35 @@ export const useGlobalSettings = defineStore('globalSettings', () => {
         {
             name: 'Select Dataset Location',
             faKey: 'fa-database',
-            id: uuidv4(),
+            id: 1,
             show: true,
             component: 'DatasetSelector',
+            url: '/',
         },
         {
             name: 'Layout Configuration',
             faKey: 'fa-table-cells-large',
-            id: uuidv4(),
+            id: 2,
             show: false,
             component: 'LayoutSelector',
+            url: '/',
         },
         {
             name: 'Settings',
             faKey: 'fa-gear',
-            id: uuidv4(),
+            id: 3,
             show: false,
             component: 'GeneralSettings',
+            url: '/',
         },
+        // {
+        //     name: 'Upload',
+        //     faKey: 'fa-upload',
+        //     id: 4,
+        //     show: false,
+        //     url: '/upload',
+        //     disableSidebar: true,
+        // },
         // {
         //     name: 'Filter Data',
         //     faKey: 'fa-filter',
@@ -51,33 +64,36 @@ export const useGlobalSettings = defineStore('globalSettings', () => {
         // },
     ]);
 
-    const activePageIndex = ref<number | null>(0);
-    const activePage = computed<SettingsPage | null>(() => {
-        if (activePageIndex.value == null) return null;
-        return settingsPages.value[activePageIndex.value];
-    });
-    const lastActivePageIndex = ref<number>(0);
-    const lastActivePage = computed<SettingsPage>(() => {
-        return settingsPages.value[lastActivePageIndex.value];
-    });
-    function toggleShown(setting: SettingsPage): void {
-        if (setting.show) {
-            setting.show = false;
+    const router = useRouter();
 
-            activePageIndex.value = null;
-        } else {
-            for (const s of settingsPages.value) {
-                s.show = false;
-            }
-            setting.show = true;
-            activePageIndex.value = settingsPages.value.findIndex(
-                (page) => page.id === setting.id
-            );
-            lastActivePageIndex.value = activePageIndex.value;
+    // Disables the sidebar on other pages
+    const settingsVisible = computed<boolean>(() => {
+        if (router.currentRoute.value.path === '/') {
+            return true;
         }
+        return false;
+    });
+
+    const tab = ref('Select Dataset Location');
+    const activePageIndex = ref<number>(1);
+    const lastActivePageIndex = ref<number>(0);
+    const isPanelVisible = ref(true);
+    function handleIconClick(setting: SettingsPage): void {
+        if (setting.id == activePageIndex.value) {
+            isPanelVisible.value = !isPanelVisible.value;
+        } else {
+            isPanelVisible.value = true;
+        }
+        lastActivePageIndex.value = activePageIndex.value;
+        activePageIndex.value = setting.id;
+    }
+
+    function toggleShown(): void {
+        isPanelVisible.value = !isPanelVisible.value;
     }
 
     function showSetting(name: string): void {
+        tab.value = 'Settings';
         let setting: SettingsPage | null = null;
         for (const s of settingsPages.value) {
             s.show = false;
@@ -87,14 +103,10 @@ export const useGlobalSettings = defineStore('globalSettings', () => {
         }
         if (setting === null) return;
         setting.show = true;
-        activePageIndex.value = settingsPages.value.findIndex(
-            (page) => page.id === setting!.id
-        );
+        activePageIndex.value = settingsPages.value.find(
+            (setting: SettingsPage) => setting.name === 'Settings'
+        )!.id;
         lastActivePageIndex.value = activePageIndex.value;
-    }
-
-    function toggleLastActive(): void {
-        toggleShown(lastActivePage.value);
     }
 
     const darkMode = useStorage<boolean>('darkMode', false);
@@ -157,10 +169,6 @@ export const useGlobalSettings = defineStore('globalSettings', () => {
 
     return {
         settingsPages,
-        activePage,
-        activePageIndex,
-        toggleShown,
-        toggleLastActive,
         darkMode,
         btnLight,
         btnDark,
@@ -173,6 +181,10 @@ export const useGlobalSettings = defineStore('globalSettings', () => {
         usingMac,
         settingsAccordion,
         openComponentSetting,
-        showSetting,
+        handleIconClick,
+        isPanelVisible,
+        tab,
+        toggleShown,
+        settingsVisible,
     };
 });
