@@ -445,37 +445,41 @@ function storeSetup() {
             case 'individual cell tracks': {
                 if (!cellMetaData?.trackArray) return [];
                 const result: AggLine[] = [];
-                for (const track of cellMetaData.selectedTrackArray) {
-                    const aggLineData: AggLineData = [];
-                    for (const cell of track.cells) {
-                        const time = cellMetaData.getTime(cell);
-                        const value = accessor.value(cell);
-                        const count = 1;
-                        aggLineData.push({ time, value, count });
+                if (cellMetaData.selectedTrackArray) {
+                    for (const track of cellMetaData.selectedTrackArray) {
+                        const aggLineData: AggLineData = [];
+                        for (const cell of track.cells) {
+                            const time = cellMetaData.getTime(cell);
+                            const value = accessor.value(cell);
+                            const count = 1;
+                            aggLineData.push({ time, value, count });
+                        }
+                        result.push({
+                            data: medianFilterSmooth(aggLineData),
+                            muted: true,
+                            selected: true,
+                            trackId: track.trackId,
+                            relation: 'other',
+                        });
                     }
-                    result.push({
-                        data: medianFilterSmooth(aggLineData),
-                        muted: true,
-                        selected: true,
-                        trackId: track.trackId,
-                        relation: 'other',
-                    });
                 }
-                for (const track of cellMetaData.unselectedTrackArray) {
-                    const aggLineData: AggLineData = [];
-                    for (const cell of track.cells) {
-                        const time = cellMetaData.getTime(cell);
-                        const value = accessor.value(cell);
-                        const count = 1;
-                        aggLineData.push({ time, value, count });
+                if (cellMetaData.unselectedTrackArray) {
+                    for (const track of cellMetaData.unselectedTrackArray) {
+                        const aggLineData: AggLineData = [];
+                        for (const cell of track.cells) {
+                            const time = cellMetaData.getTime(cell);
+                            const value = accessor.value(cell);
+                            const count = 1;
+                            aggLineData.push({ time, value, count });
+                        }
+                        result.push({
+                            data: medianFilterSmooth(aggLineData),
+                            muted: true,
+                            selected: false,
+                            trackId: track.trackId,
+                            relation: 'other',
+                        });
                     }
-                    result.push({
-                        data: medianFilterSmooth(aggLineData),
-                        muted: true,
-                        selected: false,
-                        trackId: track.trackId,
-                        relation: 'other',
-                    });
                 }
 
                 return result;

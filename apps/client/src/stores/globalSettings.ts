@@ -43,7 +43,7 @@ export const useGlobalSettings = defineStore('globalSettings', () => {
         {
             name: 'Filter Data',
             faKey: 'fa-filter',
-            id: uuidv4(),
+            id: 4,
             show: false,
             component: 'FilterSelector',
         },

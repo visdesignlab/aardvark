@@ -12,7 +12,6 @@ import {
 import { useDatasetSelectionTrrackedStore } from '@/stores/datasetSelectionTrrackedStore';
 import { useConfigStore } from '@/stores/configStore';
 
-
 export interface ExperimentMetadata {
     // name?: string; // user friendly name
     filename: string;
@@ -138,7 +137,6 @@ export const useDatasetSelectionStore = defineStore(
         watch(
             currentLocationMetadata,
             () => {
-                // console.log('current location change');
                 if (!currentLocationMetadata.value?.tabularDataFilename) {
                     cellMetaData.dataInitialized = false;
                     return;
@@ -148,7 +146,6 @@ export const useDatasetSelectionStore = defineStore(
                 );
 
                 fetchingTabularData.value = true;
-                console.log({ url });
                 parse(url, {
                     header: true,
                     dynamicTyping: true,
@@ -177,7 +174,7 @@ export const useDatasetSelectionStore = defineStore(
         );
 
         function getServerUrl(path: string): string {
-            let httpValue = configStore.useHttp ? 'http://' : 'https://'
+            let httpValue = configStore.useHttp ? 'http://' : 'https://';
             let base = httpValue + datasetSelectionTrrackedStore.serverUrl;
             if (!path.startsWith('/')) base = base + '/';
             return base + path;

@@ -1,44 +1,3 @@
-<template>
-    <div v-if="cellMetaData.dataInitialized && visible">
-        <q-item-section style="position: relative">
-            <div
-                id="plotContainer"
-                ref="vgPlotContainer"
-                @clearSelection="clearBrushSelection"
-                style="position: relative"
-            ></div>
-            <div
-                class="selection-box left"
-                style="position: absolute; bottom: 12px"
-            >
-                <input
-                    type="text"
-                    :value="minValue"
-                    @input="updateMinValue($event.target.value)"
-                    @keyup.enter="handleEnter($event)"
-                    @blur="applyManualFilter()"
-                    @focus="$event.target.select()"
-                    class="minMax"
-                />
-            </div>
-            <div
-                class="selection-box right"
-                style="position: absolute; bottom: 12px; right: 0"
-            >
-                <input
-                    type="text"
-                    :value="maxValue"
-                    @input="updateMaxValue($event.target.value)"
-                    @keyup.enter="handleEnter($event)"
-                    @blur="applyManualFilter()"
-                    @focus="$event.target.select()"
-                    class="minMax"
-                />
-            </div>
-        </q-item-section>
-    </div>
-</template>
-
 <script lang="ts" setup>
 import { ref, watch } from 'vue';
 import type { PropType } from 'vue';
@@ -61,7 +20,8 @@ const props = defineProps({
         required: true,
     },
     plotBrush: {
-        type: Object as PropType<vg.Selection>,
+        // Was 'Object as PropType<vg.Selection>'
+        type: Object as PropType<any>,
         required: true,
     },
     visible: {
@@ -73,12 +33,19 @@ const props = defineProps({
 const minValue = ref('min');
 const maxValue = ref('max');
 
-const updateMinValue = (value: string) => {
+const updateMinValue = (event: Event) => {
+    const value = (event.target as HTMLInputElement).value;
     minValue.value = value;
 };
 
-const updateMaxValue = (value: string) => {
+const updateMaxValue = (event: Event) => {
+    const value = (event.target as HTMLInputElement).value;
     maxValue.value = value;
+};
+
+const selectText = (event: Event) => {
+    const target = event.target as HTMLInputElement;
+    target.select();
 };
 
 const handleEnter = (event: KeyboardEvent) => {
@@ -93,7 +60,7 @@ const updateBrushSelection = (min: number, max: number) => {
     if (props.plotBrush) {
         if (props.plotBrush.clauses && props.plotBrush.clauses.length > 0) {
             const clauseIndex = props.plotBrush.clauses.findIndex(
-                (clause) => clause.source.field === props.plotName
+                (clause: any) => clause.source.field === props.plotName
             );
 
             if (clauseIndex !== -1) {
@@ -227,14 +194,21 @@ const charts = ref<null | HTMLElement>(null);
 async function createCharts() {
     if (!props.visible) return;
     // Configure the coordinator to use DuckDB-WASM
-    vg.coordinator().databaseConnector(vg.wasmConnector());
+    // vg.coordinator().databaseConnector(vg.wasmConnector());
+    console.log('created Charts');
     if (!datasetSelectionStore.currentLocationMetadata) {
         return;
     }
+    console.log('Created Url');
     const url = datasetSelectionStore.getServerUrl(
         datasetSelectionStore.currentLocationMetadata.tabularDataFilename
     );
-    await vg.coordinator().exec([vg.loadCSV('dummy_data', url)]);
+    // Replaces localhost url with the correct minio one.
+    console.log(url);
+    let newUrl = url.replace('http://localhost/data', 'http://minio:9000/data');
+    console.log('Executing');
+    await vg.coordinator().exec([vg.loadCSV('dummy_data', newUrl)]);
+    console.log('Executed');
     charts.value = makePlot(props.plotName);
     if (vgPlotContainer.value) {
         vgPlotContainer.value.appendChild(charts.value!);
@@ -285,6 +259,47 @@ props.plotBrush.addEventListener('value', handleIntervalChange);
 watch(() => props.visible, createCharts);
 watch(dataInitialized, createCharts);
 </script>
+
+<template>
+    <div v-if="cellMetaData.dataInitialized && visible">
+        <q-item-section style="position: relative">
+            <div
+                id="plotContainer"
+                ref="vgPlotContainer"
+                @clearSelection="clearBrushSelection"
+                style="position: relative"
+            ></div>
+            <div
+                class="selection-box left"
+                style="position: absolute; bottom: 12px"
+            >
+                <input
+                    type="text"
+                    :value="minValue"
+                    @input="updateMinValue($event)"
+                    @keyup.enter="handleEnter($event)"
+                    @blur="applyManualFilter()"
+                    @focus="selectText($event)"
+                    class="minMax"
+                />
+            </div>
+            <div
+                class="selection-box right"
+                style="position: absolute; bottom: 12px; right: 0"
+            >
+                <input
+                    type="text"
+                    :value="maxValue"
+                    @input="updateMaxValue($event)"
+                    @keyup.enter="handleEnter($event)"
+                    @blur="applyManualFilter()"
+                    @focus="selectText($event)"
+                    class="minMax"
+                />
+            </div>
+        </q-item-section>
+    </div>
+</template>
 
 <style scoped>
 .plot-container {
