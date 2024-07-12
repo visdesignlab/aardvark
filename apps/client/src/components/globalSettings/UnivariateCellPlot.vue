@@ -131,22 +131,17 @@ const handleIntervalChange = () => {
     if (active && Array.isArray(active.value)) {
         const clauses = props.plotBrush.clauses;
         if (Array.isArray(clauses) && clauses.length > 0) {
-            // Iterate through all clauses
-            clauses.forEach((clause) => {
-                const plotName = clause.predicate.column;
-                const range = clause.value;
-                // PlotSelector listens for this and updates current selections view.
+            // Find the clause for the current plot
+            const currentClause = clauses.find(
+                (clause) => clause.source.field === props.plotName
+            );
+            if (currentClause) {
+                // Emit only the selection for the current plot
                 emit('selectionChange', {
-                    plotName: plotName,
-                    range: range,
+                    plotName: props.plotName,
+                    range: currentClause.value,
                 });
-            });
-        } else {
-            // Clear all selections if no clauses are present
-            emit('selectionChange', {
-                plotName: props.plotName,
-                range: null,
-            });
+            }
         }
     } else {
         clearBrushSelection();
@@ -194,7 +189,7 @@ const charts = ref<null | HTMLElement>(null);
 async function createCharts() {
     if (!props.visible) return;
     // Configure the coordinator to use DuckDB-WASM
-    // vg.coordinator().databaseConnector(vg.wasmConnector());
+    vg.coordinator().databaseConnector(vg.wasmConnector());
     console.log('created Charts');
     if (!datasetSelectionStore.currentLocationMetadata) {
         return;
