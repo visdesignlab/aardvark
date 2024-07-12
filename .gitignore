@@ -39,4 +39,15 @@ certs
 # PYC files
 *.pyc
 
+#Random
+apps/server/api/*.jpg
 apps/server/api/secrets.json
+.env
+.env.production
+.python-version
+
+#Docker
+docker/mysql-data
+docker/minio-data
+docker-local/mysql-data
+docker-local/local-data

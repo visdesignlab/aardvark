@@ -14,12 +14,15 @@ Including another URLconf
     1. Import the include() function: from django.urls import include, path
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
-from django.contrib import admin
-from django.urls import path
-from api.views import HelloWorldView
 
+from django.contrib import admin  # type: ignore
+from django.urls import path, include  # type: ignore
+from api.views import FinishExperimentView, ProcessDataView
 
 urlpatterns = [
-    path('admin/', admin.site.urls),
-    path('', HelloWorldView.as_view(), name='hello-world'),
+    path("admin/", admin.site.urls),
+    path('api/process/', ProcessDataView.as_view(), name="process"),
+    path("api/process/<str:task_id>", ProcessDataView.as_view(), name="process-status"),
+    path("api/createExperiment/", FinishExperimentView.as_view(), name="finish-experiment"),
+    path('api/s3-upload/', include('s3_file_field.urls')),
 ]

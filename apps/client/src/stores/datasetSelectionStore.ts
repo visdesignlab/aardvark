@@ -10,6 +10,8 @@ import {
     type TextTransforms,
 } from '@/stores/cellMetaData';
 import { useDatasetSelectionTrrackedStore } from '@/stores/datasetSelectionTrrackedStore';
+import { useConfigStore } from '@/stores/configStore';
+
 
 export interface ExperimentMetadata {
     // name?: string; // user friendly name
@@ -45,6 +47,7 @@ export const useDatasetSelectionStore = defineStore(
         const cellMetaData = useCellMetaData();
         const datasetSelectionTrrackedStore =
             useDatasetSelectionTrrackedStore();
+        const configStore = useConfigStore();
         const fetchingTabularData = ref(false);
         let controller: AbortController;
 
@@ -174,7 +177,8 @@ export const useDatasetSelectionStore = defineStore(
         );
 
         function getServerUrl(path: string): string {
-            let base = 'https://' + datasetSelectionTrrackedStore.serverUrl;
+            let httpValue = configStore.useHttp ? 'http://' : 'https://'
+            let base = httpValue + datasetSelectionTrrackedStore.serverUrl;
             if (!path.startsWith('/')) base = base + '/';
             return base + path;
         }

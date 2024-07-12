@@ -5,12 +5,14 @@ import { useGlobalSettings } from '@/stores/globalSettings';
 import { useDatasetSelectionTrrackedStore } from '@/stores/datasetSelectionTrrackedStore';
 import { useDatasetSelectionStore } from '@/stores/datasetSelectionStore';
 import { useDataPointSelection } from '@/stores/dataPointSelection';
+import { useConfigStore } from '@/stores/configStore';
 
 const globalSettings = useGlobalSettings();
 const datasetSelectionStore = useDatasetSelectionStore();
 const datasetSelectionTrrackedStore = useDatasetSelectionTrrackedStore();
 const dataPointSelection = useDataPointSelection();
 const $q = useQuasar();
+const configStore = useConfigStore();
 
 const serverInputRef = ref<any>(null);
 watch(
@@ -64,7 +66,7 @@ function openExampleDataset() {
         v-model="datasetSelectionTrrackedStore.serverUrl"
         filled
         type="url"
-        label="https://"
+        :label="configStore.useHttp ? 'http://' : 'https://'"
         :suffix="datasetSelectionTrrackedStore.entryPointFilename"
         debounce="1000"
         :loading="datasetSelectionStore.fetchingEntryFile"
