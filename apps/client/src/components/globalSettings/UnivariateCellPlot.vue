@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { ref, watch } from 'vue';
+import { ref, watch, onMounted } from 'vue';
 import type { PropType } from 'vue';
 import * as vg from '@uwdata/vgplot';
 import { useCellMetaData } from '@/stores/cellMetaData';
@@ -32,7 +32,7 @@ const props = defineProps({
 
 const minValue = ref('min');
 const maxValue = ref('max');
-
+const chartInitialized = ref<boolean>(false);
 const updateMinValue = (event: Event) => {
     const value = (event.target as HTMLInputElement).value;
     minValue.value = value;
@@ -56,7 +56,6 @@ const handleEnter = (event: KeyboardEvent) => {
 
 // Called by applyManualFilter when min and max textbox values are entered.
 const updateBrushSelection = (min: number, max: number) => {
-    console.log(props.plotBrush);
     if (props.plotBrush) {
         if (props.plotBrush.clauses && props.plotBrush.clauses.length > 0) {
             const clauseIndex = props.plotBrush.clauses.findIndex(
@@ -77,7 +76,6 @@ const updateBrushSelection = (min: number, max: number) => {
                 //props.plotBrush.activate(clause);
                 props.plotBrush.update(clause);
             } else {
-                console.log(min, max);
                 const clause = {
                     source: props.plotName,
                     value: [min, max],
@@ -88,7 +86,6 @@ const updateBrushSelection = (min: number, max: number) => {
                 props.plotBrush.update(clause);
             }
         } else {
-            console.log(min, max);
             const clause = {
                 source: props.plotName,
                 value: [min, max],
@@ -126,7 +123,6 @@ const applyManualFilter = () => {
 
 // Brush Selection Changes update selection stores, or clear selections.
 const handleIntervalChange = () => {
-    console.log(props.plotBrush);
     const active = props.plotBrush.clauses.active;
     if (active && Array.isArray(active.value)) {
         const clauses = props.plotBrush.clauses;
@@ -188,43 +184,40 @@ watch(
 const charts = ref<null | HTMLElement>(null);
 async function createCharts() {
     if (!props.visible) return;
-    // Configure the coordinator to use DuckDB-WASM
-    vg.coordinator().databaseConnector(vg.wasmConnector());
-    console.log('created Charts');
+
     if (!datasetSelectionStore.currentLocationMetadata) {
         return;
     }
-    console.log('Created Url');
-    const url = datasetSelectionStore.getServerUrl(
-        datasetSelectionStore.currentLocationMetadata.tabularDataFilename
-    );
-    // Replaces localhost url with the correct minio one.
-    console.log(url);
-    let newUrl = url.replace('http://localhost/data', 'http://minio:9000/data');
-    console.log('Executing');
-    await vg.coordinator().exec([vg.loadCSV('dummy_data', newUrl)]);
-    console.log('Executed');
     charts.value = makePlot(props.plotName);
     if (vgPlotContainer.value) {
         vgPlotContainer.value.appendChild(charts.value!);
     }
 }
 
+onMounted(() => {
+    if (dataInitialized) {
+        createCharts();
+    }
+});
+
 function makePlot(column: string) {
     const plot = vg.plot(
-        vg.rectY(vg.from('dummy_data'), {
+        vg.rectY(vg.from('current_cell_metadata'), {
             x: vg.bin(column),
             y: vg.count(),
             fill: '#cccccc',
             inset: 1,
         }),
-        vg.rectY(vg.from('dummy_data', { filterBy: props.plotBrush }), {
-            x: vg.bin(column),
-            y: vg.count(),
-            fill: 'steelblue',
-            opacity: 1,
-            inset: 1,
-        }),
+        vg.rectY(
+            vg.from('current_cell_metadata', { filterBy: props.plotBrush }),
+            {
+                x: vg.bin(column),
+                y: vg.count(),
+                fill: 'steelblue',
+                opacity: 1,
+                inset: 1,
+            }
+        ),
         vg.intervalX({
             as: props.plotBrush,
             peers: true,
@@ -251,12 +244,11 @@ function makePlot(column: string) {
 }
 
 props.plotBrush.addEventListener('value', handleIntervalChange);
-watch(() => props.visible, createCharts);
 watch(dataInitialized, createCharts);
 </script>
 
 <template>
-    <div v-if="cellMetaData.dataInitialized && visible">
+    <div>
         <q-item-section style="position: relative">
             <div
                 id="plotContainer"

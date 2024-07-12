@@ -415,6 +415,8 @@ export const useCellMetaData = defineStore('cellMetaData', () => {
         columnHeaders: string[],
         headerTransforms?: TextTransforms
     ): void {
+        console.log('beginning initialization');
+        console.log(dataInitialized.value);
         headers.value = columnHeaders;
         initHeaderTransforms(headerTransforms);
         initCells(rawData);
@@ -423,6 +425,7 @@ export const useCellMetaData = defineStore('cellMetaData', () => {
         if (dataPointSelection.selectedLineageId === null) {
             selectLineage(lineageArray?.value?.[0] ?? null);
         }
+        console.log('data initialized');
         dataInitialized.value = true;
     }
 
