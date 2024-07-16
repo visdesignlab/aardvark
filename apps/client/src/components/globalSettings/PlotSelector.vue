@@ -43,11 +43,10 @@
             />
         </div>
         <UnivariateCellPlot
-            v-for="plotName in allPlotNames"
+            v-for="plotName in selectedPlotSet"
             :key="plotName"
             :plot-name="plotName"
             :plot-brush="plotBrush"
-            :visible="selectedPlotSet.has(plotName)"
             @selection-change="handleSelectionChange"
         />
     </div>
@@ -76,7 +75,7 @@ const selectedPlotSet = reactive(new Set(['mass', 'time']));
 
 const computedSelectedPlots = computed(() => Array.from(selectedPlotSet));
 
-const plotBrush = vg.Selection.intersect();
+let plotBrush = vg.Selection.intersect();
 vg.Selection.crossfilter();
 
 const currentSelections = ref<Selections>({});
@@ -85,6 +84,7 @@ const selectionStore = useSelectionStore();
 
 const togglePlotSelection = (name: string) => {
     if (selectedPlotSet.has(name)) {
+        clearSelectionForPlot(name);
         selectedPlotSet.delete(name);
         console.log(`Plot ${name} removed`);
     } else {
@@ -92,6 +92,21 @@ const togglePlotSelection = (name: string) => {
         console.log(`Plot ${name} added`);
     }
     console.log('Current selected plots:', Array.from(selectedPlotSet));
+};
+
+// Clears the current selection when plot is deselected from menu.
+const clearSelectionForPlot = (plotName: string) => {
+    delete currentSelections.value[plotName];
+    selectionStore.removeSelectionByPlotName(plotName);
+
+    // Find the clause for the deleted plot and remove it
+    const clauseIndex = plotBrush.clauses.findIndex(
+        (clause: any) => clause.source.field === plotName
+    );
+    if (clauseIndex !== -1) {
+        plotBrush.remove(plotBrush.clauses[clauseIndex].source);
+    }
+    console.log(plotBrush);
 };
 
 // Invoked by selectionChange event in UnivariateCellPlot

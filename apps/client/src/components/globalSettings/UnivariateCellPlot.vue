@@ -6,6 +6,7 @@ import { useCellMetaData } from '@/stores/cellMetaData';
 import { useDatasetSelectionStore } from '@/stores/datasetSelectionStore';
 import { useSelectionStore } from '@/stores/selectionStore';
 import { storeToRefs } from 'pinia';
+import PlotSelector from './PlotSelector.vue';
 
 const vgPlotContainer = ref<HTMLDivElement | null>(null);
 const cellMetaData = useCellMetaData();
@@ -22,10 +23,6 @@ const props = defineProps({
     plotBrush: {
         // Was 'Object as PropType<vg.Selection>'
         type: Object as PropType<any>,
-        required: true,
-    },
-    visible: {
-        type: Boolean as PropType<boolean>,
         required: true,
     },
 });
@@ -49,31 +46,40 @@ const selectText = (event: Event) => {
 };
 
 const handleEnter = (event: KeyboardEvent) => {
-    //event.preventDefault(); // Prevent default form submission on Enter
+    // Prevent default form submission on Enter
+    event.preventDefault();
+
+    // Apply the manual filter
     applyManualFilter();
-    //event.target.blur(); // Manually blur the input element
+
+    // Deselect the currently focused input element
+    const activeElement = document.activeElement;
+    if (activeElement instanceof HTMLInputElement) {
+        activeElement.blur();
+    }
 };
 
 // Called by applyManualFilter when min and max textbox values are entered.
 const updateBrushSelection = (min: number, max: number) => {
     if (props.plotBrush) {
         if (props.plotBrush.clauses && props.plotBrush.clauses.length > 0) {
+            // Is there a clause on this plot?
             const clauseIndex = props.plotBrush.clauses.findIndex(
                 (clause: any) => clause.source.field === props.plotName
             );
 
+            // If theres a clause on this plot, copy it and update it.
             if (clauseIndex !== -1) {
                 const clause0 = props.plotBrush.clauses[clauseIndex];
                 clause0.source.value = [min, max];
                 const clause = {
-                    clients: clause0.clients,
-                    meta: clause0.meta,
                     predicate: `${props.plotName} BETWEEN ${min} AND ${max}`,
                     source: clause0.source,
                     value: [min, max],
                 };
 
-                //props.plotBrush.activate(clause);
+                // props.plotBrush.update(clause);
+                //props.plotBrush.remove(clause0.source);
                 props.plotBrush.update(clause);
             } else {
                 const clause = {
@@ -82,7 +88,6 @@ const updateBrushSelection = (min: number, max: number) => {
                     predicate: `${props.plotName} BETWEEN ${min} AND ${max}`,
                 };
 
-                //props.plotBrush.activate(clause);
                 props.plotBrush.update(clause);
             }
         } else {
@@ -92,7 +97,6 @@ const updateBrushSelection = (min: number, max: number) => {
                 predicate: `${props.plotName} BETWEEN ${min} AND ${max}`,
             };
 
-            //props.plotBrush.activate(clause);
             props.plotBrush.update(clause);
         }
     }
@@ -102,8 +106,6 @@ const updateBrushSelection = (min: number, max: number) => {
         min.toFixed(2),
         max.toFixed(2),
     ]);
-
-    handleIntervalChange();
 };
 
 // Called when textbox values are changed.
@@ -123,6 +125,7 @@ const applyManualFilter = () => {
 
 // Brush Selection Changes update selection stores, or clear selections.
 const handleIntervalChange = () => {
+    //console.log(props.plotBrush);
     const active = props.plotBrush.clauses.active;
     if (active && Array.isArray(active.value)) {
         const clauses = props.plotBrush.clauses;
@@ -183,11 +186,6 @@ watch(
 
 const charts = ref<null | HTMLElement>(null);
 async function createCharts() {
-    if (!props.visible) return;
-
-    if (!datasetSelectionStore.currentLocationMetadata) {
-        return;
-    }
     charts.value = makePlot(props.plotName);
     if (vgPlotContainer.value) {
         vgPlotContainer.value.appendChild(charts.value!);
@@ -201,7 +199,7 @@ onMounted(() => {
 });
 
 function makePlot(column: string) {
-    const plot = vg.plot(
+    return vg.plot(
         vg.rectY(vg.from('current_cell_metadata'), {
             x: vg.bin(column),
             y: vg.count(),
@@ -216,6 +214,9 @@ function makePlot(column: string) {
                 fill: 'steelblue',
                 opacity: 1,
                 inset: 1,
+                tip: {
+                    anchor: 'bottom',
+                },
             }
         ),
         vg.intervalX({
@@ -227,20 +228,20 @@ function makePlot(column: string) {
         vg.width(600),
         vg.height(250),
         vg.style({ 'font-size': '30px' }),
-        vg.xDomain(vg.Fixed),
+        vg.xDomain(vg.toFixed),
         vg.xLabelAnchor('center'),
         vg.xTickPadding(10),
         vg.xLabelOffset(80),
         vg.xAxis('bottom'),
         vg.xLine(true),
         vg.xAlign(0),
+        //vg.xZero(true),
         vg.xInsetRight(20),
         vg.xTickSpacing(100),
         vg.yLabelAnchor('top'),
         vg.yAxis(null),
         vg.yTicks(0)
     );
-    return plot;
 }
 
 props.plotBrush.addEventListener('value', handleIntervalChange);
