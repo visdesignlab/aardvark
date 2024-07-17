@@ -70,10 +70,8 @@ interface SelectionChangeEvent {
 }
 const menuOpen = ref(false);
 
-const allPlotNames = ['A', 'y', 'mass', 'time', 'x'];
+const allPlotNames = ['A', 'x', 'y', 'mass', 'time', 'MI'];
 const selectedPlotSet = reactive(new Set(['mass', 'time']));
-
-const computedSelectedPlots = computed(() => Array.from(selectedPlotSet));
 
 let plotBrush = vg.Selection.intersect();
 vg.Selection.crossfilter();
@@ -99,15 +97,29 @@ const clearSelectionForPlot = (plotName: string) => {
     delete currentSelections.value[plotName];
     selectionStore.removeSelectionByPlotName(plotName);
 
-    // Find the clause for the deleted plot and remove it
+    // If there is a selection clause on this plot, remove it.
     const clauseIndex = plotBrush.clauses.findIndex(
         (clause: any) => clause.source.field === plotName
     );
     if (clauseIndex !== -1) {
-        plotBrush.remove(plotBrush.clauses[clauseIndex].source);
+        //plotBrush = plotBrush.remove(plotBrush.clauses[clauseIndex].source);
     }
-    console.log(plotBrush);
 };
+
+const handleSelectionRemoved = (event: CustomEvent) => {
+    // If there exists a selection with this plot name, remove it.
+    const clauseIndex = plotBrush.clauses.findIndex(
+        (clause: any) => clause.source.field === event.detail
+    );
+    if (clauseIndex !== -1) {
+        //plotBrush = plotBrush.remove(plotBrush.clauses[clauseIndex].source);
+    }
+};
+
+window.addEventListener(
+    'selectionRemoved',
+    handleSelectionRemoved as EventListener
+);
 
 // Invoked by selectionChange event in UnivariateCellPlot
 const handleSelectionChange = (event: SelectionChangeEvent) => {

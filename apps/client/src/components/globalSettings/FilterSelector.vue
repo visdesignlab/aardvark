@@ -12,8 +12,6 @@ const selectionStore = useSelectionStore();
 const { filters } = storeToRefs(filterStore);
 const { Selections } = storeToRefs(selectionStore);
 
-const emit = defineEmits(['clearSelection']);
-
 const selectionsCount = computed(() => Selections.value.length);
 const filtersCount = computed(() => filters.value.length);
 
@@ -21,9 +19,7 @@ function removeFilter(index: number) {
     filterStore.removeFilter(index);
 }
 function removeSelection(index: number) {
-    selectionStore.removeSelection(index);
     const plotName = Selections.value[index]?.plotName;
-
     selectionStore.removeSelectionByPlotName(plotName);
 }
 </script>
@@ -143,45 +139,26 @@ function removeSelection(index: number) {
                 </q-list>
             </q-expansion-item>
         </div>
-        <q-expansion-item
-            group="settings"
-            icon="scatter_plot"
-            label="Cell Attributes"
-            v-model="globalSettings.settingsAccordion['general']"
-        >
+
+        <q-expansion-item icon="scatter_plot" label="Cell Attributes">
             <q-card :dark="globalSettings.darkMode">
-                <q-card-section id="cellPlots">
-                    <PlotSelector></PlotSelector>
-                </q-card-section>
+                <PlotSelector></PlotSelector>
             </q-card>
         </q-expansion-item>
 
         <q-separator />
 
-        <q-expansion-item
-            group="settings"
-            icon="linear_scale"
-            label="Track Attributes"
-            v-model="
-                globalSettings.settingsAccordion['ImageViewerSettingsSidebar']
-            "
-        >
+        <q-expansion-item icon="linear_scale" label="Track Attributes">
             <q-card :dark="globalSettings.darkMode">
-                <q-card-section> </q-card-section>
+                <PlotSelector></PlotSelector>
             </q-card>
         </q-expansion-item>
+
         <q-separator />
 
-        <q-expansion-item
-            group="settings"
-            icon="account_tree"
-            label="Lineage Attributes"
-            v-model="
-                globalSettings.settingsAccordion['LooneageViewSettingsSidebar']
-            "
-        >
+        <q-expansion-item icon="account_tree" label="Lineage Attributes">
             <q-card :dark="globalSettings.darkMode">
-                <q-card-section> </q-card-section>
+                <PlotSelector></PlotSelector>
             </q-card>
         </q-expansion-item>
         <q-separator />

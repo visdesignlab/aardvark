@@ -39,6 +39,9 @@ export const useSelectionStore = defineStore('Selection', {
             );
             if (index !== -1) {
                 this.removeSelection(index);
+                window.dispatchEvent(
+                    new CustomEvent('selectionRemoved', { detail: plotName })
+                );
             }
         },
     },

@@ -21,7 +21,6 @@ const props = defineProps({
         required: true,
     },
     plotBrush: {
-        // Was 'Object as PropType<vg.Selection>'
         type: Object as PropType<any>,
         required: true,
     },
@@ -64,24 +63,24 @@ const updateBrushSelection = (min: number, max: number) => {
     if (props.plotBrush) {
         if (props.plotBrush.clauses && props.plotBrush.clauses.length > 0) {
             // Is there a clause on this plot?
-            const clauseIndex = props.plotBrush.clauses.findIndex(
+            const existingClauseIndex = props.plotBrush.clauses.findIndex(
                 (clause: any) => clause.source.field === props.plotName
             );
 
             // If theres a clause on this plot, copy it and update it.
-            if (clauseIndex !== -1) {
-                const clause0 = props.plotBrush.clauses[clauseIndex];
-                clause0.source.value = [min, max];
+            if (existingClauseIndex !== -1) {
+                const existingClause =
+                    props.plotBrush.clauses[existingClauseIndex];
+                existingClause.source.value = [min, max];
                 const clause = {
                     predicate: `${props.plotName} BETWEEN ${min} AND ${max}`,
-                    source: clause0.source,
+                    source: existingClause.source,
                     value: [min, max],
                 };
-
-                // props.plotBrush.update(clause);
-                //props.plotBrush.remove(clause0.source);
                 props.plotBrush.update(clause);
-            } else {
+            }
+            // Otherwise, make a new clause.
+            else {
                 const clause = {
                     source: props.plotName,
                     value: [min, max],
@@ -90,7 +89,10 @@ const updateBrushSelection = (min: number, max: number) => {
 
                 props.plotBrush.update(clause);
             }
-        } else {
+        }
+
+        // Make a new clause even if none exist.
+        else {
             const clause = {
                 source: props.plotName,
                 value: [min, max],
@@ -259,7 +261,7 @@ watch(dataInitialized, createCharts);
             ></div>
             <div
                 class="selection-box left"
-                style="position: absolute; bottom: 12px"
+                style="position: absolute; bottom: 15px"
             >
                 <input
                     type="text"
@@ -273,7 +275,7 @@ watch(dataInitialized, createCharts);
             </div>
             <div
                 class="selection-box right"
-                style="position: absolute; bottom: 12px; right: 0"
+                style="position: absolute; bottom: 15px; right: 0"
             >
                 <input
                     type="text"
