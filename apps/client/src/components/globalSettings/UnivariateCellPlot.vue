@@ -60,48 +60,53 @@ const handleEnter = (event: KeyboardEvent) => {
 
 // Called by applyManualFilter when min and max textbox values are entered.
 const updateBrushSelection = (min: number, max: number) => {
-    if (props.plotBrush) {
-        if (props.plotBrush.clauses && props.plotBrush.clauses.length > 0) {
-            // Is there a clause on this plot?
-            const existingClauseIndex = props.plotBrush.clauses.findIndex(
-                (clause: any) => clause.source.field === props.plotName
-            );
+    console.log('update manual Filter');
+    // if (props.plotBrush) {
+    //     if (props.plotBrush.clauses && props.plotBrush.clauses.length > 0) {
+    //         // Is there a clause on this plot?
+    //         const existingClauseIndex = props.plotBrush.clauses.findIndex(
+    //             (clause: any) => clause.source.field === props.plotName
+    //         );
 
-            // If theres a clause on this plot, copy it and update it.
-            if (existingClauseIndex !== -1) {
-                const existingClause =
-                    props.plotBrush.clauses[existingClauseIndex];
-                existingClause.source.value = [min, max];
-                const clause = {
-                    predicate: `${props.plotName} BETWEEN ${min} AND ${max}`,
-                    source: existingClause.source,
-                    value: [min, max],
-                };
-                props.plotBrush.update(clause);
-            }
-            // Otherwise, make a new clause.
-            else {
-                const clause = {
-                    source: props.plotName,
-                    value: [min, max],
-                    predicate: `${props.plotName} BETWEEN ${min} AND ${max}`,
-                };
+    //         // If theres a clause on this plot, copy it and update it.
+    //         if (existingClauseIndex !== -1) {
+    //             console.log('found existing');
+    //             const existingClause =
+    //                 props.plotBrush.clauses[existingClauseIndex];
+    //             existingClause.source.value = [min, max];
+    //             // const clause = {
+    //             //     predicate: `${props.plotName} BETWEEN ${min} AND ${max}`,
+    //             //     source: existingClause.source,
+    //             //     value: [min, max],
+    //             // };
+    //             existingClause.value = [min, max];
+    //             existingClause.predicate = `${props.plotName} BETWEEN ${min} AND ${max}`;
+    //             props.plotBrush.update(existingClause);
+    //         }
+    //         // Otherwise, make a new clause.
+    //         else {
+    //             console.log('Else');
+    //             const clause = {
+    //                 source: props.plotName,
+    //                 value: [min, max],
+    //                 predicate: `${props.plotName} BETWEEN ${min} AND ${max}`,
+    //             };
 
-                props.plotBrush.update(clause);
-            }
-        }
+    //             props.plotBrush.update(clause);
+    //         }
+    //     }
 
-        // Make a new clause even if none exist.
-        else {
-            const clause = {
-                source: props.plotName,
-                value: [min, max],
-                predicate: `${props.plotName} BETWEEN ${min} AND ${max}`,
-            };
+    //     // Make a new clause even if none exist.
+    //     else {
+    //         const clause = {
+    //             source: props.plotName,
+    //             value: [min, max],
+    //             predicate: `${props.plotName} BETWEEN ${min} AND ${max}`,
+    //         };
 
-            props.plotBrush.update(clause);
-        }
-    }
+    //         props.plotBrush.update(clause);
+    //     }
+    // }
 
     // Update the store
     selectionStore.updateSelection(props.plotName, [
@@ -127,7 +132,8 @@ const applyManualFilter = () => {
 
 // Brush Selection Changes update selection stores, or clear selections.
 const handleIntervalChange = () => {
-    //console.log(props.plotBrush);
+    console.log('interval change occurred');
+    console.log(props.plotBrush);
     const active = props.plotBrush.clauses.active;
     if (active && Array.isArray(active.value)) {
         const clauses = props.plotBrush.clauses;
@@ -245,8 +251,9 @@ function makePlot(column: string) {
         vg.yTicks(0)
     );
 }
-
-props.plotBrush.addEventListener('value', handleIntervalChange);
+console.log('blargen');
+console.log(props.plotBrush);
+// props.plotBrush.addEventListener('value', handleIntervalChange);
 watch(dataInitialized, createCharts);
 </script>
 

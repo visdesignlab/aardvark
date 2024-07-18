@@ -73,12 +73,40 @@ const menuOpen = ref(false);
 const allPlotNames = ['A', 'x', 'y', 'mass', 'time', 'MI'];
 const selectedPlotSet = reactive(new Set(['mass', 'time']));
 
-let plotBrush = vg.Selection.intersect();
-vg.Selection.crossfilter();
+// const plotBrush = ref(vg.Selection.intersect());
+// vg.Selection.crossfilter();
 
 const currentSelections = ref<Selections>({});
 const filterStore = useFilterStore();
 const selectionStore = useSelectionStore();
+
+const mosaicSelection = computed(() => vg.Selection.intersect());
+
+const plotBrush = computed(() => {
+    console.log('plotBrush computed');
+    // const mosaicSelection = vg.Selection.intersect();
+    for (let oldClause of mosaicSelection.value.clauses) {
+        mosaicSelection.value.update({
+            source: oldClause.source,
+            value: null,
+            predicate: null,
+        });
+        // mosaicSelection.value = mosaicSelection.value.remove(oldClause.source);
+    }
+
+    for (let selection of selectionStore.Selections) {
+        const source = selection.plotName;
+        const min = +selection.range[0];
+        const max = +selection.range[1];
+        const value = [min, max];
+        const predicate = `${source}  BETWEEN ${min} AND ${max}`;
+        const clause = { source, value, predicate };
+        mosaicSelection.value.update(clause);
+    }
+    return mosaicSelection.value;
+});
+
+// const blarg = 9;
 
 const togglePlotSelection = (name: string) => {
     if (selectedPlotSet.has(name)) {
@@ -98,21 +126,21 @@ const clearSelectionForPlot = (plotName: string) => {
     selectionStore.removeSelectionByPlotName(plotName);
 
     // If there is a selection clause on this plot, remove it.
-    const clauseIndex = plotBrush.clauses.findIndex(
+    const clauseIndex = plotBrush.value.clauses.findIndex(
         (clause: any) => clause.source.field === plotName
     );
     if (clauseIndex !== -1) {
-        //plotBrush = plotBrush.remove(plotBrush.clauses[clauseIndex].source);
+        //plotBrush.value = plotBrush.value.remove(plotBrush.value.clauses[clauseIndex].source);
     }
 };
 
 const handleSelectionRemoved = (event: CustomEvent) => {
     // If there exists a selection with this plot name, remove it.
-    const clauseIndex = plotBrush.clauses.findIndex(
+    const clauseIndex = plotBrush.value.clauses.findIndex(
         (clause: any) => clause.source.field === event.detail
     );
     if (clauseIndex !== -1) {
-        //plotBrush = plotBrush.remove(plotBrush.clauses[clauseIndex].source);
+        //plotBrush.value = plotBrush.value.remove(plotBrush.value.clauses[clauseIndex].source);
     }
 };
 
