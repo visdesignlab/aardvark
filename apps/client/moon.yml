@@ -27,3 +27,7 @@ project:
   owner: 'University of Utah'
   maintainers: ['Dev-Lan','bbollen23']
   description: 'Front end data visualization platform for cell microscopy data.'
+
+tags:
+  - 'frontend'
+  - 'vue'
