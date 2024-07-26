@@ -3,14 +3,12 @@ import { ref, watch, onMounted } from 'vue';
 import type { PropType } from 'vue';
 import * as vg from '@uwdata/vgplot';
 import { useCellMetaData } from '@/stores/cellMetaData';
-import { useDatasetSelectionStore } from '@/stores/datasetSelectionStore';
 import { useSelectionStore } from '@/stores/selectionStore';
 import { storeToRefs } from 'pinia';
-import PlotSelector from './PlotSelector.vue';
+import { Query } from '@uwdata/mosaic-sql';
 
 const vgPlotContainer = ref<HTMLDivElement | null>(null);
 const cellMetaData = useCellMetaData();
-const datasetSelectionStore = useDatasetSelectionStore();
 const { dataInitialized } = storeToRefs(cellMetaData);
 const selectionStore = useSelectionStore();
 const { Selections } = storeToRefs(selectionStore);
@@ -26,8 +24,12 @@ const props = defineProps({
     },
 });
 
+// Range Slider
+const range = ref({ min: ref(0), max: ref(0) });
+
 const minValue = ref('min');
 const maxValue = ref('max');
+
 const chartInitialized = ref<boolean>(false);
 const updateMinValue = (event: Event) => {
     const value = (event.target as HTMLInputElement).value;
@@ -42,6 +44,13 @@ const updateMaxValue = (event: Event) => {
 const selectText = (event: Event) => {
     const target = event.target as HTMLInputElement;
     target.select();
+};
+
+const handleRangeChange = (newRange: { min: number; max: number }) => {
+    //range.value = newRange;
+    minValue.value = newRange.min.toFixed(3).toString();
+    maxValue.value = newRange.max.toFixed(3).toString();
+    applyManualFilter();
 };
 
 const handleEnter = (event: KeyboardEvent) => {
@@ -61,57 +70,10 @@ const handleEnter = (event: KeyboardEvent) => {
 // Called by applyManualFilter when min and max textbox values are entered.
 const updateBrushSelection = (min: number, max: number) => {
     console.log('update manual Filter');
-    // if (props.plotBrush) {
-    //     if (props.plotBrush.clauses && props.plotBrush.clauses.length > 0) {
-    //         // Is there a clause on this plot?
-    //         const existingClauseIndex = props.plotBrush.clauses.findIndex(
-    //             (clause: any) => clause.source.field === props.plotName
-    //         );
-
-    //         // If theres a clause on this plot, copy it and update it.
-    //         if (existingClauseIndex !== -1) {
-    //             console.log('found existing');
-    //             const existingClause =
-    //                 props.plotBrush.clauses[existingClauseIndex];
-    //             existingClause.source.value = [min, max];
-    //             // const clause = {
-    //             //     predicate: `${props.plotName} BETWEEN ${min} AND ${max}`,
-    //             //     source: existingClause.source,
-    //             //     value: [min, max],
-    //             // };
-    //             existingClause.value = [min, max];
-    //             existingClause.predicate = `${props.plotName} BETWEEN ${min} AND ${max}`;
-    //             props.plotBrush.update(existingClause);
-    //         }
-    //         // Otherwise, make a new clause.
-    //         else {
-    //             console.log('Else');
-    //             const clause = {
-    //                 source: props.plotName,
-    //                 value: [min, max],
-    //                 predicate: `${props.plotName} BETWEEN ${min} AND ${max}`,
-    //             };
-
-    //             props.plotBrush.update(clause);
-    //         }
-    //     }
-
-    //     // Make a new clause even if none exist.
-    //     else {
-    //         const clause = {
-    //             source: props.plotName,
-    //             value: [min, max],
-    //             predicate: `${props.plotName} BETWEEN ${min} AND ${max}`,
-    //         };
-
-    //         props.plotBrush.update(clause);
-    //     }
-    // }
-
     // Update the store
     selectionStore.updateSelection(props.plotName, [
-        min.toFixed(2),
-        max.toFixed(2),
+        min.toString(),
+        max.toString(),
     ]);
 };
 
@@ -126,7 +88,7 @@ const applyManualFilter = () => {
         !isNaN(max) &&
         min <= max
     ) {
-        updateBrushSelection(min, max);
+        updateBrushSelection(range.value.min, range.value.max);
     }
 };
 
@@ -200,9 +162,51 @@ async function createCharts() {
     }
 }
 
+let dataMin = ref(0);
+let dataMax = ref(0);
+const minMaxSelection = vg.Selection.intersect();
+
+watch(dataInitialized, (newValue) => {
+    if (newValue) {
+        dataRange();
+    }
+});
+
+async function dataRange() {
+    try {
+        const thisMin = await vg
+            .coordinator()
+            .query(
+                Query.from('current_cell_metadata')
+                    .select(props.plotName)
+                    .orderby(props.plotName)
+                    .limit(1),
+                { type: 'json' }
+            );
+
+        const thisMax = await vg.coordinator().query(
+            `
+  SELECT ${props.plotName}
+  FROM current_cell_metadata
+  ORDER BY ${props.plotName} DESC
+  LIMIT 1
+`,
+            { type: 'json' }
+        );
+
+        dataMin.value = Number(thisMin[0][props.plotName].toFixed(3));
+        dataMax.value = Number(thisMax[0][props.plotName].toFixed(3));
+
+        // You might want to do a similar query for dataMin
+    } catch (error) {
+        console.error('Error fetching data range:', error);
+    }
+}
+
 onMounted(() => {
-    if (dataInitialized) {
+    if (dataInitialized.value) {
         createCharts();
+        dataRange();
     }
 });
 
@@ -248,13 +252,15 @@ function makePlot(column: string) {
         vg.xTickSpacing(100),
         vg.yLabelAnchor('top'),
         vg.yAxis(null),
+        vg.xLine(false),
         vg.yTicks(0)
     );
 }
 console.log('blargen');
 console.log(props.plotBrush);
-// props.plotBrush.addEventListener('value', handleIntervalChange);
+props.plotBrush.addEventListener('value', handleIntervalChange);
 watch(dataInitialized, createCharts);
+watch(range, handleRangeChange);
 </script>
 
 <template>
@@ -294,6 +300,23 @@ watch(dataInitialized, createCharts);
                     class="minMax"
                 />
             </div>
+            <div
+                class="q-range-container"
+                style="position: absolute; bottom: 40px; left: 0; right: 0"
+            >
+                <q-range
+                    v-model="range"
+                    :min="dataMin"
+                    :max="dataMax"
+                    :step="0.001"
+                    label
+                    thumb-size="13px"
+                    track-size="2px"
+                    switch-label-side
+                    selection-color="steel-blue"
+                    track-color="hidden"
+                />
+            </div>
         </q-item-section>
     </div>
 </template>
@@ -322,5 +345,8 @@ watch(dataInitialized, createCharts);
 }
 .minMax:hover {
     background-color: #f0f0f0;
+}
+.q-range-container {
+    padding: 0 20px;
 }
 </style>

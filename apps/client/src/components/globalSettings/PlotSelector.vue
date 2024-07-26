@@ -53,7 +53,7 @@
 </template>
 
 <script lang="ts" setup>
-import { ref, reactive, computed } from 'vue';
+import { ref, reactive, computed, onMounted } from 'vue';
 import { QBtn } from 'quasar';
 import * as vg from '@uwdata/vgplot';
 import { storeToRefs } from 'pinia';
@@ -71,7 +71,7 @@ interface SelectionChangeEvent {
 const menuOpen = ref(false);
 
 const allPlotNames = ['A', 'x', 'y', 'mass', 'time', 'MI'];
-const selectedPlotSet = reactive(new Set(['mass', 'time']));
+const selectedPlotSet = ref(new Set(['mass', 'time']));
 
 // const plotBrush = ref(vg.Selection.intersect());
 // vg.Selection.crossfilter();
@@ -79,6 +79,12 @@ const selectedPlotSet = reactive(new Set(['mass', 'time']));
 const currentSelections = ref<Selections>({});
 const filterStore = useFilterStore();
 const selectionStore = useSelectionStore();
+
+onMounted(() => {
+    // Force computation of plotBrush and mosaicSelection
+    plotBrush.value;
+    mosaicSelection.value;
+});
 
 const mosaicSelection = computed(() => vg.Selection.intersect());
 
@@ -109,15 +115,17 @@ const plotBrush = computed(() => {
 // const blarg = 9;
 
 const togglePlotSelection = (name: string) => {
-    if (selectedPlotSet.has(name)) {
+    const newSet = new Set(selectedPlotSet.value);
+    if (newSet.has(name)) {
         clearSelectionForPlot(name);
-        selectedPlotSet.delete(name);
+        newSet.delete(name);
         console.log(`Plot ${name} removed`);
     } else {
-        selectedPlotSet.add(name);
+        newSet.add(name);
         console.log(`Plot ${name} added`);
     }
-    console.log('Current selected plots:', Array.from(selectedPlotSet));
+    selectedPlotSet.value = newSet; // This assignment triggers reactivity
+    console.log('Current selected plots:', Array.from(selectedPlotSet.value));
 };
 
 // Clears the current selection when plot is deselected from menu.
