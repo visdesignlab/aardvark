@@ -86,11 +86,8 @@ class Task(ABC):
         logger.info('Fake Cleaning')
 
     # Generic unpacking of a zip file with callback for additional processing.
-    def process_zip_file(self, label="", callback=None):
+    def process_zip_file(self, base_file_location="", callback=None):
         try:
-            base_file_location = f"{self.experiment_name}/" \
-                f"location_{self.location}/" \
-                f"{label}/"
             companion_ome = ""
             with zipfile.ZipFile(self.blob, 'r') as zip_ref:
                 zip_contents = zip_ref.namelist()
@@ -221,7 +218,10 @@ class Task(ABC):
 class LiveCyteSegmentationsTask(Task):
     def execute(self):
         logger.info(f"Executing task: {self.record_id}")
-        data = self.process_zip_file(label="segmentations", callback=roi_to_geojson)
+        base_file_location = f"{self.experiment_name}/" \
+                f"location_{self.location}/" \
+                "segmentations/cells"
+        data = self.process_zip_file(base_file_location=base_file_location, callback=roi_to_geojson)
         return data
 
     def cleanup(self):
@@ -232,7 +232,10 @@ class LiveCyteSegmentationsTask(Task):
 class LiveCyteCellImagesTask(Task):
     def execute(self):
         logger.info(f"Executing task: {self.record_id}")
-        data = self.process_zip_file(label="images", callback=None)
+        base_file_location = f"{self.experiment_name}/" \
+        f"location_{self.location}/" \
+        "images"
+        data = self.process_zip_file(base_file_location=base_file_location, callback=None)
         return data
 
     def cleanup(self):
