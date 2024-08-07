@@ -315,6 +315,7 @@ export const useUploadStore = defineStore('uploadStore', () => {
                     if (responseData.data) {
                         uploadingFile.processedData = responseData.data;
                     }
+                    // This only triggers when everything is done since experimentConfig is only computed once all has finished.
                     if (experimentConfig && experimentHeaders) {
                         const submitExperimentResponse: CreateExperimentResponseData =
                             await onSubmitExperiment();
@@ -327,12 +328,14 @@ export const useUploadStore = defineStore('uploadStore', () => {
                                 'There was an error submitting this experiment.';
                         }
                     }
+                    uploadingFile.processing = 'succeeded';
                 } else if (
                     responseData.status === 'FAILED' ||
                     responseData.status === 'ERROR'
                 ) {
                     // show error/failure message
                     updatesAvailable = true;
+                    uploadingFile.processing = 'failed';
                 } else if (responseData.status === 'RUNNING') {
                     // show running symbol like it normally does
                     uploadingFile.processing = 'running';
@@ -342,7 +345,6 @@ export const useUploadStore = defineStore('uploadStore', () => {
                     await new Promise((resolve) => setTimeout(resolve, 5000));
                 }
             }
-            uploadingFile.processing = 'succeeded';
         } catch (error) {
             console.error('Error checking for updates:', error);
             uploadingFile.processing = 'failed';
