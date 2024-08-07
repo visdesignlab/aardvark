@@ -437,10 +437,6 @@ export const useUploadStore = defineStore('uploadStore', () => {
     ];
 
     async function populateDefaultColumnMappings() {
-        if (columnMappings.value) {
-            // if it's already populated don't set the defaults
-            return;
-        }
         if (locationFileList.value.length == 0) {
             // if there are no files are selectted don't populate
             return;
