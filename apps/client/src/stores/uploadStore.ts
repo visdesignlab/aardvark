@@ -275,7 +275,10 @@ export const useUploadStore = defineStore('uploadStore', () => {
 
                     const processResponseData: ProcessResponseData =
                         processResponse.data;
-                    if (processResponseData.task_id) {
+                    if (
+                        processResponseData.task_id &&
+                        fileToUpload.checkForUpdates
+                    ) {
                         checkForUpdates(
                             processResponseData.task_id,
                             fileToUpload
