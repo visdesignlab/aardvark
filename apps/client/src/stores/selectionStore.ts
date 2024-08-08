@@ -4,10 +4,14 @@ interface Selection {
     plotName: string;
     range: [string, string];
 }
+interface Plot {
+    plotName: string;
+}
 
 export const useSelectionStore = defineStore('Selection', {
     state: () => ({
         Selections: [] as Selection[],
+        Plots: [] as Plot[],
     }),
     actions: {
         addSelection(selection: Selection) {
@@ -38,10 +42,20 @@ export const useSelectionStore = defineStore('Selection', {
                 (s) => s.plotName === plotName
             );
             if (index !== -1) {
-                this.removeSelection(index);
                 window.dispatchEvent(
                     new CustomEvent('selectionRemoved', { detail: plotName })
                 );
+                this.removeSelection(index);
+            }
+        },
+        addPlot(plot: Plot) {
+            const existingIndex = this.Plots.findIndex(
+                (s) => s.plotName === plot.plotName
+            );
+            if (existingIndex !== -1) {
+                this.Plots[existingIndex] = plot;
+            } else {
+                this.Plots.push(plot);
             }
         },
     },

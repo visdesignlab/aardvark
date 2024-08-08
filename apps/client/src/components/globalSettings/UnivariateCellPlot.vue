@@ -12,7 +12,7 @@ const cellMetaData = useCellMetaData();
 const { dataInitialized } = storeToRefs(cellMetaData);
 const selectionStore = useSelectionStore();
 const { Selections } = storeToRefs(selectionStore);
-const emit = defineEmits(['selectionChange']);
+const emit = defineEmits(['selectionChange', 'plot-loaded']);
 const props = defineProps({
     plotName: {
         type: String as PropType<string>,
@@ -24,8 +24,56 @@ const props = defineProps({
     },
 });
 
+let dataMin = ref(0);
+let dataMax = ref(0);
+async function dataRange() {
+    try {
+        const thisMin = await vg
+            .coordinator()
+            .query(
+                Query.from('current_cell_metadata')
+                    .select(props.plotName)
+                    .orderby(props.plotName)
+                    .limit(1),
+                { type: 'json' }
+            );
+
+        const thisMax = await vg.coordinator().query(
+            `
+  SELECT ${props.plotName}
+  FROM current_cell_metadata
+  ORDER BY ${props.plotName} DESC
+  LIMIT 1
+`,
+            { type: 'json' }
+        );
+
+        dataMin.value = Number(thisMin[0][props.plotName].toFixed(3));
+        dataMax.value = Number(thisMax[0][props.plotName].toFixed(3));
+
+        // Check for existing selection in the store
+        const currentSelection = selectionStore.Selections.find(
+            (selection) => selection.plotName === props.plotName
+        );
+
+        if (currentSelection) {
+            // Use selection range if present
+            range.value.min = parseFloat(currentSelection.range[0]);
+            range.value.max = parseFloat(currentSelection.range[1]);
+        } else {
+            // Fallback to dataMin and dataMax
+            range.value.min = dataMin.value;
+            range.value.max = dataMax.value;
+        }
+
+        // You might want to do a similar query for dataMin
+    } catch (error) {
+        console.error('Error fetching data range:', error);
+    }
+}
+
 // Range Slider
-const range = ref({ min: ref(0), max: ref(0) });
+let range = ref({ min: ref(dataMin.value), max: ref(dataMax.value) });
 
 const minValue = ref('min');
 const maxValue = ref('max');
@@ -71,10 +119,15 @@ const handleEnter = (event: KeyboardEvent) => {
 const updateBrushSelection = (min: number, max: number) => {
     console.log('update manual Filter');
     // Update the store
-    selectionStore.updateSelection(props.plotName, [
-        min.toString(),
-        max.toString(),
-    ]);
+    // selectionStore.updateSelection(props.plotName, [
+    //     min.toString(),
+    //     max.toString(),
+    // ]);
+    emit('selectionChange', {
+        plotName: props.plotName,
+        range: [min, max],
+    });
+    //console.log(props.plotBrush);
 };
 
 // Called when textbox values are changed.
@@ -88,7 +141,9 @@ const applyManualFilter = () => {
         !isNaN(max) &&
         min <= max
     ) {
-        updateBrushSelection(range.value.min, range.value.max);
+        updateBrushSelection(min, max);
+        range.value.min = min;
+        range.value.max = max;
     }
 };
 
@@ -133,75 +188,61 @@ const clearBrushSelection = () => {
             value: null,
             predicate: null,
         });
+
+        console.log('clearing Brush Selection.....');
+    }
+};
+
+const handleSelectionRemoved = (event: CustomEvent) => {
+    if (props.plotName == event.detail) {
+        range.value.min = dataMin.value;
+        range.value.max = dataMax.value;
+        minValue.value = 'min';
+        maxValue.value = 'max';
     }
 };
 
 // Updates the min and max values.
-watch(
-    () => Selections.value,
-    (newSelections) => {
-        const selection = newSelections.find(
-            (s) => s.plotName === props.plotName
-        );
-        if (selection) {
-            minValue.value = selection.range[0];
-            maxValue.value = selection.range[1];
-        } else {
-            minValue.value = 'min';
-            maxValue.value = 'max';
-        }
-    },
-    { deep: true }
-);
+// watch(
+//     () => Selections.value,
+//     (newSelections) => {
+//         const selection = newSelections.find(
+//             (s) => s.plotName === props.plotName
+//         );
+//         if (selection) {
+//             minValue.value = selection.range[0];
+//             maxValue.value = selection.range[1];
+//         } else {
+//             minValue.value = 'min';
+//             maxValue.value = 'max';
+//         }
+//     },
+//     { deep: true }
+// );
 
 const charts = ref<null | HTMLElement>(null);
+const loaded = ref(false);
 async function createCharts() {
     charts.value = makePlot(props.plotName);
     if (vgPlotContainer.value) {
         vgPlotContainer.value.appendChild(charts.value!);
+        loaded.value = true;
     }
 }
-
-let dataMin = ref(0);
-let dataMax = ref(0);
 const minMaxSelection = vg.Selection.intersect();
 
-watch(dataInitialized, (newValue) => {
-    if (newValue) {
-        dataRange();
-    }
+watch(loaded, () => {
+    dataRange();
+    handlePlotLoading();
 });
-
-async function dataRange() {
-    try {
-        const thisMin = await vg
-            .coordinator()
-            .query(
-                Query.from('current_cell_metadata')
-                    .select(props.plotName)
-                    .orderby(props.plotName)
-                    .limit(1),
-                { type: 'json' }
-            );
-
-        const thisMax = await vg.coordinator().query(
-            `
-  SELECT ${props.plotName}
-  FROM current_cell_metadata
-  ORDER BY ${props.plotName} DESC
-  LIMIT 1
-`,
-            { type: 'json' }
-        );
-
-        dataMin.value = Number(thisMin[0][props.plotName].toFixed(3));
-        dataMax.value = Number(thisMax[0][props.plotName].toFixed(3));
-
-        // You might want to do a similar query for dataMin
-    } catch (error) {
-        console.error('Error fetching data range:', error);
-    }
-}
+const loading = ref(true);
+const handlePlotLoading = async () => {
+    await dataRange();
+    // Wait for 0.5 seconds before emitting the plot-loaded event
+    await new Promise((resolve) => setTimeout(resolve, 500));
+    loading.value = false;
+    emit('plot-loaded');
+};
 
 onMounted(() => {
     if (dataInitialized.value) {
@@ -231,10 +272,6 @@ function makePlot(column: string) {
                 },
             }
         ),
-        vg.intervalX({
-            as: props.plotBrush,
-            peers: true,
-        }),
         vg.marginBottom(130),
         vg.marginTop(30),
         vg.width(600),
@@ -256,11 +293,14 @@ function makePlot(column: string) {
         vg.yTicks(0)
     );
 }
-console.log('blargen');
 console.log(props.plotBrush);
-props.plotBrush.addEventListener('value', handleIntervalChange);
+//props.plotBrush.addEventListener('value', handleIntervalChange);
 watch(dataInitialized, createCharts);
 watch(range, handleRangeChange);
+window.addEventListener(
+    'selectionRemoved',
+    handleSelectionRemoved as EventListener
+);
 </script>
 
 <template>

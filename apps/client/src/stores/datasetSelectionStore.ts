@@ -160,7 +160,7 @@ export const useDatasetSelectionStore = defineStore(
                     comments: '#',
                     complete: async (results: ParseResult<AnyAttributes>) => {
                         // If you need to use local duckDb instance, you can use this.
-                        // vg.coordinator().databaseConnector(vg.wasmConnector());
+                        //vg.coordinator().databaseConnector(vg.wasmConnector());
 
                         await vg
                             .coordinator()
