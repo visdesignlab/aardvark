@@ -5,6 +5,7 @@ import { useFilterStore } from '@/stores/filterStore';
 import { useSelectionStore } from '@/stores/selectionStore';
 import { storeToRefs } from 'pinia';
 import { computed } from 'vue';
+import { forEach } from 'lodash-es';
 
 const globalSettings = useGlobalSettings();
 const filterStore = useFilterStore();
@@ -22,6 +23,14 @@ function removeSelection(index: number) {
     const plotName = Selections.value[index]?.plotName;
     selectionStore.removeSelectionByPlotName(plotName);
 }
+const addFilter = () => {
+    Selections.value.forEach((selection) => {
+        filterStore.addFilter({
+            plotName: selection.plotName,
+            range: [selection.range[0], selection.range[1]],
+        });
+    });
+};
 </script>
 
 <template>
@@ -83,6 +92,19 @@ function removeSelection(index: number) {
                     </q-item>
                 </q-list>
             </q-expansion-item>
+            <q-separator />
+            <q-btn
+                flat
+                color="black"
+                icon="arrow_downward"
+                label="Convert to Filters"
+                text-color="dark-grey"
+                no-caps
+                class="filter-style"
+                padding="sm 136.5px sm 12px"
+                dense
+                @click="addFilter"
+            />
             <q-separator />
             <q-expansion-item>
                 <template v-slot:header>
@@ -177,5 +199,9 @@ function removeSelection(index: number) {
     border: 1px solid #e0e0e0;
     border-radius: 4px;
     margin-bottom: 16px;
+}
+.filter-style {
+    font-weight: 400;
+    font-size: 12px;
 }
 </style>

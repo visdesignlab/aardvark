@@ -6,6 +6,18 @@ import { useCellMetaData } from '@/stores/cellMetaData';
 import { useSelectionStore } from '@/stores/selectionStore';
 import { storeToRefs } from 'pinia';
 import { Query } from '@uwdata/mosaic-sql';
+import {
+    QMenu,
+    QItem,
+    QItemSection,
+    QDialog,
+    QCard,
+    QCardSection,
+    QCardActions,
+    QForm,
+    QInput,
+    QBtn,
+} from 'quasar';
 
 const vgPlotContainer = ref<HTMLDivElement | null>(null);
 const cellMetaData = useCellMetaData();
@@ -71,6 +83,41 @@ async function dataRange() {
         console.error('Error fetching data range:', error);
     }
 }
+
+const showRangeDialog = ref(false);
+const minInput = ref('');
+const maxInput = ref('');
+
+const openRangeDialog = () => {
+    minInput.value = minValue.value === 'min' ? '' : minValue.value;
+    maxInput.value = maxValue.value === 'max' ? '' : maxValue.value;
+    showRangeDialog.value = true;
+};
+
+const onSubmit = () => {
+    if (minInput.value !== '' && maxInput.value !== '') {
+        minValue.value = minInput.value;
+        maxValue.value = maxInput.value;
+        applyManualFilter();
+        showRangeDialog.value = false;
+    }
+};
+
+const validatePositiveNumber = (val: string) => {
+    if (val === '') return true;
+    const num = parseFloat(val);
+    return (!isNaN(num) && num >= 0) || 'Please enter a positive number';
+};
+
+const validateMinMax = () => {
+    if (minInput.value !== '' && maxInput.value !== '') {
+        return (
+            parseFloat(minInput.value) <= parseFloat(maxInput.value) ||
+            'Min should be less than or equal to Max'
+        );
+    }
+    return true;
+};
 
 // Range Slider
 let range = ref({ min: ref(dataMin.value), max: ref(dataMax.value) });
@@ -301,91 +348,103 @@ window.addEventListener(
     'selectionRemoved',
     handleSelectionRemoved as EventListener
 );
+
+const menus = ref(false);
+
+document.addEventListener('contextmenu', (e) => {
+    e.preventDefault();
+    //menus.value = true;
+});
 </script>
 
 <template>
     <div>
         <q-item-section style="position: relative">
             <div
-                id="plotContainer"
                 ref="vgPlotContainer"
                 @clearSelection="clearBrushSelection"
                 style="position: relative"
-            ></div>
-            <div
-                class="selection-box left"
-                style="position: absolute; bottom: 15px"
             >
-                <input
-                    type="text"
-                    :value="minValue"
-                    @input="updateMinValue($event)"
-                    @keyup.enter="handleEnter($event)"
-                    @blur="applyManualFilter()"
-                    @focus="selectText($event)"
-                    class="minMax"
-                />
-            </div>
-            <div
-                class="selection-box right"
-                style="position: absolute; bottom: 15px; right: 0"
-            >
-                <input
-                    type="text"
-                    :value="maxValue"
-                    @input="updateMaxValue($event)"
-                    @keyup.enter="handleEnter($event)"
-                    @blur="applyManualFilter()"
-                    @focus="selectText($event)"
-                    class="minMax"
-                />
-            </div>
-            <div
-                class="q-range-container"
-                style="position: absolute; bottom: 40px; left: 0; right: 0"
-            >
-                <q-range
-                    v-model="range"
-                    :min="dataMin"
-                    :max="dataMax"
-                    :step="0.001"
-                    label
-                    thumb-size="13px"
-                    track-size="2px"
-                    switch-label-side
-                    selection-color="steel-blue"
-                    track-color="hidden"
-                />
+                <q-menu
+                    v-model="menus"
+                    touch-position
+                    anchor="top right"
+                    self="top right"
+                >
+                    <q-item clickable @click="openRangeDialog">
+                        <q-item-section>Enter Range</q-item-section>
+                    </q-item>
+                </q-menu>
+
+                <div
+                    class="q-range-container"
+                    style="position: absolute; bottom: 40px; left: 0; right: 0"
+                >
+                    <q-range
+                        v-model="range"
+                        :min="dataMin"
+                        :max="dataMax"
+                        :step="0.001"
+                        label
+                        thumb-size="13px"
+                        track-size="2px"
+                        switch-label-side
+                        selection-color="steel-blue"
+                        track-color="hidden"
+                        drag-range
+                    />
+                </div>
             </div>
         </q-item-section>
+
+        <!-- Q-Dialog for entering min and max values -->
+        <q-dialog v-model="showRangeDialog">
+            <q-card style="min-width: 350px">
+                <q-card-section>
+                    <div class="text-h6">Enter Range</div>
+                </q-card-section>
+
+                <q-card-section>
+                    <q-form @submit="onSubmit" class="q-gutter-md">
+                        <q-input
+                            filled
+                            v-model="minInput"
+                            label="Min"
+                            lazy-rules
+                            :rules="[validatePositiveNumber]"
+                        />
+
+                        <q-input
+                            filled
+                            v-model="maxInput"
+                            label="Max"
+                            lazy-rules
+                            :rules="[validatePositiveNumber]"
+                        />
+
+                        <div>
+                            <q-btn
+                                label="Submit"
+                                type="submit"
+                                color="primary"
+                                :disable="!validateMinMax()"
+                            />
+                            <q-btn
+                                label="Cancel"
+                                color="primary"
+                                flat
+                                @click="showRangeDialog = false"
+                                class="q-ml-sm"
+                            />
+                        </div>
+                    </q-form>
+                </q-card-section>
+            </q-card>
+        </q-dialog>
     </div>
 </template>
 
 <style scoped>
-.plot-container {
-    display: flex;
-    align-items: center;
-    text-align: center;
-}
-.selection-box {
-    display: flex;
-    align-items: center;
-}
-.minMax {
-    width: 56px;
-    padding: 2px 3px;
-    border: 1px solid lightgrey;
-    border-radius: 4px;
-    font-size: 11px;
-    line-height: 12px;
-    color: gray;
-    text-align: center;
-    background-color: white;
-    transition: background-color 0.2s ease-in-out;
-}
-.minMax:hover {
-    background-color: #f0f0f0;
-}
 .q-range-container {
     padding: 0 20px;
 }

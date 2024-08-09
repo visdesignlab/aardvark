@@ -35,16 +35,6 @@
                         </q-list>
                     </q-menu>
                 </q-btn>
-                <q-btn
-                    class="gt-xs"
-                    size="12px"
-                    flat
-                    dense
-                    round
-                    icon="filter_alt"
-                    color="grey-7"
-                    @click="addFilter"
-                />
             </div>
             <UnivariateCellPlot
                 v-for="plot in selectedPlots"
@@ -179,17 +169,6 @@ const handleSelectionChange = (event: SelectionChangeEvent) => {
         delete currentSelections.value[plotName];
         selectionStore.removeSelectionByPlotName(plotName);
     }
-};
-
-const addFilter = () => {
-    Object.entries(currentSelections.value).forEach(([plotName, range]) => {
-        if (range) {
-            filterStore.addFilter({
-                plotName,
-                range: [range[0].toFixed(2), range[1].toFixed(2)],
-            });
-        }
-    });
 };
 </script>
 
