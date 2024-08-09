@@ -46,6 +46,7 @@ To create and run the docker container, first change into the `docker/` director
 # Client settings
 VITE_ENVIRONMENT=production
 VITE_USE_HTTP=True
+VITE_SERVER_URL=localhost/data
 
 # Docker Container Only Settings
 DATABASE_ROOT_PASSWORD=root_pass
