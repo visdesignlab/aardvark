@@ -17,7 +17,7 @@ export interface SettingsPage {
 export const useGlobalSettings = defineStore('globalSettings', () => {
     const settingsPages = ref<SettingsPage[]>([
         {
-            name: 'Select Dataset Location',
+            name: 'Select Dataset',
             faKey: 'fa-database',
             id: 1,
             show: true,
