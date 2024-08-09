@@ -46,6 +46,7 @@ After installing docker, you'll need to create a ".env" file. Here we have a tem
 # Client settings
 VITE_ENVIRONMENT=production
 VITE_USE_HTTP=True
+VITE_SERVER_URL=localhost/data
 
 # Docker Container Only Settings
 DATABASE_ROOT_PASSWORD=root_pass
