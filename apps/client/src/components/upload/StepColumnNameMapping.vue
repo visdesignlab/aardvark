@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onActivated } from 'vue';
+import { ref } from 'vue';
 import { useUploadStore } from '@/stores/uploadStore';
 import { useGlobalSettings } from '@/stores/globalSettings';
 const uploadStore = useUploadStore();
@@ -46,10 +46,6 @@ const specialVariables = ref<SpecialVariable[]>([
     },
 ]);
 
-onActivated(() => {
-    console.log('hook called');
-    uploadStore.populateDefaultColumnMappings();
-});
 </script>
 
 <template>

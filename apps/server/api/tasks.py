@@ -216,8 +216,8 @@ class LiveCyteSegmentationsTask(Task):
     def execute(self):
         logger.info(f"Executing task: {self.record_id}")
         base_file_location = f"{self.experiment_name}/" \
-                f"location_{self.location}/" \
-                "segmentations/cells"
+                             f"location_{self.location}/" \
+                             "segmentations/cells"
         data = self.process_zip_file(base_file_location=base_file_location, callback=roi_to_geojson)
         return data
 
@@ -230,8 +230,8 @@ class LiveCyteCellImagesTask(Task):
     def execute(self):
         logger.info(f"Executing task: {self.record_id}")
         base_file_location = f"{self.experiment_name}/" \
-        f"location_{self.location}/" \
-        "images"
+                             f"location_{self.location}/" \
+                             "images"
         data = self.process_zip_file(base_file_location=base_file_location, callback=None)
         return data
 
@@ -243,10 +243,11 @@ class LiveCyteCellImagesTask(Task):
 class LiveCyteMetadataTask(Task):
     def execute(self):
         logger.info(f"Executing task: {self.record_id}")
-        
+
         base_file_location = f"{self.experiment_name}/" \
-        f"location_{self.location}"
-        data = self.process_csv_file(base_file_location=base_file_location, skip_rows=1, callback=None)
+            f"location_{self.location}"
+        data = self.process_csv_file(base_file_location=base_file_location, skip_rows=1,
+                                     callback=None)
         return data
 
     def cleanup(self):
