@@ -1,16 +1,16 @@
 import { defineStore } from 'pinia';
 
-interface filter {
+interface Filter {
     plotName: string;
-    range: [string, string];
+    range: [number, number];
 }
 
 export const useFilterStore = defineStore('filter', {
     state: () => ({
-        filters: [] as filter[],
+        filters: [] as Filter[],
     }),
     actions: {
-        addFilter(filter: filter) {
+        addFilter(filter: Filter) {
             const existingIndex = this.filters.findIndex(
                 (s) => s.plotName === filter.plotName
             );
@@ -23,7 +23,7 @@ export const useFilterStore = defineStore('filter', {
         removeFilter(index: number) {
             this.filters.splice(index, 1);
         },
-        updateFilter(plotName: string, range: [string, string]) {
+        updateFilter(plotName: string, range: [number, number]) {
             const existingIndex = this.filters.findIndex(
                 (s) => s.plotName === plotName
             );

@@ -72,8 +72,8 @@ const addFilter = () => {
                                 caption
                                 style="margin-left: -20px; white-space: nowrap"
                             >
-                                [{{ selection.range[0] }}-{{
-                                    selection.range[1]
+                                [{{ selection.range[0].toFixed(3) }}-{{
+                                    selection.range[1].toFixed(3)
                                 }}]
                             </q-item-label>
                         </q-item-section>

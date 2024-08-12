@@ -2,8 +2,9 @@ import { defineStore } from 'pinia';
 
 interface Selection {
     plotName: string;
-    range: [string, string];
+    range: [number, number];
 }
+
 interface Plot {
     plotName: string;
 }
@@ -27,7 +28,7 @@ export const useSelectionStore = defineStore('Selection', {
         removeSelection(index: number) {
             this.Selections.splice(index, 1);
         },
-        updateSelection(plotName: string, range: [string, string]) {
+        updateSelection(plotName: string, range: [number, number]) {
             const existingIndex = this.Selections.findIndex(
                 (s) => s.plotName === plotName
             );

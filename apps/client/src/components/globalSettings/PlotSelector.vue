@@ -56,8 +56,10 @@ import { storeToRefs } from 'pinia';
 import UnivariateCellPlot from './UnivariateCellPlot.vue';
 import { useFilterStore } from '@/stores/filterStore';
 import { useSelectionStore } from '@/stores/selectionStore';
+import { useCellMetaData } from '@/stores/cellMetaData';
+const cellMetaData = useCellMetaData();
 
-interface Selections {
+interface Selection {
     [key: string]: [number, number] | undefined;
 }
 interface SelectionChangeEvent {
@@ -70,16 +72,14 @@ const loading = ref(true);
 const loadedPlots = ref(0);
 const totalPlots = ref(0);
 
-const allPlotNames = ['A', 'x', 'y', 'mass', 'time', 'MI'];
-const currentSelections = ref<Selections>({});
-const filterStore = useFilterStore();
+const allPlotNames = cellMetaData.headers;
+const currentSelections = ref<Selection>({});
 const selectionStore = useSelectionStore();
 
 const { Plots, Selections } = storeToRefs(selectionStore);
 
 onMounted(() => {
-    selectionStore.addPlot({ plotName: 'mass' });
-    selectionStore.addPlot({ plotName: 'time' });
+    selectionStore.addPlot({ plotName: cellMetaData.headerKeys.mass });
     totalPlots.value = selectedPlots.value.length;
 });
 
@@ -91,14 +91,8 @@ const handlePlotLoaded = () => {
     }
 };
 
-const selectedPlots = computed(() => Plots.value);
-
-const isPlotSelected = (name: string) => {
-    return Plots.value.some((plot) => plot.plotName === name);
-};
-
+// Mosaic selection
 const mosaicSelection = computed(() => vg.Selection.intersect());
-
 const plotBrush = computed(() => {
     console.log('plotBrush computed');
 
@@ -115,6 +109,11 @@ const plotBrush = computed(() => {
     return mosaicSelection.value;
 });
 
+// Selecting which plots to show
+const selectedPlots = computed(() => Plots.value);
+const isPlotSelected = (name: string) => {
+    return Plots.value.some((plot) => plot.plotName === name);
+};
 const togglePlotSelection = (name: string) => {
     if (isPlotSelected(name)) {
         clearSelectionForPlot(name);
@@ -162,8 +161,8 @@ const handleSelectionChange = (event: SelectionChangeEvent) => {
     if (range && range[0] !== undefined && range[1] !== undefined) {
         currentSelections.value[plotName] = range;
         selectionStore.updateSelection(plotName, [
-            range[0].toFixed(2),
-            range[1].toFixed(2),
+            Number(range[0].toFixed(3)),
+            Number(range[1].toFixed(3)),
         ]);
     } else {
         delete currentSelections.value[plotName];
