@@ -45,13 +45,15 @@ function returnHome(): void {
 const $q = useQuasar();
 
 async function handleNextStep(): Promise<void> {
-    if (uploadStore.step === 'finalReview') {
-        uploadStore.uploadAll();
-    } else if (uploadStore.step === 'metadata') {
+    if (uploadStore.step === 'finalReview' || uploadStore.step === 'metadata') {
         const verifyExperimentName = await uploadStore.verifyExperimentName();
         if (verifyExperimentName) {
             uploadStore.experimentNameValid = true;
-            (stepper.value as any).next();
+            if (uploadStore.step === 'metadata') {
+                (stepper.value as any).next();
+            } else {
+                uploadStore.uploadAll();
+            }
         } else {
             $q.notify({
                 color: 'negative',

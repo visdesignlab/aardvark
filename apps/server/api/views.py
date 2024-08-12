@@ -159,15 +159,40 @@ class FinishExperimentView(APIView):
 
 class VerifyExperimentNameView(APIView):
     def get(self, request, experiment_name):
+
+        '''
+        Leaving both checks in here. I do not think checking 'aa_index.json' is necessary
+        when Loon is fully developed, but for now, I would like to discourage the re-use
+        of any experiment even if the original data is deleted.
+        '''
+
+        def strip_json(s):
+            if s.endswith('.json'):
+                return s[:-5]
+            return s
+
+        experiment_name = strip_json(experiment_name)
+
+        # Checks aa_index.json file
         with default_storage.open('aa_index.json', 'r') as file:
             content = file.read()
 
         experiment_list = json.loads(content)['experiments']
 
-        # Removes '.json' from both strings
-        experiment_list_stripped = [element.rstrip('.json') for element in experiment_list]
+        experiment_list_stripped = [strip_json(element) for element in experiment_list]
 
-        if experiment_name.rstrip('.json') in experiment_list_stripped:
+        if experiment_name in experiment_list_stripped:
+            return Response({'status': 'FAILED'})
+
+        # Checks directories
+        subdirs, files = default_storage.listdir('')
+
+        if experiment_name in subdirs:
+            return Response({'status': 'FAILED'})
+
+        # Checks experiment table
+        exists = Experiment.objects.filter(name=experiment_name).exists()
+        if exists:
             return Response({'status': 'FAILED'})
 
         return Response({'status': 'SUCCESS'})
