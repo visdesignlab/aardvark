@@ -134,7 +134,10 @@ export const useUploadStore = defineStore('uploadStore', () => {
                 locationFiles.segmentations.processedData &&
                 locationFiles.table.processedData
             ) {
-                const imageDataFilename = `${locationFiles.images.processedData.base_file_location}${locationFiles.images.processedData.companion_ome}`;
+                const imageDataFilename = `${locationFiles.images.processedData.base_file_location.replace(
+                    /\/$/,
+                    ''
+                )}/${locationFiles.images.processedData.companion_ome}`;
                 const segmentationsFolder =
                     `${locationFiles.segmentations.processedData.base_file_location}`.replace(
                         /\/$/,
