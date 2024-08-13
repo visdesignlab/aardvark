@@ -31,10 +31,8 @@ FROM nginx:alpine
 
 # From build step, copy dist directory
 COPY --from=build-step /app/dist /usr/share/nginx/html
-# COPY ./nginx.conf /etc/nginx/nginx.conf
 
 # Expose port 80 to be able to access the app
 EXPOSE 80
 
-# Start Nginx server
-CMD ["nginx", "-g", "daemon off;"]
+ENTRYPOINT ["/app/client-entrypoint.sh"]
