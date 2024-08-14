@@ -3,7 +3,7 @@
 
 set -x
 
-envsubst '$SSL_CERT_FILE $SSL_KEY_FILE' < /etc/nginx/nginx.conf.template > /etc/nginx/nginx.conf
+envsubst '$SSL_CERT_FILE $SSL_KEY_FILE $SSL_TARGET_MOUNTED_DIRECTORY' < /etc/nginx/nginx.conf.template > /etc/nginx/nginx.conf
 
 # Check the result of envsubst
 if [ $? -ne 0 ]; then

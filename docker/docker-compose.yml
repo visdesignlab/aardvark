@@ -14,7 +14,7 @@ services:
       - "443:443"
     volumes:
       - ${NGINX_FILE}:/etc/nginx/nginx.conf.template # relative to docker compose
-      - ${SSL_SOURCE_DIRECTORY}:/etc/nginx/ssl:ro
+      - ${SSL_SOURCE_DIRECTORY}:${SSL_TARGET_MOUNTED_DIRECTORY}:ro
       - ./client-entrypoint.sh:/app/client-entrypoint.sh # relative to docker compose
     depends_on:
       - server
