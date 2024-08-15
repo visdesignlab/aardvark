@@ -44,6 +44,8 @@ apps/server/api/*.jpg
 apps/server/api/secrets.json
 .env
 .env.production
+.env.*
+/docker/config*
 .python-version
 
 #Docker
