@@ -5,6 +5,7 @@ import * as vg from '@uwdata/vgplot';
 import { useCellMetaData } from '@/stores/cellMetaData';
 import { useSelectionStore } from '@/stores/selectionStore';
 import { storeToRefs } from 'pinia';
+import { Query, min, max, count } from '@uwdata/mosaic-sql';
 import {
     QMenu,
     QItem,
@@ -37,39 +38,133 @@ const props = defineProps({
     },
 });
 
-// Sets range (min and max) of plot
+// async function dataRange() {
+//     try {
+//         const plotName = props.plotName;
+
+//         const query = `SELECT MIN(${plotName}) as min, MAX(${plotName}) as max
+//                    FROM current_cell_metadata`;
+
+//         const result = await vg.coordinator().query(query);
+
+//         console.log(result);
+//         // Assuming result is an object with 'rows' property
+//         const [min, max] = result.rows.map((row) => Number(row[0]));
+
+//         dataMin.value = min;
+//         dataMax.value = max;
+
+//         dataMin.value = Number(min.toFixed(3));
+//         dataMax.value = Number(max.toFixed(3));
+
+//         // Check for existing selection in the store (using localeCompare)
+//         const currentSelection = selectionStore?.Selections?.find(
+//             (selection) =>
+//                 selection.plotName.localeCompare(props.plotName) === 0
+//         );
+
+//         if (currentSelection) {
+//             // Use selection range if present
+//             range.value.min = currentSelection.range[0];
+//             range.value.max = currentSelection.range[1];
+//         } else {
+//             // Fallback to dataMin and dataMax
+//             range.value.min = dataMin.value;
+//             range.value.max = dataMax.value;
+//         }
+//     } catch (error) {
+//         console.error('Error fetching data range:', error);
+//     }
+// }
+
 async function dataRange() {
     try {
-        // Finds min and max from duckDB
-        const result = await vg.coordinator().query(
-            `SELECT MIN(${props.plotName}) as min, MAX(${props.plotName}) as max
-            FROM current_cell_metadata`,
-            { type: 'json' }
-        );
+        const plotName = props.plotName;
+        // Escape single quotes and wrap the entire name in single quotes
+        const escapedPlotName = `"${plotName.replace(/"/g, '""')}"`;
 
-        const { min, max } = result[0];
-        dataMin.value = Number(min.toFixed(3));
-        dataMax.value = Number(max.toFixed(3));
+        const query = Query.from('current_cell_metadata').select({
+            min_value: min(plotName),
+            max_value: max(plotName),
+        });
+
+        //console.log('Query:', query.toString());
+        const result = await vg.coordinator().query(query.toString());
+        //console.log('Query result:', result);
+
+        // const queryTest =
+        //     "SELECT count(*) from current_cell_metadata WHERE '" +
+        //     plotName +
+        //     "' is null";
+        // const queryTest =
+        //     'SELECT count(*) from (SELECT * from current_cell_metadata LIMIT 100);';
+
+        // const queryTest = Query.from('current_cell_metadata')
+        //     .select({
+        //         count: count(),
+        //     })
+        //     .where("'" + plotName + "' IS NULL");
+
+        const queryTest = Query.from('current_cell_metadata')
+            .select(plotName)
+            .limit(100);
+
+        console.log('Query test: ' + plotName, queryTest.toString());
+        const resultTest = await vg
+            .coordinator()
+            .query(queryTest, { type: 'json' });
+        console.log('Query test result: ' + plotName, resultTest);
+
+        // Check if result exists and has data
+        if (
+            !result ||
+            !result.batches ||
+            result.batches.length === 0 ||
+            result.batches[0].numRows === 0
+        ) {
+            throw new Error('No data returned from query');
+        }
+
+        // Extract min and max values from the result and convert BigInt to Number
+        const minValue = Number(result.batches[0].get(0).min_value);
+        const maxValue = Number(result.batches[0].get(0).max_value);
+        // console.log('Min value:', minValue, 'Max value:', maxValue);
+
+        // Check if the values are valid numbers
+        if (isNaN(minValue) || isNaN(maxValue)) {
+            throw new Error('Invalid min or max value returned from query');
+        }
+
+        dataMin.value = Number(minValue.toFixed(3));
+        dataMax.value = Number(maxValue.toFixed(3));
 
         // Check for existing selection in the store
-        const currentSelection = selectionStore.Selections.find(
+        const currentSelection = selectionStore?.Selections?.find(
             (selection) => selection.plotName === props.plotName
         );
-
-        if (currentSelection) {
-            // Use selection range if present
-            range.value.min = currentSelection.range[0];
-            range.value.max = currentSelection.range[1];
+        if (
+            currentSelection &&
+            Array.isArray(currentSelection.range) &&
+            currentSelection.range.length === 2
+        ) {
+            // Use selection range if present and valid
+            range.value.min = Number(currentSelection.range[0]);
+            range.value.max = Number(currentSelection.range[1]);
         } else {
             // Fallback to dataMin and dataMax
             range.value.min = dataMin.value;
             range.value.max = dataMax.value;
         }
+        //console.log('Final range:', range.value);
     } catch (error) {
-        console.error('Error fetching data range:', error);
+        // console.error('Error fetching data range:', error);
+        // Set default values or handle the error as needed
+        dataMin.value = 0;
+        dataMax.value = 1;
+        range.value.min = 0;
+        range.value.max = 1;
     }
 }
-
 // Q-Range Slider Data
 let range = ref({ min: ref(dataMin.value), max: ref(dataMax.value) });
 

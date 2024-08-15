@@ -1,9 +1,9 @@
 <template>
     <div>
-        <div v-show="loading" class="loading-wrapper">
+        <div v-if="!dataInitialized" class="loading-wrapper">
             <div class="loading-text">Loading...</div>
         </div>
-        <div v-show="!loading">
+        <div v-else>
             <div class="q-item-section__right">
                 <q-btn
                     class="gt-xs q-mr-sm"
@@ -58,6 +58,7 @@ import { useFilterStore } from '@/stores/filterStore';
 import { useSelectionStore } from '@/stores/selectionStore';
 import { useCellMetaData } from '@/stores/cellMetaData';
 const cellMetaData = useCellMetaData();
+const { dataInitialized } = storeToRefs(cellMetaData);
 
 interface Selection {
     [key: string]: [number, number] | undefined;
@@ -72,15 +73,31 @@ const loading = ref(true);
 const loadedPlots = ref(0);
 const totalPlots = ref(0);
 
-const allPlotNames = cellMetaData.headers;
+// const allPlotNames = ['A', 'x', 'y', 'mass', 'time', 'MI'];
+const allPlotNames = computed(() => {
+    return dataInitialized.value ? cellMetaData.headers : [];
+});
+const firstPlotName = computed(() => {
+    return dataInitialized.value && cellMetaData.headers.length > 0
+        ? cellMetaData.headers[0]
+        : '';
+});
 const currentSelections = ref<Selection>({});
 const selectionStore = useSelectionStore();
 
 const { Plots, Selections } = storeToRefs(selectionStore);
 
 onMounted(() => {
-    selectionStore.addPlot({ plotName: cellMetaData.headerKeys.mass });
-    totalPlots.value = selectedPlots.value.length;
+    watch(
+        dataInitialized,
+        (isInitialized) => {
+            if (isInitialized && firstPlotName.value) {
+                selectionStore.addPlot({ plotName: firstPlotName.value });
+                totalPlots.value = selectedPlots.value.length;
+            }
+        },
+        { immediate: true }
+    );
 });
 
 const handlePlotLoaded = () => {
@@ -98,10 +115,14 @@ const plotBrush = computed(() => {
 
     for (let selection of Selections.value) {
         const source = selection.plotName;
-        const min = +selection.range[0];
-        const max = +selection.range[1];
+        const min = Number(selection.range[0]);
+        const max = Number(selection.range[1]);
         const value = [min, max];
-        const predicate = `${source} BETWEEN ${min} AND ${max}`;
+
+        // Escape the source name to handle multi-word column names
+        const escapedSource = `"${source.replace(/"/g, '""')}"`;
+
+        const predicate = `${escapedSource} BETWEEN ${min} AND ${max}`;
         const clause = { source, value, predicate };
         mosaicSelection.value.update(clause);
     }
