@@ -4,8 +4,8 @@ services:
   # Depends on server. NGINX will throw errors if api endpoints are not setup.
   client:
     build:
-      context: ../apps/client # relative to docker compose
-      dockerfile: ../../docker/Dockerfile.client # relative to build context
+      context: ../../apps/client # relative to docker compose
+      dockerfile: ../../docker/buildFiles/Dockerfile.client # relative to build context
       args:
         VITE_USE_HTTP: ${USE_HTTP}
         VITE_ENVIRONMENT: ${VITE_ENVIRONMENT}
@@ -19,14 +19,14 @@ services:
     depends_on:
       - server
     env_file:
-      - path: ./.env # relative to docker compose (has to be in same directory)
+      - path: ${DOCKER_ENV_FILE} # relative to docker compose (has to be in same directory)
         required: true
 
   # Depends on database. Database must be healthy before starting server
   server:
     build:
-      context: ../apps/server # relative to docker compose
-      dockerfile: ../../docker/Dockerfile.server # relatvie to build context
+      context: ../../apps/server # relative to docker compose
+      dockerfile: ../../docker/buildFiles/Dockerfile.server # relatvie to build context
     ports:
       - "8000:8000"
     environment:
@@ -39,13 +39,13 @@ services:
       minio:
         condition: service_healthy
     volumes:
-      - ./.env:/app/.env # relative to docker compose
+      - ${DOCKER_ENV_FILE}:/app/.env # relative to docker compose
       - ./server-entrypoint.sh:/app/server-entrypoint.sh # relative to docker compose
 
   celery:
     build:
-      context: ../apps/server # relative to docker compose
-      dockerfile: ../../docker/Dockerfile.celery # relatvie to build context
+      context: ../../apps/server # relative to docker compose
+      dockerfile: ../../docker/buildFiles/Dockerfile.celery # relatvie to build context
     command:
       [
         "celery",
@@ -63,7 +63,7 @@ services:
     environment:
       DJANGO_ENV_FILE: "/app/.env"
     volumes:
-      - ./.env:/app/.env # relative to docker compose
+      - ${DOCKER_ENV_FILE}:/app/.env # relative to docker compose
     depends_on:
       db:
         condition: service_healthy
@@ -99,7 +99,7 @@ services:
       timeout: 20s
       retries: 10
     env_file:
-      - path: ./.env # relative to docker compose (has to be in same directory)
+      - path: ${DOCKER_ENV_FILE} # relative to docker compose (has to be in same directory)
         required: true
 
   redis:
