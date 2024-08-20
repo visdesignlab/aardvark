@@ -54,3 +54,8 @@ docker/minio-data
 docker/ssl/
 docker-local/mysql-data
 docker-local/local-data
+
+__pycache__/
+*.pyc
+config.json
+config-production.json

@@ -43,8 +43,11 @@ class SchemaError(Exception):
 
 class BuildConfig:
     def __init__(self, configFile, envFile):
-        with open(configFile, 'r') as file:
-            self.config = json.load(file)
+        try:
+            with open(configFile, 'r') as file:
+                self.config = json.load(file)
+        except FileNotFoundError:
+            raise BuildValidationError(message=f"Cannot find file named '{configFile}'.")
         self.outConfig = {}
         self.errors = []
         self.validate()
@@ -53,7 +56,7 @@ class BuildConfig:
         self.set('DOCKER_ENV_FILE', envFile)
 
     def validate(self):
-        with open('buildFiles/config.json.schema', 'r') as schemaFile:
+        with open('.build-files/config.json.schema', 'r') as schemaFile:
             self.schema = json.load(schemaFile)
 
         currConfig = self.config
@@ -115,7 +118,8 @@ class BuildConfig:
         for key, value in self.outConfig.items():
             outString = f'{outString}{key}={value}\n'
 
-        with open(self.envFile, 'w') as outF:
+        fullEnvFileName = f'.build-files/{self.envFile}'
+        with open(fullEnvFileName, 'w') as outF:
             outF.write(outString)
 
     def reportErrors(self):
@@ -252,33 +256,48 @@ def run_command(command, shell=True):
     return process
 
 
-def follow_logs(service_name, logs_path, verbose=False):
-
+def follow_logs(service_name, logs_path, verbose=False, detached=False):
     file_name = f"{logs_path}/{service_name}.log"
-    with open(file_name, 'w') as f:
-        command = f'docker compose -f buildFiles/docker-compose.yml logs -f {service_name}'
+    if detached:
+        command = f'docker compose -f .build-files/docker-compose.yml logs -f {service_name}' \
+                f' >> {file_name} 2>&1 &'
+        subprocess.Popen(
+            command,
+            shell=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            start_new_session=True
+        )
+    else:
+        command = f'docker compose -f .build-files/docker-compose.yml logs -f {service_name}'
         process = subprocess.Popen(
             command,
             shell=True,
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
+            start_new_session=True,
             text=True
         )
-        for line in iter(process.stdout.readline, ''):
-            clean_line = strip_ansi_escape_codes(line)
-            f.write(clean_line)  # Clean line of ASCII characters
-            f.flush()
-            if verbose:
-                logging.info(line.strip())
+        with open(file_name, 'w') as f:
 
-        for line in iter(process.stderr.readline, ''):
-            clean_line = strip_ansi_escape_codes(line)
-            f.write(clean_line)  # Write cleaned line to file
-            f.flush()  # Ensure the line is written to the file immediately
-            if verbose:
-                logging.info(line.strip())
+            for line in iter(process.stdout.readline, ''):
+                clean_line = strip_ansi_escape_codes(line)
+                f.write(clean_line)  # Clean line of ASCII characters
+                f.flush()
+                if verbose:
+                    logging.info(line.strip())
 
-        # Optionally send std error to subprocess.PIPE and then take STDERR and log to error file
+            for line in iter(process.stderr.readline, ''):
+                clean_line = strip_ansi_escape_codes(line)
+                f.write(clean_line)  # Write cleaned line to file
+                f.flush()  # Ensure the line is written to the file immediately
+                if verbose:
+                    logging.info(line.strip())
+
+            process.stdout.close()
+            process.stderr.close()
+
+    # Optionally send std error to subprocess.PIPE and then take STDERR and log to error file
 
 
 def build_containers(env_file):
@@ -288,7 +307,7 @@ def build_containers(env_file):
     # print("Building Containers...")
     spinner_thread = threading.Thread(target=spinner, args=("Building containers...",))
     spinner_thread.start()
-    process = run_command(f"docker compose -f buildFiles/docker-compose.yml"
+    process = run_command(f"docker compose -f .build-files/docker-compose.yml"
                           f" --env-file {env_file} build")
     process.wait()  # Wait for the build to complete
 
@@ -297,14 +316,26 @@ def build_containers(env_file):
     print("\nBuild complete.")  # Print new line after spinner stops
 
 
-def start_containers(env_file, logs_path, verbose=False):
+def follow_all_logs(logs_path, verbose=False, detached=False):
+    services = ["db", "client", "server", "minio", "celery", "redis"]
+    # threads = []
+
+    for service in services:
+        log_thread = threading.Thread(target=follow_logs, args=(service,
+                                                                logs_path,
+                                                                verbose,
+                                                                detached))
+        log_thread.daemon = True
+        log_thread.start()
+
+
+def start_containers(env_file):
     global stop_spinner
     stop_spinner = False
     """ Start the containers in detached mode. """
-    # print("Starting Containers...")
     spinner_thread = threading.Thread(target=spinner, args=("Starting containers...",))
     spinner_thread.start()
-    process = run_command(f"docker compose -f buildFiles/docker-compose.yml"
+    process = run_command(f"docker compose -f .build-files/docker-compose.yml"
                           f" --env-file {env_file} up -d")
 
     process.wait()  # Wait for the containers to start
@@ -312,15 +343,10 @@ def start_containers(env_file, logs_path, verbose=False):
     stop_spinner = True
     spinner_thread.join()  # Ensure spinner thread completes
 
-    services = ["db", "client", "server", "minio", "celery", "redis"]
-
-    for service in services:
-        threading.Thread(target=follow_logs, args=(service, logs_path, verbose)).start()
-
     print("\nContainers started.")
 
 
-def check_containers_status():
+def check_containers_status(detached=False):
     """ Check and print the status of each container. """
     while True:
         print("Checking container statuses...")
@@ -329,7 +355,7 @@ def check_containers_status():
                 "docker",
                 "compose",
                 "-f",
-                "buildFiles/docker-compose.yml",
+                ".build-files/docker-compose.yml",
                 "ps",
                 "--services",
                 "--filter",
@@ -342,16 +368,19 @@ def check_containers_status():
 
         if len(running_services) == number_of_services:  # Number of containers
             print("All containers are running.")
-            time.sleep(5)
+            if not detached:
+                time.sleep(5)
+            else:
+                break
         else:
             print(f"Running containers: {running_services}")
             time.sleep(5)  # Wait before checking again
 
 
-def cleanup_and_exit(signal, frame):
+def cleanup_and_exit(signal=None, frame=None):
     """ Stop all Docker containers and exit gracefully. """
     print("\nCleaning up and stopping containers...")
-    subprocess.run("docker compose -f buildFiles/docker-compose.yml down", shell=True)
+    subprocess.run("docker compose -f .build-files/docker-compose.yml down", shell=True)
     sys.exit(0)
 
 
@@ -380,28 +409,35 @@ if __name__ == "__main__":
                         default=".env", help="Name of environment file created.")
     parser.add_argument("--config-file", type=str, required=False,
                         default="config.json", help="Name of config file to pull from.")
-    parser.add_argument("-v", "--verbose", action='store_true')
+    parser.add_argument("-v", "--verbose", action='store_true',
+                        help="Increased terminal logging output.")
+    parser.add_argument("-d", "--detached", action='store_true', help="Detached mode.")
+    parser.add_argument("-D", "--down", action="store_true", help="Shuts down docker containers.")
     args = parser.parse_args()
 
-    createEnvFile(args.config_file, args.env_file)
+    if not args.down:
+        createEnvFile(args.config_file, args.env_file)
 
-    timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-    logs_path = f'logs/logs_{timestamp}'
-    full_output_path = f'{logs_path}/out.log'
-    os.makedirs(f'logs/logs_{timestamp}', exist_ok=True)
+        timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+        logs_path = f'logs/logs_{timestamp}'
+        full_output_path = f'{logs_path}/out.log'
+        os.makedirs(f'logs/logs_{timestamp}', exist_ok=True)
 
-    handlers = [logging.FileHandler(full_output_path)]
+        handlers = [logging.FileHandler(full_output_path)]
 
-    if args.verbose:
-        handlers.append(logging.StreamHandler(sys.stdout))
+        if args.verbose:
+            handlers.append(logging.StreamHandler(sys.stdout))
 
-    logging.basicConfig(
-        level=logging.INFO,
-        format='%(asctime)s - %(levelname)s - %(message)s',
-        handlers=handlers
-    )
+        logging.basicConfig(
+            level=logging.INFO,
+            format='%(asctime)s - %(levelname)s - %(message)s',
+            handlers=handlers
+        )
 
-    signal.signal(signal.SIGINT, cleanup_and_exit)
-    build_containers(args.env_file)
-    start_containers(args.env_file, logs_path, args.verbose)
-    check_containers_status()
+        signal.signal(signal.SIGINT, cleanup_and_exit)
+        build_containers(f'.build-files/{args.env_file}')
+        start_containers(f'.build-files/{args.env_file}')
+        follow_all_logs(logs_path, args.verbose, args.detached)
+        check_containers_status(args.detached)
+    else:
+        cleanup_and_exit()
