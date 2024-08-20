@@ -109,6 +109,14 @@ class BuildConfig:
                                 'message': value['custom']['message'],
                                 'schemaKey': key
                             })
+                    else:
+                        if matchedPattern is None:
+                            self.errors.append({
+                                'stepString': currStepString,
+                                'type': 'custom',
+                                'message': value['custom']['message'],
+                                'schemaKey': key
+                            })
 
     def set(self, settingName, settingValue):
         self.outConfig[settingName] = settingValue
@@ -413,31 +421,37 @@ if __name__ == "__main__":
                         help="Increased terminal logging output.")
     parser.add_argument("-d", "--detached", action='store_true', help="Detached mode.")
     parser.add_argument("-D", "--down", action="store_true", help="Shuts down docker containers.")
+    parser.add_argument("-e", "--validate-build", action="store_true",
+                        help="If present, only validates configuration file and generates"
+                        "corresponding environment file.")
     args = parser.parse_args()
 
-    if not args.down:
-        createEnvFile(args.config_file, args.env_file)
+    if not args.validate_build:
+        if not args.down:
+            createEnvFile(args.config_file, args.env_file)
 
-        timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-        logs_path = f'logs/logs_{timestamp}'
-        full_output_path = f'{logs_path}/out.log'
-        os.makedirs(f'logs/logs_{timestamp}', exist_ok=True)
+            timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+            logs_path = f'logs/logs_{timestamp}'
+            full_output_path = f'{logs_path}/out.log'
+            os.makedirs(f'logs/logs_{timestamp}', exist_ok=True)
 
-        handlers = [logging.FileHandler(full_output_path)]
+            handlers = [logging.FileHandler(full_output_path)]
 
-        if args.verbose:
-            handlers.append(logging.StreamHandler(sys.stdout))
+            if args.verbose:
+                handlers.append(logging.StreamHandler(sys.stdout))
 
-        logging.basicConfig(
-            level=logging.INFO,
-            format='%(asctime)s - %(levelname)s - %(message)s',
-            handlers=handlers
-        )
+            logging.basicConfig(
+                level=logging.INFO,
+                format='%(asctime)s - %(levelname)s - %(message)s',
+                handlers=handlers
+            )
 
-        signal.signal(signal.SIGINT, cleanup_and_exit)
-        build_containers(f'.build-files/{args.env_file}')
-        start_containers(f'.build-files/{args.env_file}')
-        follow_all_logs(logs_path, args.verbose, args.detached)
-        check_containers_status(args.detached)
+            signal.signal(signal.SIGINT, cleanup_and_exit)
+            build_containers(f'.build-files/{args.env_file}')
+            start_containers(f'.build-files/{args.env_file}')
+            follow_all_logs(logs_path, args.verbose, args.detached)
+            check_containers_status(args.detached)
+        else:
+            cleanup_and_exit()
     else:
-        cleanup_and_exit()
+        createEnvFile(args.config_file, args.env_file)

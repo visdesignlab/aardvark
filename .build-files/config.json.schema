@@ -27,24 +27,72 @@
                 "databaseUser":{"type":"string", "required":true},
                 "databasePassword":{"type":"string", "required":true},
                 "databaseRootPassword":{"type":"string", "required":true},
-                "sourceVolumeLocation":{"type":"string", "required":true}
+                "sourceVolumeLocation":{
+                    "type":"string",
+                    "required":true,
+                    "custom":{
+                        "regexPattern":"(/$)",
+                        "errorOnMatch":true,
+                        "message":"Invalid source volume location formatting. The sourceVolumeLocation must not end with a trailing slash."
+                    }
+                }
             }
         },
         "minioSettings":{
             "type":"object",
             "required":true,
             "properties":{
-                "minioStorageAccessKey":{"type":"string", "required":true},
-                "minioStorageSecretKey":{"type":"string", "required":true},
-                "sourceVolumeLocation":{"type":"string", "required":true}
+                "minioStorageAccessKey":{
+                    "type":"string",
+                    "required":true,
+                    "custom":{
+                        "regexPattern":"^.{4,}$",
+                        "errorOnMatch":false,
+                        "message":"Secret key must be at least 4 characters."
+                    }
+                },
+                "minioStorageSecretKey":{
+                    "type":"string",
+                    "required":true,
+                    "custom":{
+                        "regexPattern":"^.{8,}$",
+                        "errorOnMatch":false,
+                        "message":"Secret key must be at least 8 characters."
+                    }
+                },
+                "sourceVolumeLocation":{
+                    "type":"string",
+                    "required":true,
+                    "custom":{
+                        "regexPattern":"(/$)",
+                        "errorOnMatch":true,
+                        "message":"Invalid source volume location formatting. The sourceVolumeLocation must not end with a trailing slash."
+                    }
+                }
             }
         },
         "nginxSettings":{
             "type":"object",
             "required":true,
             "properties":{
-                "sourceVolumeLocation":{"type":"string", "required":true},
-                "targetVolumeLocation":{"type":"string", "required":true},
+                "sourceVolumeLocation":{
+                    "type":"string",
+                    "required":true,
+                    "custom":{
+                        "regexPattern":"(/$)",
+                        "errorOnMatch":true,
+                        "message":"Invalid source volume location formatting. The sourceVolumeLocation must not end with a trailing slash."
+                    }
+                },
+                "targetVolumeLocation":{
+                    "type":"string",
+                    "required":true,
+                    "custom":{
+                        "regexPattern":"(/$)",
+                        "errorOnMatch":true,
+                        "message":"Invalid target volume location formatting. The targetVolumeLocation must not end with a trailing slash."
+                    }
+                },
                 "certFileLocation":{"type":"string", "required":true},
                 "keyFileLocation":{"type":"string", "required":true}
             }

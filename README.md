@@ -34,88 +34,108 @@ Loon is a repository that is meant to be deployed as a standalone docker contain
 
 ## Use And Deployment
 
-All of the necessary applications are shipped in a single docker container. In the repository, you will see two docker directories: `docker` and `docker-local`. The main deployment will use the `docker` directory. The `docker-local` directory is a separate local version of Loon which we will discuss shortly.
+All of the necessary applications are shipped in a single docker container. We use a python script called "build.py" to initiate and simplify the process.
 
-### Running the docker container
+**Note that docker and Python 3+ must be installed and running in order to use the "build.py" script**
 
-After installing docker, you'll need to create a ".env" file. Here we have a template ".env" file:
+We start by making a configuration file called "config.json". Below is a template:
+
+```json
+{
+  "generalSettings": {
+    "useHttp": false,
+    "environment": "production",
+    "baseUrl": "localhost"
+  },
+  "mySqlSettings": {
+    "databaseName": "loon",
+    "databaseUser": "user",
+    "databasePassword": "user_pass",
+    "databaseRootPassword": "root_pass",
+    "sourceVolumeLocation": "/Users/bbollen23/loonar-data/mysql-data"
+  },
+  "minioSettings": {
+    "minioStorageAccessKey": "admin",
+    "minioStorageSecretKey": "minioadmin",
+    "sourceVolumeLocation": "/Users/bbollen23/loonar-data/minio-data"
+  },
+  "nginxSettings": {
+    "sourceVolumeLocation": "/Users/bbollen23/loonar-data/ssl",
+    "targetVolumeLocation": "/etc/nginx/ssl",
+    "certFileLocation": "certs/localhost.crt",
+    "keyFileLocation": "private/localhost.key"
+  }
+}
+```
+
+### General Settings
+
+| Variable      | Details                                                                                          | Possible Values  |
+| ------------- | ------------------------------------------------------------------------------------------------ | ---------------- |
+| "useHttp"     | Set to true if using HTTP is desired. If set to False, SSL keys will be required                 | true/false       |
+| "environment" | Used to determine features disabled during a local version. Most versions will use 'production'. | production/local |
+| "baseUrl"     | Base URL for application.                                                                        | string           |
+
+### MySQL Settings
+
+| Variable               | Details                                                                                                              | Possible Values |
+| ---------------------- | -------------------------------------------------------------------------------------------------------------------- | --------------- |
+| "databaseName"         | Name of database in mysql to create                                                                                  | string          |
+| "databaseUser"         | Name of standard user                                                                                                | string          |
+| "databasePassword"     | Password for standard user                                                                                           | string          |
+| "databaseRootPassword" | Password for root user                                                                                               | string          |
+| "sourceVolumeLocation" | Location for the source data to be mounted to the container. This can be any directory with appropriate permissions. | string          |
+
+### MinIO Settings
+
+| Variable                | Details                                                                                                              | Possible Values        |
+| ----------------------- | -------------------------------------------------------------------------------------------------------------------- | ---------------------- |
+| "minioStorageAccessKey" | Username for MinIO administrator                                                                                     | string (>3 characters) |
+| "minioStorageSecretKey" | Password for MinIO administrator                                                                                     | string (>7 characters) |
+| "sourceVolumeLocation"  | Location for the source data to be mounted to the container. This can be any directory with appropriate permissions. | string                 |
+
+### NGINX Settings
+
+| Variable               | Details                                               | Possible Values |
+| ---------------------- | ----------------------------------------------------- | --------------- |
+| "sourceVolumeLocation" | Location for the ssl keys to be mounted to container. | string          |
+| "targetVolumeLocation" | Location inside container where to mount keys.        | string          |
+| "certFileLocation"     | Name of cert file relative to source volume mount.    | string          |
+| "keyFileLocation"      | Name of key file relative to source volume mount      | string          |
+
+The build script will do its best to validate each of these fields before starting the docker container. When running the build script, there are several inputs you can use
+
+| Argument             | Description                                                                                                                                      | Example               |
+| -------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------ | --------------------- |
+| -h, --help           | Outputs this information to terminal without running script.                                                                                     | -h                    |
+| -v, --verbose        | All output response is sent to the terminal and main log file. If not present, limited information will be passed to the terminal.               | -v                    |
+| -d, --detached       | Once all containers are started, program will exit and log in the background                                                                     | -d                    |
+| -e, --validate-build | When present, the script will not build or start any containers. Only the configuration file will be validated and the environment file created. | -e                    |
+| --env-file           | Name of env file to create.                                                                                                                      | .env, .env.production |
+| --config-file        | Name of config file to use as input                                                                                                              | config.json           |
+| -D, --down           | Stops all containers and removes all containers. Note that this will not build or start containers nor validate the configuration file.          | -D                    |
+
+In the repository, you will see two docker directories: `docker` and `docker-local`. The main deployment will use the `docker` directory. The `docker-local` directory is a separate local version of Loon which we will discuss shortly. Below are some examples.
 
 ```bash
-## Docker container for docker full docker deployment. Only "allowed_host" needs to be changed when deploying on a non-local machine.
-
-# Client settings
-VITE_ENVIRONMENT=production
-VITE_USE_HTTP=True
-
-# Docker Container Only Settings
-DATABASE_ROOT_PASSWORD=root_pass
-
-# General Django Settings
-MINIO_ENABLED=True
-
-# Docker Container and Django Settings
-SECRET_KEY="django-insecure-z2^vruu347=0e-qyh%&k)%*j9(hgubj$layg&k$-vwb1u+mp93"
-DEBUG=True
-ALLOWED_HOST='localhost'
-
-# MySQL
-DATABASE_NAME=loon
-DATABASE_USER=user
-DATABASE_PASSWORD=user_pass
-DATABASE_HOST=db
-DATABASE_PORT=3306
-
-# Celery and Redis
-CELERY_BROKER_URL=redis://redis:6379/0
-CELERY_RESULT_BACKEND=redis://redis:6379/0
-
-# Minio
-MINIO_STORAGE_ENDPOINT=minio:9000
-MINIO_STORAGE_ACCESS_KEY=admin
-MINIO_STORAGE_SECRET_KEY=minioadmin
-MINIO_STORAGE_MEDIA_BUCKET_NAME=data
-MINIO_STORAGE_STATIC_BUCKET_NAME=static
-MINIO_STORAGE_MEDIA_URL=http://localhost/data
-MINIO_STORAGE_STATIC_URL=http://localhost/data
+python3 build.py
 ```
 
-Below is a table explaining each of these environment variables. In the "Possible Values" column, values that are bolded are **required**. Values that are italicized are suggestions.
+The above script will build and then run all containers using a default of "config.json" as the configuration file and creating a ".env" file in the `.build-files` directory.
 
-| Variable                         | Details                                                                                                                         | Possible Values                    |
-| -------------------------------- | ------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------- |
-| VITE_ENVIRONMENT                 | Used to determine features disabled during a local version. Most versions will use 'production'.                                | production/local                   |
-| VITE_USE_HTTP                    | Set to true if you are using an HTTP connection rather than an HTTPS connection to deploy the application                       | True/False                         |
-| DATABASE_ROOT_PASS               | Password for MySQL root access                                                                                                  | string                             |
-| MINIO_ENABLED                    | If False, this will disable all Minio access.                                                                                   | True/False                         |
-| SECRET_KEY                       |                                                                                                                                 |                                    |
-| DEBUG                            |                                                                                                                                 |                                    |
-| ALLOWED_HOST                     | The value of the url which Django should be accessed. Use your custom URL during deployment and 'localhost' for testing locally | string                             |
-| DATABASE_NAME                    | Name of database in MySQL                                                                                                       | string                             |
-| DATABASE_USER                    | Username for basic MySQL User                                                                                                   | string                             |
-| DATABASE_PASSWORD                | Password for basic MySQL User                                                                                                   | string                             |
-| DATABASE_HOST                    | Value in docker container corresponding to database.                                                                            | **db**                             |
-| DATABASE_PORT                    | Port for MySQL database                                                                                                         | **3306**                           |
-| CELERY_BROKER_URL                | Broker URL for Celery tasks                                                                                                     | **redis://redis:6379/0**           |
-| CELERY_RESULT_BACKEND            | URL for Server to communicate with when retrieving results                                                                      | **redis://redis:6379/0**           |
-| MINIO_STORAGE_ENDPOINT           | Endpoint to communicate with MinIO service                                                                                      | **minio:9000**                     |
-| MINIO_STORAGE_ACCESS_KEY         | Username for MinIO administrator                                                                                                | string (>3 characters)             |
-| MINO_STORAGE_SECRET_KEY          | Password for MinIO administrator                                                                                                | string (>8 characters)             |
-| MINIO_STORAGE_MEDIA_BUCKET_NAME  | Bucket name for MinIO media data                                                                                                | **data**                           |
-| MINIO_STORAGE_STATIC_BUCKET_NAME | Bucket name for Minio static data                                                                                               | **static**                         |
-| MINIO_STORAGE_MEDIA_URL          | Storage URL for media files                                                                                                     | **{http/https}://{url_name}/data** |
-| MINIO_STORAGE_STATIC_URL         | Storage URL for static files                                                                                                    | **{http/https}://{url_name}/data** |
-
-After creating the `.env` file, change into the `docker` directory of your application. Ensure that your local instance of Docker is running. Then, run the following command:
-
-```
-docker compose up --build
+```bash
+python3 build.py --env-file .env.production --config-file config-production.json
 ```
 
-This will take some time to start. The docker container will be fully finished once you see that "server-1" and "celery-1" have started successfully.
+This will use the "config-production.json" as the input configuration file and output a ".env.production" environment file.
 
-## Local Loon
+```bash
+python3 build.py -vd
+```
 
-Local loon is a standalone version of Loon with all of the same features as Loon _except_ uploading data. Instead, this is meant to be deployed alongside the datasets in question. Instead of going through a lengthy process of uploading and processing data, we give users the option of transforming and maintaining their data themselves. Then, instead of using
+This will enable verbose mode so that we can see the build process as it runs. It will also exit once all containers have begun running.
+
+If you're using the script not in detached mode, then pressing "Ctrl+C" in the terminal will stop and remove all docker containers. Additionally, all logs will be outputted to a "logs" directory. For each run of the build script, a new directory called `logs_%Y-%m-%d_%H-%M-%S` will be created with logging for each individual service separated.
 
 ## For Developers
 
