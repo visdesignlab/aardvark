@@ -82,19 +82,22 @@ def createEnvFile(configFileName, envFileName):
     # --------------------------------------------------------------
 
     # minio_settings = buildConfig.config.get('minioSettings')
-    buildConfig.set('MINIO_STORAGE_ACCESS_KEY', buildConfig.get(
-        'minioSettings.minioStorageAccessKey'
-        ))
-    buildConfig.set('MINIO_STORAGE_SECRET_KEY', buildConfig.get(
-        'minioSettings.minioStorageSecretKey'
-        ))
-    buildConfig.set('MINIO_VOLUME_LOCATION', buildConfig.get('minioSettings.sourceVolumeLocation'))
+    if buildConfig.get('minioSettings') != "":
+        
+        buildConfig.set('MINIO_STORAGE_ACCESS_KEY', buildConfig.get(
+            'minioSettings.minioStorageAccessKey'
+            ))
+        buildConfig.set('MINIO_STORAGE_SECRET_KEY', buildConfig.get(
+            'minioSettings.minioStorageSecretKey'
+            ))
+        buildConfig.set('MINIO_VOLUME_LOCATION',
+                        buildConfig.get('minioSettings.sourceVolumeLocation'))
 
-    buildConfig.set('MINIO_STORAGE_ENDPOINT', 'minio:9000')
-    buildConfig.set('MINIO_STORAGE_MEDIA_BUCKET_NAME', 'data')
-    buildConfig.set('MINIO_STORAGE_STATIC_BUCKET_NAME', 'static')
-    buildConfig.set('MINIO_STORAGE_MEDIA_URL', f'{base_url}/data')
-    buildConfig.set('MINIO_STORAGE_STATIC_URL', f'{base_url}/data')
+        buildConfig.set('MINIO_STORAGE_ENDPOINT', 'minio:9000')
+        buildConfig.set('MINIO_STORAGE_MEDIA_BUCKET_NAME', 'data')
+        buildConfig.set('MINIO_STORAGE_STATIC_BUCKET_NAME', 'static')
+        buildConfig.set('MINIO_STORAGE_MEDIA_URL', f'{base_url}/data')
+        buildConfig.set('MINIO_STORAGE_STATIC_URL', f'{base_url}/data')
 
     # --------------------------------------------------------------
     # NGINX SETTINGS -----------------------------------------------
