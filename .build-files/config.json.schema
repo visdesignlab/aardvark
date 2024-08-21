@@ -41,6 +41,11 @@
         "minioSettings":{
             "type":"object",
             "required":true,
+            "dependentOn":{
+                "key":"generalSettings.environment",
+                "value":"local",
+                "errorOnMatch": false
+            },
             "properties":{
                 "minioStorageAccessKey":{
                     "type":"string",
@@ -74,6 +79,11 @@
         "nginxSettings":{
             "type":"object",
             "required":true,
+            "dependentOn":{
+                "key":"generalSettings.useHttp",
+                "value":false,
+                "errorOnMatch": true
+            },
             "properties":{
                 "sourceVolumeLocation":{
                     "type":"string",
@@ -95,6 +105,26 @@
                 },
                 "certFileLocation":{"type":"string", "required":true},
                 "keyFileLocation":{"type":"string", "required":true}
+            }
+        },
+        "localDataSettings":{
+            "type":"object",
+            "required":true,
+            "dependentOn":{
+                "key":"generalSettings.environment",
+                "value":"local",
+                "errorOnMatch": true
+            },
+            "properties":{
+                "sourceVolumeLocation":{
+                    "type":"string",
+                    "required":true,
+                    "custom":{
+                        "regexPattern":"(/$)",
+                        "errorOnMatch":true,
+                        "message":"Invalid source volume location formatting. The sourceVolumeLocation must not end with a trailing slash."
+                    }
+                }
             }
         }
     }

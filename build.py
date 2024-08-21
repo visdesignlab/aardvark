@@ -1,5 +1,4 @@
 import subprocess
-import json
 import re
 import argparse
 import sys
@@ -9,175 +8,49 @@ import threading
 import logging
 import os
 from datetime import datetime
+import shutil
+
+sys.path.append(os.path.join(os.path.dirname(__file__), '.build-files'))
+import BuildConfig  # type: ignore
 
 
 number_of_services = 6
 
 
-def typeMapping(s, reverse=False):
-    type_mapping = {
-        "boolean": bool,
-        "string": str
-    }
+def createComposeFile(local=False):
+    docker_compose_template = '.build-files/docker-compose.template.yml'
+    if local:
+        docker_compose_template = '.build-files/docker-compose-local.template.yml'
 
-    type_mapping_reverse = {value: key for key, value in type_mapping.items()}
-
-    if not reverse:
-        return type_mapping[s]
-    else:
-        return type_mapping_reverse[s]
-
-
-class BuildValidationError(Exception):
-    def __init__(self, message):
-        # Call the base class constructor with the parameters it needs
-        super().__init__(message)
-        # Now for your custom code...
-
-
-class SchemaError(Exception):
-    def __init__(self, message):
-        # Call the base class constructor with the parameters it needs
-        super().__init__(message)
-
-
-class BuildConfig:
-    def __init__(self, configFile, envFile):
-        try:
-            with open(configFile, 'r') as file:
-                self.config = json.load(file)
-        except FileNotFoundError:
-            raise BuildValidationError(message=f"Cannot find file named '{configFile}'.")
-        self.outConfig = {}
-        self.errors = []
-        self.validate()
-        self.envFile = envFile
-        # Env File name will be placed in env file for mounting
-        self.set('DOCKER_ENV_FILE', envFile)
-
-    def validate(self):
-        with open('.build-files/config.json.schema', 'r') as schemaFile:
-            self.schema = json.load(schemaFile)
-
-        currConfig = self.config
-        currSchema = self.schema
-        if self.schema['type'] == "object":
-            currSchema = self.schema['properties']
-            self.validateCurrConfig(currSchema, currConfig, currStepString='')
-        else:
-            print('This is not an object')
-
-    def validateCurrConfig(self, currSchema, currConfig, currStepString):
-        for key, value in currSchema.items():
-            if value['type'] == 'object':
-                tempSchema = value['properties']
-                try:
-                    tempConfig = currConfig[key]
-                except KeyError:
-                    tempConfig = {}
-                    self.errors.append({
-                        'stepString': currStepString,
-                        'type': 'missingKey',
-                        'schemaKey': key
-                    })
-                tempStepString = f'{currStepString}-{key}'
-                self.validateCurrConfig(tempSchema, tempConfig, currStepString=tempStepString)
-            else:
-                schemaType = value['type']
-                if key not in currConfig and value['required'] is True:
-                    self.errors.append({
-                        'stepString': currStepString,
-                        'type': 'missingKey',
-                        'schemaKey': key
-                    })
-                elif key in currConfig and type(currConfig[key]) is not typeMapping(schemaType):
-                    self.errors.append({
-                        'stepString': currStepString,
-                        'type': 'incorrectType',
-                        'schemaKey': key,
-                        'schemaValue': value,
-                        'configValue': currConfig[key]
-                    })
-                elif 'custom' in value:
-                    pattern = re.compile(value['custom']['regexPattern'])
-                    matchedPattern = pattern.search(currConfig[key])
-                    if value['custom']['errorOnMatch']:
-                        if matchedPattern is not None:
-                            self.errors.append({
-                                'stepString': currStepString,
-                                'type': 'custom',
-                                'message': value['custom']['message'],
-                                'schemaKey': key
-                            })
-                    else:
-                        if matchedPattern is None:
-                            self.errors.append({
-                                'stepString': currStepString,
-                                'type': 'custom',
-                                'message': value['custom']['message'],
-                                'schemaKey': key
-                            })
-
-    def set(self, settingName, settingValue):
-        self.outConfig[settingName] = settingValue
-
-    def writeToEnv(self):
-        outString = ""
-        for key, value in self.outConfig.items():
-            outString = f'{outString}{key}={value}\n'
-
-        fullEnvFileName = f'.build-files/{self.envFile}'
-        with open(fullEnvFileName, 'w') as outF:
-            outF.write(outString)
-
-    def reportErrors(self):
-        if len(self.errors) == 0:
-            print('\nValidated configuration file.\n')
-            return
-        print('\nEncountered Errors when validating configuration file:\n')
-        for entry in self.errors:
-            stepString = entry['stepString']
-            schemaKey = entry['schemaKey']
-            stepStringFormatted = f'{stepString}-{schemaKey}'.lstrip('-').replace('-', '.')
-            if entry['type'] == 'missingKey':
-                message = f'--> Missing Required Key: {stepStringFormatted}'
-            elif entry['type'] == 'incorrectType':
-                schemaType = entry['schemaValue']['type']
-                configType = typeMapping(type(entry['configValue']), reverse=True)
-                message = f'--> Incorrect Type: {stepStringFormatted}' \
-                    f' must be "{schemaType}"' \
-                    f' but is "{configType}"'
-            elif entry['type'] == 'custom':
-                errorMessage = entry['message']
-                message = f'--> Error at {stepStringFormatted}:' \
-                    f' {errorMessage}'
-            print(f'{message}\n')
-        exit()
+    shutil.copy(docker_compose_template, '.build-files/docker-compose.yml')
 
 
 def createEnvFile(configFileName, envFileName):
-    buildConfig = BuildConfig(configFileName, envFileName)
+    buildConfig = BuildConfig.BuildConfig(configFileName, envFileName)
     buildConfig.reportErrors()
 
     # --------------------------------------------------------------
     # GENERAL SETTINGS ---------------------------------------------
     # --------------------------------------------------------------
-    general_settings = buildConfig.config.get('generalSettings')
-    use_http = general_settings.get('useHttp')
-    base_url = general_settings.get('baseUrl')
-    environment = general_settings.get('environment')
+    # general_settings = buildConfig.get('generalSettings')
+    use_http = buildConfig.get('generalSettings.useHttp')
+    base_url = buildConfig.get('generalSettings.baseUrl')
+    environment = buildConfig.get('generalSettings.environment')
 
     buildConfig.set('USE_HTTP', use_http)
 
-    if use_http:
-        nginx_file = './nginx-http.conf'
-        minio_browser_redirect_url = f'http://{base_url}/minio'
+    if environment != 'local':
+        if use_http:
+            nginx_file = './nginx-http.conf'
+            minio_browser_redirect_url = f'http://{base_url}/minio'
+        else:
+            nginx_file = './nginx-https.conf'
+            minio_browser_redirect_url = f'https://{base_url}/minio'
+        buildConfig.set('MINIO_BROWSER_REDIRECT_URL', minio_browser_redirect_url)
     else:
-        nginx_file = './nginx-https.conf'
-        minio_browser_redirect_url = f'https://{base_url}/minio'
+        nginx_file = './nginx-http-local.conf'
 
     buildConfig.set('NGINX_FILE', nginx_file)
-    buildConfig.set('MINIO_BROWSER_REDIRECT_URL', minio_browser_redirect_url)
 
     buildConfig.set('VITE_ENVIRONMENT', environment)
     buildConfig.set('VITE_SERVER_URL', f'{base_url}/data')
@@ -186,13 +59,13 @@ def createEnvFile(configFileName, envFileName):
     # MYSQL SETTINGS -----------------------------------------------
     # --------------------------------------------------------------
 
-    my_sql_settings = buildConfig.config.get('mySqlSettings')
+    # my_sql_settings = buildConfig.config.get('mySqlSettings')
 
-    buildConfig.set('DATABASE_ROOT_PASSWORD', my_sql_settings.get('databaseRootPassword'))
-    buildConfig.set('DATABASE_PASSWORD', my_sql_settings.get('databasePassword'))
-    buildConfig.set('DATABASE_USER', my_sql_settings.get('databaseUser'))
-    buildConfig.set('DATABASE_NAME', my_sql_settings.get('databaseName'))
-    buildConfig.set('MYSQL_VOLUME_LOCATION', my_sql_settings.get('sourceVolumeLocation'))
+    buildConfig.set('DATABASE_ROOT_PASSWORD', buildConfig.get('mySqlSettings.databaseRootPassword'))
+    buildConfig.set('DATABASE_PASSWORD', buildConfig.get('mySqlSettings.databasePassword'))
+    buildConfig.set('DATABASE_USER', buildConfig.get('mySqlSettings.databaseUser'))
+    buildConfig.set('DATABASE_NAME', buildConfig.get('mySqlSettings.databaseName'))
+    buildConfig.set('MYSQL_VOLUME_LOCATION', buildConfig.get('mySqlSettings.sourceVolumeLocation'))
 
     buildConfig.set('DATABASE_HOST', 'db')
     buildConfig.set('DATABASE_PORT', '3306')
@@ -208,10 +81,14 @@ def createEnvFile(configFileName, envFileName):
     # MINIO SETTINGS -----------------------------------------------
     # --------------------------------------------------------------
 
-    minio_settings = buildConfig.config.get('minioSettings')
-    buildConfig.set('MINIO_STORAGE_ACCESS_KEY', minio_settings.get('minioStorageAccessKey'))
-    buildConfig.set('MINIO_STORAGE_SECRET_KEY', minio_settings.get('minioStorageSecretKey'))
-    buildConfig.set('MINIO_VOLUME_LOCATION', minio_settings.get('sourceVolumeLocation'))
+    # minio_settings = buildConfig.config.get('minioSettings')
+    buildConfig.set('MINIO_STORAGE_ACCESS_KEY', buildConfig.get(
+        'minioSettings.minioStorageAccessKey'
+        ))
+    buildConfig.set('MINIO_STORAGE_SECRET_KEY', buildConfig.get(
+        'minioSettings.minioStorageSecretKey'
+        ))
+    buildConfig.set('MINIO_VOLUME_LOCATION', buildConfig.get('minioSettings.sourceVolumeLocation'))
 
     buildConfig.set('MINIO_STORAGE_ENDPOINT', 'minio:9000')
     buildConfig.set('MINIO_STORAGE_MEDIA_BUCKET_NAME', 'data')
@@ -223,12 +100,12 @@ def createEnvFile(configFileName, envFileName):
     # NGINX SETTINGS -----------------------------------------------
     # --------------------------------------------------------------
 
-    nginx_settings = buildConfig.config.get('nginxSettings')
-
-    buildConfig.set('SSL_SOURCE_DIRECTORY', nginx_settings.get('sourceVolumeLocation'))
-    buildConfig.set('SSL_TARGET_MOUNTED_DIRECTORY', nginx_settings.get('targetVolumeLocation'))
-    buildConfig.set('SSL_CERT_FILE', nginx_settings.get('certFileLocation'))
-    buildConfig.set('SSL_KEY_FILE', nginx_settings.get('keyFileLocation'))
+    if buildConfig.get('nginxSettings') != "":
+        ssl_mapping = f"{buildConfig.get('nginxSettings.sourceVolumeLocation')}" \
+                      f":{buildConfig.get('nginxSettings.sourceVolumeLocation')}::ro"
+        buildConfig.set('SSL_MAPPING', ssl_mapping)
+        buildConfig.set('SSL_CERT_FILE', buildConfig.get('nginxSettings.certFileLocation'))
+        buildConfig.set('SSL_KEY_FILE', buildConfig.get('nginxSettings.keyFileLocation'))
 
     # --------------------------------------------------------------
     # OTHER SETTINGS -----------------------------------------------
@@ -241,8 +118,11 @@ def createEnvFile(configFileName, envFileName):
     buildConfig.set('SECRET_KEY',
                     '"django-insecure-z2^vruu347=0e-qyh%&k)%*j9(hgubj$layg&k$-vwb1u+mp93"'
                     )
+    localVolumeLocation = buildConfig.get('localDataSettings.sourceVolumeLocation')
+    buildConfig.set('LOCAL_VOLUME_LOCATION', localVolumeLocation)
 
     buildConfig.writeToEnv()
+    return buildConfig
 
 
 def run_command(command, shell=True):
@@ -428,8 +308,12 @@ if __name__ == "__main__":
 
     if not args.validate_build:
         if not args.down:
-            createEnvFile(args.config_file, args.env_file)
+            # Create the env file, returning the build config
+            buildConfig = createEnvFile(args.config_file, args.env_file)
+            # Generate docker compose file based on if we are using local loon or not
+            createComposeFile(local=buildConfig.local)
 
+            # Get current time and create unique logs path
             timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
             logs_path = f'logs/logs_{timestamp}'
             full_output_path = f'{logs_path}/out.log'
@@ -437,6 +321,7 @@ if __name__ == "__main__":
 
             handlers = [logging.FileHandler(full_output_path)]
 
+            # If verbose, add additional handler to output info to terminal
             if args.verbose:
                 handlers.append(logging.StreamHandler(sys.stdout))
 
@@ -446,7 +331,10 @@ if __name__ == "__main__":
                 handlers=handlers
             )
 
+            # Bind Ctrl+C to cleanup
             signal.signal(signal.SIGINT, cleanup_and_exit)
+
+            # Build, run, then follow all logs. Begin monitoring process
             build_containers(f'.build-files/{args.env_file}')
             start_containers(f'.build-files/{args.env_file}')
             follow_all_logs(logs_path, args.verbose, args.detached)
@@ -454,4 +342,5 @@ if __name__ == "__main__":
         else:
             cleanup_and_exit()
     else:
-        createEnvFile(args.config_file, args.env_file)
+        buildConfig = createEnvFile(args.config_file, args.env_file)
+        createComposeFile(local=buildConfig.local)

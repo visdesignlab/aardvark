@@ -37,6 +37,8 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
+      minio:
+        condition: service_healthy
     volumes:
       - ${DOCKER_ENV_FILE}:/app/.env # relative to docker compose
       - ./server-entrypoint.sh:/app/server-entrypoint.sh # relative to docker compose
@@ -62,11 +64,13 @@ services:
     environment:
       DJANGO_ENV_FILE: "/app/.env"
     volumes:
-      - ./.env:/app/.env # relative to docker compose
+      - ${DOCKER_ENV_FILE}:/app/.env # relative to docker compose
     depends_on:
       db:
         condition: service_healthy
       redis:
+        condition: service_healthy
+      minio:
         condition: service_healthy
 
   # MySQL service. Has healthcheck which uses mysqladmin to ping before reporting healthy.
@@ -78,7 +82,7 @@ services:
       MYSQL_PASSWORD: ${DATABASE_PASSWORD}
       MYSQL_ROOT_PASSWORD: ${DATABASE_ROOT_PASSWORD}
     volumes:
-      - ./mysql-data:/var/lib/mysql
+      - ${MYSQL_VOLUME_LOCATION}:/var/lib/mysql
     ports:
       - "3306:3306"
     healthcheck:
@@ -96,7 +100,7 @@ services:
       timeout: 20s
       retries: 10
     env_file:
-      - path: ./.env # relative to docker compose (has to be in same directory)
+      - path: ${DOCKER_ENV_FILE} # relative to docker compose (has to be in same directory)
         required: true
 
   redis:
@@ -109,13 +113,23 @@ services:
       timeout: 5s
       retries: 5
 
-  data:
-    build:
-      context: ./
-      dockerfile: Dockerfile.data
+  minio:
+    image: minio/minio:latest
+    # When run with a TTY, minio prints credentials on startup
+    tty: true
+    command: "server --address ':9000' --console-address ':9001' /data"
+    environment:
+      MINIO_ROOT_USER: ${MINIO_STORAGE_ACCESS_KEY}
+      MINIO_ROOT_PASSWORD: ${MINIO_STORAGE_SECRET_KEY}
+      MINIO_BROWSER_REDIRECT_URL: ${MINIO_BROWSER_REDIRECT_URL}
     ports:
-      - "9000:9000"
+      - 9000:9000
+      - 9001:9001
+    healthcheck:
+      test: ["CMD-SHELL", "/minio-healthcheck.sh"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
     volumes:
-      - ${LOCAL_VOLUME_LOCATION}:/app/data # relative to docker compose
-      # - ./key.pem:/app/ssl/key.pem
-      # - ./cert.pem:/app/ssl/cert.pem
+      - ${MINIO_VOLUME_LOCATION}:/data
+      - ./minio-healthcheck.sh/:/minio-healthcheck.sh
