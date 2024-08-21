@@ -105,7 +105,7 @@ def createEnvFile(configFileName, envFileName):
 
     if buildConfig.get('nginxSettings') != "":
         ssl_mapping = f"{buildConfig.get('nginxSettings.sourceVolumeLocation')}" \
-                      f":{buildConfig.get('nginxSettings.sourceVolumeLocation')}::ro"
+                      f":{buildConfig.get('nginxSettings.sourceVolumeLocation')}:ro"
         buildConfig.set('SSL_MAPPING', ssl_mapping)
         buildConfig.set('SSL_CERT_FILE', buildConfig.get('nginxSettings.certFileLocation'))
         buildConfig.set('SSL_KEY_FILE', buildConfig.get('nginxSettings.keyFileLocation'))

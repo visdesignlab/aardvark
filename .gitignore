@@ -49,11 +49,10 @@ apps/server/api/secrets.json
 .python-version
 
 #Docker
-docker/mysql-data
-docker/minio-data
-docker/ssl/
-docker-local/mysql-data
-docker-local/local-data
+.build-files/mysql-data
+.build-files/minio-data
+.build-files/ssl/
+.build-files/docker-compose.yml
 
 __pycache__/
 *.pyc
