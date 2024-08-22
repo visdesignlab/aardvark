@@ -26,7 +26,7 @@ let dataMin = ref(0);
 let dataMax = ref(0);
 
 // Define Plot Emits and Props
-const emit = defineEmits(['selectionChange', 'plot-loaded']);
+const emit = defineEmits(['selectionChange', 'plot-loaded', 'plot-error']);
 const props = defineProps({
     plotName: {
         type: String as PropType<string>,
@@ -38,84 +38,31 @@ const props = defineProps({
     },
 });
 
-// async function dataRange() {
-//     try {
-//         const plotName = props.plotName;
-
-//         const query = `SELECT MIN(${plotName}) as min, MAX(${plotName}) as max
-//                    FROM current_cell_metadata`;
-
-//         const result = await vg.coordinator().query(query);
-
-//         console.log(result);
-//         // Assuming result is an object with 'rows' property
-//         const [min, max] = result.rows.map((row) => Number(row[0]));
-
-//         dataMin.value = min;
-//         dataMax.value = max;
-
-//         dataMin.value = Number(min.toFixed(3));
-//         dataMax.value = Number(max.toFixed(3));
-
-//         // Check for existing selection in the store (using localeCompare)
-//         const currentSelection = selectionStore?.Selections?.find(
-//             (selection) =>
-//                 selection.plotName.localeCompare(props.plotName) === 0
-//         );
-
-//         if (currentSelection) {
-//             // Use selection range if present
-//             range.value.min = currentSelection.range[0];
-//             range.value.max = currentSelection.range[1];
-//         } else {
-//             // Fallback to dataMin and dataMax
-//             range.value.min = dataMin.value;
-//             range.value.max = dataMax.value;
-//         }
-//     } catch (error) {
-//         console.error('Error fetching data range:', error);
-//     }
-// }
-
+// Function that finds the min and max of the data to set the quasar slider.
 async function dataRange() {
     try {
+        // Loading
+
         const plotName = props.plotName;
-        // Escape single quotes and wrap the entire name in single quotes
-        const escapedPlotName = `"${plotName.replace(/"/g, '""')}"`;
 
-        const query = Query.from('current_cell_metadata').select({
-            min_value: min(plotName),
-            max_value: max(plotName),
-        });
+        if (!plotName || plotName.trim() === '') {
+            throw new Error('Invalid or empty plot name');
+        }
 
-        //console.log('Query:', query.toString());
-        const result = await vg.coordinator().query(query.toString());
-        //console.log('Query result:', result);
+        // Escape the column name to handle spaces and special characters
+        const escapedPlotName = `${plotName.replace(/"/g, '""')}`;
 
-        // const queryTest =
-        //     "SELECT count(*) from current_cell_metadata WHERE '" +
-        //     plotName +
-        //     "' is null";
-        // const queryTest =
-        //     'SELECT count(*) from (SELECT * from current_cell_metadata LIMIT 100);';
+        const query = `
+            SELECT
+                MIN("${escapedPlotName}") AS min_value,
+                MAX("${escapedPlotName}") AS max_value
+            FROM current_cell_metadata
+        `;
 
-        // const queryTest = Query.from('current_cell_metadata')
-        //     .select({
-        //         count: count(),
-        //     })
-        //     .where("'" + plotName + "' IS NULL");
+        console.log('Constructed query:', query);
 
-        const queryTest = Query.from('current_cell_metadata')
-            .select(plotName)
-            .limit(100);
+        const result = await vg.coordinator().query(query);
 
-        console.log('Query test: ' + plotName, queryTest.toString());
-        const resultTest = await vg
-            .coordinator()
-            .query(queryTest, { type: 'json' });
-        console.log('Query test result: ' + plotName, resultTest);
-
-        // Check if result exists and has data
         if (
             !result ||
             !result.batches ||
@@ -125,46 +72,42 @@ async function dataRange() {
             throw new Error('No data returned from query');
         }
 
-        // Extract min and max values from the result and convert BigInt to Number
         const minValue = Number(result.batches[0].get(0).min_value);
         const maxValue = Number(result.batches[0].get(0).max_value);
-        // console.log('Min value:', minValue, 'Max value:', maxValue);
 
-        // Check if the values are valid numbers
         if (isNaN(minValue) || isNaN(maxValue)) {
-            throw new Error('Invalid min or max value returned from query');
+            throw new Error('NaN values detected in the data');
         }
 
         dataMin.value = Number(minValue.toFixed(3));
         dataMax.value = Number(maxValue.toFixed(3));
 
-        // Check for existing selection in the store
+        console.log(dataMin.value);
+        console.log(dataMax.value);
+
         const currentSelection = selectionStore?.Selections?.find(
-            (selection) => selection.plotName === props.plotName
+            (selection) => {
+                selection.plotName === plotName;
+            }
         );
         if (
             currentSelection &&
             Array.isArray(currentSelection.range) &&
             currentSelection.range.length === 2
         ) {
-            // Use selection range if present and valid
             range.value.min = Number(currentSelection.range[0]);
             range.value.max = Number(currentSelection.range[1]);
         } else {
-            // Fallback to dataMin and dataMax
             range.value.min = dataMin.value;
             range.value.max = dataMax.value;
         }
-        //console.log('Final range:', range.value);
     } catch (error) {
-        // console.error('Error fetching data range:', error);
-        // Set default values or handle the error as needed
-        dataMin.value = 0;
-        dataMax.value = 1;
-        range.value.min = 0;
-        range.value.max = 1;
+        console.error('Error fetching data range:', error);
+        emit('plot-error', props.plotName);
+        throw error;
     }
 }
+
 // Q-Range Slider Data
 let range = ref({ min: ref(dataMin.value), max: ref(dataMax.value) });
 
@@ -201,18 +144,22 @@ const applyManualSelection = (min: number, max: number) => {
 
 // Finds current brush selection, changes selection store, updates text box vals.
 const clearBrushSelection = () => {
-    const active = props.plotBrush.clauses.active;
-    if (props.plotBrush) {
-        emit('selectionChange', {
-            plotName: active.source.field,
-            range: null,
-        });
+    try {
+        const active = props.plotBrush.clauses.active;
+        if (props.plotBrush) {
+            emit('selectionChange', {
+                plotName: active.source.field,
+                range: null,
+            });
 
-        props.plotBrush.update({
-            source: props.plotName,
-            value: null,
-            predicate: null,
-        });
+            props.plotBrush.update({
+                source: props.plotName,
+                value: null,
+                predicate: null,
+            });
+        }
+    } catch (error) {
+        emit('plot-error', props.plotName);
     }
 };
 
@@ -225,47 +172,51 @@ const handleSelectionRemoved = (event: CustomEvent) => {
 
 // Vg Plot
 function makePlot(column: string) {
-    return vg.plot(
-        // Background grey data
-        vg.rectY(vg.from('current_cell_metadata'), {
-            x: vg.bin(column),
-            y: vg.count(),
-            fill: '#cccccc',
-            inset: 1,
-        }),
-        // Currently Selected Data
-        vg.rectY(
-            vg.from('current_cell_metadata', { filterBy: props.plotBrush }),
-            {
+    try {
+        return vg.plot(
+            // Background grey data
+            vg.rectY(vg.from('current_cell_metadata'), {
                 x: vg.bin(column),
                 y: vg.count(),
-                fill: 'steelblue',
-                opacity: 1,
+                fill: '#cccccc',
                 inset: 1,
-                tip: {
-                    anchor: 'bottom',
-                },
-            }
-        ),
-        vg.marginBottom(130),
-        vg.marginTop(30),
-        vg.width(600),
-        vg.height(250),
-        vg.style({ 'font-size': '30px' }),
-        vg.xDomain(vg.toFixed),
-        vg.xLabelAnchor('center'),
-        vg.xTickPadding(10),
-        vg.xLabelOffset(80),
-        vg.xAxis('bottom'),
-        vg.xLine(true),
-        vg.xAlign(0),
-        vg.xInsetRight(20),
-        vg.xTickSpacing(100),
-        vg.yLabelAnchor('top'),
-        vg.yAxis(null),
-        vg.xLine(false),
-        vg.yTicks(0)
-    );
+            }),
+            // Currently Selected Data
+            vg.rectY(
+                vg.from('current_cell_metadata', { filterBy: props.plotBrush }),
+                {
+                    x: vg.bin(column),
+                    y: vg.count(),
+                    fill: 'steelblue',
+                    opacity: 1,
+                    inset: 1,
+                    tip: {
+                        anchor: 'bottom',
+                    },
+                }
+            ),
+            vg.marginBottom(130),
+            vg.marginTop(30),
+            vg.width(600),
+            vg.height(250),
+            vg.style({ 'font-size': '30px' }),
+            vg.xDomain(vg.toFixed),
+            vg.xLabelAnchor('center'),
+            vg.xTickPadding(10),
+            vg.xLabelOffset(80),
+            vg.xAxis('bottom'),
+            vg.xLine(true),
+            vg.xAlign(0),
+            vg.xInsetRight(20),
+            vg.xTickSpacing(100),
+            vg.yLabelAnchor('top'),
+            vg.yAxis(null),
+            vg.xLine(false),
+            vg.yTicks(0)
+        );
+    } catch (error) {
+        emit('plot-error', props.plotName);
+    }
 }
 
 // Dialog box, enter exact numbers ------
@@ -302,37 +253,60 @@ const validateMinMax = () => {
     return true;
 };
 
-// Handle Loading
+// Handle Loading of Everything
 const charts = ref<null | HTMLElement>(null);
 const loaded = ref(false);
 
+// Creates the Plots.
 async function createCharts() {
-    charts.value = makePlot(props.plotName);
-    if (plotContainer.value) {
-        plotContainer.value.appendChild(charts.value!);
-        loaded.value = true;
+    try {
+        charts.value = makePlot(props.plotName);
+        if (plotContainer.value) {
+            plotContainer.value.appendChild(charts.value!);
+            loaded.value = true;
+        }
+    } catch (error) {
+        console.error('Error creating charts:', error);
+        emit('plot-error', props.plotName);
     }
 }
+
+// Checks when everything has loaded
 watch(loaded, () => {
-    dataRange();
+    dataRange().catch((error) => {
+        console.error('Error in dataRange:', error);
+        emit('plot-error', props.plotName);
+    });
     handlePlotLoading();
 });
+
+// Waits for data range to load, then waits a bit, then notifies plotselector to show everything.
 const handlePlotLoading = async () => {
-    await dataRange();
-    // Wait for 0.5 seconds before emitting the plot-loaded event
-    await new Promise((resolve) => setTimeout(resolve, 500));
-    emit('plot-loaded');
+    try {
+        await dataRange();
+        // Wait for 0.5 seconds before emitting the plot-loaded event
+        await new Promise((resolve) => setTimeout(resolve, 500));
+        emit('plot-loaded');
+    } catch (error) {
+        console.error('Error in handlePlotLoading:', error);
+        emit('plot-error', props.plotName);
+    }
 };
 
 // Handle Rendering
 onMounted(() => {
     if (dataInitialized.value) {
         createCharts();
-        dataRange();
+        dataRange().catch((error) => {
+            console.error('Error in dataRange:', error);
+            emit('plot-error', props.plotName);
+        });
     }
 });
 
+// Waits for data to be initialized before creating charts
 watch(dataInitialized, createCharts);
+
 watch(range, handleRangeChange);
 
 // Remove Selection

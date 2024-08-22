@@ -43,20 +43,36 @@
                 :plot-brush="plotBrush"
                 @selection-change="handleSelectionChange"
                 @plot-loaded="handlePlotLoaded"
+                @plot-error="handlePlotError"
             />
+            <q-dialog v-model="showErrorDialog">
+                <q-card>
+                    <q-card-section>
+                        <div class="text-h6">Error</div>
+                    </q-card-section>
+                    <q-card-section class="q-pt-none">
+                        An error occurred while loading the plot:
+                        {{ errorPlotName }}
+                    </q-card-section>
+                    <q-card-actions align="right">
+                        <q-btn flat label="OK" color="primary" v-close-popup />
+                    </q-card-actions>
+                </q-card>
+            </q-dialog>
         </div>
     </div>
 </template>
 
 <script lang="ts" setup>
 import { ref, computed, onMounted, watch } from 'vue';
-import { QBtn } from 'quasar';
+import { QBtn, QDialog, QCard, QCardSection, QCardActions } from 'quasar';
 import * as vg from '@uwdata/vgplot';
 import { storeToRefs } from 'pinia';
 import UnivariateCellPlot from './UnivariateCellPlot.vue';
 import { useFilterStore } from '@/stores/filterStore';
 import { useSelectionStore } from '@/stores/selectionStore';
 import { useCellMetaData } from '@/stores/cellMetaData';
+
 const cellMetaData = useCellMetaData();
 const { dataInitialized } = storeToRefs(cellMetaData);
 
@@ -73,7 +89,7 @@ const loading = ref(true);
 const loadedPlots = ref(0);
 const totalPlots = ref(0);
 
-// const allPlotNames = ['A', 'x', 'y', 'mass', 'time', 'MI'];
+// On any update, computes the plots to be shown.
 const allPlotNames = computed(() => {
     return dataInitialized.value ? cellMetaData.headers : [];
 });
@@ -82,11 +98,29 @@ const firstPlotName = computed(() => {
         ? cellMetaData.headers[0]
         : '';
 });
+
 const currentSelections = ref<Selection>({});
 const selectionStore = useSelectionStore();
 
 const { Plots, Selections } = storeToRefs(selectionStore);
 
+const showErrorDialog = ref(false);
+const errorPlotName = ref('');
+
+// If there is a plot loading here, a dialog is displayed.
+const handlePlotError = (plotName: string) => {
+    console.log('handlePlotError called with:', plotName);
+    errorPlotName.value = plotName;
+    showErrorDialog.value = true;
+
+    // Deselect the plot and remove it from the shown plots
+    clearSelectionForPlot(plotName);
+    selectionStore.Plots = Plots.value.filter(
+        (plot) => plot.plotName !== plotName
+    );
+};
+
+// Adds a plot initially when first loading.
 onMounted(() => {
     watch(
         dataInitialized,
@@ -108,7 +142,7 @@ const handlePlotLoaded = () => {
     }
 };
 
-// Mosaic selection
+// Mosaic Selections within plots gets computed
 const mosaicSelection = computed(() => vg.Selection.intersect());
 const plotBrush = computed(() => {
     console.log('plotBrush computed');
@@ -177,6 +211,7 @@ window.addEventListener(
     handleSelectionRemoved as EventListener
 );
 
+// When a selection changes, the selection store updates.
 const handleSelectionChange = (event: SelectionChangeEvent) => {
     const { plotName, range } = event;
     if (range && range[0] !== undefined && range[1] !== undefined) {
