@@ -2,11 +2,16 @@ FROM python:3.11
 
 WORKDIR /app
 
-COPY requirements.txt .
+ARG DOCKER_ENV_FILE
 
+COPY ./apps/server/requirements.txt .
+COPY ./.build-files/$DOCKER_ENV_FILE /app/.env
 RUN pip install --no-cache-dir -r requirements.txt
 
-COPY . .
+COPY ./apps/server/ .
+
+COPY ./.build-files/server-entrypoint.sh /app/server-entrypoint.sh
+RUN chmod +x /app/server-entrypoint.sh
 
 EXPOSE 8000
 

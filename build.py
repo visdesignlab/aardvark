@@ -14,9 +14,6 @@ sys.path.append(os.path.join(os.path.dirname(__file__), '.build-files'))
 import BuildConfig  # type: ignore
 
 
-number_of_services = 6
-
-
 def createComposeFile(local=False):
     docker_compose_template = '.build-files/docker-compose.template.yml'
     if local:
@@ -41,14 +38,14 @@ def createEnvFile(configFileName, envFileName):
 
     if environment != 'local':
         if use_http:
-            nginx_file = './nginx-http.conf'
+            nginx_file = 'nginx-http.conf'
             minio_browser_redirect_url = f'http://{base_url}/minio'
         else:
-            nginx_file = './nginx-https.conf'
+            nginx_file = 'nginx-https.conf'
             minio_browser_redirect_url = f'https://{base_url}/minio'
         buildConfig.set('MINIO_BROWSER_REDIRECT_URL', minio_browser_redirect_url)
     else:
-        nginx_file = './nginx-http-local.conf'
+        nginx_file = 'nginx-http-local.conf'
 
     buildConfig.set('NGINX_FILE', nginx_file)
 
@@ -83,7 +80,7 @@ def createEnvFile(configFileName, envFileName):
 
     # minio_settings = buildConfig.config.get('minioSettings')
     if buildConfig.get('minioSettings') != "":
-        
+
         buildConfig.set('MINIO_STORAGE_ACCESS_KEY', buildConfig.get(
             'minioSettings.minioStorageAccessKey'
             ))
@@ -105,10 +102,12 @@ def createEnvFile(configFileName, envFileName):
 
     if buildConfig.get('nginxSettings') != "":
         ssl_mapping = f"{buildConfig.get('nginxSettings.sourceVolumeLocation')}" \
-                      f":{buildConfig.get('nginxSettings.sourceVolumeLocation')}:ro"
+                      f":{buildConfig.get('nginxSettings.targetVolumeLocation')}:ro"
         buildConfig.set('SSL_MAPPING', ssl_mapping)
         buildConfig.set('SSL_CERT_FILE', buildConfig.get('nginxSettings.certFileLocation'))
         buildConfig.set('SSL_KEY_FILE', buildConfig.get('nginxSettings.keyFileLocation'))
+        buildConfig.set('SSL_TARGET_MOUNTED_DIRECTORY',
+                        buildConfig.get('nginxSettings.targetVolumeLocation'))
 
     # --------------------------------------------------------------
     # OTHER SETTINGS -----------------------------------------------
@@ -207,10 +206,7 @@ def build_containers(env_file):
     print("\nBuild complete.")  # Print new line after spinner stops
 
 
-def follow_all_logs(logs_path, verbose=False, detached=False):
-    services = ["db", "client", "server", "minio", "celery", "redis"]
-    # threads = []
-
+def follow_all_logs(logs_path, services, verbose=False, detached=False):
     for service in services:
         log_thread = threading.Thread(target=follow_logs, args=(service,
                                                                 logs_path,
@@ -237,7 +233,7 @@ def start_containers(env_file):
     print("\nContainers started.")
 
 
-def check_containers_status(detached=False):
+def check_containers_status(services, detached=False):
     """ Check and print the status of each container. """
     while True:
         print("Checking container statuses...")
@@ -256,7 +252,7 @@ def check_containers_status(detached=False):
             text=True
         )
         running_services = result.stdout.strip().split('\n')
-
+        number_of_services = len(services)
         if len(running_services) == number_of_services:  # Number of containers
             print("All containers are running.")
             if not detached:
@@ -316,6 +312,11 @@ if __name__ == "__main__":
             # Generate docker compose file based on if we are using local loon or not
             createComposeFile(local=buildConfig.local)
 
+            if buildConfig.local:
+                services = ["db", "client", "server", "data", "celery", "redis"]
+            else:
+                services = ["db", "client", "server", "minio", "celery", "redis"]
+
             # Get current time and create unique logs path
             timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
             logs_path = f'logs/logs_{timestamp}'
@@ -340,8 +341,8 @@ if __name__ == "__main__":
             # Build, run, then follow all logs. Begin monitoring process
             build_containers(f'.build-files/{args.env_file}')
             start_containers(f'.build-files/{args.env_file}')
-            follow_all_logs(logs_path, args.verbose, args.detached)
-            check_containers_status(args.detached)
+            follow_all_logs(logs_path, services, args.verbose, args.detached)
+            check_containers_status(services, args.detached)
         else:
             cleanup_and_exit()
     else:

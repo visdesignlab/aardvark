@@ -4,19 +4,18 @@ services:
   # Depends on server. NGINX will throw errors if api endpoints are not setup.
   client:
     build:
-      context: ../apps/client # relative to docker compose
-      dockerfile: ../../.build-files/Dockerfile.client # relative to build context
+      context: ../ # relative to docker compose
+      dockerfile: ./.build-files/Dockerfile.client # relative to build context
       args:
         VITE_USE_HTTP: ${USE_HTTP}
         VITE_ENVIRONMENT: ${VITE_ENVIRONMENT}
         VITE_SERVER_URL: ${VITE_SERVER_URL}
+        NGINX_FILE: ${NGINX_FILE}
     ports:
       - "80:80"
       - "443:443"
     volumes:
-      - ${NGINX_FILE}:/etc/nginx/nginx.conf.template # relative to docker compose
       - ${SSL_MAPPING:-/dev/null:/dev/null}
-      - ./client-entrypoint.sh:/app/client-entrypoint.sh # relative to docker compose
     depends_on:
       - server
     env_file:
@@ -26,8 +25,10 @@ services:
   # Depends on database. Database must be healthy before starting server
   server:
     build:
-      context: ../apps/server # relative to docker compose
-      dockerfile: ../../.build-files/Dockerfile.server # relatvie to build context
+      context: ../ # relative to docker compose
+      dockerfile: ./.build-files/Dockerfile.server # relatvie to build context
+      args:
+        DOCKER_ENV_FILE: ${DOCKER_ENV_FILE}
     ports:
       - "8000:8000"
     environment:
@@ -39,14 +40,13 @@ services:
         condition: service_healthy
       minio:
         condition: service_healthy
-    volumes:
-      - ${DOCKER_ENV_FILE}:/app/.env # relative to docker compose
-      - ./server-entrypoint.sh:/app/server-entrypoint.sh # relative to docker compose
 
   celery:
     build:
-      context: ../apps/server # relative to docker compose
-      dockerfile: ../../.build-files/Dockerfile.celery # relatvie to build context
+      context: ../ # relative to docker compose
+      dockerfile: ./.build-files/Dockerfile.celery # relatvie to build context
+      args:
+        DOCKER_ENV_FILE: ${DOCKER_ENV_FILE}
     command:
       [
         "celery",
@@ -63,8 +63,6 @@ services:
     tty: false
     environment:
       DJANGO_ENV_FILE: "/app/.env"
-    volumes:
-      - ${DOCKER_ENV_FILE}:/app/.env # relative to docker compose
     depends_on:
       db:
         condition: service_healthy

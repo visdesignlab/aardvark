@@ -1,0 +1,42 @@
+FROM ubuntu:24.04
+RUN apt-get update
+RUN apt-get upgrade -y
+RUN apt-get install -y python3
+RUN apt-get install -y pip
+RUN apt-get install -y curl
+RUN apt-get install -y docker.io
+RUN curl -L "https://github.com/docker/compose/releases/download/v2.29.2/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+RUN chmod +x /usr/local/bin/docker-compose
+
+
+WORKDIR /app
+
+COPY . .
+
+# Run a command to keep the container running
+CMD ["tail", "-f", "/dev/null"]
+
+
+# # Stage 1: Install Docker Compose
+# FROM docker/compose:1.24.1 AS compose
+
+# # Stage 2: Install Python
+# FROM python:3.11 AS python
+
+# # Install dependencies (optional)
+# RUN pip install --upgrade pip
+
+# # Stage 3: Final stage combining both
+# FROM python:3.11
+
+# # Copy Docker Compose from the compose stage
+# COPY --from=compose /usr/local/bin/docker-compose /usr/local/bin/docker-compose
+
+# # Set the working directory
+# WORKDIR /app
+
+# # Copy application files into the container
+# COPY . .
+
+# # Run a command to keep the container running
+# CMD ["tail", "-f", "/dev/null"]

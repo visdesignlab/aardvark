@@ -1,0 +1,4 @@
+#!/bin/bash
+
+# Run python3 build.py with all arguments passed to this script
+python3 /Users/bbollen23/loonar/build.py "$@"

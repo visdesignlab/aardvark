@@ -60,3 +60,4 @@ config.json
 config-production.json
 config-test.json
 config-local.json
+config-local-loon.json
