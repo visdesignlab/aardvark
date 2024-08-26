@@ -149,7 +149,7 @@ def run_command(command, shell=True):
 def follow_logs(service_name, logs_path, verbose=False, detached=False):
     file_name = f"{logs_path}/{service_name}.log"
     if detached:
-        command = f'docker compose -f .build-files/docker-compose.yml logs -f {service_name}' \
+        command = f'docker-compose -f .build-files/docker-compose.yml logs -f {service_name}' \
                 f' >> {file_name} 2>&1 &'
         subprocess.Popen(
             command,
@@ -159,7 +159,7 @@ def follow_logs(service_name, logs_path, verbose=False, detached=False):
             start_new_session=True
         )
     else:
-        command = f'docker compose -f .build-files/docker-compose.yml logs -f {service_name}'
+        command = f'docker-compose -f .build-files/docker-compose.yml logs -f {service_name}'
         process = subprocess.Popen(
             command,
             shell=True,
@@ -197,7 +197,7 @@ def build_containers(env_file):
     # print("Building Containers...")
     spinner_thread = threading.Thread(target=spinner, args=("Building containers...",))
     spinner_thread.start()
-    process = run_command(f"docker compose -f .build-files/docker-compose.yml"
+    process = run_command(f"docker-compose -f .build-files/docker-compose.yml"
                           f" --env-file {env_file} build")
     process.wait()  # Wait for the build to complete
 
@@ -222,7 +222,7 @@ def start_containers(env_file):
     """ Start the containers in detached mode. """
     spinner_thread = threading.Thread(target=spinner, args=("Starting containers...",))
     spinner_thread.start()
-    process = run_command(f"docker compose -f .build-files/docker-compose.yml"
+    process = run_command(f"docker-compose -f .build-files/docker-compose.yml"
                           f" --env-file {env_file} up -d")
 
     process.wait()  # Wait for the containers to start
@@ -239,8 +239,7 @@ def check_containers_status(services, detached=False):
         print("Checking container statuses...")
         result = subprocess.run(
             [
-                "docker",
-                "compose",
+                "docker-compose",
                 "-f",
                 ".build-files/docker-compose.yml",
                 "ps",
@@ -267,7 +266,7 @@ def check_containers_status(services, detached=False):
 def cleanup_and_exit(signal=None, frame=None):
     """ Stop all Docker containers and exit gracefully. """
     print("\nCleaning up and stopping containers...")
-    subprocess.run("docker compose -f .build-files/docker-compose.yml down", shell=True)
+    subprocess.run("docker-compose -f .build-files/docker-compose.yml down", shell=True)
     sys.exit(0)
 
 
@@ -309,7 +308,7 @@ if __name__ == "__main__":
         if not args.down:
             # Create the env file, returning the build config
             buildConfig = createEnvFile(args.config_file, args.env_file)
-            # Generate docker compose file based on if we are using local loon or not
+            # Generate docker-compose file based on if we are using local loon or not
             createComposeFile(local=buildConfig.local)
 
             if buildConfig.local:
