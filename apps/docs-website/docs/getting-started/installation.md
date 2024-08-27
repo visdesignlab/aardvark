@@ -141,11 +141,15 @@ python3 build.py
 
 The above script will build and then run all containers using a default of "config.json" as the configuration file and creating a ".env" file in the `.build-files` directory.
 
+**Specifying the env file name and configuration file name**
+
 ```bash
 python3 build.py --env-file .env.production --config-file config-production.json
 ```
 
 This will use the "config-production.json" as the input configuration file and output a ".env.production" environment file.
+
+**Using Detached Mode and Verbose**
 
 ```bash
 python3 build.py -vd
@@ -156,8 +160,10 @@ This will enable verbose mode so that we can see the build process as it runs. I
 **Overwritting configuration file with environment variables**
 
 ```bash
-export LOCALDATASETTINGS_SOURCEVOLUMELOCATION=/Users/MyUser/my-loon-data/
+export LOCALDATASETTINGS_SOURCEVOLUMELOCATION=/Users/MyUser/my-loon-data
 python3 build -o
 ```
+
+This will take your current config (in this case `config.json` in the root directory since no file name was specified) and overwrite the `localDataSettings.sourceVolumeLocation` value to be `/Users/MyUser/my-loon-data`. The original `config.json` will not be altered. Instead, a temporary file (in this case named `config.json.temp`) will be created and then used.
 
 If you're using the script not in detached mode, then pressing "Ctrl+C" in the terminal will stop and remove all docker containers. Additionally, all logs will be outputted to a "logs" directory. For each run of the build script, a new directory called `logs_%Y-%m-%d_%H-%M-%S` will be created with logging for each individual service separated.
