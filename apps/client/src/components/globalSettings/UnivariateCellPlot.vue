@@ -190,9 +190,6 @@ function makePlot(column: string) {
                     fill: '#377eb8',
                     opacity: 1,
                     inset: 1,
-                    tip: {
-                        anchor: 'bottom',
-                    },
                 }
             ),
             vg.marginBottom(45),
