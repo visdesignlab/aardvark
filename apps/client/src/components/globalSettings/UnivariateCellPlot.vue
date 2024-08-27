@@ -351,7 +351,6 @@ const plotContainer = ref<HTMLDivElement | null>(null);
                         switch-label-side
                         selection-color="steel-blue"
                         track-color="hidden"
-                        drag-range
                     />
                 </div>
             </div>
