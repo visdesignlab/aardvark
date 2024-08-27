@@ -361,7 +361,7 @@ const plotContainer = ref<HTMLDivElement | null>(null);
         <q-dialog v-model="showRangeDialog">
             <q-card>
                 <q-card-section>
-                    <div>Enter Range</div>
+                    <div class="text-h6">Enter Range</div>
                 </q-card-section>
 
                 <q-card-section>
