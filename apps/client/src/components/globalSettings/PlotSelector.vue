@@ -1,68 +1,3 @@
-<template>
-    <div>
-        <div v-if="!dataInitialized" class="loading-wrapper">
-            <div class="loading-text">Loading...</div>
-        </div>
-        <div v-else>
-            <div class="q-item-section__right">
-                <q-btn
-                    class="gt-xs q-mr-sm"
-                    size="12px"
-                    flat
-                    dense
-                    round
-                    icon="menu"
-                    color="grey-7"
-                >
-                    <q-menu v-model="menuOpen" fit>
-                        <q-list
-                            style="min-width: 100px; max-height: 300px"
-                            class="scroll"
-                        >
-                            <q-item
-                                v-for="name in allPlotNames"
-                                :key="name"
-                                clickable
-                                :class="{
-                                    'selected-item': isPlotSelected(name),
-                                }"
-                                @click.stop="togglePlotSelection(name)"
-                            >
-                                <q-item-section class="plot-name">{{
-                                    name
-                                }}</q-item-section>
-                            </q-item>
-                        </q-list>
-                    </q-menu>
-                </q-btn>
-            </div>
-            <UnivariateCellPlot
-                v-for="plot in selectedPlots"
-                :key="plot.plotName"
-                :plot-name="plot.plotName"
-                :plot-brush="plotBrush"
-                @selection-change="handleSelectionChange"
-                @plot-loaded="handlePlotLoaded"
-                @plot-error="handlePlotError"
-            />
-            <q-dialog v-model="showErrorDialog">
-                <q-card>
-                    <q-card-section>
-                        <div class="text-h6">Error</div>
-                    </q-card-section>
-                    <q-card-section class="q-pt-none">
-                        An error occurred while loading the plot:
-                        {{ errorPlotName }}
-                    </q-card-section>
-                    <q-card-actions align="right">
-                        <q-btn flat label="OK" color="primary" v-close-popup />
-                    </q-card-actions>
-                </q-card>
-            </q-dialog>
-        </div>
-    </div>
-</template>
-
 <script lang="ts" setup>
 import { ref, computed, onMounted, watch } from 'vue';
 import { QBtn, QDialog, QCard, QCardSection, QCardActions } from 'quasar';
@@ -226,6 +161,70 @@ const handleSelectionChange = (event: SelectionChangeEvent) => {
     }
 };
 </script>
+<template>
+    <div>
+        <div v-if="!dataInitialized" class="loading-wrapper">
+            <div class="loading-text">Loading...</div>
+        </div>
+        <div v-else>
+            <div class="q-item-section__right">
+                <q-btn
+                    class="gt-xs q-mr-sm"
+                    size="12px"
+                    flat
+                    dense
+                    round
+                    icon="menu"
+                    color="grey-7"
+                >
+                    <q-menu v-model="menuOpen" fit>
+                        <q-list
+                            style="min-width: 100px; max-height: 300px"
+                            class="scroll"
+                        >
+                            <q-item
+                                v-for="name in allPlotNames"
+                                :key="name"
+                                clickable
+                                :class="{
+                                    'selected-item': isPlotSelected(name),
+                                }"
+                                @click.stop="togglePlotSelection(name)"
+                            >
+                                <q-item-section class="plot-name">{{
+                                    name
+                                }}</q-item-section>
+                            </q-item>
+                        </q-list>
+                    </q-menu>
+                </q-btn>
+            </div>
+            <UnivariateCellPlot
+                v-for="plot in selectedPlots"
+                :key="plot.plotName"
+                :plot-name="plot.plotName"
+                :plot-brush="plotBrush"
+                @selection-change="handleSelectionChange"
+                @plot-loaded="handlePlotLoaded"
+                @plot-error="handlePlotError"
+            />
+            <q-dialog v-model="showErrorDialog">
+                <q-card>
+                    <q-card-section>
+                        <div class="text-h6">Error</div>
+                    </q-card-section>
+                    <q-card-section class="q-pt-none">
+                        An error occurred while loading the plot:
+                        {{ errorPlotName }}
+                    </q-card-section>
+                    <q-card-actions align="right">
+                        <q-btn flat label="OK" color="primary" v-close-popup />
+                    </q-card-actions>
+                </q-card>
+            </q-dialog>
+        </div>
+    </div>
+</template>
 
 <style scoped>
 .q-item-section__right {
