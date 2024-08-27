@@ -195,24 +195,22 @@ function makePlot(column: string) {
                     },
                 }
             ),
-            vg.marginBottom(130),
-            vg.marginTop(30),
-            vg.width(600),
-            vg.height(250),
-            vg.style({ 'font-size': '30px' }),
+            vg.marginBottom(45),
+            vg.marginTop(5),
+            vg.marginLeft(20),
+            vg.marginRight(20),
+            vg.width(268),
+            vg.height(85),
+            vg.style({ 'font-size': '.85em' }),
             vg.xDomain(vg.toFixed),
             vg.xLabelAnchor('center'),
-            vg.xTickPadding(10),
-            vg.xLabelOffset(80),
-            vg.xAxis('bottom'),
-            vg.xLine(true),
-            vg.xAlign(0),
-            vg.xInsetRight(20),
+            vg.xTickPadding(8),
+            vg.xLabelOffset(38),
+            vg.xInsetLeft(0),
+            vg.xInsetRight(0),
             vg.xTickSpacing(100),
-            vg.yLabelAnchor('top'),
             vg.yAxis(null),
-            vg.xLine(false),
-            vg.yTicks(0)
+            vg.xLine(false)
         );
     } catch (error) {
         emit('plot-error', props.plotName);
@@ -411,7 +409,7 @@ const plotContainer = ref<HTMLDivElement | null>(null);
 .q-range-container {
     padding: 0 20px;
     position: absolute;
-    bottom: 40px;
+    bottom: 20px;
     left: 0;
     right: 0;
 }
