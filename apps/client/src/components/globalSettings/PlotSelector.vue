@@ -29,11 +29,7 @@ const allPlotNames = computed(() => {
     return dataInitialized.value ? cellMetaData.headers : [];
 });
 const firstPlotName = computed(() => {
-    return dataInitialized.value &&
-        cellMetaData.headers?.length &&
-        cellMetaData.headers.length > 0
-        ? cellMetaData.headers[0]
-        : '';
+    return dataInitialized.value ? cellMetaData.headerKeys.mass : '';
 });
 
 const currentSelections = ref<Selection>({});
