@@ -187,7 +187,7 @@ function makePlot(column: string) {
                 {
                     x: vg.bin(column),
                     y: vg.count(),
-                    fill: 'steelblue',
+                    fill: '#377eb8',
                     opacity: 1,
                     inset: 1,
                     tip: {
@@ -349,7 +349,7 @@ const plotContainer = ref<HTMLDivElement | null>(null);
                         thumb-size="14px"
                         track-size="2px"
                         switch-label-side
-                        selection-color="steel-blue"
+                        selection-color="#377eb8"
                         track-color="hidden"
                     />
                 </div>
