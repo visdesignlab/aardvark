@@ -28,7 +28,7 @@ DuckDB is the database required by our visualization platform Mosaic. It enables
 
 Below is an architecture diagram for the various applications in Loon
 
-![Loon Architecture Diagram](./loon-architecture-light.svg)
+![Loon Architecture Diagram](./apps/docs-website/docs/getting-started/img/loon-architecture-light.svg)
 
 Loon is a repository that is meant to be deployed as a standalone docker container. In the repository, there are two docker directories (one is `docker` and the other is `docker-local`). This separates the projects into two distinct pieces: Loon and Local Loon.
 
