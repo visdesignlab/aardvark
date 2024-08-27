@@ -184,3 +184,23 @@ If you'd like to install all dependencies for all repositories you can run `moon
 Similar to the frontend pieces, you can install necessary packages for the documentation website using `moon docs:install` and then run the website using `moon docs:run`.
 
 All tasks can be viewed in the individual repository's moon.yml files.
+
+## EXTRA NOTES
+
+Build docker image on Dockerfile.loon. All commands at root.
+
+```bash
+docker build -f ./.build-files/Dockerfile.loon -t loon:1.0 .
+```
+
+Run:
+
+```bash
+docker run --name loon -d \
+-e LOCAL_DATA_VOLUME_LOCATION=/Users/bbollen23/loonar-data/local-data \
+-v /var/run/docker.sock:/var/run/docker.sock \
+-v /Users/bbollen23/loonar-data/local-data/:/app/data \
+loon:1.0
+```
+
+May have to remove using `docker rm loon`

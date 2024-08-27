@@ -5,7 +5,8 @@ import re
 def typeMapping(s, reverse=False):
     type_mapping = {
         "boolean": bool,
-        "string": str
+        "string": str,
+        "integer": int
     }
 
     type_mapping_reverse = {value: key for key, value in type_mapping.items()}
@@ -149,8 +150,13 @@ class BuildConfig:
                                 'schemaKey': key
                             })
 
-    def set(self, settingName, settingValue):
-        self.outConfig[settingName] = settingValue
+    def set(self, settingName, settingValue, directToEnv=False):
+        if not directToEnv:
+            self.outConfig[settingName] = settingValue
+        else:
+            fullEnvFileName = f'.build-files/{self.envFile}'
+            with open(fullEnvFileName, 'a') as outF:
+                outF.write(f'{settingName}={settingValue}')
 
     def get(self, keyString):
         keyList = keyString.split(".")

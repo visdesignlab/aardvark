@@ -14,4 +14,5 @@ WORKDIR /app
 COPY . .
 
 # Run a command to keep the container running
-CMD ["python3", "build.py", "--config-file", "config-local-loon.json"]
+# Specifying config and overwriting.
+CMD ["python3", "build.py", "-o", "--config-file", "config-local.json"]

@@ -9,9 +9,63 @@ import logging
 import os
 from datetime import datetime
 import shutil
+import json
 
 sys.path.append(os.path.join(os.path.dirname(__file__), '.build-files'))
 import BuildConfig  # type: ignore
+
+
+def set_value_in_dict(key_entry_list, curr_dict, new_value):
+
+    valid_booleans = {'true', 'false'}
+    lower_s = new_value.lower()
+
+    if lower_s in valid_booleans:
+        new_value = lower_s == 'true'
+    else:
+        try:
+            new_value = int(new_value)
+        except ValueError:
+            pass
+
+    curr_dict = curr_dict[key_entry_list[0]]
+    for i in range(1, len(key_entry_list)-1):
+        curr_dict = curr_dict[key_entry_list[i]]
+
+    curr_dict[key_entry_list[len(key_entry_list)-1]] = new_value
+
+
+def generate_possible_key_list(json_dict, key_list, prepend_string=""):
+    for key, value in json_dict.items():
+        if isinstance(value, dict):
+            curr_prepend_string = f'{prepend_string}{key}_'
+            generate_possible_key_list(value, key_list, prepend_string=curr_prepend_string)
+        else:
+            key_list.append(f'{prepend_string}{key}')
+
+
+def overwrite_config(config_file):
+    print('Overwriting with local variables:\n')
+    with open(config_file, 'r') as cf:
+        config_dict = json.load(cf)
+        total_key_list = []
+        generate_possible_key_list(config_dict, total_key_list)
+    count = 0
+    for item in total_key_list:
+        # Get uppercase version and check if in environ
+        curr_env_value = os.getenv(item.upper())
+        if curr_env_value is not None:
+            count += 1
+            print(f"{item.upper()}={curr_env_value}")
+            # Used to get value in config dict
+            key_entry_list = item.split("_")
+
+            set_value_in_dict(key_entry_list, config_dict, curr_env_value)
+    if count == 0:
+        print("No variables to overwrite.")
+    else:
+        with open(args.config_file, 'w') as cfw:
+            json.dump(config_dict, cfw, indent=4)
 
 
 def createComposeFile(local=False):
@@ -62,7 +116,6 @@ def createEnvFile(configFileName, envFileName):
     buildConfig.set('DATABASE_PASSWORD', buildConfig.get('mySqlSettings.databasePassword'))
     buildConfig.set('DATABASE_USER', buildConfig.get('mySqlSettings.databaseUser'))
     buildConfig.set('DATABASE_NAME', buildConfig.get('mySqlSettings.databaseName'))
-    buildConfig.set('MYSQL_VOLUME_LOCATION', buildConfig.get('mySqlSettings.sourceVolumeLocation'))
 
     buildConfig.set('DATABASE_HOST', 'db')
     buildConfig.set('DATABASE_PORT', '3306')
@@ -108,6 +161,8 @@ def createEnvFile(configFileName, envFileName):
         buildConfig.set('SSL_KEY_FILE', buildConfig.get('nginxSettings.keyFileLocation'))
         buildConfig.set('SSL_TARGET_MOUNTED_DIRECTORY',
                         buildConfig.get('nginxSettings.targetVolumeLocation'))
+        buildConfig.set('SSL_SOURCE_MOUNTED_DIRECTORY',
+                        buildConfig.get('nginxSettings.sourceVolumeLocation'))
 
     # --------------------------------------------------------------
     # OTHER SETTINGS -----------------------------------------------
@@ -121,7 +176,7 @@ def createEnvFile(configFileName, envFileName):
                     '"django-insecure-z2^vruu347=0e-qyh%&k)%*j9(hgubj$layg&k$-vwb1u+mp93"'
                     )
     localVolumeLocation = buildConfig.get('localDataSettings.sourceVolumeLocation')
-    buildConfig.set('LOCAL_VOLUME_LOCATION', localVolumeLocation)
+    buildConfig.set('LOCAL_DATA_VOLUME_LOCATION', localVolumeLocation)
 
     buildConfig.writeToEnv()
     return buildConfig
@@ -302,11 +357,17 @@ if __name__ == "__main__":
     parser.add_argument("-e", "--validate-build", action="store_true",
                         help="If present, only validates configuration file and generates"
                         "corresponding environment file.")
+    parser.add_argument("-o", "--overwrite", action="store_true",
+                        help="If present, overwrites chosen config with current env variables")
+
     args = parser.parse_args()
 
     if not args.validate_build:
         if not args.down:
             # Create the env file, returning the build config
+            if args.overwrite:
+                overwrite_config(args.config_file)
+
             buildConfig = createEnvFile(args.config_file, args.env_file)
             # Generate docker-compose file based on if we are using local loon or not
             createComposeFile(local=buildConfig.local)
@@ -345,5 +406,8 @@ if __name__ == "__main__":
         else:
             cleanup_and_exit()
     else:
+        if args.overwrite:
+            overwrite_config(args.config_file)
+
         buildConfig = createEnvFile(args.config_file, args.env_file)
         createComposeFile(local=buildConfig.local)

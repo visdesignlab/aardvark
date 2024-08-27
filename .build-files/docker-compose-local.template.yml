@@ -13,9 +13,6 @@ services:
         NGINX_FILE: ${NGINX_FILE}
     ports:
       - "80:80"
-      - "443:443"
-    volumes:
-      - ${SSL_MAPPING:-/dev/null:/dev/null}
     depends_on:
       - server
     env_file:
@@ -114,10 +111,7 @@ services:
     ports:
       - "9000:9000"
     volumes:
-      - local-data:/app/data # relative to docker compose
-      # - ./key.pem:/app/ssl/key.pem
-      # - ./cert.pem:/app/ssl/cert.pem
+      - ${LOCAL_DATA_VOLUME_LOCATION}:/app/data # relative to docker compose
 
 volumes:
   mysql-data:
-  local-data:

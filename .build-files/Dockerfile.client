@@ -35,6 +35,8 @@ FROM nginx:alpine
 # From build step, copy dist directory
 COPY --from=build-step /app/dist /usr/share/nginx/html
 ARG NGINX_FILE
+ARG SSL_TARGET_MOUNTED_DIRECTORY
+ARG SSL_SOURCE_MOUNTED_DIRECTORY
 
 COPY ./.build-files/$NGINX_FILE /etc/nginx/nginx.conf.template
 
