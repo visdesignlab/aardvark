@@ -311,11 +311,6 @@ window.addEventListener(
     handleSelectionRemoved as EventListener
 );
 
-// Opening Context Menu
-document.addEventListener('contextmenu', (e) => {
-    e.preventDefault();
-});
-
 const plotContainer = ref<HTMLDivElement | null>(null);
 </script>
 
