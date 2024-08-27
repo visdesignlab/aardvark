@@ -333,8 +333,8 @@ const plotContainer = ref<HTMLDivElement | null>(null);
                 style="position: relative"
             >
                 <!-- Q-Menu for other options -->
-                <q-menu touch-position anchor="top right" self="top right">
-                    <q-item clickable @click="openRangeDialog">
+                <q-menu touch-position context-menu>
+                    <q-item clickable v-close-popup @click="openRangeDialog">
                         <q-item-section>Enter Range</q-item-section>
                     </q-item>
                 </q-menu>
