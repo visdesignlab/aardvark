@@ -77,11 +77,6 @@ class BuildConfig:
                                                         value['dependentOn']['errorOnMatch']
                                                         )
                     if not dependencyCheck:
-                        # self.errors.append({
-                        #     'stepString': currStepString,
-                        #     'type': 'missingKey',
-                        #     'schemaKey': key
-                        # })
                         dependencyCheckPassed = True
                 tempSchema = value['properties']
 
