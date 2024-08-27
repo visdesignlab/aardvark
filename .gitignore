@@ -64,3 +64,4 @@ config-local.json
 !.build-files/config.json
 config-local-loon.json
 !.build-files/Dockerfile.loon.local
+loon

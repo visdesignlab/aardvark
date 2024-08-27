@@ -1,6 +1,0 @@
-#!/bin/bash
-
-# To use this file, call "chmod +x loon" and then add "path/to/loonar/" to your path.
-
-# Run python3 build.py with all arguments passed to this script
-python3 /Users/bbollen23/loonar/build.py "$@"
