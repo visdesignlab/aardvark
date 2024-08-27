@@ -95,14 +95,11 @@ const addFilter = () => {
             <q-separator />
             <q-btn
                 flat
-                color="black"
                 icon="arrow_downward"
+                icon-right="arrow_downward"
                 label="Convert to Filters"
-                text-color="dark-grey"
                 no-caps
-                class="filter-style"
-                padding="sm 136.5px sm 12px"
-                dense
+                class="filter-style w-100"
                 @click="addFilter"
             />
             <q-separator />
@@ -199,9 +196,5 @@ const addFilter = () => {
     border: 1px solid #e0e0e0;
     border-radius: 4px;
     margin-bottom: 16px;
-}
-.filter-style {
-    font-weight: 400;
-    font-size: 12px;
 }
 </style>
