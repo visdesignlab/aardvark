@@ -207,7 +207,8 @@ function makePlot(column: string) {
             vg.xInsetRight(0),
             vg.xTickSpacing(100),
             vg.yAxis(null),
-            vg.xLine(false)
+            vg.xLine(false),
+            vg.xNice(false)
         );
     } catch (error) {
         emit('plot-error', props.plotName);
