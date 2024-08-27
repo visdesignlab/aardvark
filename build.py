@@ -63,9 +63,12 @@ def overwrite_config(config_file):
             set_value_in_dict(key_entry_list, config_dict, curr_env_value)
     if count == 0:
         print("No variables to overwrite.")
+        return config_file
     else:
-        with open(args.config_file, 'w') as cfw:
+        new_config_file_name = f"{config_file}.temp"
+        with open(new_config_file_name, 'w') as cfw:
             json.dump(config_dict, cfw, indent=4)
+        return new_config_file_name
 
 
 def createComposeFile(local=False):
@@ -362,13 +365,15 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
+    config_file_name = args.config_file
+
     if not args.validate_build:
         if not args.down:
             # Create the env file, returning the build config
             if args.overwrite:
-                overwrite_config(args.config_file)
+                config_file_name = overwrite_config(config_file_name)
 
-            buildConfig = createEnvFile(args.config_file, args.env_file)
+            buildConfig = createEnvFile(config_file_name, args.env_file)
             # Generate docker-compose file based on if we are using local loon or not
             createComposeFile(local=buildConfig.local)
 
@@ -407,7 +412,7 @@ if __name__ == "__main__":
             cleanup_and_exit()
     else:
         if args.overwrite:
-            overwrite_config(args.config_file)
+            config_file_name = overwrite_config(config_file_name)
 
-        buildConfig = createEnvFile(args.config_file, args.env_file)
+        buildConfig = createEnvFile(config_file_name, args.env_file)
         createComposeFile(local=buildConfig.local)

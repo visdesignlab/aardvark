@@ -65,3 +65,4 @@ config-local.json
 config-local-loon.json
 !.build-files/Dockerfile.loon.local
 loon
+.build-files/*.temp
