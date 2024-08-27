@@ -60,4 +60,7 @@ config.json
 config-production.json
 config-test.json
 config-local.json
+!.build-files/config-local.json
+!.build-files/config.json
 config-local-loon.json
+!.build-files/Dockerfile.loon.local
