@@ -4,7 +4,7 @@ import PlotSelector from './PlotSelector.vue';
 import { useFilterStore } from '@/stores/filterStore';
 import { useSelectionStore } from '@/stores/selectionStore';
 import { storeToRefs } from 'pinia';
-import { computed } from 'vue';
+import { computed, ref } from 'vue';
 import { forEach } from 'lodash-es';
 
 const globalSettings = useGlobalSettings();
@@ -30,6 +30,51 @@ const addFilter = () => {
             range: [selection.range[0], selection.range[1]],
         });
     });
+};
+
+const showRangeDialog = ref(false);
+const minInput = ref('');
+const maxInput = ref('');
+const customRangeSelection = ref();
+
+const openRangeDialog = (selection) => {
+    customRangeSelection.value = selection;
+    minInput.value = selection.range[0].toFixed(3).toString();
+    maxInput.value = selection.range[1].toFixed(3).toString();
+    showRangeDialog.value = true;
+};
+
+const onSubmit = () => {
+    if (minInput.value !== '' && maxInput.value !== '') {
+        const updatedSelection = {
+            plotName: customRangeSelection.value.plotName,
+            range: [Number(minInput.value), Number(maxInput.value)] as [
+                number,
+                number
+            ],
+        };
+        selectionStore.updateSelection(
+            updatedSelection.plotName,
+            updatedSelection.range
+        );
+        showRangeDialog.value = false;
+    }
+};
+
+const validateRealNumber = (val: string) => {
+    if (val === '') return true;
+    const num = parseFloat(val);
+    return !isNaN(num) || 'Please enter a real number';
+};
+
+const validateMinMax = () => {
+    if (minInput.value !== '' && maxInput.value !== '') {
+        return (
+            parseFloat(minInput.value) <= parseFloat(maxInput.value) ||
+            'Min should be less than or equal to Max'
+        );
+    }
+    return true;
 };
 </script>
 
@@ -58,6 +103,17 @@ const addFilter = () => {
                         clickable
                         v-ripple
                     >
+                        <!-- Q-Menu for other options -->
+                        <q-menu touch-position context-menu>
+                            <q-item
+                                clickable
+                                v-close-popup
+                                @click="openRangeDialog(selection)"
+                            >
+                                <q-item-section>Enter Range</q-item-section>
+                            </q-item>
+                        </q-menu>
+
                         <q-item-section avatar top left>
                             <q-avatar icon="scatter_plot" style="width: 18px" />
                         </q-item-section>
@@ -95,11 +151,14 @@ const addFilter = () => {
             <q-separator />
             <q-btn
                 flat
+                color="black"
                 icon="arrow_downward"
-                icon-right="arrow_downward"
                 label="Convert to Filters"
+                text-color="dark-grey"
                 no-caps
-                class="filter-style w-100"
+                class="filter-style"
+                padding="sm 136.5px sm 12px"
+                dense
                 @click="addFilter"
             />
             <q-separator />
@@ -182,6 +241,53 @@ const addFilter = () => {
         </q-expansion-item>
         <q-separator />
     </q-list>
+    <q-dialog v-model="showRangeDialog">
+        <q-card>
+            <q-card-section>
+                <div class="text-h6">Enter Range</div>
+            </q-card-section>
+
+            <q-card-section>
+                <q-form @submit="onSubmit" class="q-gutter-md">
+                    <q-input
+                        filled
+                        type="number"
+                        step="any"
+                        v-model="minInput"
+                        label="Min"
+                        lazy-rules
+                        :rules="[validateRealNumber]"
+                    />
+
+                    <q-input
+                        filled
+                        type="number"
+                        step="any"
+                        v-model="maxInput"
+                        label="Max"
+                        lazy-rules
+                        :rules="[validateRealNumber]"
+                    />
+
+                    <div>
+                        <q-btn
+                            label="Submit"
+                            type="submit"
+                            color="primary"
+                            :disable="!validateMinMax()"
+                        />
+                        <q-btn
+                            label="Cancel"
+                            color="primary"
+                            flat
+                            @click="showRangeDialog = false"
+                            class="q-ml-sm"
+                        />
+                    </div>
+                </q-form>
+            </q-card-section>
+        </q-card>
+    </q-dialog>
 </template>
 
 <style scoped lange="scss">
@@ -196,5 +302,9 @@ const addFilter = () => {
     border: 1px solid #e0e0e0;
     border-radius: 4px;
     margin-bottom: 16px;
+}
+.filter-style {
+    font-weight: 400;
+    font-size: 12px;
 }
 </style>
