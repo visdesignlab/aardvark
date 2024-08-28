@@ -1,11 +1,10 @@
 <script setup lang="ts">
-import { ref } from 'vue';
+import { computed, ref } from 'vue';
 import { useGlobalSettings } from '@/stores/globalSettings';
 import PlotSelector from './PlotSelector.vue';
 import { useFilterStore } from '@/stores/filterStore';
 import { useSelectionStore } from '@/stores/selectionStore';
 import { storeToRefs } from 'pinia';
-import { computed } from 'vue';
 
 const globalSettings = useGlobalSettings();
 const filterStore = useFilterStore();
@@ -61,6 +60,17 @@ const cellAttributesOpen = ref(true);
                         ) in selectionStore.modifiedSelections"
                         :key="index"
                     >
+                        <!-- Q-Menu for other options -->
+                        <q-menu touch-position context-menu>
+                            <q-item
+                                clickable
+                                v-close-popup
+                                @click="openRangeDialog(selection)"
+                            >
+                                <q-item-section>Enter Range</q-item-section>
+                            </q-item>
+                        </q-menu>
+
                         <q-item-section avatar top left>
                             <q-avatar icon="scatter_plot" style="width: 18px" />
                         </q-item-section>
@@ -102,6 +112,7 @@ const cellAttributesOpen = ref(true);
                 label="Convert to Filters"
                 no-caps
                 class="filter-style w-100"
+                dense
                 @click="addFilter"
             />
             <q-separator />
@@ -188,6 +199,53 @@ const cellAttributesOpen = ref(true);
         </q-expansion-item> -->
         <q-separator />
     </q-list>
+    <q-dialog v-model="showRangeDialog">
+        <q-card>
+            <q-card-section>
+                <div class="text-h6">Enter Range</div>
+            </q-card-section>
+
+            <q-card-section>
+                <q-form @submit="onSubmit" class="q-gutter-md">
+                    <q-input
+                        filled
+                        type="number"
+                        step="any"
+                        v-model="minInput"
+                        label="Min"
+                        lazy-rules
+                        :rules="[validateRealNumber]"
+                    />
+
+                    <q-input
+                        filled
+                        type="number"
+                        step="any"
+                        v-model="maxInput"
+                        label="Max"
+                        lazy-rules
+                        :rules="[validateRealNumber]"
+                    />
+
+                    <div>
+                        <q-btn
+                            label="Submit"
+                            type="submit"
+                            color="primary"
+                            :disable="!validateMinMax()"
+                        />
+                        <q-btn
+                            label="Cancel"
+                            color="primary"
+                            flat
+                            @click="showRangeDialog = false"
+                            class="q-ml-sm"
+                        />
+                    </div>
+                </q-form>
+            </q-card-section>
+        </q-card>
+    </q-dialog>
 </template>
 
 <style scoped lange="scss">
