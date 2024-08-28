@@ -11,11 +11,11 @@
                 "baseUrl":{
                     "type":"string",
                     "required":true,
-                    "custom":{
+                    "custom":[{
                         "regexPattern":"(^/)|(/$)|(https://)|(http://)",
                         "errorOnMatch":true,
                         "message":"Invalid baseUrl formatting. The baseUrl must have no trailing forward slash, leading forward slash, and must not begin with 'https://' or 'http://'"
-                    }
+                    }]
                 }
             }
         },
@@ -41,29 +41,36 @@
                 "minioStorageAccessKey":{
                     "type":"string",
                     "required":true,
-                    "custom":{
+                    "custom":[{
                         "regexPattern":"^.{4,}$",
                         "errorOnMatch":false,
                         "message":"Secret key must be at least 4 characters."
-                    }
+                    }]
                 },
                 "minioStorageSecretKey":{
                     "type":"string",
                     "required":true,
-                    "custom":{
+                    "custom":[{
                         "regexPattern":"^.{8,}$",
                         "errorOnMatch":false,
                         "message":"Secret key must be at least 8 characters."
-                    }
+                    }]
                 },
                 "sourceVolumeLocation":{
                     "type":"string",
                     "required":true,
-                    "custom":{
-                        "regexPattern":"(/$)",
-                        "errorOnMatch":true,
-                        "message":"Invalid source volume location formatting. The sourceVolumeLocation must not end with a trailing slash."
-                    }
+                    "custom":[
+                        {
+                            "regexPattern":"(/$)",
+                            "errorOnMatch":true,
+                            "message":"Invalid source volume location formatting. The sourceVolumeLocation must not end with a trailing slash."
+                        },
+                        {
+                            "regexPattern":"^\\s*$",
+                            "errorOnMatch":true,
+                            "message":"Invalid source volume location formatting. Must not be empty."    
+                        }
+                    ]
                 }
             }
         },
@@ -79,20 +86,20 @@
                 "sourceVolumeLocation":{
                     "type":"string",
                     "required":true,
-                    "custom":{
+                    "custom":[{
                         "regexPattern":"(/$)",
                         "errorOnMatch":true,
                         "message":"Invalid source volume location formatting. The sourceVolumeLocation must not end with a trailing slash."
-                    }
+                    }]
                 },
                 "targetVolumeLocation":{
                     "type":"string",
                     "required":true,
-                    "custom":{
+                    "custom":[{
                         "regexPattern":"(/$)",
                         "errorOnMatch":true,
                         "message":"Invalid target volume location formatting. The targetVolumeLocation must not end with a trailing slash."
-                    }
+                    }]
                 },
                 "certFileLocation":{"type":"string", "required":true},
                 "keyFileLocation":{"type":"string", "required":true}
@@ -110,11 +117,19 @@
                 "sourceVolumeLocation":{
                     "type":"string",
                     "required":true,
-                    "custom":{
-                        "regexPattern":"(/$)",
-                        "errorOnMatch":true,
-                        "message":"Invalid source volume location formatting. The sourceVolumeLocation must not end with a trailing slash."
-                    }
+                    "custom":[
+                        {
+                            "regexPattern":"(/$)",
+                            "errorOnMatch":true,
+                            "message":"Invalid source volume location formatting. The sourceVolumeLocation must not end with a trailing slash."
+                        },
+                        {
+                            "regexPattern":"^\\s*$",
+                            "errorOnMatch":true,
+                            "message":"Invalid source volume location formatting. Must not be empty."    
+                        }
+
+                    ]
                 }
             }
         }

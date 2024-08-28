@@ -122,24 +122,25 @@ class BuildConfig:
                         'configValue': currConfig[key]
                     })
                 elif 'custom' in value:
-                    pattern = re.compile(value['custom']['regexPattern'])
-                    matchedPattern = pattern.search(currConfig[key])
-                    if value['custom']['errorOnMatch']:
-                        if matchedPattern is not None:
-                            self.errors.append({
-                                'stepString': currStepString,
-                                'type': 'custom',
-                                'message': value['custom']['message'],
-                                'schemaKey': key
-                            })
-                    else:
-                        if matchedPattern is None:
-                            self.errors.append({
-                                'stepString': currStepString,
-                                'type': 'custom',
-                                'message': value['custom']['message'],
-                                'schemaKey': key
-                            })
+                    for custom_entry in value['custom']:
+                        pattern = re.compile(custom_entry['regexPattern'])
+                        matchedPattern = pattern.search(currConfig[key])
+                        if custom_entry['errorOnMatch']:
+                            if matchedPattern is not None:
+                                self.errors.append({
+                                    'stepString': currStepString,
+                                    'type': 'custom',
+                                    'message': custom_entry['message'],
+                                    'schemaKey': key
+                                })
+                        else:
+                            if matchedPattern is None:
+                                self.errors.append({
+                                    'stepString': currStepString,
+                                    'type': 'custom',
+                                    'message': custom_entry['message'],
+                                    'schemaKey': key
+                                })
 
     def set(self, settingName, settingValue, directToEnv=False):
         if not directToEnv:
