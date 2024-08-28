@@ -36,13 +36,6 @@ const props = defineProps({
     },
 });
 
-// Called when textbox values are changed.
-const applyManualSelection = (min: number, max: number) => {
-    if (!isNaN(min) && !isNaN(max) && min <= max) {
-        rangeModel.value = { min, max };
-    }
-};
-
 // Finds current brush selection, changes selection store, updates text box vals.
 const clearBrushSelection = () => {
     try {
@@ -134,6 +127,13 @@ function onSubmit() {
     applyManualSelection(minInput.value, maxInput.value);
     showRangeDialog.value = false;
 }
+
+// Called when textbox values are changed.
+const applyManualSelection = (min: number, max: number) => {
+    if (!isNaN(min) && !isNaN(max) && min <= max) {
+        rangeModel.value = { min, max };
+    }
+};
 
 const minMaxFormError = computed<string | boolean>(() => {
     // returns an error string if invalid

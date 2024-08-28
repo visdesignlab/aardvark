@@ -3,7 +3,7 @@ import { computed, ref } from 'vue';
 import { useGlobalSettings } from '@/stores/globalSettings';
 import PlotSelector from './PlotSelector.vue';
 import { useFilterStore } from '@/stores/filterStore';
-import { useSelectionStore } from '@/stores/selectionStore';
+import { type DataSelection, useSelectionStore } from '@/stores/selectionStore';
 import { storeToRefs } from 'pinia';
 
 const globalSettings = useGlobalSettings();
@@ -33,6 +33,54 @@ function addFilter() {
 }
 
 const cellAttributesOpen = ref(true);
+
+// Dialog box, enter exact numbers ------
+const showRangeDialog = ref(false);
+const minInput = ref<number>();
+const maxInput = ref<number>();
+const customRangeSelection = ref();
+
+function openRangeDialog(selection: DataSelection) {
+    customRangeSelection.value = selection;
+    minInput.value = selection.range[0];
+    maxInput.value = selection.range[1];
+    showRangeDialog.value = true;
+}
+
+function onSubmit() {
+    if (typeof minInput.value === 'undefined') return;
+    if (typeof maxInput.value === 'undefined') return;
+    applyManualSelection(minInput.value, maxInput.value);
+    showRangeDialog.value = false;
+}
+
+// Called when textbox values are changed.
+const applyManualSelection = (min: number, max: number) => {
+    if (!isNaN(min) && !isNaN(max) && min <= max) {
+        selectionStore.updateSelection(customRangeSelection.value.plotName, [
+            minInput.value,
+            maxInput.value,
+        ] as [number, number]);
+    }
+};
+
+const minMaxFormError = computed<string | boolean>(() => {
+    // returns an error string if invalid
+    // otherwise returns false
+    // @ts-ignore: actually it can be '', I would expect quasar to make this undefined or null, but it doesn't
+    if (typeof minInput.value === 'undefined' || minInput.value === '')
+        return 'Min cannot be undefined.';
+    // @ts-ignore: actually it can be '', I would expect quasar to make this undefined or null, but it doesn't
+    if (typeof maxInput.value === 'undefined' || maxInput.value === '')
+        return 'Max cannot be undefined.';
+    if (minInput.value > maxInput.value)
+        return 'Min should be less than or equal to Max.';
+    return false;
+});
+
+const minMaxFormValid = computed<boolean>(() => {
+    return !minMaxFormError.value;
+});
 </script>
 
 <template>
@@ -211,28 +259,31 @@ const cellAttributesOpen = ref(true);
                         filled
                         type="number"
                         step="any"
-                        v-model="minInput"
+                        v-model.number="minInput"
                         label="Min"
                         lazy-rules
-                        :rules="[validateRealNumber]"
                     />
 
                     <q-input
                         filled
                         type="number"
                         step="any"
-                        v-model="maxInput"
+                        v-model.number="maxInput"
                         label="Max"
                         lazy-rules
-                        :rules="[validateRealNumber]"
                     />
-
+                    <q-banner
+                        v-if="minMaxFormError"
+                        dense
+                        class="text-white bg-red"
+                        >{{ minMaxFormError }}</q-banner
+                    >
                     <div>
                         <q-btn
                             label="Submit"
                             type="submit"
                             color="primary"
-                            :disable="!validateMinMax()"
+                            :disable="!minMaxFormValid"
                         />
                         <q-btn
                             label="Cancel"
