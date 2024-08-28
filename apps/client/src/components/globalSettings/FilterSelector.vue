@@ -1,36 +1,39 @@
 <script setup lang="ts">
+import { ref } from 'vue';
 import { useGlobalSettings } from '@/stores/globalSettings';
 import PlotSelector from './PlotSelector.vue';
 import { useFilterStore } from '@/stores/filterStore';
 import { useSelectionStore } from '@/stores/selectionStore';
 import { storeToRefs } from 'pinia';
 import { computed } from 'vue';
-import { forEach } from 'lodash-es';
 
 const globalSettings = useGlobalSettings();
 const filterStore = useFilterStore();
 const selectionStore = useSelectionStore();
 const { filters } = storeToRefs(filterStore);
-const { Selections } = storeToRefs(selectionStore);
 
-const selectionsCount = computed(() => Selections.value.length);
+const selectionsCount = computed(
+    () => selectionStore.modifiedSelections.length
+);
 const filtersCount = computed(() => filters.value.length);
 
 function removeFilter(index: number) {
     filterStore.removeFilter(index);
 }
-function removeSelection(index: number) {
-    const plotName = Selections.value[index]?.plotName;
+function removeSelection(plotName: string) {
+    console.log(plotName);
     selectionStore.removeSelectionByPlotName(plotName);
 }
-const addFilter = () => {
-    Selections.value.forEach((selection) => {
+function addFilter() {
+    for (const selection of selectionStore.modifiedSelections) {
         filterStore.addFilter({
             plotName: selection.plotName,
             range: [selection.range[0], selection.range[1]],
         });
-    });
-};
+    }
+}
+
+const cellAttributesOpen = ref(true);
 </script>
 
 <template>
@@ -53,10 +56,10 @@ const addFilter = () => {
                 </template>
                 <q-list>
                     <q-item
-                        v-for="(selection, index) in Selections"
+                        v-for="(
+                            selection, index
+                        ) in selectionStore.modifiedSelections"
                         :key="index"
-                        clickable
-                        v-ripple
                     >
                         <q-item-section avatar top left>
                             <q-avatar icon="scatter_plot" style="width: 18px" />
@@ -72,16 +75,15 @@ const addFilter = () => {
                                 caption
                                 style="margin-left: -20px; white-space: nowrap"
                             >
-                                [{{ selection.range[0].toFixed(3) }}-{{
-                                    selection.range[1].toFixed(3)
-                                }}]
+                                {{ selection.range[0].toFixed(2) }} –
+                                {{ selection.range[1].toFixed(2) }}
                             </q-item-label>
                         </q-item-section>
 
                         <q-item-section side>
                             <q-btn
                                 class="gt-xs"
-                                @click="removeSelection(index)"
+                                @click="removeSelection(selection.plotName)"
                                 size="12px"
                                 flat
                                 dense
@@ -159,7 +161,11 @@ const addFilter = () => {
             </q-expansion-item>
         </div>
 
-        <q-expansion-item icon="scatter_plot" label="Cell Attributes">
+        <q-expansion-item
+            v-model="cellAttributesOpen"
+            icon="scatter_plot"
+            label="Cell Attributes"
+        >
             <q-card :dark="globalSettings.darkMode">
                 <PlotSelector></PlotSelector>
             </q-card>
@@ -167,7 +173,7 @@ const addFilter = () => {
 
         <q-separator />
 
-        <q-expansion-item icon="linear_scale" label="Track Attributes">
+        <!-- <q-expansion-item icon="linear_scale" label="Track Attributes">
             <q-card :dark="globalSettings.darkMode">
                 <PlotSelector></PlotSelector>
             </q-card>
@@ -179,7 +185,7 @@ const addFilter = () => {
             <q-card :dark="globalSettings.darkMode">
                 <PlotSelector></PlotSelector>
             </q-card>
-        </q-expansion-item>
+        </q-expansion-item> -->
         <q-separator />
     </q-list>
 </template>

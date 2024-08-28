@@ -4,7 +4,6 @@ import { QBtn, QDialog, QCard, QCardSection, QCardActions } from 'quasar';
 import * as vg from '@uwdata/vgplot';
 import { storeToRefs } from 'pinia';
 import UnivariateCellPlot from './UnivariateCellPlot.vue';
-import { useFilterStore } from '@/stores/filterStore';
 import { useSelectionStore } from '@/stores/selectionStore';
 import { useCellMetaData } from '@/stores/cellMetaData';
 
@@ -14,15 +13,14 @@ const { dataInitialized } = storeToRefs(cellMetaData);
 interface Selection {
     [key: string]: [number, number] | undefined;
 }
-interface SelectionChangeEvent {
-    plotName: string;
-    range: [number, number] | null;
-}
 
 const menuOpen = ref(false);
 const loading = ref(true);
 const loadedPlots = ref(0);
-const totalPlots = ref(0);
+const displayedPlots = computed(() =>
+    dataSelections.value.filter((d) => d.displayChart)
+);
+const totalPlots = computed(() => displayedPlots.value.length);
 
 // On any update, computes the plots to be shown.
 const allPlotNames = computed(() => {
@@ -35,7 +33,7 @@ const firstPlotName = computed(() => {
 const currentSelections = ref<Selection>({});
 const selectionStore = useSelectionStore();
 
-const { Plots, Selections } = storeToRefs(selectionStore);
+const { dataSelections } = storeToRefs(selectionStore);
 
 const showErrorDialog = ref(false);
 const errorPlotName = ref('');
@@ -48,9 +46,10 @@ const handlePlotError = (plotName: string) => {
 
     // Deselect the plot and remove it from the shown plots
     clearSelectionForPlot(plotName);
-    selectionStore.Plots = Plots.value.filter(
-        (plot) => plot.plotName !== plotName
-    );
+    // TODO: update to no plots
+    // selectionStore.Plots = Plots.value.filter(
+    //     (plot) => plot.plotName !== plotName
+    // );
 };
 
 // Adds a plot initially when first loading.
@@ -59,8 +58,7 @@ onMounted(() => {
         dataInitialized,
         (isInitialized) => {
             if (isInitialized && firstPlotName.value) {
-                selectionStore.addPlot({ plotName: firstPlotName.value });
-                totalPlots.value = selectedPlots.value.length;
+                selectionStore.addPlot(firstPlotName.value);
             }
         },
         { immediate: true }
@@ -75,12 +73,12 @@ const handlePlotLoaded = () => {
     }
 };
 
-// Mosaic Selections within plots gets computed
+// Mosaic selections within plots gets computed
 const mosaicSelection = computed(() => vg.Selection.intersect());
 const plotBrush = computed(() => {
     console.log('plotBrush computed');
 
-    for (let selection of Selections.value) {
+    for (let selection of dataSelections.value) {
         const source = selection.plotName;
         const min = Number(selection.range[0]);
         const max = Number(selection.range[1]);
@@ -98,25 +96,18 @@ const plotBrush = computed(() => {
 });
 
 // Selecting which plots to show
-const selectedPlots = computed(() => Plots.value);
-const isPlotSelected = (name: string) => {
-    return Plots.value.some((plot) => plot.plotName === name);
-};
+function isPlotSelected(name: string): boolean {
+    const selection = selectionStore.getSelection(name);
+    if (selection === null) return false;
+    return selection.displayChart;
+}
 const togglePlotSelection = (name: string) => {
-    if (isPlotSelected(name)) {
-        clearSelectionForPlot(name);
-        selectionStore.Plots = Plots.value.filter(
-            (plot) => plot.plotName !== name
-        );
-        console.log(`Plot ${name} removed`);
-    } else {
-        selectionStore.addPlot({ plotName: name });
-        console.log(`Plot ${name} added`);
+    const selection = selectionStore.getSelection(name);
+    if (selection === null) {
+        selectionStore.addPlot(name);
+        return;
     }
-    console.log(
-        'Current selected plots:',
-        Plots.value.map((plot) => plot.plotName)
-    );
+    selection.displayChart = !selection.displayChart;
 };
 
 const clearSelectionForPlot = (plotName: string) => {
@@ -143,26 +134,11 @@ window.addEventListener(
     'selectionRemoved',
     handleSelectionRemoved as EventListener
 );
-
-// When a selection changes, the selection store updates.
-const handleSelectionChange = (event: SelectionChangeEvent) => {
-    const { plotName, range } = event;
-    if (range && range[0] !== undefined && range[1] !== undefined) {
-        currentSelections.value[plotName] = range;
-        selectionStore.updateSelection(plotName, [
-            Number(range[0].toFixed(3)),
-            Number(range[1].toFixed(3)),
-        ]);
-    } else {
-        delete currentSelections.value[plotName];
-        selectionStore.removeSelectionByPlotName(plotName);
-    }
-};
 </script>
 <template>
     <div>
-        <div v-if="!dataInitialized" class="loading-wrapper">
-            <div class="loading-text">Loading...</div>
+        <div v-if="!dataInitialized" class="flex justify-center">
+            <div class="text-h6 q-m-lg">Loading...</div>
         </div>
         <div v-else>
             <div class="q-item-section__right">
@@ -188,6 +164,7 @@ const handleSelectionChange = (event: SelectionChangeEvent) => {
                                     'selected-item': isPlotSelected(name),
                                 }"
                                 @click.stop="togglePlotSelection(name)"
+                                dense
                             >
                                 <q-item-section class="plot-name">{{
                                     name
@@ -198,11 +175,10 @@ const handleSelectionChange = (event: SelectionChangeEvent) => {
                 </q-btn>
             </div>
             <UnivariateCellPlot
-                v-for="plot in selectedPlots"
-                :key="plot.plotName"
-                :plot-name="plot.plotName"
+                v-for="dataSelection in displayedPlots"
+                :key="dataSelection.plotName"
+                :plot-name="dataSelection.plotName"
                 :plot-brush="plotBrush"
-                @selection-change="handleSelectionChange"
                 @plot-loaded="handlePlotLoaded"
                 @plot-error="handlePlotError"
             />
@@ -230,23 +206,8 @@ const handleSelectionChange = (event: SelectionChangeEvent) => {
     justify-content: flex-end;
 }
 
-.plot-name {
-    font-size: 0.8em;
-}
-
 .selected-item {
     background-color: #e0e0e0;
     color: black;
-}
-
-.loading-wrapper {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    height: 100%;
-}
-
-.loading-text {
-    font-size: 1rem;
 }
 </style>

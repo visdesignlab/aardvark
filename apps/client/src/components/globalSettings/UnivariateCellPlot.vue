@@ -1,9 +1,9 @@
 <script lang="ts" setup>
-import { ref, watch, onMounted } from 'vue';
+import { ref, watch, onMounted, computed } from 'vue';
 import type { PropType } from 'vue';
 import * as vg from '@uwdata/vgplot';
 import { useCellMetaData } from '@/stores/cellMetaData';
-import { useSelectionStore } from '@/stores/selectionStore';
+import { useSelectionStore, type DataSelection } from '@/stores/selectionStore';
 import { storeToRefs } from 'pinia';
 import { Query, min, max, count } from '@uwdata/mosaic-sql';
 import {
@@ -22,8 +22,6 @@ import {
 const cellMetaData = useCellMetaData();
 const { dataInitialized } = storeToRefs(cellMetaData);
 const selectionStore = useSelectionStore();
-let dataMin = ref(0);
-let dataMax = ref(0);
 
 // Define Plot Emits and Props
 const emit = defineEmits(['selectionChange', 'plot-loaded', 'plot-error']);
@@ -38,107 +36,10 @@ const props = defineProps({
     },
 });
 
-// Function that finds the min and max of the data to set the quasar slider.
-async function dataRange() {
-    try {
-        // Loading
-
-        const plotName = props.plotName;
-
-        if (!plotName || plotName.trim() === '') {
-            throw new Error('Invalid or empty plot name');
-        }
-
-        // Escape the column name to handle spaces and special characters
-        const escapedPlotName = `${plotName.replace(/"/g, '""')}`;
-
-        const query = `
-            SELECT
-                MIN("${escapedPlotName}") AS min_value,
-                MAX("${escapedPlotName}") AS max_value
-            FROM current_cell_metadata
-        `;
-
-        console.log('Constructed query:', query);
-
-        const result = await vg.coordinator().query(query);
-
-        if (
-            !result ||
-            !result.batches ||
-            result.batches.length === 0 ||
-            result.batches[0].numRows === 0
-        ) {
-            throw new Error('No data returned from query');
-        }
-
-        const minValue = Number(result.batches[0].get(0).min_value);
-        const maxValue = Number(result.batches[0].get(0).max_value);
-
-        if (isNaN(minValue) || isNaN(maxValue)) {
-            throw new Error('NaN values detected in the data');
-        }
-
-        dataMin.value = Number(minValue.toFixed(3));
-        dataMax.value = Number(maxValue.toFixed(3));
-
-        console.log(dataMin.value);
-        console.log(dataMax.value);
-
-        const currentSelection = selectionStore?.Selections?.find(
-            (selection) => {
-                selection.plotName === plotName;
-            }
-        );
-        if (
-            currentSelection &&
-            Array.isArray(currentSelection.range) &&
-            currentSelection.range.length === 2
-        ) {
-            range.value.min = Number(currentSelection.range[0]);
-            range.value.max = Number(currentSelection.range[1]);
-        } else {
-            range.value.min = dataMin.value;
-            range.value.max = dataMax.value;
-        }
-    } catch (error) {
-        console.error('Error fetching data range:', error);
-        emit('plot-error', props.plotName);
-        throw error;
-    }
-}
-
-// Q-Range Slider Data
-let range = ref({ min: ref(dataMin.value), max: ref(dataMax.value) });
-
-// Updates Selection and Exact Input Values when Q-Range Slider is moved
-const handleRangeChange = (newRange: { min: number; max: number }) => {
-    minInput.value = newRange.min.toFixed(3);
-    maxInput.value = newRange.max.toFixed(3);
-
-    if (
-        !isNaN(newRange.min) &&
-        !isNaN(newRange.max) &&
-        newRange.min <= newRange.max
-    ) {
-        updateBrushSelection(newRange.min, newRange.max);
-    }
-};
-
-// Updates Selection store
-const updateBrushSelection = (min: number, max: number) => {
-    emit('selectionChange', {
-        plotName: props.plotName,
-        range: [Number(min.toFixed(3)), Number(max.toFixed(3))],
-    });
-};
-
 // Called when textbox values are changed.
 const applyManualSelection = (min: number, max: number) => {
     if (!isNaN(min) && !isNaN(max) && min <= max) {
-        updateBrushSelection(min, max);
-        range.value.min = Number(min);
-        range.value.max = Number(max);
+        rangeModel.value = { min, max };
     }
 };
 
@@ -165,8 +66,9 @@ const clearBrushSelection = () => {
 
 const handleSelectionRemoved = (event: CustomEvent) => {
     if (props.plotName == event.detail) {
-        range.value.min = dataMin.value;
-        range.value.max = dataMax.value;
+        //TODO: UPDATE
+        // range.value.min = dataMin.value;
+        // range.value.max = dataMax.value;
     }
 };
 
@@ -217,37 +119,39 @@ function makePlot(column: string) {
 
 // Dialog box, enter exact numbers ------
 const showRangeDialog = ref(false);
-const minInput = ref('');
-const maxInput = ref('');
+const minInput = ref<number>();
+const maxInput = ref<number>();
 
-const openRangeDialog = () => {
-    minInput.value = range.value.min.toString();
-    maxInput.value = range.value.max.toString();
+function openRangeDialog() {
+    minInput.value = rangeModel.value.min;
+    maxInput.value = rangeModel.value.max;
     showRangeDialog.value = true;
-};
+}
 
-const onSubmit = () => {
-    if (minInput.value !== '' && maxInput.value !== '') {
-        applyManualSelection(Number(minInput.value), Number(maxInput.value));
-        showRangeDialog.value = false;
-    }
-};
+function onSubmit() {
+    if (typeof minInput.value === 'undefined') return;
+    if (typeof maxInput.value === 'undefined') return;
+    applyManualSelection(minInput.value, maxInput.value);
+    showRangeDialog.value = false;
+}
 
-const validateRealNumber = (val: string) => {
-    if (val === '') return true;
-    const num = parseFloat(val);
-    return !isNaN(num) || 'Please enter a real number';
-};
+const minMaxFormError = computed<string | boolean>(() => {
+    // returns an error string if invalid
+    // otherwise returns false
+    // @ts-ignore: actually it can be '', I would expect quasar to make this undefined or null, but it doesn't
+    if (typeof minInput.value === 'undefined' || minInput.value === '')
+        return 'Min cannot be undefined.';
+    // @ts-ignore: actually it can be '', I would expect quasar to make this undefined or null, but it doesn't
+    if (typeof maxInput.value === 'undefined' || maxInput.value === '')
+        return 'Max cannot be undefined.';
+    if (minInput.value > maxInput.value)
+        return 'Min should be less than or equal to Max.';
+    return false;
+});
 
-const validateMinMax = () => {
-    if (minInput.value !== '' && maxInput.value !== '') {
-        return (
-            parseFloat(minInput.value) <= parseFloat(maxInput.value) ||
-            'Min should be less than or equal to Max'
-        );
-    }
-    return true;
-};
+const minMaxFormValid = computed<boolean>(() => {
+    return !minMaxFormError.value;
+});
 
 // Handle Loading of Everything
 const charts = ref<null | HTMLElement>(null);
@@ -269,17 +173,17 @@ async function createCharts() {
 
 // Checks when everything has loaded
 watch(loaded, () => {
-    dataRange().catch((error) => {
-        console.error('Error in dataRange:', error);
-        emit('plot-error', props.plotName);
-    });
+    // dataRange().catch((error) => {
+    //     console.error('Error in dataRange:', error);
+    //     emit('plot-error', props.plotName);
+    // });
     handlePlotLoading();
 });
 
 // Waits for data range to load, then waits a bit, then notifies plotselector to show everything.
-const handlePlotLoading = async () => {
+async function handlePlotLoading() {
     try {
-        await dataRange();
+        // await dataRange();
         // Wait for 0.5 seconds before emitting the plot-loaded event
         await new Promise((resolve) => setTimeout(resolve, 500));
         emit('plot-loaded');
@@ -287,23 +191,23 @@ const handlePlotLoading = async () => {
         console.error('Error in handlePlotLoading:', error);
         emit('plot-error', props.plotName);
     }
-};
+}
 
 // Handle Rendering
 onMounted(() => {
     if (dataInitialized.value) {
         createCharts();
-        dataRange().catch((error) => {
-            console.error('Error in dataRange:', error);
-            emit('plot-error', props.plotName);
-        });
+        // dataRange().catch((error) => {
+        //     console.error('Error in dataRange:', error);
+        //     emit('plot-error', props.plotName);
+        // });
     }
 });
 
 // Waits for data to be initialized before creating charts
 watch(dataInitialized, createCharts);
 
-watch(range, handleRangeChange);
+// watch(range, handleRangeChange);
 
 // Remove Selection
 window.addEventListener(
@@ -312,6 +216,30 @@ window.addEventListener(
 );
 
 const plotContainer = ref<HTMLDivElement | null>(null);
+
+const selection = computed<DataSelection>(() => {
+    const s = selectionStore.getSelection(props.plotName);
+    if (!s) {
+        return {
+            plotName: 'not found',
+            type: 'cell',
+            range: [0, 0],
+            maxRange: [0, 0],
+            displayChart: true,
+        };
+    }
+    return s;
+});
+
+const rangeModel = computed({
+    get() {
+        return { min: selection.value.range[0], max: selection.value.range[1] };
+    },
+    set(newValue) {
+        selection.value.range[0] = newValue.min;
+        selection.value.range[1] = newValue.max;
+    },
+});
 </script>
 
 <template>
@@ -332,10 +260,12 @@ const plotContainer = ref<HTMLDivElement | null>(null);
 
                 <div class="q-range-container">
                     <q-range
-                        v-model="range"
-                        :min="dataMin"
-                        :max="dataMax"
+                        v-model="rangeModel"
+                        :min="selection.maxRange[0]"
+                        :max="selection.maxRange[1]"
                         :step="0.001"
+                        :left-label-value="rangeModel.min.toFixed(2)"
+                        :right-label-value="rangeModel.max.toFixed(2)"
                         label
                         thumb-size="14px"
                         track-size="2px"
@@ -360,28 +290,32 @@ const plotContainer = ref<HTMLDivElement | null>(null);
                             filled
                             type="number"
                             step="any"
-                            v-model="minInput"
+                            v-model.number="minInput"
                             label="Min"
                             lazy-rules
-                            :rules="[validateRealNumber]"
                         />
 
                         <q-input
                             filled
                             type="number"
                             step="any"
-                            v-model="maxInput"
+                            v-model.number="maxInput"
                             label="Max"
                             lazy-rules
-                            :rules="[validateRealNumber]"
                         />
 
+                        <q-banner
+                            v-if="minMaxFormError"
+                            dense
+                            class="text-white bg-red"
+                            >{{ minMaxFormError }}</q-banner
+                        >
                         <div>
                             <q-btn
                                 label="Submit"
                                 type="submit"
                                 color="primary"
-                                :disable="!validateMinMax()"
+                                :disable="!minMaxFormValid"
                             />
                             <q-btn
                                 label="Cancel"

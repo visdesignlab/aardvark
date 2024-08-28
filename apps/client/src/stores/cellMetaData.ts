@@ -91,7 +91,7 @@ export const useCellMetaData = defineStore('cellMetaData', () => {
     const selectedTrackArray = computed<Track[] | null>(() => {
         if (!dataInitialized.value || !trackArray.value) return null;
 
-        const selections = selectionStore.Selections;
+        const selections = selectionStore.dataSelections;
 
         return trackArray.value.filter((track) => {
             return selections.every((selection) => {
