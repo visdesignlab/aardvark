@@ -131,3 +131,6 @@ services:
     volumes:
       - ${MINIO_VOLUME_LOCATION}:/data
       - ./minio-healthcheck.sh/:/minio-healthcheck.sh
+
+volumes:
+  mysql-data:
