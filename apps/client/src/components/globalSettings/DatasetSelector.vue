@@ -6,6 +6,8 @@ import { useDatasetSelectionTrrackedStore } from '@/stores/datasetSelectionTrrac
 import { useDatasetSelectionStore } from '@/stores/datasetSelectionStore';
 import { useDataPointSelection } from '@/stores/dataPointSelection';
 import { useConfigStore } from '@/stores/configStore';
+import { useSelectionStore } from '@/stores/selectionStore';
+import { useFilterStore } from '@/stores/filterStore';
 
 const globalSettings = useGlobalSettings();
 const datasetSelectionStore = useDatasetSelectionStore();
@@ -13,6 +15,8 @@ const datasetSelectionTrrackedStore = useDatasetSelectionTrrackedStore();
 const dataPointSelection = useDataPointSelection();
 const $q = useQuasar();
 const configStore = useConfigStore();
+const selectionStore = useSelectionStore();
+const filterStore = useFilterStore();
 
 const serverInputRef = ref<any>(null);
 watch(
@@ -29,7 +33,9 @@ watch(
 );
 
 function onClickLocation(location: any) {
-    // console.log('clicked location: ', location);
+    //console.log('clicked location: ', location);
+    selectionStore.clearAllSelections();
+    filterStore.clearAllFilters();
     datasetSelectionStore.selectImagingLocation(location);
 }
 
@@ -45,11 +51,17 @@ const shortExpName = computed<string>(() => {
 });
 
 function openExampleDataset() {
+    selectionStore.clearAllSelections();
+    filterStore.clearAllFilters();
     datasetSelectionTrrackedStore.serverUrl =
         'apps.vdl.sci.utah.edu/aardvark-s3';
 
     datasetSelectionTrrackedStore.currentExperimentFilename = 'Example_1.json';
     datasetSelectionTrrackedStore.selectedLocationIds['loc_4_well_23'] = true;
+}
+function onSelectExperiment() {
+    selectionStore.clearAllSelections();
+    filterStore.clearAllFilters();
 }
 </script>
 
@@ -84,6 +96,7 @@ function openExampleDataset() {
         :display-value="shortExpName"
         :options="datasetSelectionStore.experimentFilenameList"
         :dark="globalSettings.darkMode"
+        @update:model-value="onSelectExperiment"
     />
     <div
         v-if="

@@ -34,6 +34,9 @@ export const useSelectionStore = defineStore('Selection', {
                 this.dataSelections.push(selection);
             }
         },
+        clearAllSelections() {
+            this.dataSelections = [];
+        },
         removeSelection(index: number) {
             this.dataSelections[index].range = [
                 ...this.dataSelections[index].maxRange,

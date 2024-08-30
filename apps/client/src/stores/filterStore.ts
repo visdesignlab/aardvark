@@ -33,5 +33,8 @@ export const useFilterStore = defineStore('filter', {
                 this.addFilter({ plotName, range });
             }
         },
+        clearAllFilters() {
+            this.filters = [];
+        },
     },
 });
