@@ -6,7 +6,9 @@ import { storeToRefs } from 'pinia';
 import UnivariateCellPlot from './UnivariateCellPlot.vue';
 import { useSelectionStore, emitter } from '@/stores/selectionStore';
 import { useCellMetaData } from '@/stores/cellMetaData';
+import { useGlobalSettings } from '@/stores/globalSettings';
 
+const globalSettings = useGlobalSettings();
 const cellMetaData = useCellMetaData();
 const { dataInitialized } = storeToRefs(cellMetaData);
 
@@ -30,7 +32,6 @@ const firstPlotName = computed(() => {
     return dataInitialized.value ? cellMetaData.headerKeys.mass : '';
 });
 
-const currentSelections = ref<Selection>({});
 const selectionStore = useSelectionStore();
 
 const { dataSelections } = storeToRefs(selectionStore);
@@ -112,7 +113,6 @@ const togglePlotSelection = (name: string) => {
 };
 
 const clearSelectionForPlot = (plotName: string) => {
-    delete currentSelections.value[plotName];
     selectionStore.removeSelectionByPlotName(plotName);
 
     mosaicSelection.value.update({
@@ -152,7 +152,11 @@ window.addEventListener(
                     icon="menu"
                     color="grey-7"
                 >
-                    <q-menu v-model="menuOpen" fit>
+                    <q-menu
+                        v-model="menuOpen"
+                        fit
+                        :dark="globalSettings.darkMode"
+                    >
                         <q-list
                             style="min-width: 100px; max-height: 300px"
                             class="scroll"

@@ -3,8 +3,9 @@ import { computed, ref } from 'vue';
 import { useGlobalSettings } from '@/stores/globalSettings';
 import PlotSelector from './PlotSelector.vue';
 import { useFilterStore } from '@/stores/filterStore';
-import { type DataSelection, useSelectionStore } from '@/stores/selectionStore';
+import { useSelectionStore } from '@/stores/selectionStore';
 import { storeToRefs } from 'pinia';
+import FilterEditMenu from './FilterEditMenu.vue';
 
 const globalSettings = useGlobalSettings();
 const filterStore = useFilterStore();
@@ -20,7 +21,6 @@ function removeFilter(index: number) {
     filterStore.removeFilter(index);
 }
 function removeSelection(plotName: string) {
-    console.log(plotName);
     selectionStore.removeSelectionByPlotName(plotName);
 }
 function addFilter() {
@@ -36,54 +36,6 @@ function addFilter() {
 }
 
 const cellAttributesOpen = ref(true);
-
-// Dialog box, enter exact numbers ------
-const showRangeDialog = ref(false);
-const minInput = ref<number>();
-const maxInput = ref<number>();
-const customRangeSelection = ref();
-
-function openRangeDialog(selection: DataSelection) {
-    customRangeSelection.value = selection;
-    minInput.value = selection.range[0];
-    maxInput.value = selection.range[1];
-    showRangeDialog.value = true;
-}
-
-function onSubmit() {
-    if (typeof minInput.value === 'undefined') return;
-    if (typeof maxInput.value === 'undefined') return;
-    applyManualSelection(minInput.value, maxInput.value);
-    showRangeDialog.value = false;
-}
-
-// Called when textbox values are changed.
-const applyManualSelection = (min: number, max: number) => {
-    if (!isNaN(min) && !isNaN(max) && min <= max) {
-        selectionStore.updateSelection(customRangeSelection.value.plotName, [
-            minInput.value,
-            maxInput.value,
-        ] as [number, number]);
-    }
-};
-
-const minMaxFormError = computed<string | boolean>(() => {
-    // returns an error string if invalid
-    // otherwise returns false
-    // @ts-ignore: actually it can be '', I would expect quasar to make this undefined or null, but it doesn't
-    if (typeof minInput.value === 'undefined' || minInput.value === '')
-        return 'Min cannot be undefined.';
-    // @ts-ignore: actually it can be '', I would expect quasar to make this undefined or null, but it doesn't
-    if (typeof maxInput.value === 'undefined' || maxInput.value === '')
-        return 'Max cannot be undefined.';
-    if (minInput.value > maxInput.value)
-        return 'Min should be less than or equal to Max.';
-    return false;
-});
-
-const minMaxFormValid = computed<boolean>(() => {
-    return !minMaxFormError.value;
-});
 </script>
 
 <template>
@@ -111,16 +63,12 @@ const minMaxFormValid = computed<boolean>(() => {
                         ) in selectionStore.modifiedSelections"
                         :key="index"
                     >
-                        <!-- Q-Menu for other options -->
-                        <q-menu touch-position context-menu>
-                            <q-item
-                                clickable
-                                v-close-popup
-                                @click="openRangeDialog(selection)"
-                            >
-                                <q-item-section>Enter Range</q-item-section>
-                            </q-item>
-                        </q-menu>
+                        <FilterEditMenu
+                            :plot-name="selection.plotName"
+                            :initial-min="selection.range[0]"
+                            :initial-max="selection.range[1]"
+                            type="selection"
+                        />
 
                         <q-item-section avatar top left>
                             <q-avatar icon="scatter_plot" style="width: 18px" />
@@ -133,8 +81,13 @@ const minMaxFormValid = computed<boolean>(() => {
                                 {{ selection.plotName }}
                             </q-item-label>
                             <q-item-label
-                                caption
-                                style="margin-left: -20px; white-space: nowrap"
+                                style="
+                                    margin-left: -20px;
+                                    white-space: nowrap;
+                                    color: grey;
+                                "
+                                class="text-caption"
+                                :dark="globalSettings.darkMode"
                             >
                                 {{ selection.range[0].toFixed(2) }} –
                                 {{ selection.range[1].toFixed(2) }}
@@ -189,6 +142,13 @@ const minMaxFormValid = computed<boolean>(() => {
                         clickable
                         v-ripple
                     >
+                        <FilterEditMenu
+                            :plot-name="filter.plotName"
+                            :initial-min="filter.range[0]"
+                            :initial-max="filter.range[1]"
+                            type="filter"
+                        />
+
                         <q-item-section avatar top left>
                             <q-avatar icon="scatter_plot" style="width: 18px" />
                         </q-item-section>
@@ -200,10 +160,16 @@ const minMaxFormValid = computed<boolean>(() => {
                                 {{ filter.plotName }}
                             </q-item-label>
                             <q-item-label
-                                caption
-                                style="margin-left: -20px; white-space: nowrap"
+                                style="
+                                    margin-left: -20px;
+                                    white-space: nowrap;
+                                    color: grey;
+                                "
+                                class="text-caption"
+                                :dark="globalSettings.darkMode"
                             >
-                                [{{ filter.range[0] }}-{{ filter.range[1] }}]
+                                {{ filter.range[0].toFixed(2) }} –
+                                {{ filter.range[1].toFixed(2) }}
                             </q-item-label>
                         </q-item-section>
 
@@ -234,72 +200,7 @@ const minMaxFormValid = computed<boolean>(() => {
         </q-expansion-item>
 
         <q-separator />
-
-        <!-- <q-expansion-item icon="linear_scale" label="Track Attributes">
-            <q-card :dark="globalSettings.darkMode">
-                <PlotSelector></PlotSelector>
-            </q-card>
-        </q-expansion-item>
-
-        <q-separator />
-
-        <q-expansion-item icon="account_tree" label="Lineage Attributes">
-            <q-card :dark="globalSettings.darkMode">
-                <PlotSelector></PlotSelector>
-            </q-card>
-        </q-expansion-item> -->
-        <q-separator />
     </q-list>
-    <q-dialog v-model="showRangeDialog">
-        <q-card>
-            <q-card-section>
-                <div class="text-h6">Enter Range</div>
-            </q-card-section>
-
-            <q-card-section>
-                <q-form @submit="onSubmit" class="q-gutter-md">
-                    <q-input
-                        filled
-                        type="number"
-                        step="any"
-                        v-model.number="minInput"
-                        label="Min"
-                        lazy-rules
-                    />
-
-                    <q-input
-                        filled
-                        type="number"
-                        step="any"
-                        v-model.number="maxInput"
-                        label="Max"
-                        lazy-rules
-                    />
-                    <q-banner
-                        v-if="minMaxFormError"
-                        dense
-                        class="text-white bg-red"
-                        >{{ minMaxFormError }}</q-banner
-                    >
-                    <div>
-                        <q-btn
-                            label="Submit"
-                            type="submit"
-                            color="primary"
-                            :disable="!minMaxFormValid"
-                        />
-                        <q-btn
-                            label="Cancel"
-                            color="primary"
-                            flat
-                            @click="showRangeDialog = false"
-                            class="q-ml-sm"
-                        />
-                    </div>
-                </q-form>
-            </q-card-section>
-        </q-card>
-    </q-dialog>
 </template>
 
 <style scoped lange="scss">

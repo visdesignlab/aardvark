@@ -5,7 +5,8 @@ import * as vg from '@uwdata/vgplot';
 import { useCellMetaData } from '@/stores/cellMetaData';
 import { useSelectionStore, type DataSelection } from '@/stores/selectionStore';
 import { storeToRefs } from 'pinia';
-import { Query, min, max, count } from '@uwdata/mosaic-sql';
+import FilterEditMenu from './FilterEditMenu.vue';
+import { useGlobalSettings } from '@/stores/globalSettings';
 import {
     QMenu,
     QItem,
@@ -19,6 +20,7 @@ import {
 } from 'quasar';
 
 // Initialise Data
+const globalSettings = useGlobalSettings();
 const cellMetaData = useCellMetaData();
 const { dataInitialized } = storeToRefs(cellMetaData);
 const selectionStore = useSelectionStore();
@@ -231,23 +233,24 @@ const rangeModel = computed({
         selection.value.range[1] = newValue.max;
     },
 });
+
+const handleRangeUpdate = (newRange: { min: number; max: number }) => {
+    rangeModel.value = newRange;
+};
 </script>
 
 <template>
     <div>
         <q-item-section style="position: relative">
-            <!-- Plot Container, and Q-Range Slider -->
-            <div
-                ref="plotContainer"
-                @clearSelection="clearBrushSelection"
-                style="position: relative"
-            >
-                <!-- Q-Menu for other options -->
-                <q-menu touch-position context-menu>
-                    <q-item clickable v-close-popup @click="openRangeDialog">
-                        <q-item-section>Enter Range</q-item-section>
-                    </q-item>
-                </q-menu>
+            <div ref="plotContainer" style="position: relative">
+                <FilterEditMenu
+                    :plot-name="props.plotName"
+                    :initial-min="rangeModel.min"
+                    :initial-max="rangeModel.max"
+                    type="selection"
+                    @update:range="handleRangeUpdate"
+                    :dark="globalSettings.darkMode"
+                />
 
                 <div class="q-range-container">
                     <q-range
@@ -263,63 +266,11 @@ const rangeModel = computed({
                         switch-label-side
                         selection-color="#377eb8"
                         track-color="hidden"
+                        :dark="globalSettings.darkMode"
                     />
                 </div>
             </div>
         </q-item-section>
-
-        <!-- Q-Dialog for entering min and max values -->
-        <q-dialog v-model="showRangeDialog">
-            <q-card>
-                <q-card-section>
-                    <div class="text-h6">Enter Range</div>
-                </q-card-section>
-
-                <q-card-section>
-                    <q-form @submit="onSubmit" class="q-gutter-md">
-                        <q-input
-                            filled
-                            type="number"
-                            step="any"
-                            v-model.number="minInput"
-                            label="Min"
-                            lazy-rules
-                        />
-
-                        <q-input
-                            filled
-                            type="number"
-                            step="any"
-                            v-model.number="maxInput"
-                            label="Max"
-                            lazy-rules
-                        />
-
-                        <q-banner
-                            v-if="minMaxFormError"
-                            dense
-                            class="text-white bg-red"
-                            >{{ minMaxFormError }}</q-banner
-                        >
-                        <div>
-                            <q-btn
-                                label="Submit"
-                                type="submit"
-                                color="primary"
-                                :disable="!minMaxFormValid"
-                            />
-                            <q-btn
-                                label="Cancel"
-                                color="primary"
-                                flat
-                                @click="showRangeDialog = false"
-                                class="q-ml-sm"
-                            />
-                        </div>
-                    </q-form>
-                </q-card-section>
-            </q-card>
-        </q-dialog>
     </div>
 </template>
 
