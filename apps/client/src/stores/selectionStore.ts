@@ -73,7 +73,7 @@ export const useSelectionStore = defineStore('Selection', {
                     new CustomEvent('selectionRemoved', { detail: plotName })
                 );
                 // Actually remove the selection from the array
-                this.dataSelections.splice(index, 1);
+                this.removeSelection(index);
             }
         },
         getSelection(name: string): DataSelection | null {
