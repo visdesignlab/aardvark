@@ -10,7 +10,7 @@ We support two official docker images for Loon -- a standard Loon version and a 
 
 To run this image, you will need to specify the location of your Docker socket to mount, the path where your data is currently located, and an additional environment variable.
 
-Image Source: https://hub.docker.com/r/bbollen23/local-loon
+Image source: https://hub.docker.com/r/bbollen23/local-loon
 
 ### Volumes
 
@@ -28,6 +28,8 @@ Image Source: https://hub.docker.com/r/bbollen23/local-loon
 ## Standard Loon Image
 
 To run this image, you will need to specify the location of your Docker socket to mount, the path where you would like your data to be uploaded, and an additional environment variable.
+
+Image source: https://hub.docker.com/r/bbollen23/loon
 
 ### Volumes
 

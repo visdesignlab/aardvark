@@ -25,7 +25,11 @@ const sidebars: SidebarsConfig = {
         type: "doc",
         id: "getting-started/index",
       },
-      items: ["getting-started/loon-wrappers", "getting-started/building-loon"],
+      items: [
+        "getting-started/loon-wrappers",
+        "getting-started/building-loon",
+        "getting-started/data",
+      ],
     },
     {
       type: "category",
