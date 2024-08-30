@@ -1,5 +1,6 @@
 import { defineStore } from 'pinia';
 import * as vg from '@uwdata/vgplot';
+import mitt from 'mitt';
 
 export interface DataSelection {
     plotName: string;
@@ -9,7 +10,12 @@ export interface DataSelection {
     displayChart: boolean; // controls if the chart is shown or not, true by default
 }
 
-// const emit = defineEmits(['selectionChange', 'plot-loaded', 'plot-error']);
+type Events = {
+    'plot-error': string;
+};
+
+export const emitter = mitt<Events>();
+//const emit = defineEmits(['plot-error']);
 
 export const useSelectionStore = defineStore('Selection', {
     state: () => ({
@@ -49,7 +55,13 @@ export const useSelectionStore = defineStore('Selection', {
             if (existingIndex !== -1) {
                 this.dataSelections[existingIndex].range = range;
             } else {
-                this.addSelection({ plotName, range });
+                this.addSelection({
+                    plotName,
+                    range,
+                    type: 'cell', // Default value
+                    maxRange: [...range], // Using the provided range as maxRange
+                    displayChart: true, // Default value
+                });
             }
         },
         removeSelectionByPlotName(plotName: string) {
@@ -60,7 +72,8 @@ export const useSelectionStore = defineStore('Selection', {
                 window.dispatchEvent(
                     new CustomEvent('selectionRemoved', { detail: plotName })
                 );
-                this.removeSelection(index);
+                // Actually remove the selection from the array
+                this.dataSelections.splice(index, 1);
             }
         },
         getSelection(name: string): DataSelection | null {
@@ -126,15 +139,16 @@ export const useSelectionStore = defineStore('Selection', {
                 maxVal = Number(result.batches[0].get(0).max_value);
 
                 if (isNaN(minVal) || isNaN(maxVal)) {
-                    throw new Error('NaN values detected in the data');
+                    emitter.emit('plot-error', plotName);
+                    //throw new Error('NaN values detected in the data');
                 }
 
                 return [minVal, maxVal];
             } catch (error) {
                 console.error('Error fetching data range:', error);
                 // TODO: can't emit from store
-                // emit('plot-error', plotName);
-                throw error;
+                emitter.emit('plot-error', plotName);
+                //throw error;
             }
         },
         async setMaxRange(plotName: string) {

@@ -4,7 +4,7 @@ import { QBtn, QDialog, QCard, QCardSection, QCardActions } from 'quasar';
 import * as vg from '@uwdata/vgplot';
 import { storeToRefs } from 'pinia';
 import UnivariateCellPlot from './UnivariateCellPlot.vue';
-import { useSelectionStore } from '@/stores/selectionStore';
+import { useSelectionStore, emitter } from '@/stores/selectionStore';
 import { useCellMetaData } from '@/stores/cellMetaData';
 
 const cellMetaData = useCellMetaData();
@@ -54,6 +54,7 @@ const handlePlotError = (plotName: string) => {
 
 // Adds a plot initially when first loading.
 onMounted(() => {
+    emitter.on('plot-error', handlePlotError);
     watch(
         dataInitialized,
         (isInitialized) => {

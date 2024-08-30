@@ -173,17 +173,12 @@ async function createCharts() {
 
 // Checks when everything has loaded
 watch(loaded, () => {
-    // dataRange().catch((error) => {
-    //     console.error('Error in dataRange:', error);
-    //     emit('plot-error', props.plotName);
-    // });
     handlePlotLoading();
 });
 
 // Waits for data range to load, then waits a bit, then notifies plotselector to show everything.
 async function handlePlotLoading() {
     try {
-        // await dataRange();
         // Wait for 0.5 seconds before emitting the plot-loaded event
         await new Promise((resolve) => setTimeout(resolve, 500));
         emit('plot-loaded');
@@ -197,10 +192,6 @@ async function handlePlotLoading() {
 onMounted(() => {
     if (dataInitialized.value) {
         createCharts();
-        // dataRange().catch((error) => {
-        //     console.error('Error in dataRange:', error);
-        //     emit('plot-error', props.plotName);
-        // });
     }
 });
 
