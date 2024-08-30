@@ -112,10 +112,13 @@ services:
       retries: 5
 
   minio:
-    image: minio/minio:latest
+    build:
+      context: ../ # relative to docker compose
+      dockerfile: ./.build-files/Dockerfile.minio # relatvie to build context
+      args:
+        DOCKER_ENV_FILE: ${DOCKER_ENV_FILE}
     # When run with a TTY, minio prints credentials on startup
     tty: true
-    command: "server --address ':9000' --console-address ':9001' /data"
     environment:
       MINIO_ROOT_USER: ${MINIO_STORAGE_ACCESS_KEY}
       MINIO_ROOT_PASSWORD: ${MINIO_STORAGE_SECRET_KEY}
@@ -130,7 +133,6 @@ services:
       retries: 5
     volumes:
       - ${MINIO_VOLUME_LOCATION}:/data
-      - ./minio-healthcheck.sh/:/minio-healthcheck.sh
 
 volumes:
   mysql-data:
