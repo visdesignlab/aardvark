@@ -36,6 +36,10 @@ function addFilter() {
 }
 
 const cellAttributesOpen = ref(true);
+
+const mutedTextClass = computed(() =>
+    globalSettings.darkMode ? 'text-grey-5' : 'text-grey-8'
+);
 </script>
 
 <template>
@@ -70,23 +74,20 @@ const cellAttributesOpen = ref(true);
                             type="selection"
                         />
 
-                        <q-item-section avatar top left>
-                            <q-avatar icon="scatter_plot" style="width: 18px" />
+                        <q-item-section
+                            side
+                            left
+                            class="q-pa-none q-mr-xs flex-grow-0"
+                        >
+                            <q-avatar icon="scatter_plot" />
                         </q-item-section>
 
                         <q-item-section>
-                            <q-item-label
-                                style="font-size: 14px; margin-left: -20px"
-                            >
+                            <q-item-label class="text-body2">
                                 {{ selection.plotName }}
                             </q-item-label>
                             <q-item-label
-                                style="
-                                    margin-left: -20px;
-                                    white-space: nowrap;
-                                    color: grey;
-                                "
-                                class="text-caption"
+                                :class="`text-caption ${mutedTextClass}`"
                                 :dark="globalSettings.darkMode"
                             >
                                 {{ selection.range[0].toFixed(2) }} –
@@ -98,7 +99,7 @@ const cellAttributesOpen = ref(true);
                             <q-btn
                                 class="gt-xs"
                                 @click="removeSelection(selection.plotName)"
-                                size="12px"
+                                size="md"
                                 flat
                                 dense
                                 round
@@ -136,12 +137,7 @@ const cellAttributesOpen = ref(true);
                     </q-item-section>
                 </template>
                 <q-list>
-                    <q-item
-                        v-for="(filter, index) in filters"
-                        :key="index"
-                        clickable
-                        v-ripple
-                    >
+                    <q-item v-for="(filter, index) in filters" :key="index">
                         <FilterEditMenu
                             :plot-name="filter.plotName"
                             :initial-min="filter.range[0]"
@@ -149,23 +145,20 @@ const cellAttributesOpen = ref(true);
                             type="filter"
                         />
 
-                        <q-item-section avatar top left>
-                            <q-avatar icon="scatter_plot" style="width: 18px" />
+                        <q-item-section
+                            side
+                            left
+                            class="q-pa-none q-mr-xs flex-grow-0"
+                        >
+                            <q-avatar icon="scatter_plot" />
                         </q-item-section>
 
                         <q-item-section>
-                            <q-item-label
-                                style="font-size: 14px; margin-left: -20px"
-                            >
+                            <q-item-label class="text-body2">
                                 {{ filter.plotName }}
                             </q-item-label>
                             <q-item-label
-                                style="
-                                    margin-left: -20px;
-                                    white-space: nowrap;
-                                    color: grey;
-                                "
-                                class="text-caption"
+                                :class="`text-caption ${mutedTextClass}`"
                                 :dark="globalSettings.darkMode"
                             >
                                 {{ filter.range[0].toFixed(2) }} –
@@ -177,7 +170,7 @@ const cellAttributesOpen = ref(true);
                             <q-btn
                                 class="gt-xs"
                                 @click="removeFilter(index)"
-                                size="12px"
+                                size="md"
                                 flat
                                 dense
                                 round
