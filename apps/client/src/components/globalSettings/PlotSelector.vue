@@ -40,18 +40,20 @@ const showErrorDialog = ref(false);
 const errorPlotName = ref('');
 
 // If there is a plot loading here, a dialog is displayed.
-const handlePlotError = (plotName: string) => {
-    console.log('handlePlotError called with:', plotName);
+function handlePlotError(plotName: string) {
+    // console.log('handlePlotError called with:', plotName);
     errorPlotName.value = plotName;
     showErrorDialog.value = true;
 
     // Deselect the plot and remove it from the shown plots
-    clearSelectionForPlot(plotName);
-    // TODO: update to no plots
-    // selectionStore.Plots = Plots.value.filter(
-    //     (plot) => plot.plotName !== plotName
-    // );
-};
+    selectionStore.removePlotWithErrors(plotName);
+
+    mosaicSelection.value.update({
+        source: plotName,
+        value: null,
+        predicate: null,
+    });
+}
 
 // Adds a plot initially when first loading.
 onMounted(() => {
@@ -67,18 +69,18 @@ onMounted(() => {
     );
 });
 
-const handlePlotLoaded = () => {
+function handlePlotLoaded() {
     loadedPlots.value++;
-    console.log('Plot loaded');
+    // console.log('Plot loaded');
     if (loadedPlots.value === totalPlots.value) {
         loading.value = false;
     }
-};
+}
 
 // Mosaic selections within plots gets computed
 const mosaicSelection = computed(() => vg.Selection.intersect());
 const plotBrush = computed(() => {
-    console.log('plotBrush computed');
+    // console.log('plotBrush computed');
 
     for (let selection of dataSelections.value) {
         const source = selection.plotName;
@@ -103,33 +105,23 @@ function isPlotSelected(name: string): boolean {
     if (selection === null) return false;
     return selection.displayChart;
 }
-const togglePlotSelection = (name: string) => {
+function togglePlotSelection(name: string) {
     const selection = selectionStore.getSelection(name);
     if (selection === null) {
         selectionStore.addPlot(name);
         return;
     }
     selection.displayChart = !selection.displayChart;
-};
+}
 
-const clearSelectionForPlot = (plotName: string) => {
-    selectionStore.removePlotWithErrors(plotName);
-
-    mosaicSelection.value.update({
-        source: plotName,
-        value: null,
-        predicate: null,
-    });
-};
-
-const handleSelectionRemoved = (event: CustomEvent) => {
-    console.log('handleSelectionRemoved reached');
+function handleSelectionRemoved(event: CustomEvent) {
+    // console.log('handleSelectionRemoved reached');
     mosaicSelection.value.update({
         source: event.detail,
         value: null,
         predicate: null,
     });
-};
+}
 
 window.addEventListener(
     'selectionRemoved',

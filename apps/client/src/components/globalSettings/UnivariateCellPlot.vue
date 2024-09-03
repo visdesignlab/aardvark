@@ -7,17 +7,7 @@ import { useSelectionStore, type DataSelection } from '@/stores/selectionStore';
 import { storeToRefs } from 'pinia';
 import FilterEditMenu from './FilterEditMenu.vue';
 import { useGlobalSettings } from '@/stores/globalSettings';
-import {
-    QMenu,
-    QItem,
-    QItemSection,
-    QDialog,
-    QCard,
-    QCardSection,
-    QForm,
-    QInput,
-    QBtn,
-} from 'quasar';
+import { QItemSection } from 'quasar';
 
 // Initialise Data
 const globalSettings = useGlobalSettings();
@@ -37,27 +27,6 @@ const props = defineProps({
         required: true,
     },
 });
-
-// Finds current brush selection, changes selection store, updates text box vals.
-const clearBrushSelection = () => {
-    try {
-        const active = props.plotBrush.clauses.active;
-        if (props.plotBrush) {
-            emit('selectionChange', {
-                plotName: active.source.field,
-                range: null,
-            });
-
-            props.plotBrush.update({
-                source: props.plotName,
-                value: null,
-                predicate: null,
-            });
-        }
-    } catch (error) {
-        emit('plot-error', props.plotName);
-    }
-};
 
 // Vg Plot
 function makePlot(column: string) {
@@ -103,49 +72,6 @@ function makePlot(column: string) {
         emit('plot-error', props.plotName);
     }
 }
-
-// Dialog box, enter exact numbers ------
-const showRangeDialog = ref(false);
-const minInput = ref<number>();
-const maxInput = ref<number>();
-
-function openRangeDialog() {
-    minInput.value = rangeModel.value.min;
-    maxInput.value = rangeModel.value.max;
-    showRangeDialog.value = true;
-}
-
-function onSubmit() {
-    if (typeof minInput.value === 'undefined') return;
-    if (typeof maxInput.value === 'undefined') return;
-    applyManualSelection(minInput.value, maxInput.value);
-    showRangeDialog.value = false;
-}
-
-// Called when textbox values are changed.
-const applyManualSelection = (min: number, max: number) => {
-    if (!isNaN(min) && !isNaN(max) && min <= max) {
-        rangeModel.value = { min, max };
-    }
-};
-
-const minMaxFormError = computed<string | boolean>(() => {
-    // returns an error string if invalid
-    // otherwise returns false
-    // @ts-ignore: actually it can be '', I would expect quasar to make this undefined or null, but it doesn't
-    if (typeof minInput.value === 'undefined' || minInput.value === '')
-        return 'Min cannot be undefined.';
-    // @ts-ignore: actually it can be '', I would expect quasar to make this undefined or null, but it doesn't
-    if (typeof maxInput.value === 'undefined' || maxInput.value === '')
-        return 'Max cannot be undefined.';
-    if (minInput.value > maxInput.value)
-        return 'Min should be less than or equal to Max.';
-    return false;
-});
-
-const minMaxFormValid = computed<boolean>(() => {
-    return !minMaxFormError.value;
-});
 
 // Handle Loading of Everything
 const charts = ref<null | HTMLElement>(null);
@@ -218,9 +144,9 @@ const rangeModel = computed({
     },
 });
 
-const handleRangeUpdate = (newRange: { min: number; max: number }) => {
+function handleRangeUpdate(newRange: { min: number; max: number }) {
     rangeModel.value = newRange;
-};
+}
 </script>
 
 <template>
