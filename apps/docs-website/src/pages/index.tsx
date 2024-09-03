@@ -14,16 +14,16 @@ function HomepageHeader() {
     <header className={clsx('hero hero--secondary', styles.heroBanner)}>
       <div className="container">
         <div className={styles.titleContainer}>
-          {/* <ImageSwitcher
-            lightImageSrc={"img/logos/revisitLogoThumbnail-dotted-light.svg"}
-            darkImageSrc={"img/logos/revisitLogoThumbnail-dotted-dark.svg"}
+          <ImageSwitcher
+            lightImageSrc={"img/logos/loon-logo-bordered-light.svg"}
+            darkImageSrc={"img/logos/loon-logo-bordered-dark.svg"}
             className={clsx(styles.largeItem, styles.homepageLogo)}
           />
           <ImageSwitcher
-            lightImageSrc={"img/logos/revisitLogoLong.svg"}
-            darkImageSrc={"img/logos/revisitLogoLong-dark.svg"}
+            lightImageSrc={"img/logos/loon-logo-bordered-light.svg"}
+            darkImageSrc={"img/logos/loon-logo-bordered-dark.svg"}
             className={clsx(styles.smallItem, styles.homepageLogo)}
-          /> */}
+          />
           <div className={clsx('hero__title', styles.description)}>
             Cell Microscopy Data Visualization
           </div>
