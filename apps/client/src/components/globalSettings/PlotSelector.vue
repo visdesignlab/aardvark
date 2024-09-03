@@ -113,7 +113,7 @@ const togglePlotSelection = (name: string) => {
 };
 
 const clearSelectionForPlot = (plotName: string) => {
-    selectionStore.removeSelectionByPlotName(plotName);
+    selectionStore.removePlotWithErrors(plotName);
 
     mosaicSelection.value.update({
         source: plotName,
