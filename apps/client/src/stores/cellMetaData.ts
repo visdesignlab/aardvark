@@ -3,7 +3,6 @@ import { defineStore } from 'pinia';
 import { isEqual, every, sortBy } from 'lodash-es';
 import { useDataPointSelection } from './dataPointSelection';
 import { extent as d3Extent } from 'd3-array';
-import { useSelectionStore } from './selectionStore';
 
 export interface Lineage {
     lineageId: string; // should be equal to the founder trackId
@@ -85,41 +84,6 @@ export const useCellMetaData = defineStore('cellMetaData', () => {
     const trackMap = ref<Map<string, Track>>();
     const lineageArray = ref<Lineage[]>();
     const lineageMap = ref<Map<string, Lineage>>();
-
-    // Testing Selections of Track Arrays
-    const selectionStore = useSelectionStore();
-    const selectedTrackArray = computed<Track[] | null>(() => {
-        if (!dataInitialized.value || !trackArray.value) return null;
-
-        const selections = selectionStore.dataSelections;
-
-        return trackArray.value.filter((track) => {
-            return selections.every((selection) => {
-                const [min, max] = selection.range.map(Number);
-                return track.cells.some((cell) => {
-                    const value = cell.attrNum[selection.plotName];
-                    return value >= min && value <= max;
-                });
-            });
-        });
-    });
-
-    const unselectedTrackArray = computed<Track[] | null>(() => {
-        if (
-            !dataInitialized.value ||
-            !trackArray.value ||
-            !selectedTrackArray.value
-        )
-            return null;
-
-        const selectedTrackIds = new Set(
-            selectedTrackArray.value.map((track) => track.trackId)
-        );
-
-        return trackArray.value.filter(
-            (track) => !selectedTrackIds.has(track.trackId)
-        );
-    });
 
     const selectedLineage = computed<Lineage | null>(() => {
         if (!dataInitialized.value) return null;
@@ -745,7 +709,6 @@ export const useCellMetaData = defineStore('cellMetaData', () => {
         lineageAttributeHeaders,
         selectedLineage,
         selectLineage,
-        selectedTrackArray,
         getLineage,
         getLineageId,
         selectedTrack,
@@ -768,6 +731,5 @@ export const useCellMetaData = defineStore('cellMetaData', () => {
         getClosestTime,
         getCellIndexWithTime,
         getCellIndexWithFrame,
-        unselectedTrackArray,
     };
 });

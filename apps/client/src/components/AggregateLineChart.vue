@@ -520,21 +520,11 @@ const otherUnmuted = computed(() => {
                 </g>
                 <g :transform="`translate(${margin.left},${margin.top})`">
                     <path
-                        :class="`unselected muted agg-line ${globalSettings.normalizedDark}`"
-                        v-for="(
-                            aggLine, index
-                        ) in aggregateLineChartStore.aggLineDataList.filter(
-                            (d) => d.muted
-                        )"
-                        :key="index"
-                        :d="areaGen(aggLine.data) ?? ''"
-                    ></path>
-                    <path
                         :class="`muted agg-line ${globalSettings.normalizedDark}`"
                         v-for="(
                             aggLine, index
                         ) in aggregateLineChartStore.aggLineDataList.filter(
-                            (d) => d.muted && d.selected
+                            (d) => d.muted
                         )"
                         :key="index"
                         :d="areaGen(aggLine.data) ?? ''"
@@ -692,10 +682,6 @@ const otherUnmuted = computed(() => {
     stroke: #e29609;
     fill: #e29609;
 }
-.dark.unselected {
-    fill: #d8d8d8;
-    stroke: #d8d8d8;
-}
 
 .dark.hovered,
 .light.hovered {
@@ -711,10 +697,6 @@ const otherUnmuted = computed(() => {
 .light.selected {
     fill: #fde309;
     stroke: #fde309;
-}
-.light.unselected {
-    fill: #333333;
-    stroke: #333333;
 }
 
 .mw-250 {
