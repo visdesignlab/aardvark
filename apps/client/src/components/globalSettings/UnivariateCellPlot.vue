@@ -59,14 +59,6 @@ const clearBrushSelection = () => {
     }
 };
 
-const handleSelectionRemoved = (event: CustomEvent) => {
-    if (props.plotName == event.detail) {
-        //TODO: UPDATE
-        // range.value.min = dataMin.value;
-        // range.value.max = dataMax.value;
-    }
-};
-
 // Vg Plot
 function makePlot(column: string) {
     try {
@@ -199,14 +191,6 @@ onMounted(() => {
 
 // Waits for data to be initialized before creating charts
 watch(dataInitialized, createCharts);
-
-// watch(range, handleRangeChange);
-
-// Remove Selection
-window.addEventListener(
-    'selectionRemoved',
-    handleSelectionRemoved as EventListener
-);
 
 const plotContainer = ref<HTMLDivElement | null>(null);
 
