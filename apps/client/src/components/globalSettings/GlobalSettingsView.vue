@@ -18,9 +18,10 @@ onKeyStroke(['b', 'B'], (e: KeyboardEvent) => {
         show-overlay
         behavior="desktop"
         :dark="globalSettings.darkMode"
+        class=""
     >
-        <div>
-            <div class="d-flex h-100 ps-1 pt-1 pb-1 flex-grow-1">
+        <div class="drawer-container">
+            <div class="tabs-container">
                 <q-tabs
                     v-model="globalSettings.tab"
                     vertical
@@ -45,45 +46,44 @@ onKeyStroke(['b', 'B'], (e: KeyboardEvent) => {
                         </q-tab>
                     </template>
                 </q-tabs>
-
-                <div class="d-flex flex-column">
-                    <transition name="collapse">
-                        <q-tab-panels
-                            v-model="globalSettings.tab"
-                            v-if="globalSettings.isPanelVisible"
-                            class="fixed-width-panels flex-grow-1"
-                            :dark="globalSettings.darkMode"
-                            swipeable
-                            vertical
-                            style="margin-left: 5px"
+            </div>
+            <div class="content-container">
+                <transition name="collapse">
+                    <q-tab-panels
+                        v-model="globalSettings.tab"
+                        v-if="globalSettings.isPanelVisible"
+                        class="fixed-width-panels flex-grow-1"
+                        :dark="globalSettings.darkMode"
+                        swipeable
+                        vertical
+                        style="margin-left: 5px"
+                    >
+                        <template
+                            v-for="setting in globalSettings.settingsPages"
+                            :key="setting.name"
                         >
-                            <template
-                                v-for="setting in globalSettings.settingsPages"
-                                :key="setting.name"
+                            <q-tab-panel
+                                :name="setting.name"
+                                style="border-radius: 4px"
                             >
-                                <q-tab-panel
-                                    :name="setting.name"
-                                    style="border-radius: 4px"
-                                >
-                                    <div>
-                                        <div
-                                            class="d-flex row justify-space-between align-center"
-                                            style="margin-bottom: 5px"
-                                        >
-                                            <h5 style="margin-bottom: 0px">
-                                                {{ setting.name }}
-                                            </h5>
-                                        </div>
-                                        <hr />
-                                        <component
-                                            :is="setting.component"
-                                        ></component>
+                                <div>
+                                    <div
+                                        class="d-flex row justify-space-between align-center"
+                                        style="margin-bottom: 5px"
+                                    >
+                                        <h5 style="margin-bottom: 0px">
+                                            {{ setting.name }}
+                                        </h5>
                                     </div>
-                                </q-tab-panel>
-                            </template>
-                        </q-tab-panels>
-                    </transition>
-                </div>
+                                    <hr />
+                                    <component
+                                        :is="setting.component"
+                                    ></component>
+                                </div>
+                            </q-tab-panel>
+                        </template>
+                    </q-tab-panels>
+                </transition>
             </div>
         </div>
     </q-drawer>
@@ -121,5 +121,25 @@ $panel-width: 300px;
 .slide-right-leave-to {
     opacity: 0.05;
     left: -$panel-width;
+}
+
+/* New styles */
+.drawer-container {
+    display: flex;
+    flex-direction: row;
+    height: 100%;
+}
+
+.tabs-container {
+    flex-grow: 0;
+    flex-shrink: 0;
+    height: 100%;
+    overflow: hidden; /* Prevent the tabs from being scrollable */
+}
+
+.content-container {
+    flex-grow: 1;
+    overflow-y: auto; /* Make only the content scrollable */
+    padding: 10px; /* Add some padding to the content */
 }
 </style>
