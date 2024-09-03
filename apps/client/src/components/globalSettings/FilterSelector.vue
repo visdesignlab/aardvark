@@ -27,10 +27,7 @@ function addFilter() {
     for (const selection of selectionStore.modifiedSelections) {
         filterStore.addFilter({
             plotName: selection.plotName,
-            range: [
-                Number(selection.range[0].toFixed(3)),
-                Number(selection.range[1].toFixed(3)),
-            ],
+            range: [selection.range[0], selection.range[1]],
         });
     }
 }
