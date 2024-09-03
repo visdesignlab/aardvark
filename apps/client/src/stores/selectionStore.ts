@@ -68,20 +68,18 @@ export const useSelectionStore = defineStore('Selection', {
             const index = this.dataSelections.findIndex(
                 (s) => s.plotName === plotName
             );
-            if (index !== -1) {
-                window.dispatchEvent(
-                    new CustomEvent('selectionRemoved', { detail: plotName })
-                );
-                this.removeSelection(index);
-            }
+            if (index === -1) return;
+            window.dispatchEvent(
+                new CustomEvent('selectionRemoved', { detail: plotName })
+            );
+            this.removeSelection(index);
         },
         removePlotWithErrors(plotName: string) {
             const index = this.dataSelections.findIndex(
                 (s) => s.plotName === plotName
             );
-            if (index !== -1) {
-                this.dataSelections.splice(index, 1);
-            }
+            if (index === -1) return;
+            this.dataSelections.splice(index, 1);
         },
         getSelection(name: string): DataSelection | null {
             const s = this.dataSelections.find(
