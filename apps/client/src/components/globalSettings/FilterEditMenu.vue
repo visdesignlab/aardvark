@@ -59,8 +59,10 @@ function onSubmit() {
 }
 
 const minMaxFormError = computed<string | boolean>(() => {
+    // @ts-ignore: actually it can be '', I would expect quasar to make this undefined or null, but it doesn't
     if (typeof minInput.value === 'undefined' || minInput.value === '')
         return 'Min cannot be undefined.';
+    // @ts-ignore: actually it can be '', I would expect quasar to make this undefined or null, but it doesn't
     if (typeof maxInput.value === 'undefined' || maxInput.value === '')
         return 'Max cannot be undefined.';
     if (minInput.value > maxInput.value)
