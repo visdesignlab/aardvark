@@ -49,6 +49,7 @@ export const useDatasetSelectionStore = defineStore(
             useDatasetSelectionTrrackedStore();
         const configStore = useConfigStore();
         const fetchingTabularData = ref(false);
+        const refreshTime = ref<string>(new Date().getTime().toString());
         let controller: AbortController;
 
         const experimentFilenameList = asyncComputed<string[]>(async () => {
@@ -61,9 +62,12 @@ export const useDatasetSelectionStore = defineStore(
             }
             controller = new AbortController();
             fetchingEntryFile.value = true;
-            const response = await fetch(fullURL, {
-                signal: controller.signal, // link controller so can cancel if need to
-            }).catch((error: Error) => {
+            const response = await fetch(
+                fullURL + `?timestamp=${refreshTime.value}`,
+                {
+                    signal: controller.signal, // link controller so can cancel if need to
+                }
+            ).catch((error: Error) => {
                 handleFetchEntryError(
                     `Could not access ${fullURL}. "${error.message}"`
                 );
@@ -79,7 +83,7 @@ export const useDatasetSelectionStore = defineStore(
             serverUrlValid.value = true;
             const data = await response.json();
             return data.experiments;
-        }, []);
+        }, [refreshTime.value]);
 
         function handleFetchEntryError(message: string): void {
             // // console.log('ERROR', errorMessage);
@@ -209,6 +213,10 @@ export const useDatasetSelectionStore = defineStore(
             );
         });
 
+        function refreshFileNameList() {
+            refreshTime.value = new Date().getTime().toString();
+        }
+
         return {
             serverUrlValid,
             errorMessage,
@@ -220,6 +228,7 @@ export const useDatasetSelectionStore = defineStore(
             selectImagingLocation,
             getServerUrl,
             segmentationFolderUrl,
+            refreshFileNameList,
         };
     }
 );

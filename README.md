@@ -28,7 +28,9 @@ DuckDB is the database required by our visualization platform Mosaic. It enables
 
 Below is an architecture diagram for the various applications in Loon
 
-![Loon Architecture Diagram](./apps/docs-website/docs/getting-started/img/loon-architecture-light.svg)
+
+![Loon Architecture Diagram](./loon-architecture-light.svg)
+
 
 Loon is a repository that is meant to be deployed as a standalone docker container. In the repository, there are two docker directories (one is `docker` and the other is `docker-local`). This separates the projects into two distinct pieces: Loon and Local Loon.
 
@@ -46,6 +48,7 @@ After installing docker, you'll need to create a ".env" file. Here we have a tem
 # Client settings
 VITE_ENVIRONMENT=production
 VITE_USE_HTTP=True
+VITE_SERVER_URL=localhost/data
 
 # Docker Container Only Settings
 DATABASE_ROOT_PASSWORD=root_pass
@@ -105,6 +108,15 @@ Below is a table explaining each of these environment variables. In the "Possibl
 | MINIO_STORAGE_MEDIA_URL          | Storage URL for media files                                                                                                     | **{http/https}://{url_name}/data** |
 | MINIO_STORAGE_STATIC_URL         | Storage URL for static files                                                                                                    | **{http/https}://{url_name}/data** |
 
+
+After creating the `.env` file, change into the `docker` directory of your application. Ensure that your local instance of Docker is running. Then, run the following command:
+
+```
+docker compose up --build
+```
+
+This will take some time to start. The docker container will be fully finished once you see that "server-1" and "celery-1" have started successfully.
+
 ## Local Loon
 
 Local loon is a standalone version of Loon with all of the same features as Loon _except_ uploading data. Instead, this is meant to be deployed alongside the datasets in question. Instead of going through a lengthy process of uploading and processing data, we give users the option of transforming and maintaining their data themselves. Then, instead of using
@@ -120,6 +132,7 @@ Moon is most useful when you're running just the front end component. Because of
 ### Installing Moon
 
 We use [Moon](https://moonrepo.dev/) as the monorepo package for managing this repository.
+
 
 For Linux/Mac you can install Moon with the following:
 

@@ -4,21 +4,23 @@ import { useQuasar } from 'quasar';
 import { useGlobalSettings } from '@/stores/globalSettings';
 import { useDatasetSelectionTrrackedStore } from '@/stores/datasetSelectionTrrackedStore';
 import { useDatasetSelectionStore } from '@/stores/datasetSelectionStore';
+
 import { useDataPointSelection } from '@/stores/dataPointSelection';
 import { useConfigStore } from '@/stores/configStore';
 import { useSelectionStore } from '@/stores/selectionStore';
 import { useFilterStore } from '@/stores/filterStore';
 
+
 const globalSettings = useGlobalSettings();
 const datasetSelectionStore = useDatasetSelectionStore();
 const datasetSelectionTrrackedStore = useDatasetSelectionTrrackedStore();
-const dataPointSelection = useDataPointSelection();
 const $q = useQuasar();
+
 const configStore = useConfigStore();
 const selectionStore = useSelectionStore();
 const filterStore = useFilterStore();
 
-const serverInputRef = ref<any>(null);
+
 watch(
     () => datasetSelectionStore.fetchingTabularData,
     () => {
@@ -50,15 +52,7 @@ const shortExpName = computed<string>(() => {
     return shortName;
 });
 
-function openExampleDataset() {
-    selectionStore.clearAllSelections();
-    filterStore.clearAllFilters();
-    datasetSelectionTrrackedStore.serverUrl =
-        'apps.vdl.sci.utah.edu/aardvark-s3';
 
-    datasetSelectionTrrackedStore.currentExperimentFilename = 'Example_1.json';
-    datasetSelectionTrrackedStore.selectedLocationIds['loc_4_well_23'] = true;
-}
 function onSelectExperiment() {
     selectionStore.clearAllSelections();
     filterStore.clearAllFilters();
@@ -66,38 +60,23 @@ function onSelectExperiment() {
 </script>
 
 <template>
-    <q-btn
-        outline
-        rounded
-        class="full-width q-mb-md"
-        @click="openExampleDataset"
-        >Load Example Dataset</q-btn
-    >
-    <q-input
-        ref="serverInputRef"
-        v-model="datasetSelectionTrrackedStore.serverUrl"
-        filled
-        type="url"
-        :label="configStore.useHttp ? 'http://' : 'https://'"
-        :suffix="datasetSelectionTrrackedStore.entryPointFilename"
-        debounce="1000"
-        :loading="datasetSelectionStore.fetchingEntryFile"
-        :error="!datasetSelectionStore.serverUrlValid"
-        :error-message="datasetSelectionStore.errorMessage"
-        :dark="globalSettings.darkMode"
-    />
-    <q-select
-        v-if="
-            datasetSelectionStore.serverUrlValid &&
-            datasetSelectionTrrackedStore.serverUrl
-        "
-        label="Experiment"
-        v-model="datasetSelectionTrrackedStore.currentExperimentFilename"
-        :display-value="shortExpName"
-        :options="datasetSelectionStore.experimentFilenameList"
-        :dark="globalSettings.darkMode"
-        @update:model-value="onSelectExperiment"
-    />
+    <div class="flex row">
+        <q-select
+            label="Experiment"
+            v-model="datasetSelectionTrrackedStore.currentExperimentFilename"
+            :display-value="shortExpName"
+            :options="datasetSelectionStore.experimentFilenameList"
+            :dark="globalSettings.darkMode"
+            class="flex-grow-1"
+            @update:model-value="onSelectExperiment"
+        />
+        <q-btn
+            flat
+            icon="mdi-refresh"
+            @click="datasetSelectionStore.refreshFileNameList"
+        ></q-btn>
+    </div>
+
     <div
         v-if="
             datasetSelectionStore.currentExperimentMetadata &&
