@@ -6,10 +6,12 @@ import { useDatasetSelectionStore } from './datasetSelectionStore';
 import { useImageViewerStore } from './imageViewerStore';
 import { useLooneageViewStore } from './looneageViewStore';
 import { useDataPointSelection } from './dataPointSelection';
+import { useFilterStore } from './filterStore';
+import { useSelectionStore } from './selectionStore';
 import { useSkipTrackingMap } from '@/stores/skipTrackingMap';
 import { defineStore } from 'pinia';
 import { initializeTrrack, Registry, type Trigger } from '@trrack/core';
-import { cloneDeep, isEqual } from 'lodash-es';
+import { cloneDeep, isEqual, debounce } from 'lodash-es';
 import {
     compressToEncodedURIComponent,
     decompressFromEncodedURIComponent,
@@ -36,6 +38,8 @@ export const useProvenanceStore = defineStore('provenanceStore', () => {
         useDatasetSelectionTrrackedStore(),
         useLooneageViewStore(),
         useDataPointSelection(),
+        useFilterStore(),
+        useSelectionStore(),
     ];
 
     const initialState: SubStores = {};
@@ -77,20 +81,22 @@ export const useProvenanceStore = defineStore('provenanceStore', () => {
     }
 
     for (const store of storesToTrrack) {
-        store.$subscribe((mutation, state) => {
-            const storeId = mutation.storeId;
-            // console.log({ storeId, state, mutation });
-            if (skipTrackingMap.map.get(storeId)) {
-                skipTrackingMap.map.set(storeId, false);
-                // console.count('SKIPPED');
-                return;
-            }
-            // console.log({ prvState: provenance.getState() });
-            if (isEqual(state, provenance.getState()[storeId])) {
-                return;
-            }
-            provenance.apply(storeId, registerActions[storeId](state));
-        });
+        store.$subscribe(
+            debounce((mutation, state) => {
+                const storeId = mutation.storeId;
+                // console.log({ storeId, state, mutation });
+                if (skipTrackingMap.map.get(storeId)) {
+                    skipTrackingMap.map.set(storeId, false);
+                    // console.count('SKIPPED');
+                    return;
+                }
+                // console.log({ prvState: provenance.getState() });
+                if (isEqual(state, provenance.getState()[storeId])) {
+                    return;
+                }
+                provenance.apply(storeId, registerActions[storeId](state));
+            }, 500)
+        );
     }
 
     provenance.currentChange(() => {

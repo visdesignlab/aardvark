@@ -5,10 +5,21 @@ import { useGlobalSettings } from '@/stores/globalSettings';
 import { useDatasetSelectionTrrackedStore } from '@/stores/datasetSelectionTrrackedStore';
 import { useDatasetSelectionStore } from '@/stores/datasetSelectionStore';
 
+import { useDataPointSelection } from '@/stores/dataPointSelection';
+import { useConfigStore } from '@/stores/configStore';
+import { useSelectionStore } from '@/stores/selectionStore';
+import { useFilterStore } from '@/stores/filterStore';
+
+
 const globalSettings = useGlobalSettings();
 const datasetSelectionStore = useDatasetSelectionStore();
 const datasetSelectionTrrackedStore = useDatasetSelectionTrrackedStore();
 const $q = useQuasar();
+
+const configStore = useConfigStore();
+const selectionStore = useSelectionStore();
+const filterStore = useFilterStore();
+
 
 watch(
     () => datasetSelectionStore.fetchingTabularData,
@@ -24,7 +35,9 @@ watch(
 );
 
 function onClickLocation(location: any) {
-    // console.log('clicked location: ', location);
+    //console.log('clicked location: ', location);
+    selectionStore.clearAllSelections();
+    filterStore.clearAllFilters();
     datasetSelectionStore.selectImagingLocation(location);
 }
 
@@ -38,6 +51,12 @@ const shortExpName = computed<string>(() => {
     }
     return shortName;
 });
+
+
+function onSelectExperiment() {
+    selectionStore.clearAllSelections();
+    filterStore.clearAllFilters();
+}
 </script>
 
 <template>
@@ -49,6 +68,7 @@ const shortExpName = computed<string>(() => {
             :options="datasetSelectionStore.experimentFilenameList"
             :dark="globalSettings.darkMode"
             class="flex-grow-1"
+            @update:model-value="onSelectExperiment"
         />
         <q-btn
             flat

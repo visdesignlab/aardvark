@@ -2,6 +2,7 @@ import { ref, computed, watch } from 'vue';
 import { defineStore } from 'pinia';
 import { asyncComputed } from '@vueuse/core';
 import { parse, type ParseResult } from 'papaparse';
+import * as vg from '@uwdata/vgplot';
 
 import { computedAsync } from '@vueuse/core';
 import {
@@ -141,7 +142,6 @@ export const useDatasetSelectionStore = defineStore(
         watch(
             currentLocationMetadata,
             () => {
-                // console.log('current location change');
                 if (!currentLocationMetadata.value?.tabularDataFilename) {
                     cellMetaData.dataInitialized = false;
                     return;
@@ -150,8 +150,11 @@ export const useDatasetSelectionStore = defineStore(
                     currentLocationMetadata.value?.tabularDataFilename
                 );
 
+                const duckDbUrl = getDuckDbUrl(
+                    currentLocationMetadata.value?.tabularDataFilename
+                );
+
                 fetchingTabularData.value = true;
-                console.log({ url });
                 parse(url, {
                     header: true,
                     dynamicTyping: true,
@@ -159,19 +162,20 @@ export const useDatasetSelectionStore = defineStore(
                     download: true,
                     worker: true,
                     comments: '#',
-                    complete: (results: ParseResult<AnyAttributes>, file) => {
-                        // console.log('parse complete');
-                        // console.log(
-                        //     'headers',
-                        //     currentExperimentMetadata.value?.headerTransforms
-                        // );
+                    complete: async (results: ParseResult<AnyAttributes>) => {
+                        // If you need to use local duckDb instance, you can use this.
+                        vg.coordinator().databaseConnector(vg.wasmConnector());
+
+                        await vg
+                            .coordinator()
+                            .exec([
+                                vg.loadCSV('current_cell_metadata', duckDbUrl),
+                            ]);
                         cellMetaData.init(
                             results.data,
                             results.meta.fields as string[],
                             currentExperimentMetadata.value?.headerTransforms
                         );
-                        // console.log({ results, file });
-                        // console.log(cellMetaData);
                         fetchingTabularData.value = false;
                     },
                 });
@@ -182,8 +186,22 @@ export const useDatasetSelectionStore = defineStore(
         function getServerUrl(path: string): string {
             let httpValue = configStore.useHttp ? 'http://' : 'https://';
             let base = httpValue + datasetSelectionTrrackedStore.serverUrl;
-            if (!path.startsWith('/')) base = base + '/';
-            return base + path;
+            // Trims any leading slashes from path
+            let trimmedPath = path.replace(/^\/+/, '');
+            return base + '/' + trimmedPath;
+        }
+
+        function getDuckDbUrl(path: string): string {
+            let httpValue = configStore.useHttp ? 'http://' : 'https://';
+            let duckDbBase =
+                httpValue +
+                datasetSelectionTrrackedStore.serverUrl?.replace(
+                    'localhost/data',
+                    'minio:9000/data'
+                );
+            // Trims any leading slashes from path
+            let trimmedPath = path.replace(/^\/+/, '');
+            return duckDbBase + '/' + trimmedPath;
         }
 
         const segmentationFolderUrl = computed<string>(() => {
