@@ -16,7 +16,7 @@ import {
 import { useSelectionStore } from '@/stores/selectionStore';
 import { useFilterStore } from '@/stores/filterStore';
 
-let globalSettings = useGlobalSettings();
+const globalSettings = useGlobalSettings();
 const props = defineProps<{
     plotName: string;
     initialMin: number;
@@ -83,17 +83,19 @@ const minMaxFormValid = computed<boolean>(() => {
             @click="openRangeDialog"
             :dark="globalSettings.darkMode"
         >
-            <q-item-section>Enter Range</q-item-section>
+            <q-item-section :dark="globalSettings.darkMode"
+                >Enter Range</q-item-section
+            >
         </q-item>
     </q-menu>
 
-    <q-dialog v-model="showRangeDialog" :dark="globalSettings.darkMode">
+    <q-dialog v-model="showRangeDialog">
         <q-card :dark="globalSettings.darkMode">
             <q-card-section :dark="globalSettings.darkMode">
                 <div class="text-h6">Enter Range for {{ plotName }}</div>
             </q-card-section>
 
-            <q-card-section :dark="globalSettings.darkMode">
+            <q-card-section>
                 <q-form
                     @submit="onSubmit"
                     class="q-gutter-md"
@@ -123,8 +125,8 @@ const minMaxFormValid = computed<boolean>(() => {
                         v-if="minMaxFormError"
                         dense
                         class="text-white bg-red"
-                        :dark="globalSettings.darkMode"
                         >{{ minMaxFormError }}
+                        :dark="globalSettings.darkMode"
                     </q-banner>
 
                     <div>

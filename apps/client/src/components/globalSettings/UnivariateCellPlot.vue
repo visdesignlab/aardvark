@@ -159,7 +159,6 @@ function handleRangeUpdate(newRange: { min: number; max: number }) {
                     :initial-max="rangeModel.max"
                     type="selection"
                     @update:range="handleRangeUpdate"
-                    :dark="globalSettings.darkMode"
                 />
 
                 <div class="q-range-container">
