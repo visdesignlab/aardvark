@@ -112,6 +112,14 @@ services:
       - "9000:9000"
     volumes:
       - ${LOCAL_DATA_VOLUME_LOCATION}:/app/data # relative to docker compose
+  duckdb:
+    build:
+      context: ../ # relative to docker compose
+      dockerfile: ./.build-files/Dockerfile.duckdb # relative to build context
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./duckdb-data:/duckdb-data
 
 volumes:
   mysql-data:

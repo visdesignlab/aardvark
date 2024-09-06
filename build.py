@@ -378,9 +378,9 @@ if __name__ == "__main__":
             createComposeFile(local=buildConfig.local)
 
             if buildConfig.local:
-                services = ["db", "client", "server", "data", "celery", "redis"]
+                services = ["db", "client", "server", "data", "celery", "redis", "duckdb"]
             else:
-                services = ["db", "client", "server", "minio", "celery", "redis"]
+                services = ["db", "client", "server", "minio", "celery", "redis", "duckdb"]
 
             # Get current time and create unique logs path
             timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
