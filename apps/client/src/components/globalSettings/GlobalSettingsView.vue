@@ -63,6 +63,7 @@ onKeyStroke(['b', 'B'], (e: KeyboardEvent) => {
                             >
                                 <q-tab-panel
                                     :name="setting.name"
+                                    class="overlow-x-hidden"
                                     style="border-radius: 4px"
                                 >
                                     <div>
@@ -75,9 +76,11 @@ onKeyStroke(['b', 'B'], (e: KeyboardEvent) => {
                                             </h5>
                                         </div>
                                         <hr />
-                                        <component
-                                            :is="setting.component"
-                                        ></component>
+                                        <keep-alive>
+                                            <component
+                                                :is="setting.component"
+                                            ></component>
+                                        </keep-alive>
                                     </div>
                                 </q-tab-panel>
                             </template>
@@ -91,6 +94,10 @@ onKeyStroke(['b', 'B'], (e: KeyboardEvent) => {
 
 <style scoped lang="scss">
 $panel-width: 300px;
+
+.overlow-x-hidden {
+    overflow-x: hidden;
+}
 
 .flex-grow-0 {
     flex-grow: 0;

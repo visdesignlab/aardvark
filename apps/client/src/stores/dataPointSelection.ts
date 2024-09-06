@@ -10,8 +10,15 @@ export const useDataPointSelection = defineStore('dataPointSelection', () => {
     const selectedLineageId = ref<string | null>(null);
     const currentFrameIndex = ref<number>(0);
 
-    watch(datasetSelectionTrrackedStore.$state, () => {
+    watch(datasetSelectionTrrackedStore.$state, (oldState) => {
         if (!cellMetaData.dataInitialized) return;
+        if (
+            JSON.stringify(oldState) ===
+            JSON.stringify(datasetSelectionTrrackedStore.$state)
+        ) {
+            // watch has triggered because of provenance change instead of user action
+            return;
+        }
         currentFrameIndex.value = 0;
         selectedTrackId.value = null;
         selectedLineageId.value = null;
