@@ -92,6 +92,10 @@ onKeyStroke(['b', 'B'], (e: KeyboardEvent) => {
 <style scoped lang="scss">
 $panel-width: 300px;
 
+.overlow-x-hidden {
+    overflow-x: hidden;
+}
+
 .flex-grow-0 {
     flex-grow: 0;
 }

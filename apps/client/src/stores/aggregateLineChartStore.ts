@@ -432,6 +432,7 @@ function storeSetup() {
                     result.push({
                         data: medianFilterSmooth(aggLineData),
                         muted: false,
+                        selected: false,
                         trackId: lineage.lineageId,
                         relation: 'other',
                     });

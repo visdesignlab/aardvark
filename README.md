@@ -28,7 +28,9 @@ DuckDB is the database required by our visualization platform Mosaic. It enables
 
 Below is an architecture diagram for the various applications in Loon
 
+
 ![Loon Architecture Diagram](./loon-architecture-light.svg)
+
 
 Loon is a repository that is meant to be deployed as a standalone docker container. In the repository, there are two docker directories (one is `docker` and the other is `docker-local`). This separates the projects into two distinct pieces: Loon and Local Loon.
 
@@ -106,6 +108,7 @@ Below is a table explaining each of these environment variables. In the "Possibl
 | MINIO_STORAGE_MEDIA_URL          | Storage URL for media files                                                                                                     | **{http/https}://{url_name}/data** |
 | MINIO_STORAGE_STATIC_URL         | Storage URL for static files                                                                                                    | **{http/https}://{url_name}/data** |
 
+
 After creating the `.env` file, change into the `docker` directory of your application. Ensure that your local instance of Docker is running. Then, run the following command:
 
 ```
@@ -129,6 +132,7 @@ Moon is most useful when you're running just the front end component. Because of
 ### Installing Moon
 
 We use [Moon](https://moonrepo.dev/) as the monorepo package for managing this repository.
+
 
 For Linux/Mac you can install Moon with the following:
 
