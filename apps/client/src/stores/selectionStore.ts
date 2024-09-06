@@ -154,6 +154,7 @@ export const useSelectionStore = defineStore('Selection', {
                 // TODO: can't emit from store
                 emitter.emit('plot-error', plotName);
                 //throw error;
+                return [0, 0];
             }
         },
         async setMaxRange(plotName: string) {
