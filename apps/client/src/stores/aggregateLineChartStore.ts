@@ -13,7 +13,6 @@ export interface AggLine {
     muted: boolean;
     relation: 'ancestor' | 'left' | 'right' | 'other';
     trackId: string;
-    selected?: boolean;
 }
 export interface AggLineData extends Array<AggDataPoint> {}
 export interface AggDataPoint {
@@ -433,7 +432,6 @@ function storeSetup() {
                     result.push({
                         data: medianFilterSmooth(aggLineData),
                         muted: false,
-                        selected: false,
                         trackId: lineage.lineageId,
                         relation: 'other',
                     });
