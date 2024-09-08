@@ -20,34 +20,32 @@ onKeyStroke(['b', 'B'], (e: KeyboardEvent) => {
         :dark="globalSettings.darkMode"
         class=""
     >
-        <div class="drawer-container">
-            <div class="tabs-container">
-                <q-tabs
-                    v-model="globalSettings.tab"
-                    vertical
-                    class="fixed-width-tabs justify-content-start"
+        <div class="flex row no-wrap full-height">
+            <q-tabs
+                v-model="globalSettings.tab"
+                vertical
+                class="fixed-width-tabs justify-content-start"
+            >
+                <template
+                    v-for="setting in globalSettings.settingsPages"
+                    :key="setting.name"
                 >
-                    <template
-                        v-for="setting in globalSettings.settingsPages"
-                        :key="setting.name"
+                    <q-tab
+                        :name="setting.name"
+                        @click="globalSettings.handleIconClick(setting)"
                     >
-                        <q-tab
-                            :name="setting.name"
-                            @click="globalSettings.handleIconClick(setting)"
-                        >
-                            <template v-slot:default>
-                                <div class="d-flex align-items-center">
-                                    <font-awesome-icon
-                                        :icon="`fa-solid ${setting.faKey}`"
-                                        style="height: 1.3em"
-                                    />
-                                </div>
-                            </template>
-                        </q-tab>
-                    </template>
-                </q-tabs>
-            </div>
-            <div class="content-container">
+                        <template v-slot:default>
+                            <div class="d-flex align-items-center">
+                                <font-awesome-icon
+                                    :icon="`fa-solid ${setting.faKey}`"
+                                    style="height: 1.3em"
+                                />
+                            </div>
+                        </template>
+                    </q-tab>
+                </template>
+            </q-tabs>
+            <div class="overlow-x-hidden">
                 <transition name="collapse">
                     <q-tab-panels
                         v-model="globalSettings.tab"
@@ -125,26 +123,5 @@ $panel-width: 300px;
 .slide-right-leave-to {
     opacity: 0.05;
     left: -$panel-width;
-}
-
-/* New styles */
-.drawer-container {
-    display: flex;
-    flex-direction: row;
-    height: 100%;
-}
-
-.tabs-container {
-    flex-grow: 0;
-    flex-shrink: 0;
-    height: 100%;
-    overflow: hidden; /* Prevent the tabs from being scrollable */
-}
-
-.content-container {
-    flex-grow: 1;
-    overflow-y: auto; /* Make only the content scrollable */
-    padding: 10px; /* Add some padding to the content */
-    overflow-x: hidden;
 }
 </style>
