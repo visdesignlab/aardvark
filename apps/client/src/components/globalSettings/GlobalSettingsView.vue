@@ -12,13 +12,12 @@ onKeyStroke(['b', 'B'], (e: KeyboardEvent) => {
 <template>
     <q-drawer
         v-model="globalSettings.settingsVisible"
-        :width="globalSettings.isPanelVisible ? 370 : 70"
+        :width="globalSettings.isPanelVisible ? 360 : 70"
         side="left"
         :bordered="globalSettings.isPanelVisible"
         show-overlay
         behavior="desktop"
         :dark="globalSettings.darkMode"
-        class=""
     >
         <div class="flex row no-wrap full-height">
             <q-tabs
@@ -54,25 +53,16 @@ onKeyStroke(['b', 'B'], (e: KeyboardEvent) => {
                         :dark="globalSettings.darkMode"
                         swipeable
                         vertical
-                        style="margin-left: 5px"
                     >
                         <template
                             v-for="setting in globalSettings.settingsPages"
                             :key="setting.name"
                         >
-                            <q-tab-panel
-                                :name="setting.name"
-                                style="border-radius: 4px"
-                            >
+                            <q-tab-panel :name="setting.name">
                                 <div>
-                                    <div
-                                        class="d-flex row justify-space-between align-center"
-                                        style="margin-bottom: 5px"
-                                    >
-                                        <h5 style="margin-bottom: 0px">
-                                            {{ setting.name }}
-                                        </h5>
-                                    </div>
+                                    <h5 class="q-mb-none">
+                                        {{ setting.name }}
+                                    </h5>
                                     <hr />
                                     <component
                                         :is="setting.component"
