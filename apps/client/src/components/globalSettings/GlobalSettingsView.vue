@@ -145,5 +145,6 @@ $panel-width: 300px;
     flex-grow: 1;
     overflow-y: auto; /* Make only the content scrollable */
     padding: 10px; /* Add some padding to the content */
+    overflow-x: hidden;
 }
 </style>
