@@ -164,7 +164,7 @@ export const useDatasetSelectionStore = defineStore(
                     comments: '#',
                     complete: async (results: ParseResult<AnyAttributes>) => {
                         // If you need to use local duckDb instance, you can use this.
-                        vg.coordinator().databaseConnector(vg.wasmConnector());
+                        // vg.coordinator().databaseConnector(vg.wasmConnector());
 
                         await vg
                             .coordinator()
@@ -193,11 +193,15 @@ export const useDatasetSelectionStore = defineStore(
 
         function getDuckDbUrl(path: string): string {
             let httpValue = configStore.useHttp ? 'http://' : 'https://';
+            let replaceValue =
+                configStore.environment === 'local'
+                    ? 'data:9000'
+                    : 'minio:9000';
             let duckDbBase =
                 httpValue +
                 datasetSelectionTrrackedStore.serverUrl?.replace(
                     'localhost/data',
-                    'minio:9000/data'
+                    replaceValue
                 );
             // Trims any leading slashes from path
             let trimmedPath = path.replace(/^\/+/, '');

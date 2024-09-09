@@ -66,7 +66,7 @@ export const useGlobalSettings = defineStore('globalSettings', () => {
         return false;
     });
 
-    const tab = ref('Select Dataset Location');
+    const tab = ref('Select Dataset');
     const activePageIndex = ref<number>(1);
     const lastActivePageIndex = ref<number>(0);
     const isPanelVisible = ref(true);

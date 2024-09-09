@@ -4,24 +4,28 @@ services:
   # Depends on server. NGINX will throw errors if api endpoints are not setup.
   client:
     build:
-      context: ../apps/client # relative to docker compose
-      dockerfile: ../../docker/Dockerfile.client # relative to build context
+      context: ../ # relative to docker compose
+      dockerfile: ./.build-files/Dockerfile.client # relative to build context
       args:
-        VITE_USE_HTTP: ${VITE_USE_HTTP}
+        VITE_USE_HTTP: ${USE_HTTP}
         VITE_ENVIRONMENT: ${VITE_ENVIRONMENT}
         VITE_SERVER_URL: ${VITE_SERVER_URL}
+        NGINX_FILE: ${NGINX_FILE}
     ports:
       - "80:80"
-    volumes:
-      - ./nginx.conf:/etc/nginx/nginx.conf # relative to docker compose
     depends_on:
       - server
+    env_file:
+      - path: ${DOCKER_ENV_FILE} # relative to docker compose (has to be in same directory)
+        required: true
 
   # Depends on database. Database must be healthy before starting server
   server:
     build:
-      context: ../apps/server # relative to docker compose
-      dockerfile: ../../docker/Dockerfile.server # relatvie to build context
+      context: ../ # relative to docker compose
+      dockerfile: ./.build-files/Dockerfile.server # relatvie to build context
+      args:
+        DOCKER_ENV_FILE: ${DOCKER_ENV_FILE}
     ports:
       - "8000:8000"
     environment:
@@ -31,16 +35,13 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
-      minio:
-        condition: service_healthy
-    volumes:
-      - ./.env:/app/.env # relative to docker compose
-      - ./server-entrypoint.sh:/app/server-entrypoint.sh # relative to docker compose
 
   celery:
     build:
-      context: ../apps/server # relative to docker compose
-      dockerfile: ../../docker/Dockerfile.celery # relatvie to build context
+      context: ../ # relative to docker compose
+      dockerfile: ./.build-files/Dockerfile.celery # relatvie to build context
+      args:
+        DOCKER_ENV_FILE: ${DOCKER_ENV_FILE}
     command:
       [
         "celery",
@@ -57,14 +58,10 @@ services:
     tty: false
     environment:
       DJANGO_ENV_FILE: "/app/.env"
-    volumes:
-      - ./.env:/app/.env # relative to docker compose
     depends_on:
       db:
         condition: service_healthy
       redis:
-        condition: service_healthy
-      minio:
         condition: service_healthy
 
   # MySQL service. Has healthcheck which uses mysqladmin to ping before reporting healthy.
@@ -76,7 +73,7 @@ services:
       MYSQL_PASSWORD: ${DATABASE_PASSWORD}
       MYSQL_ROOT_PASSWORD: ${DATABASE_ROOT_PASSWORD}
     volumes:
-      - ./mysql-data:/var/lib/mysql
+      - mysql-data:/var/lib/mysql
     ports:
       - "3306:3306"
     healthcheck:
@@ -94,7 +91,7 @@ services:
       timeout: 20s
       retries: 10
     env_file:
-      - path: ./.env # relative to docker compose (has to be in same directory)
+      - path: ${DOCKER_ENV_FILE} # relative to docker compose (has to be in same directory)
         required: true
 
   redis:
@@ -107,32 +104,23 @@ services:
       timeout: 5s
       retries: 5
 
-  minio:
-    image: minio/minio:latest
-    # When run with a TTY, minio prints credentials on startup
-    tty: true
-    command: "server --address ':9000' --console-address ':9090' /data"
-    environment:
-      MINIO_ROOT_USER: ${MINIO_STORAGE_ACCESS_KEY}
-      MINIO_ROOT_PASSWORD: ${MINIO_STORAGE_SECRET_KEY}
+  data:
+    build:
+      context: ./
+      dockerfile: Dockerfile.data
     ports:
-      - 9000:9000
-      - 9090:9090
-    healthcheck:
-      test: ["CMD-SHELL", "/minio-healthcheck.sh"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
+      - "9000:9000"
     volumes:
-      - ./minio-data:/data
-      - ./minio-healthcheck.sh/:/minio-healthcheck.sh
-
+      - ${LOCAL_DATA_VOLUME_LOCATION}:/app/data # relative to docker compose
   duckdb:
     build:
-      context: ../apps/duckdb # relative to docker compose
-      dockerfile: ../../docker/Dockerfile.duckdb # relative to build context
+      context: ../ # relative to docker compose
+      dockerfile: ./.build-files/Dockerfile.duckdb # relative to build context
     ports:
       - "3000:3000"
     volumes:
-      - ./duckdb-data:/duckdb-data
+      - duckdb-data:/app/duckdb-data
 
+volumes:
+  mysql-data:
+  duckdb-data:

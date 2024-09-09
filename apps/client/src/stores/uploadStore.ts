@@ -155,9 +155,10 @@ export const useUploadStore = defineStore('uploadStore', () => {
                         /\/$/,
                         ''
                     );
-                const tabularDataFilename = `${
-                    locationFiles.table.processedData.base_file_location
-                }${locationFiles.table.file!.name}`;
+                const tabularDataFilename = `${locationFiles.table.processedData.base_file_location.replace(
+                    /\/$/,
+                    ''
+                )}/${locationFiles.table.file!.name}`;
                 locationConfig.push({
                     id: locationFiles.locationId,
                     tabularDataFilename,
