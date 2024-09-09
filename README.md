@@ -190,7 +190,7 @@ All tasks can be viewed in the individual repository's moon.yml files.
 Build docker image on Dockerfile.loon. All commands at root.
 
 ```bash
-docker build -f ./.build-files/Dockerfile.loon -t loon:1.0 .
+docker build -f ./.build-files/Dockerfile.loon.local -t loon:1.0 .
 ```
 
 Run:

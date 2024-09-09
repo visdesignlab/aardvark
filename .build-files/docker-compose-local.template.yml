@@ -119,7 +119,8 @@ services:
     ports:
       - "3000:3000"
     volumes:
-      - ./duckdb-data:/duckdb-data
+      - duckdb-data:/app/duckdb-data
 
 volumes:
   mysql-data:
+  duckdb-data:

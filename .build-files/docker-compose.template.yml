@@ -136,11 +136,12 @@ services:
   duckdb:
     build:
       context: ../ # relative to docker compose
-      dockerfile: ../.build-files/Dockerfile.duckdb # relative to build context
+      dockerfile: ./.build-files/Dockerfile.duckdb # relative to build context
     ports:
       - "3000:3000"
     volumes:
-      - ./duckdb-data:/duckdb-data
+      - duckdb-data:/app/duckdb-data
 
 volumes:
   mysql-data:
+  duckdb-data:
