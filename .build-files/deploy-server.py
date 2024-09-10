@@ -30,7 +30,7 @@ def deploy():
         return jsonify({'status': 'FAILED', 'error': 'UNAUTHORIZED_ACCESS'})
 
     commands = [
-        'python3 ../build.py -D',
+        'cd ../ && python3 ../build.py -D',
         'git pull origin main',
         'python3 ../build.py -d --config-file /loonar-data/config.json'
     ]
