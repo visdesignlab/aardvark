@@ -32,6 +32,7 @@ def deploy():
     commands = [
         'cd .. && python3 build.py -D',
         'git pull origin dev || true',
+        'ls -a',
         'python3 build.py -d --config-file /loonar-data/config.json'
     ]
 
