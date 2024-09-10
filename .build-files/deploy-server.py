@@ -30,9 +30,9 @@ def deploy():
         return jsonify({'status': 'FAILED', 'error': 'UNAUTHORIZED_ACCESS'})
 
     commands = [
-        'cd ../ && python3 ../build.py -D',
-        'git pull origin dev',
-        'python3 ../build.py -d --config-file /loonar-data/config.json'
+        'cd .. && python3 build.py -D',
+        'git pull origin dev || true',
+        'python3 build.py -d --config-file /loonar-data/config.json'
     ]
 
     # Execute commands sequentially
