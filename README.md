@@ -209,7 +209,7 @@ May have to remove using `docker rm loon`
 
 To auto deploy on remote server, make sure following is done:
 
-```
+```bash
 cd .build-files
 python3 -m venv .venv
 source .venv/bin/activate
@@ -217,4 +217,8 @@ pip install requirements.txt
 python deploy-server.py
 ```
 
-Runs on port 5421
+Runs on port 5421. You must have a ".env.secrets" file which has DEPLOYMENT_AUTH_TOKEN as an environment variable. When sending a post request to server_url/deploy, it will check that you have a header "Authorization" with the token matching DEPLOYMENT_AUTH_TOKEN in .env.secrets. You can specify the path to the .env.secrets file like this:
+
+```bash
+python deploy-server.py --env-file /path/to/.env.secrets
+```
