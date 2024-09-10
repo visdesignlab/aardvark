@@ -12,6 +12,8 @@ To run this image, you will need to specify the location of your Docker socket t
 
 Image source: https://hub.docker.com/r/bbollen23/local-loon
 
+All Versions: https://hub.docker.com/r/bbollen23/local-loon/tags
+
 ### Volumes
 
 | Volumes           | Source                                                              | Destination          | Details                                                 |
@@ -30,6 +32,8 @@ Image source: https://hub.docker.com/r/bbollen23/local-loon
 To run this image, you will need to specify the location of your Docker socket to mount, the path where you would like your data to be uploaded, and an additional environment variable.
 
 Image source: https://hub.docker.com/r/bbollen23/loon
+
+All Versions: https://hub.docker.com/r/bbollen23/loon/tags
 
 ### Volumes
 
