@@ -204,3 +204,17 @@ loon:1.0
 ```
 
 May have to remove using `docker rm loon`
+
+### Github Deployment
+
+To auto deploy on remote server, make sure following is done:
+
+```
+cd .build-files
+python3 -m venv .venv
+source .venv/bin/activate
+pip install requirements.txt
+python deploy-server.py
+```
+
+Runs on port 5421
