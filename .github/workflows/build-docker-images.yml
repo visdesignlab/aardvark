@@ -21,6 +21,13 @@ jobs:
           run: |
             ls -la 
             docker build -f ./.build-files/Dockerfile.loon.local -t local-loon:latest .
+        - name: tag the docker image
+          id: tag-docker-images
+          run: |
+            docker tag local-loon:latest ${{ secrets.DOCKERHUB_USERNAME }}/local-loon:beta-0.2
+            docker tag local-loon:latest ${{ secrets.DOCKERHUB_USERNAME }}/local-loon:latest
         - name: push the docker image
           id: push-docker-image
-          run: docker push ${{secrets.DOCKERHUB_USERNAME}}/local-loon:latest
+          run: |
+            docker push ${{secrets.DOCKERHUB_USERNAME}}/local-loon:beta-0.2
+            docker push ${{secrets.DOCKERHUB_USERNAME}}/local-loon:latest
