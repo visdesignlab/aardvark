@@ -13,4 +13,4 @@ jobs:
       - name: Make API request using curl
         run: |
           curl --location --request POST 'loonsw.sci.utah.edu:5421/deploy' \
-          --header 'Authorization: ${{secrets.DEPLOYMENT_AUTH_TOKEN}}'"
+          --header 'Authorization: ${{secrets.DEPLOYMENT_AUTH_TOKEN}}'
