@@ -50,5 +50,10 @@ def deploy():
     return jsonify({'status': 'SUCCESS'})
 
 
+@app.route('/healthcheck', methods=['GET'])
+def healthCheck():
+    return jsonify({'status': 'healthy'})
+
+
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5421)
