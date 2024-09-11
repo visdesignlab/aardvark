@@ -1,0 +1,16 @@
+name: Deploy To Server
+on:
+  pull_request:
+    branches: [dev]
+    types: [closed]
+jobs:
+  curl-request:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Make API request using curl
+        run: |
+          curl -X POST https://loonsw.sci.utah.edu:5421/deploy \
+            -H "Authorization: Bearer ${{ secrets.DEPLOYMENT_AUTH_TOKEN }}" \
