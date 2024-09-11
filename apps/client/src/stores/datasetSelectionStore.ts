@@ -165,9 +165,22 @@ export const useDatasetSelectionStore = defineStore(
                     complete: async (results: ParseResult<AnyAttributes>) => {
                         // If you need to use local duckDb instance, you can use this.
                         // vg.coordinator().databaseConnector(vg.wasmConnector());
+                        let httpValue = configStore.useHttp
+                            ? 'ws://'
+                            : 'wss://';
+                        let webSocketUrl =
+                            httpValue +
+                            datasetSelectionTrrackedStore.serverUrl.replace(
+                                '/data',
+                                '/ws/'
+                            );
+                        console.log(webSocketUrl);
                         vg.coordinator().databaseConnector(
-                            vg.socketConnector('wss://loonsw.sci.utah.edu/ws')
+                            vg.socketConnector(webSocketUrl)
                         );
+                        // vg.coordinator().databaseConnector(
+                        //     vg.socketConnector('ws://localhost:3000')
+                        // );
                         await vg
                             .coordinator()
                             .exec([
