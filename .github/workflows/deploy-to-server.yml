@@ -12,7 +12,7 @@ jobs:
 
       - name: Make API request using curl
         run: |
-          curl --location --request POST 'https://loonsw.sci.utah.edu:5421/deploy' \
+          curl --location --request POST 'http://loonsw.sci.utah.edu:5421/deploy' \
             --header 'Authorization: ${{secrets.DEPLOYMENT_AUTH_TOKEN}}' \
             --max-time 10 \
             --fail \
