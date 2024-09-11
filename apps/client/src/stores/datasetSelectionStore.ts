@@ -11,7 +11,6 @@ import {
     type TextTransforms,
 } from '@/stores/cellMetaData';
 import { useDatasetSelectionTrrackedStore } from '@/stores/datasetSelectionTrrackedStore';
-import { useConfigStore } from '@/stores/configStore';
 
 export interface ExperimentMetadata {
     // name?: string; // user friendly name
@@ -47,14 +46,13 @@ export const useDatasetSelectionStore = defineStore(
         const cellMetaData = useCellMetaData();
         const datasetSelectionTrrackedStore =
             useDatasetSelectionTrrackedStore();
-        const configStore = useConfigStore();
         const fetchingTabularData = ref(false);
         const refreshTime = ref<string>(new Date().getTime().toString());
         let controller: AbortController;
 
         const experimentFilenameList = asyncComputed<string[]>(async () => {
             if (datasetSelectionTrrackedStore.serverUrl == null) return null;
-            const fullURL = getServerUrl(
+            const fullURL = getFileUrl(
                 datasetSelectionTrrackedStore.entryPointFilename
             );
             if (controller) {
@@ -86,7 +84,6 @@ export const useDatasetSelectionStore = defineStore(
         }, [refreshTime.value]);
 
         function handleFetchEntryError(message: string): void {
-            // // console.log('ERROR', errorMessage);
             errorMessage.value = message;
             serverUrlValid.value = false;
             fetchingEntryFile.value = false;
@@ -94,13 +91,12 @@ export const useDatasetSelectionStore = defineStore(
 
         const currentExperimentMetadata =
             computedAsync<ExperimentMetadata | null>(async () => {
-                // console.log('updating exp metadata');
                 if (
                     datasetSelectionTrrackedStore.currentExperimentFilename ==
                     null
                 )
                     return null;
-                const fullURL = getServerUrl(
+                const fullURL = getFileUrl(
                     datasetSelectionTrrackedStore.currentExperimentFilename
                 );
                 const response = await fetch(fullURL, {});
@@ -109,7 +105,6 @@ export const useDatasetSelectionStore = defineStore(
             });
 
         function selectImagingLocation(location: LocationMetadata): void {
-            // console.log('select imaging location');
             datasetSelectionTrrackedStore.$patch(() => {
                 for (const key in datasetSelectionTrrackedStore.selectedLocationIds) {
                     datasetSelectionTrrackedStore.selectedLocationIds[key] =
@@ -118,7 +113,6 @@ export const useDatasetSelectionStore = defineStore(
                 datasetSelectionTrrackedStore.selectedLocationIds[location.id] =
                     true;
             });
-            // console.log(cloneDeep(datasetSelectionTrrackedStore.$state));
         }
 
         // TODO: - update to support multi-location
@@ -146,11 +140,11 @@ export const useDatasetSelectionStore = defineStore(
                     cellMetaData.dataInitialized = false;
                     return;
                 }
-                const url = getServerUrl(
+                const url = getFileUrl(
                     currentLocationMetadata.value?.tabularDataFilename
                 );
 
-                const duckDbUrl = getDuckDbUrl(
+                const duckDbFileUrl = getDuckDbFileUrl(
                     currentLocationMetadata.value?.tabularDataFilename
                 );
 
@@ -163,28 +157,21 @@ export const useDatasetSelectionStore = defineStore(
                     worker: true,
                     comments: '#',
                     complete: async (results: ParseResult<AnyAttributes>) => {
-                        // If you need to use local duckDb instance, you can use this.
+                        // If you need to use web based duckDb instance, you can use this.
                         // vg.coordinator().databaseConnector(vg.wasmConnector());
-                        let httpValue = configStore.useHttp
-                            ? 'ws://'
-                            : 'wss://';
-                        let webSocketUrl =
-                            httpValue +
-                            datasetSelectionTrrackedStore.serverUrl.replace(
-                                '/data',
-                                '/ws/'
-                            );
-                        console.log(webSocketUrl);
+
                         vg.coordinator().databaseConnector(
-                            vg.socketConnector(webSocketUrl)
+                            vg.socketConnector(
+                                datasetSelectionTrrackedStore.duckDbWebsocketUrl
+                            )
                         );
-                        // vg.coordinator().databaseConnector(
-                        //     vg.socketConnector('ws://localhost:3000')
-                        // );
                         await vg
                             .coordinator()
                             .exec([
-                                vg.loadCSV('current_cell_metadata', duckDbUrl),
+                                vg.loadCSV(
+                                    'current_cell_metadata',
+                                    duckDbFileUrl
+                                ),
                             ]);
                         cellMetaData.init(
                             results.data,
@@ -198,36 +185,23 @@ export const useDatasetSelectionStore = defineStore(
             // { deep: true }
         );
 
-        function getServerUrl(path: string): string {
-            let httpValue = configStore.useHttp ? 'http://' : 'https://';
-            let base = httpValue + datasetSelectionTrrackedStore.serverUrl;
+        function getFileUrl(path: string): string {
             // Trims any leading slashes from path
             let trimmedPath = path.replace(/^\/+/, '');
-            return base + '/' + trimmedPath;
+            return `${datasetSelectionTrrackedStore.serverUrl}/${trimmedPath}`;
         }
 
-        function getDuckDbUrl(path: string): string {
-            let httpValue = configStore.useHttp ? 'http://' : 'https://';
-            let replaceValue =
-                configStore.environment === 'local'
-                    ? 'data:9000'
-                    : 'minio:9000';
-            let duckDbBase =
-                httpValue +
-                datasetSelectionTrrackedStore.serverUrl?.replace(
-                    'localhost/data',
-                    replaceValue
-                );
+        function getDuckDbFileUrl(path: string): string {
             // Trims any leading slashes from path
             let trimmedPath = path.replace(/^\/+/, '');
-            return duckDbBase + '/' + trimmedPath;
+            return `${datasetSelectionTrrackedStore.duckDbUrl}/${trimmedPath}`;
         }
 
         const segmentationFolderUrl = computed<string>(() => {
             if (currentLocationMetadata.value?.segmentationsFolder == null) {
                 return '';
             }
-            return getServerUrl(
+            return getFileUrl(
                 currentLocationMetadata.value.segmentationsFolder
             );
         });
@@ -245,7 +219,7 @@ export const useDatasetSelectionStore = defineStore(
             currentLocationMetadata,
             fetchingTabularData,
             selectImagingLocation,
-            getServerUrl,
+            getFileUrl,
             segmentationFolderUrl,
             refreshFileNameList,
         };
