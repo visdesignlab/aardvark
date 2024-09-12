@@ -159,7 +159,7 @@ watch(currentLocationMetadata, async () => {
     // imageViewerStore.frameIndex = 0;
     pixelSource.value = null;
 
-    const fullImageUrl = datasetSelectionStore.getServerUrl(
+    const fullImageUrl = datasetSelectionStore.getFileUrl(
         currentLocationMetadata.value.imageDataFilename
     );
     loader.value = await loadOmeTiff(fullImageUrl, { pool: new Pool() });
@@ -201,7 +201,7 @@ function createBaseImageLayer(): typeof ImageLayer {
 }
 
 function createSegmentationsLayer(): typeof GeoJsonLayer {
-    const folderUrl = datasetSelectionStore.getServerUrl(
+    const folderUrl = datasetSelectionStore.getFileUrl(
         datasetSelectionStore.currentLocationMetadata?.segmentationsFolder ??
             'UNKNOWN'
     );
