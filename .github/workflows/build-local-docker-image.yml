@@ -1,7 +1,7 @@
 name: Build Local Docker Image
 on:
   pull_request:
-    branches: [main]
+    branches: [dev]
     types: [closed]
 jobs:
     build:
