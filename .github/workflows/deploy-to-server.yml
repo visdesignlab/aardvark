@@ -11,18 +11,20 @@ jobs:
         id: deployRequest
         uses: fjogeleit/http-request-action@v1.9.2
         with:
-          url: 'https://loonsw.sci.utah.edu:8443/deploy/'
+          url: 'https://loonsw.sci.utah.edu/deploy/'
           method: 'GET'
           customHeaders: '{"Authorization": "${{secrets.DEPLOYMENT_AUTH_TOKEN}}"}'
         continue-on-error: true
       - name: Hit API CURL
         run: |
-          curl --location 'https://loonsw.sci.utah.edu:8443/deploy' \
+          curl --location 'https://loonsw.sci.utah.edu/deploy' \
           --header 'Authorization: ${{secrets.DEPLOYMENT_AUTH_TOKEN}}'
+          --max-time 10
         continue-on-error: true
       - name: Hit API CURL Healthcheck
         run: |
-          curl --location 'https://loonsw.sci.utah.edu:8443/healthcheck' \
+          curl --location 'https://loonsw.sci.utah.edu/healthcheck' \
+          --max-time 10
         continue-on-error: true
 
 
