@@ -4,24 +4,32 @@ on:
     branches: [dev]
     types: [closed]
 jobs:
-  curl-request:
+  deployment:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3
-
-      - name: Make API request using curl
+        id: deployRequest
+        uses: fjogeleit/http-request-action@v1
+        with:
+          url: 'http://loonsw.sci.utah.edu/deploy'
+          method: 'POST'
+          customHeaders: '{"Content-Type": "application/json", "Authorization" : "${{secrets.DEPLOYMENT_AUTH_TOKEN}}"}'
+      - name: Show response
         run: |
-          curl --location --request POST 'http://loonsw.sci.utah.edu:5421/deploy' \
-            --header 'Authorization: ${{secrets.DEPLOYMENT_AUTH_TOKEN}}' \
-            --max-time 10 \
-            --fail \
-            --show-error \
-            --silent
+          echo ${{ steps.deployRequest.outputs.response }}
 
-      - name: Check for status code
-        run: |
-          if [ $? -ne 0 ]; then
-            echo "Error: Failed to reach the server or no response. Exiting..."
-            exit 1
-          fi
+      # - name: Make API request using curl
+      #   run: |
+      #     curl --location --request POST 'http://loonsw.sci.utah.edu:5421/deploy' \
+      #       --header 'Authorization: ${{secrets.DEPLOYMENT_AUTH_TOKEN}}' \
+      #       --max-time 10 \
+      #       --fail \
+      #       --show-error \
+      #       --silent
+
+      # - name: Check for status code
+      #   run: |
+      #     if [ $? -ne 0 ]; then
+      #       echo "Error: Failed to reach the server or no response. Exiting..."
+      #       exit 1
+      #     fi
