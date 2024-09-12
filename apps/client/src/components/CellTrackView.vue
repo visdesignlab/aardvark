@@ -76,7 +76,7 @@ watch(currentLocationMetadata, async () => {
 
     pixelSource.value = null;
 
-    const fullImageUrl = datasetSelectionStore.getServerUrl(
+    const fullImageUrl = datasetSelectionStore.getFileUrl(
         currentLocationMetadata.value.imageDataFilename
     );
     loader.value = await loadOmeTiff(fullImageUrl, { pool: new Pool() });
