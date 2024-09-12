@@ -22,7 +22,7 @@ load_dotenv(dotenv_path=env_file_path)
 DEPLOYMENT_AUTH_TOKEN = os.getenv('DEPLOYMENT_AUTH_TOKEN')
 
 
-@app.route('/deploy', methods=['POST'])
+@app.route('/deploy', methods=['GET'])
 def deploy():
     token = request.headers.get('Authorization')
 
@@ -56,4 +56,8 @@ def healthCheck():
 
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5421)
+    ssl_cert_path = '/etc/letsencrypt/archive/loonsw.sci.utah.edu/fullchain1.pem'
+    ssl_key_path = '/etc/letsencrypt/archive/loonsw.sci.utah.edu/privkey1.pem'
+
+    # Run Flask with HTTPS
+    app.run(host='0.0.0.0', port=5421, ssl_context=(ssl_cert_path, ssl_key_path))
