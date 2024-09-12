@@ -7,11 +7,11 @@ jobs:
   deployment:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout code
+      - name: Hit API
         id: deployRequest
-        uses: fjogeleit/http-request-action@v1
+        uses: fjogeleit/http-request-action@v1.9.2
         with:
-          url: 'http://loonsw.sci.utah.edu/deploy'
+          url: 'http://loonsw.sci.utah.edu:5421/deploy'
           method: 'POST'
           customHeaders: '{"Content-Type": "application/json", "Authorization" : "${{secrets.DEPLOYMENT_AUTH_TOKEN}}"}'
       - name: Show response
