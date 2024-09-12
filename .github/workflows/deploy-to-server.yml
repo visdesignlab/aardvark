@@ -16,7 +16,7 @@ jobs:
         continue-on-error: true
       - name: Hit API CURL
         run: |
-          curl --location 'https://loonsw.sci.utah.edu:5421/deploy'
+          curl --location 'https://loonsw.sci.utah.edu'
 
       # - name: Make API request using curl
       #   run: |
