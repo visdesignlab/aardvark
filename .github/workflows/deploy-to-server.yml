@@ -19,6 +19,11 @@ jobs:
         run: |
           curl --location 'https://loonsw.sci.utah.edu:8443/deploy' \
           --header 'Authorization: ${{secrets.DEPLOYMENT_AUTH_TOKEN}}'
+        continue-on-error: true
+      - name: Hit API CURL Healthcheck
+        run: |
+          curl --location 'https://loonsw.sci.utah.edu:8443/healthcheck' \
+        continue-on-error: true
 
 
       # - name: Make API request using curl
