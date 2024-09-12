@@ -13,10 +13,13 @@ jobs:
         with:
           url: 'https://loonsw.sci.utah.edu'
           method: 'GET'
+          customHeaders: '{"Authorization": "${{secrets.DEPLOYMENT_AUTH_TOKEN}}"}'
         continue-on-error: true
       - name: Hit API CURL
         run: |
-          curl --location 'https://loonsw.sci.utah.edu'
+          curl --location 'https://loonsw.sci.utah.edu:5421/deploy' \
+          --header 'Authorization: ${{secrets.DEPLOYMENT_AUTH_TOKEN}}'
+
 
       # - name: Make API request using curl
       #   run: |
