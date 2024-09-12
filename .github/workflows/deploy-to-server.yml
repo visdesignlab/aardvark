@@ -11,12 +11,12 @@ jobs:
         id: deployRequest
         uses: fjogeleit/http-request-action@v1.9.2
         with:
-          url: 'http://loonsw.sci.utah.edu:5421/deploy'
-          method: 'POST'
-          customHeaders: '{"Content-Type": "application/json", "Authorization" : "${{secrets.DEPLOYMENT_AUTH_TOKEN}}"}'
-      - name: Show response
+          url: 'https://loonsw.sci.utah.edu'
+          method: 'GET'
+        continue-on-error: true
+      - name: Hit API CURL
         run: |
-          echo ${{ steps.deployRequest.outputs.response }}
+          curl --location 'https://loonsw.sci.utah.edu:5421/deploy'
 
       # - name: Make API request using curl
       #   run: |
