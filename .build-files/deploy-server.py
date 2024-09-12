@@ -29,23 +29,23 @@ def deploy():
     if token != DEPLOYMENT_AUTH_TOKEN:
         return jsonify({'status': 'FAILED', 'error': 'UNAUTHORIZED_ACCESS'})
 
-    command = 'cd .. && python3 build.py -D && git pull origin dev || true && ls -a && python3 ' \
-        'build.py -d --config-file /loonar-data/config.json'
+    #command = 'cd .. && python3 build.py -D && git pull origin dev || true && ls -a && python3 ' \
+    #    'build.py -d --config-file /loonar-data/config.json'
 
-    try:
-        result = subprocess.run(command,
-                                shell=True,
-                                check=True,
-                                stdout=subprocess.PIPE,
-                                stderr=subprocess.PIPE)
+    #try:
+    #    result = subprocess.run(command,
+    #                            shell=True,
+    #                            check=True,
+    #                            stdout=subprocess.PIPE,
+    #                            stderr=subprocess.PIPE)
 
-        print(f"Command: {command}\n"
-              f"Output: {result.stdout.decode()}"
-              f"\nErrors: {result.stderr.decode()}")
-    except subprocess.CalledProcessError as e:
+    #    print(f"Command: {command}\n"
+    #          f"Output: {result.stdout.decode()}"
+    #          f"\nErrors: {result.stderr.decode()}")
+   # except subprocess.CalledProcessError as e:
         # Handle command failure
-        print(f"Command failed: {command}\nError: {e}")
-        return jsonify({'status': 'FAILED', 'error': str(e)}), 500
+    #    print(f"Command failed: {command}\nError: {e}")
+    #    return jsonify({'status': 'FAILED', 'error': str(e)}), 500
 
     return jsonify({'status': 'SUCCESS'})
 
