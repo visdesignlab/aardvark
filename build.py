@@ -248,20 +248,26 @@ def follow_logs(service_name, logs_path, verbose=False, detached=False):
     # Optionally send std error to subprocess.PIPE and then take STDERR and log to error file
 
 
-def build_containers(env_file):
+def build_containers(env_file, disable_spinner=False):
     global stop_spinner
-    stop_spinner = False
-    """ Build the containers. """
-    # print("Building Containers...")
-    spinner_thread = threading.Thread(target=spinner, args=("Building containers...",))
-    spinner_thread.start()
+    if not disable_spinner:
+        stop_spinner = False
+        """ Build the containers. """
+        spinner_thread = threading.Thread(target=spinner, args=("Building containers...",))
+        spinner_thread.start()
+    else:
+        print("Building containers...")
+
     process = run_command(f"docker-compose -f .build-files/docker-compose.yml"
                           f" --env-file {env_file} build")
     process.wait()  # Wait for the build to complete
 
-    stop_spinner = True
-    spinner_thread.join()  # Ensure spinner thread completes
-    print("\nBuild complete.")  # Print new line after spinner stops
+    if not disable_spinner:
+        stop_spinner = True
+        spinner_thread.join()  # Ensure spinner thread completes
+        print("\nBuild complete.")  # Print new line after spinner stops
+    else:
+        print("Build Complete.")
 
 
 def follow_all_logs(logs_path, services, verbose=False, detached=False):
@@ -274,21 +280,26 @@ def follow_all_logs(logs_path, services, verbose=False, detached=False):
         log_thread.start()
 
 
-def start_containers(env_file):
+def start_containers(env_file, disable_spinner=False):
     global stop_spinner
-    stop_spinner = False
-    """ Start the containers in detached mode. """
-    spinner_thread = threading.Thread(target=spinner, args=("Starting containers...",))
-    spinner_thread.start()
+    if not disable_spinner:
+        stop_spinner = False
+        """ Start the containers in detached mode. """
+        spinner_thread = threading.Thread(target=spinner, args=("Starting containers...",))
+        spinner_thread.start()
+    else:
+        print("Starting containers...")
     process = run_command(f"docker-compose -f .build-files/docker-compose.yml"
                           f" --env-file {env_file} up -d")
 
     process.wait()  # Wait for the containers to start
 
-    stop_spinner = True
-    spinner_thread.join()  # Ensure spinner thread completes
-
-    print("\nContainers started.")
+    if not disable_spinner:
+        stop_spinner = True
+        spinner_thread.join()  # Ensure spinner thread completes
+        print("\nContainers started.")
+    else:
+        print("Build Complete.")
 
 
 def check_containers_status(services, detached=False):
@@ -362,6 +373,8 @@ if __name__ == "__main__":
                         "corresponding environment file.")
     parser.add_argument("-o", "--overwrite", action="store_true",
                         help="If present, overwrites chosen config with current env variables")
+    parser.add_argument("-s", "--disable-spinner", action="store_true", required=False,
+                        help="Disables spinner")
 
     args = parser.parse_args()
 
@@ -404,8 +417,8 @@ if __name__ == "__main__":
             signal.signal(signal.SIGINT, cleanup_and_exit)
 
             # Build, run, then follow all logs. Begin monitoring process
-            build_containers(f'.build-files/{args.env_file}')
-            start_containers(f'.build-files/{args.env_file}')
+            build_containers(f'.build-files/{args.env_file}', args.disable_spinner)
+            start_containers(f'.build-files/{args.env_file}', args.disable_spinner)
             follow_all_logs(logs_path, services, args.verbose, args.detached)
             check_containers_status(services, args.detached)
         else:

@@ -18,6 +18,7 @@ services:
       - ${SSL_MAPPING:-/dev/null:/dev/null}
     depends_on:
       - server
+      - celery
     env_file:
       - path: ${DOCKER_ENV_FILE} # relative to docker compose (has to be in same directory)
         required: true
