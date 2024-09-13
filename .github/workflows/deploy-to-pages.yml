@@ -24,6 +24,13 @@ jobs:
       working-directory: ./apps/docs-website  # Change this to your Docusaurus directory
       run: yarn install
 
+      # Make versioning stuff here
+
+    - name: Update baseURL
+      working-directory: ./apps/docs-website
+      run: |
+        sed -i 's/baseUrl: "\/"/baseUrl: "\/loonar\//g' docusaurus.config.ts
+
     # Build the Docusaurus site
     - name: Build Docusaurus
       working-directory: ./apps/docs-website  # Change this to your Docusaurus directory
