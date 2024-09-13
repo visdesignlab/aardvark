@@ -26,10 +26,22 @@ jobs:
 
       # Make versioning stuff here
 
+    - name: Print docusaurus.config.ts before update
+      working-directory: ./apps/docs-website
+      run: |
+        echo "Contents of docusaurus.config.ts before update:"
+        cat docusaurus.config.ts
+
     - name: Update baseURL
       working-directory: ./apps/docs-website
       run: |
-        sed -i 's/baseUrl: "\/"/baseUrl: "\/loonar\//g' docusaurus.config.ts
+        sed -i 's/baseUrl: "\/"/baseUrl: "\/loonar\/"/g' docusaurus.config.ts
+
+    - name: Print docusaurus.config.ts after update
+      working-directory: ./apps/docs-website
+      run: |
+        echo "Contents of docusaurus.config.ts after update:"
+        cat docusaurus.config.ts
 
     # Build the Docusaurus site
     - name: Build Docusaurus
