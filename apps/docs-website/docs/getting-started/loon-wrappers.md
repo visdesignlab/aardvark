@@ -16,10 +16,10 @@ All Versions: https://hub.docker.com/r/bbollen23/local-loon/tags
 
 ### Volumes
 
-| Volumes           | Source                                                              | Destination          | Details                                                 |
-| ----------------- | ------------------------------------------------------------------- | -------------------- | ------------------------------------------------------- |
-| Docker Volume     | Mac and Linux: /var/run/docker.sock, Windows: //var/run/docker.sock | /var/run/docker.sock | This is required for to start nested docker containers. |
-| Local Data Volume | Absolute path to your data                                          | /app/data            | Location of where your data lives.                      |
+| Volumes           | Source                     | Destination          | Details                                                 |
+| ----------------- | -------------------------- | -------------------- | ------------------------------------------------------- |
+| Docker Volume     | /var/run/docker.sock       | /var/run/docker.sock | This is required for to start nested docker containers. |
+| Local Data Volume | Absolute path to your data | /app/data            | Location of where your data lives.                      |
 
 ### Environment Variables
 
@@ -37,10 +37,10 @@ All Versions: https://hub.docker.com/r/bbollen23/loon/tags
 
 ### Volumes
 
-| Volumes           | Source                                                              | Destination          | Details                                                 |
-| ----------------- | ------------------------------------------------------------------- | -------------------- | ------------------------------------------------------- |
-| Docker Volume     | Mac and Linux: /var/run/docker.sock, Windows: //var/run/docker.sock | /var/run/docker.sock | This is required for to start nested docker containers. |
-| MinIO Data Volume | Absolute path to your data                                          | /app/data            | Location of where your data lives.                      |
+| Volumes           | Source                     | Destination          | Details                                                 |
+| ----------------- | -------------------------- | -------------------- | ------------------------------------------------------- |
+| Docker Volume     | /var/run/docker.sock       | /var/run/docker.sock | This is required for to start nested docker containers. |
+| MinIO Data Volume | Absolute path to your data | /app/data            | Location of where your data lives.                      |
 
 ### Environment Variables
 
