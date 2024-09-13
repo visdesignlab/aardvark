@@ -387,6 +387,15 @@ if __name__ == "__main__":
                 config_file_name = overwrite_config(config_file_name)
 
             buildConfig = createEnvFile(config_file_name, args.env_file)
+
+            use_http = buildConfig.get('generalSettings.useHttp')
+            if use_http:
+                http_value = 'http://'
+            else:
+                http_value = 'https://'
+
+            base_url = buildConfig.get('generalSettings.baseUrl')
+
             # Generate docker-compose file based on if we are using local loon or not
             createComposeFile(local=buildConfig.local)
 
@@ -419,6 +428,7 @@ if __name__ == "__main__":
             # Build, run, then follow all logs. Begin monitoring process
             build_containers(f'.build-files/{args.env_file}', args.disable_spinner)
             start_containers(f'.build-files/{args.env_file}', args.disable_spinner)
+            print(f"Visit {http_value}{base_url} to view application.\n")
             follow_all_logs(logs_path, services, args.verbose, args.detached)
             check_containers_status(services, args.detached)
         else:
