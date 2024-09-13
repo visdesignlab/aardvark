@@ -1,0 +1,38 @@
+name: Deploy Docusaurus Site
+on:
+  pull_request:
+    branches: [dev]
+    types: [closed]
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    # Checkout the repository
+    - name: Checkout repository
+      uses: actions/checkout@v3
+
+    # Setup Node.js
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: lts/*
+        cache: 'yarn'
+
+
+    # Install dependencies
+    - name: Install dependencies
+      working-directory: ./path-to-docusaurus  # Change this to your Docusaurus directory
+      run: yarn install
+
+    # Build the Docusaurus site
+    - name: Build Docusaurus
+      working-directory: ./apps/docs-website  # Change this to your Docusaurus directory
+      run: yarn build
+
+    # Deploy to GitHub Pages
+    - name: Deploy to GitHub Pages
+      uses: peaceiris/actions-gh-pages@v4
+      with:
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+        publish_dir: ./apps/docs-website/build  # Change this to the build output directory
