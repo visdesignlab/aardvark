@@ -22,7 +22,7 @@ jobs:
 
     # Install dependencies
     - name: Install dependencies
-      working-directory: ./path-to-docusaurus  # Change this to your Docusaurus directory
+      working-directory: ./apps/docs-website  # Change this to your Docusaurus directory
       run: yarn install
 
     # Build the Docusaurus site
